@@ -239,18 +239,18 @@
             <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-300 mb-1">
                 <a href="{{ route('legal.terms') }}" class="hover:text-white">{{ __('Voorwaarden') }}</a>
                 <span class="text-gray-500">•</span>
-                <a href="{{ route('legal.privacy') }}" class="hover:text-white">Privacy</a>
+                <a href="{{ route('legal.privacy') }}" class="hover:text-white">{{ __('Privacy') }}</a>
                 <span class="text-gray-500">•</span>
-                <a href="{{ route('legal.cookies') }}" class="hover:text-white">Cookies</a>
+                <a href="{{ route('legal.cookies') }}" class="hover:text-white">{{ __('Cookies') }}</a>
                 <span class="text-gray-500">•</span>
-                <a href="mailto:havun22@gmail.com" class="hover:text-white">Contact</a>
+                <a href="mailto:havun22@gmail.com" class="hover:text-white">{{ __('Contact') }}</a>
             </div>
             <div class="text-center text-xs text-gray-400">
                 &copy; {{ date('Y') }} Havun
                 <span class="mx-1">•</span>
-                KvK 98516000
+                {{ __('KvK') }} 98516000
                 <span class="mx-1">•</span>
-                BTW-vrij (KOR)
+                {{ __('BTW-vrij (KOR)') }}
             </div>
         </div>
     </footer>
@@ -417,6 +417,11 @@
             let lastSyncTime = null;
             let syncInterval = null;
 
+            const __backupActief = @json(__('Backup actief'));
+            const __uitslagen = @json(__('uitslagen'));
+            const __offlineBackup = @json(__('Offline - backup beschikbaar'));
+            const __synchroniseren = @json(__('Synchroniseren...'));
+
             // Status indicator element
             function getOrCreateIndicator() {
                 let indicator = document.getElementById('noodplan-sync-indicator');
@@ -478,13 +483,13 @@
                     saveToStorage(data);
                     lastSyncTime = new Date();
 
-                    const time = lastSyncTime.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-                    updateIndicator('connected', `Backup actief | ${uitslagCount} uitslagen | ${time}`);
+                    const time = lastSyncTime.toLocaleTimeString(document.documentElement.lang || 'nl-NL', {hour: '2-digit', minute: '2-digit'});
+                    updateIndicator('connected', `${__backupActief} | ${uitslagCount} ${__uitslagen} | ${time}`);
                 } catch (e) {
                     console.error('Noodplan: sync error', e);
                     // Toon alleen offline als we langer dan 2 minuten geen sync hebben
                     if (!lastSyncTime || (new Date() - lastSyncTime) > 120000) {
-                        updateIndicator('disconnected', 'Offline - backup beschikbaar');
+                        updateIndicator('disconnected', __offlineBackup);
                     }
                 }
             }
@@ -494,7 +499,7 @@
                 if (syncInterval) clearInterval(syncInterval);
 
                 // Direct sync
-                updateIndicator('syncing', 'Synchroniseren...');
+                updateIndicator('syncing', __synchroniseren);
                 sync();
 
                 // Daarna elke 30 seconden
