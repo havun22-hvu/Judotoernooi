@@ -21,7 +21,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>AutoFix MISLUKT - JudoToernooi</h1>
+        <h1>AutoFix MISLUKT - {{ __('JudoToernooi') }}</h1>
     </div>
 
     <div class="content">

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>JudoToernooi - {{ __('Professioneel Toernooi Management') }}</title>
+    <title>{{ __('JudoToernooi') }} - {{ __('Professioneel Toernooi Management') }}</title>
     <meta name="description" content="{{ __('Organiseer uw judotoernooi professioneel met JudoToernooi. Van inschrijving tot eindstand, alles in een platform.') }}">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -16,7 +16,7 @@
     <!-- Header -->
     <header class="absolute top-0 left-0 right-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-            <div class="text-white font-bold text-xl">JudoToernooi</div>
+            <div class="text-white font-bold text-xl">{{ __('JudoToernooi') }}</div>
             <div class="flex items-center gap-4">
                 {{-- Taalkiezer --}}
                 <div class="relative" x-data="{ open: false }">
@@ -52,12 +52,12 @@
     <main class="flex flex-col items-center justify-center min-h-screen px-4 text-center">
         <!-- Logo -->
         <div class="mb-8">
-            <img src="/icon-512x512.png" alt="JudoToernooi Logo" class="w-32 h-32 rounded-full shadow-2xl mx-auto">
+            <img src="/icon-512x512.png" alt="{{ __('JudoToernooi') }} Logo" class="w-32 h-32 rounded-full shadow-2xl mx-auto">
         </div>
 
         <!-- Title -->
         <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
-            JudoToernooi
+            {{ __('JudoToernooi') }}
         </h1>
         <p class="text-xl md:text-2xl text-blue-200 mb-12 max-w-2xl">
             {{ __('Professioneel toernooi management voor judoclubs. Van inschrijving tot eindstand, alles in een platform.') }}

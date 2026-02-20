@@ -187,7 +187,7 @@
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Contact') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p>
-                            <strong>JudoToernooi (Havun)</strong><br>
+                            <strong>{{ __('JudoToernooi') }} (Havun)</strong><br>
                             <strong>{{ __('E-mail') }}:</strong> <a href="mailto:havun22@gmail.com" class="text-blue-600 hover:underline">havun22@gmail.com</a>
                         </p>
                     </div>

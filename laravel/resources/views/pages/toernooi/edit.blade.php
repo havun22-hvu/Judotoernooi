@@ -2934,7 +2934,7 @@
             <div class="p-4 bg-green-50 border border-green-200 rounded">
                 <h3 class="font-bold text-green-800 mb-2">{{ __('1. Open de JudoToernooi app op je laptop') }}</h3>
                 <p class="text-sm text-green-700">
-                    {{ __('Dubbelklik op het') }} <strong>JudoToernooi</strong> {{ __('icoon op je bureaublad.') }}
+                    {{ __('Dubbelklik op het') }} <strong>{{ __('JudoToernooi') }}</strong> {{ __('icoon op je bureaublad.') }}
                     {{ __('De lokale server start automatisch.') }}
                 </p>
             </div>
