@@ -62,7 +62,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi->routeParams()) : route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
+                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi->routeParams()) : (Auth::guard('organisator')->user() ? route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) : '/') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
                     @php
                         $currentRoute = Route::currentRouteName();
