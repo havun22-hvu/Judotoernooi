@@ -294,9 +294,9 @@
 
             div.innerHTML = `
                 <div class="flex ${isOwn ? 'justify-end' : 'justify-start'}">
-                    <div ${clickHandler} class="${isOwn ? 'bg-blue-600 text-white' : 'bg-white border'} rounded-lg px-4 py-2 max-w-[80%] shadow-sm ${cursorClass}" ${!isOwn ? 'title="Klik om te antwoorden"' : ''}>
+                    <div ${clickHandler} class="${isOwn ? 'bg-blue-600 text-white' : 'bg-white border'} rounded-lg px-4 py-2 max-w-[75%] shadow-sm ${cursorClass}" ${!isOwn ? 'title="Klik om te antwoorden"' : ''}>
                         ${!isOwn ? `<p class="text-xs font-bold text-blue-600 mb-1">${escapeHtml(msg.van_naam)}</p>` : `<p class="text-xs text-blue-200 mb-1">Naar: ${escapeHtml(msg.naar_naam)}</p>`}
-                        <p class="${isOwn ? 'text-white' : 'text-gray-800'}">${escapeHtml(msg.bericht)}</p>
+                        <p class="${isOwn ? 'text-white' : 'text-gray-800'} break-words">${escapeHtml(msg.bericht)}</p>
                         <p class="text-xs ${isOwn ? 'text-blue-200' : 'text-gray-400'} mt-1">${time}</p>
                     </div>
                 </div>
