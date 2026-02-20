@@ -241,8 +241,10 @@
         @foreach($problematischePoules as $p)
         @php
             $gVerschil = $berekenGewichtVerschil($p);
+            $pConfig = $p->getCategorieConfig();
+            $pMaxKg = (float) ($pConfig['max_kg_verschil'] ?? 0);
             $isGrootte = $isProblematischeGrootte($p->judokas_count);
-            $isGewicht = $gVerschil > 4;
+            $isGewicht = $pMaxKg > 0 && $gVerschil > $pMaxKg;
             $chipClass = $isGewicht ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
             $probleem = $isGewicht ? __(':verschil kg verschil', ['verschil' => round($gVerschil, 1)]) : __(':aantal judoka\'s', ['aantal' => $p->judokas_count]);
         @endphp
