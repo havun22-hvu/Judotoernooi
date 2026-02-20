@@ -4,10 +4,10 @@
             <!-- Header -->
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    Disclaimer
+                    {{ __('Disclaimer') }}
                 </h1>
                 <p class="text-sm text-gray-600">
-                    Laatst bijgewerkt: {{ date('d-m-Y') }}
+                    {{ __('Laatst bijgewerkt') }}: {{ date('d-m-Y') }}
                 </p>
             </div>
 
@@ -16,77 +16,70 @@
 
                 <!-- 1. Algemeen -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">1. Algemene Disclaimer</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('1. Algemene Disclaimer') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p>
-                            JudoToernooi wordt aangeboden "zoals het is" (as is), zonder enige garantie van volledigheid,
-                            juistheid, beschikbaarheid of geschiktheid voor een bepaald doel. Gebruik van de diensten is geheel op eigen risico.
+                            {{ __('JudoToernooi wordt aangeboden "zoals het is" (as is), zonder enige garantie van volledigheid, juistheid, beschikbaarheid of geschiktheid voor een bepaald doel. Gebruik van de diensten is geheel op eigen risico.') }}
                         </p>
                     </div>
                 </section>
 
                 <!-- 2. Platform beschikbaarheid -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">2. Platform Beschikbaarheid</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('2. Platform Beschikbaarheid') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            <strong>Beschikbaarheid:</strong><br>
-                            JudoToernooi wordt zo betrouwbaar mogelijk aangeboden. Wij ondersteunen organisatoren maximaal
-                            tijdens de voorbereiding en op wedstrijddagen. Er kan echter <strong>geen garantie</strong> worden gegeven
-                            op 100% beschikbaarheid of uptime. Bij overmacht (stroomuitval, internetstoring, serveruitval)
-                            kunnen wij niet aansprakelijk worden gesteld voor onderbrekingen.
+                            <strong>{{ __('Beschikbaarheid:') }}</strong><br>
+                            {!! __('JudoToernooi wordt zo betrouwbaar mogelijk aangeboden. Wij ondersteunen organisatoren maximaal tijdens de voorbereiding en op wedstrijddagen. Er kan echter <strong>geen garantie</strong> worden gegeven op 100% beschikbaarheid of uptime. Bij overmacht (stroomuitval, internetstoring, serveruitval) kunnen wij niet aansprakelijk worden gesteld voor onderbrekingen.') !!}
                         </p>
                         <p class="mb-3">
-                            <strong>Redenen voor onderbreking kunnen zijn:</strong>
+                            <strong>{{ __('Redenen voor onderbreking kunnen zijn:') }}</strong>
                         </p>
                         <ul class="list-disc pl-6 space-y-1">
-                            <li>Technisch onderhoud en updates</li>
-                            <li>Serveruitval of technische problemen</li>
-                            <li>Internetproblemen (provider, DNS, routing)</li>
-                            <li>DDoS-aanvallen of veiligheidsincidenten</li>
-                            <li>Overmacht (stroomuitval, natuurrampen)</li>
+                            <li>{{ __('Technisch onderhoud en updates') }}</li>
+                            <li>{{ __('Serveruitval of technische problemen') }}</li>
+                            <li>{{ __('Internetproblemen (provider, DNS, routing)') }}</li>
+                            <li>{{ __('DDoS-aanvallen of veiligheidsincidenten') }}</li>
+                            <li>{{ __('Overmacht (stroomuitval, natuurrampen)') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- 3. KRITIEK: Internet/server problemen tijdens toernooien -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">3. Internet- en Serverproblemen Tijdens Toernooien</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('3. Internet- en Serverproblemen Tijdens Toernooien') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <div class="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
-                            <strong>BELANGRIJK:</strong><br>
-                            Havun is <strong>NIET aansprakelijk</strong> voor enige schade, vertraging of verstoring van uw toernooi
-                            als gevolg van internet-, server- of softwareproblemen. Dit omvat, maar is niet beperkt tot:
+                            <strong>{{ __('BELANGRIJK:') }}</strong><br>
+                            {!! __('Havun is <strong>NIET aansprakelijk</strong> voor enige schade, vertraging of verstoring van uw toernooi als gevolg van internet-, server- of softwareproblemen. Dit omvat, maar is niet beperkt tot:') !!}
                             <ul class="list-disc pl-6 space-y-1 mt-2">
-                                <li>Uitval van de internetverbinding op de toernooilocatie</li>
-                                <li>Serveruitval of trage responstijden</li>
-                                <li>Softwarefouten of onverwacht gedrag</li>
-                                <li>Dataverlies door technische storingen</li>
-                                <li>Problemen met real-time synchronisatie tussen devices</li>
+                                <li>{{ __('Uitval van de internetverbinding op de toernooilocatie') }}</li>
+                                <li>{{ __('Serveruitval of trage responstijden') }}</li>
+                                <li>{{ __('Softwarefouten of onverwacht gedrag') }}</li>
+                                <li>{{ __('Dataverlies door technische storingen') }}</li>
+                                <li>{{ __('Problemen met real-time synchronisatie tussen devices') }}</li>
                             </ul>
                         </div>
 
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                            <strong>AANBEVELING - Lokale Server:</strong><br>
-                            Wij raden <strong>dringend</strong> aan om voor elk toernooi een <strong>lokale server op het lokaal netwerk</strong>
-                            te installeren als hot standby. Dit zorgt ervoor dat het toernooi kan doorgaan bij uitval van de internetverbinding.
+                            <strong>{{ __('AANBEVELING - Lokale Server:') }}</strong><br>
+                            {!! __('Wij raden <strong>dringend</strong> aan om voor elk toernooi een <strong>lokale server op het lokaal netwerk</strong> te installeren als hot standby. Dit zorgt ervoor dat het toernooi kan doorgaan bij uitval van de internetverbinding.') !!}
                             <br><br>
-                            Zie de <a href="{{ route('help') }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">Lokale Server Handleiding</a> voor installatie-instructies.
+                            {!! __('Zie de <a href=":url" target="_blank" rel="noopener" class="text-blue-600 hover:underline">Lokale Server Handleiding</a> voor installatie-instructies.', ['url' => route('help')]) !!}
                         </div>
 
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                            <strong>AANBEVELING - Schaduwadministratie op Papier:</strong><br>
-                            Houd <strong>altijd</strong> een papieren schaduwadministratie bij als ultieme fallback. Print vóór aanvang van het toernooi
-                            de volgende documenten uit via het <strong>Noodplan</strong> in het platform:
+                            <strong>{{ __('AANBEVELING - Schaduwadministratie op Papier:') }}</strong><br>
+                            {!! __('Houd <strong>altijd</strong> een papieren schaduwadministratie bij als ultieme fallback. Print vóór aanvang van het toernooi de volgende documenten uit via het <strong>Noodplan</strong> in het platform:') !!}
                             <ul class="list-disc pl-6 space-y-1 mt-2">
-                                <li>Poule-indelingen per blok</li>
-                                <li>Weeglijsten</li>
-                                <li>Wedstrijdschema's (lege formulieren)</li>
-                                <li>Zaaloverzicht (mat-verdeling)</li>
-                                <li>Contactlijst (coaches, juryleden)</li>
+                                <li>{{ __('Poule-indelingen per blok') }}</li>
+                                <li>{{ __('Weeglijsten') }}</li>
+                                <li>{{ __('Wedstrijdschema\'s (lege formulieren)') }}</li>
+                                <li>{{ __('Zaaloverzicht (mat-verdeling)') }}</li>
+                                <li>{{ __('Contactlijst (coaches, juryleden)') }}</li>
                             </ul>
                             <p class="mt-2">
-                                Het Noodplan bevat ook een <strong>offline pakket</strong> dat u kunt downloaden als standalone HTML-bestand.
+                                {!! __('Het Noodplan bevat ook een <strong>offline pakket</strong> dat u kunt downloaden als standalone HTML-bestand.') !!}
                             </p>
                         </div>
                     </div>
@@ -94,95 +87,91 @@
 
                 <!-- 4. Data en backups -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">4. Dataverlies & Back-ups</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('4. Dataverlies & Back-ups') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            <strong>Risico van dataverlies:</strong><br>
-                            Hoewel wij dagelijkse backups maken, kunnen wij niet garanderen dat gegevens altijd bewaard blijven.
+                            <strong>{{ __('Risico van dataverlies:') }}</strong><br>
+                            {{ __('Hoewel wij dagelijkse backups maken, kunnen wij niet garanderen dat gegevens altijd bewaard blijven.') }}
                         </p>
                         <p class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <strong>Advies:</strong><br>
-                            Exporteer belangrijke toernooigegevens (uitslagen, deelnemerslijsten) regelmatig via de exportfuncties in het platform.
+                            <strong>{{ __('Advies:') }}</strong><br>
+                            {{ __('Exporteer belangrijke toernooigegevens (uitslagen, deelnemerslijsten) regelmatig via de exportfuncties in het platform.') }}
                         </p>
                         <p class="mt-3">
-                            JudoToernooi is <strong>niet aansprakelijk</strong> voor dataverlies, ongeacht de oorzaak.
+                            {!! __('JudoToernooi is <strong>niet aansprakelijk</strong> voor dataverlies, ongeacht de oorzaak.') !!}
                         </p>
                     </div>
                 </section>
 
                 <!-- 5. Uitslagen en classificaties -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">5. Uitslagen, Classificaties & Poule-indelingen</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('5. Uitslagen, Classificaties & Poule-indelingen') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            Het platform berekent automatisch classificaties (leeftijdscategorieën, gewichtsklassen),
-                            poule-indelingen en wedstrijdschema's. Hoewel wij streven naar correctheid:
+                            {{ __('Het platform berekent automatisch classificaties (leeftijdscategorieën, gewichtsklassen), poule-indelingen en wedstrijdschema\'s. Hoewel wij streven naar correctheid:') }}
                         </p>
                         <ul class="list-disc pl-6 space-y-1">
-                            <li>De organisator is verantwoordelijk voor controle van alle automatische berekeningen</li>
-                            <li>De organisator is verantwoordelijk voor naleving van JBN-reglementen</li>
-                            <li>Havun is niet aansprakelijk voor onjuiste classificaties of indelingen</li>
-                            <li>Handmatige aanpassingen door de organisator zijn altijd mogelijk en aanbevolen</li>
+                            <li>{{ __('De organisator is verantwoordelijk voor controle van alle automatische berekeningen') }}</li>
+                            <li>{{ __('De organisator is verantwoordelijk voor naleving van JBN-reglementen') }}</li>
+                            <li>{{ __('Havun is niet aansprakelijk voor onjuiste classificaties of indelingen') }}</li>
+                            <li>{{ __('Handmatige aanpassingen door de organisator zijn altijd mogelijk en aanbevolen') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- 6. Betalingen -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">6. Betalingen</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('6. Betalingen') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            Betalingen worden verwerkt via Mollie. Havun is niet verantwoordelijk voor:
+                            {{ __('Betalingen worden verwerkt via Mollie. Havun is niet verantwoordelijk voor:') }}
                         </p>
                         <ul class="list-disc pl-6 space-y-1">
-                            <li>Storingen bij de betaalprovider (Mollie)</li>
-                            <li>Mislukte of vertraagde betalingen</li>
-                            <li>Geschillen tussen organisator en deelnemende clubs over inschrijfgeld</li>
+                            <li>{{ __('Storingen bij de betaalprovider (Mollie)') }}</li>
+                            <li>{{ __('Mislukte of vertraagde betalingen') }}</li>
+                            <li>{{ __('Geschillen tussen organisator en deelnemende clubs over inschrijfgeld') }}</li>
                         </ul>
                     </div>
                 </section>
 
                 <!-- 7. Beperking aansprakelijkheid -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">7. Beperking van Aansprakelijkheid</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('7. Beperking van Aansprakelijkheid') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            JudoToernooi (Havun) is <strong>niet aansprakelijk</strong> voor:
+                            {!! __('JudoToernooi (Havun) is <strong>niet aansprakelijk</strong> voor:') !!}
                         </p>
                         <ul class="list-disc pl-6 space-y-1">
-                            <li>Directe of indirecte schade door gebruik van de dienst</li>
-                            <li>Verlies van gegevens of toernooiresultaten</li>
-                            <li>Onderbreking van het toernooi door technische problemen</li>
-                            <li>Schade door internet-, server- of softwareproblemen</li>
-                            <li>Fouten in automatische berekeningen</li>
-                            <li>Ongeautoriseerde toegang tot accounts</li>
+                            <li>{{ __('Directe of indirecte schade door gebruik van de dienst') }}</li>
+                            <li>{{ __('Verlies van gegevens of toernooiresultaten') }}</li>
+                            <li>{{ __('Onderbreking van het toernooi door technische problemen') }}</li>
+                            <li>{{ __('Schade door internet-, server- of softwareproblemen') }}</li>
+                            <li>{{ __('Fouten in automatische berekeningen') }}</li>
+                            <li>{{ __('Ongeautoriseerde toegang tot accounts') }}</li>
                         </ul>
                         <p class="mt-3">
-                            De maximale aansprakelijkheid is in alle gevallen beperkt tot het bedrag dat u heeft betaald voor het
-                            betreffende toernooi, en geldt uitsluitend voor de periode vanaf betaling tot en met de afsluiting
-                            van dat toernooi (voorbereiding en wedstrijddag).
+                            {{ __('De maximale aansprakelijkheid is in alle gevallen beperkt tot het bedrag dat u heeft betaald voor het betreffende toernooi, en geldt uitsluitend voor de periode vanaf betaling tot en met de afsluiting van dat toernooi (voorbereiding en wedstrijddag).') }}
                         </p>
                     </div>
                 </section>
 
                 <!-- 8. Wijzigingen -->
                 <section>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">8. Wijzigingen in deze Disclaimer</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('8. Wijzigingen in deze Disclaimer') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p>
-                            Wij behouden ons het recht voor om deze disclaimer op elk moment te wijzigen. De meest recente versie
-                            is altijd te vinden op deze pagina.
+                            {{ __('Wij behouden ons het recht voor om deze disclaimer op elk moment te wijzigen. De meest recente versie is altijd te vinden op deze pagina.') }}
                         </p>
                     </div>
                 </section>
 
                 <!-- Contact -->
                 <section id="contact" class="pt-6 border-t border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Contact') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p>
-                            Voor vragen over deze disclaimer:<br>
-                            <strong>E-mail:</strong> <a href="mailto:havun22@gmail.com" class="text-blue-600 hover:underline">havun22@gmail.com</a>
+                            {{ __('Voor vragen over deze disclaimer:') }}<br>
+                            <strong>{{ __('E-mail') }}:</strong> <a href="mailto:havun22@gmail.com" class="text-blue-600 hover:underline">havun22@gmail.com</a>
                         </p>
                     </div>
                 </section>
@@ -191,17 +180,17 @@
 
             <!-- Related links -->
             <div class="mt-8 p-4 bg-gray-100 rounded-lg">
-                <p class="text-sm text-gray-700 mb-2">Gerelateerde documenten:</p>
+                <p class="text-sm text-gray-700 mb-2">{{ __('Gerelateerde documenten:') }}</p>
                 <div class="flex flex-wrap gap-4">
-                    <a href="{{ route('legal.terms') }}" class="text-blue-600 hover:underline text-sm">→ Algemene Voorwaarden</a>
-                    <a href="{{ route('legal.privacy') }}" class="text-blue-600 hover:underline text-sm">→ Privacyverklaring</a>
+                    <a href="{{ route('legal.terms') }}" class="text-blue-600 hover:underline text-sm">→ {{ __('Algemene Voorwaarden') }}</a>
+                    <a href="{{ route('legal.privacy') }}" class="text-blue-600 hover:underline text-sm">→ {{ __('Privacyverklaring') }}</a>
                 </div>
             </div>
 
             <!-- Back button -->
             <div class="mt-8">
                 <a href="{{ url()->previous() }}" class="text-blue-600 hover:text-blue-700">
-                    ← Terug
+                    ← {{ __('Terug') }}
                 </a>
             </div>
         </div>
