@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Inloggen') }} - JudoToernooi</title>
+    <title>{{ __('Inloggen') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -35,7 +35,7 @@
         </div>
 
         <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">JudoToernooi</h1>
+            <h1 class="text-2xl font-bold text-gray-800">{{ __('JudoToernooi') }}</h1>
             <p class="text-gray-600">{{ __('Organisator Login') }}</p>
         </div>
 

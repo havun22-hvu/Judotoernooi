@@ -57,7 +57,7 @@
             </div>
 
             <div class="bg-gray-50 px-6 py-3 text-center text-xs text-gray-500">
-                JudoToernooi - {{ __('Staging Betaling Simulatie') }}
+                {{ __('JudoToernooi') }} - {{ __('Staging Betaling Simulatie') }}
             </div>
         </div>
     </div>

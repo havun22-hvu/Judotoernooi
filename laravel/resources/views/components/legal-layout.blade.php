@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title ?? config('app.name', 'JudoToernooi') }}</title>
+        <title>{{ $title ?? config('app.name', __('JudoToernooi')) }}</title>
 
         <!-- Canonical URL (SEO) -->
         <link rel="canonical" href="https://judotournament.org{{ request()->getPathInfo() }}">
@@ -23,7 +23,7 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div class="flex items-center justify-between">
                         <a href="/" class="flex items-center text-xl font-bold text-blue-600">
-                            JudoToernooi
+                            {{ __('JudoToernooi') }}
                         </a>
                         @auth('organisator')
                             <a href="{{ route('admin.index') }}" class="text-sm text-blue-600 hover:text-blue-700">
