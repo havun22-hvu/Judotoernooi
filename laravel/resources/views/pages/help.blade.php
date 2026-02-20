@@ -869,4 +869,9 @@ function helpPage() {
     }
 }
 </script>
+<style>
+.help-section {
+    scroll-margin-top: 5rem;
+}
+</style>
 @endsection
