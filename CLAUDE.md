@@ -65,6 +65,13 @@ Route: `/admin` (alleen voor sitebeheerder)
 
 ## Rules (ALWAYS follow)
 
+### DENK ALS SAAS-BOUWER, NIET ALS PROBLEEMOPLOSSER
+Je bouwt een **SaaS product** dat door betalende klanten wordt gebruikt. Denk bij elke beslissing:
+- **Werkt dit voor ALLE organisatoren?** Niet alleen voor Henk's test-scenario
+- **Wat als 50 toernooien tegelijk draaien?** Schaalbaarheid, permissies, isolatie
+- **Wat ziet de klant?** Error pages, UX, foutmeldingen — alles moet professioneel
+- **Is dit productie-waardig?** Geen hacks, geen "werkt op mijn machine"
+
 ### LEES-DENK-DOE-DOCUMENTEER (Kritiek!)
 
 > **Volledige uitleg:** `HavunCore/docs/kb/runbooks/claude-werkwijze.md`
