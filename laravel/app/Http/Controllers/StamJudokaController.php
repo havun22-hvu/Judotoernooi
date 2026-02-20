@@ -39,9 +39,6 @@ class StamJudokaController extends Controller
             ...$request->validated(),
         ]);
 
-        // Try to link existing wimpel-judoka
-        $this->stambestandService->koppelWimpelJudoka($stamJudoka);
-
         return response()->json([
             'success' => true,
             'judoka' => $stamJudoka,
@@ -190,7 +187,6 @@ class StamJudokaController extends Controller
                     'gewicht' => $gewicht,
                 ]);
 
-                $this->stambestandService->koppelWimpelJudoka($stamJudoka);
                 $imported++;
             } catch (\Exception $e) {
                 $fouten[] = "Rij {$rijNummer}: {$e->getMessage()}";

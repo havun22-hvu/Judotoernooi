@@ -12,7 +12,7 @@ class WimpelPuntenLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'wimpel_judoka_id',
+        'stam_judoka_id',
         'toernooi_id',
         'poule_id',
         'punten',
@@ -25,9 +25,9 @@ class WimpelPuntenLog extends Model
         'created_at' => 'datetime',
     ];
 
-    public function wimpelJudoka(): BelongsTo
+    public function stamJudoka(): BelongsTo
     {
-        return $this->belongsTo(WimpelJudoka::class);
+        return $this->belongsTo(StamJudoka::class);
     }
 
     public function toernooi(): BelongsTo

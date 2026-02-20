@@ -6,7 +6,6 @@ use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\StamJudoka;
 use App\Models\Toernooi;
-use App\Models\WimpelJudoka;
 
 class StambestandService
 {
@@ -78,21 +77,5 @@ class StambestandService
         }
 
         $judoka->update(['stam_judoka_id' => $stamJudoka->id]);
-    }
-
-    /**
-     * Link an existing wimpel-judoka record to the stam-judoka.
-     */
-    public function koppelWimpelJudoka(StamJudoka $stamJudoka): void
-    {
-        $wimpel = WimpelJudoka::where('organisator_id', $stamJudoka->organisator_id)
-            ->where('naam', $stamJudoka->naam)
-            ->where('geboortejaar', $stamJudoka->geboortejaar)
-            ->whereNull('stam_judoka_id')
-            ->first();
-
-        if ($wimpel) {
-            $wimpel->update(['stam_judoka_id' => $stamJudoka->id]);
-        }
     }
 }

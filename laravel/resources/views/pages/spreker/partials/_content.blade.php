@@ -138,8 +138,8 @@
                     <div class="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400">
                         <div class="text-3xl">&#9733;</div>
                         <div>
-                            <div class="font-bold text-lg">{{ $uitreiking->wimpelJudoka->naam }}</div>
-                            <div class="text-sm text-gray-600">{{ $uitreiking->wimpelJudoka->punten_totaal }} {{ __('punten totaal') }}</div>
+                            <div class="font-bold text-lg">{{ $uitreiking->stamJudoka->naam }}</div>
+                            <div class="text-sm text-gray-600">{{ $uitreiking->stamJudoka->wimpel_punten_totaal }} {{ __('punten totaal') }}</div>
                         </div>
                         <div class="ml-auto text-right">
                             <div class="text-lg font-bold text-yellow-700">{{ $uitreiking->milestone->omschrijving }}</div>

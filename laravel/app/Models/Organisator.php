@@ -214,11 +214,6 @@ class Organisator extends Authenticatable
         return $this->hasMany(StamJudoka::class);
     }
 
-    public function wimpelJudokas(): HasMany
-    {
-        return $this->hasMany(WimpelJudoka::class);
-    }
-
     public function wimpelMilestones(): HasMany
     {
         return $this->hasMany(WimpelMilestone::class)->orderBy('volgorde');

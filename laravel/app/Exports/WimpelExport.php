@@ -18,8 +18,9 @@ class WimpelExport implements FromArray, WithEvents
 
     public function array(): array
     {
-        $judokas = $this->organisator->wimpelJudokas()
-            ->orderByDesc('punten_totaal')
+        $judokas = $this->organisator->stamJudokas()
+            ->metWimpel()
+            ->orderByDesc('wimpel_punten_totaal')
             ->get();
 
         if ($judokas->isEmpty()) {
@@ -28,7 +29,7 @@ class WimpelExport implements FromArray, WithEvents
 
         // Collect all unique toernooi IDs from punten log (ordered by toernooi date)
         $toernooiIds = WimpelPuntenLog::query()
-            ->whereIn('wimpel_judoka_id', $judokas->pluck('id'))
+            ->whereIn('stam_judoka_id', $judokas->pluck('id'))
             ->whereNotNull('toernooi_id')
             ->distinct()
             ->pluck('toernooi_id');
@@ -40,7 +41,7 @@ class WimpelExport implements FromArray, WithEvents
 
         // Check for handmatige punten
         $heeftHandmatig = WimpelPuntenLog::query()
-            ->whereIn('wimpel_judoka_id', $judokas->pluck('id'))
+            ->whereIn('stam_judoka_id', $judokas->pluck('id'))
             ->whereNull('toernooi_id')
             ->exists();
 
@@ -60,11 +61,11 @@ class WimpelExport implements FromArray, WithEvents
 
         // Pre-load punten per judoka per toernooi
         $puntenPerJudoka = WimpelPuntenLog::query()
-            ->whereIn('wimpel_judoka_id', $judokas->pluck('id'))
-            ->selectRaw('wimpel_judoka_id, toernooi_id, SUM(punten) as totaal')
-            ->groupBy('wimpel_judoka_id', 'toernooi_id')
+            ->whereIn('stam_judoka_id', $judokas->pluck('id'))
+            ->selectRaw('stam_judoka_id, toernooi_id, SUM(punten) as totaal')
+            ->groupBy('stam_judoka_id', 'toernooi_id')
             ->get()
-            ->groupBy('wimpel_judoka_id');
+            ->groupBy('stam_judoka_id');
 
         // Build data rows
         $rows = [$header];
@@ -73,7 +74,7 @@ class WimpelExport implements FromArray, WithEvents
             $row = [
                 $judoka->naam,
                 $judoka->geboortejaar,
-                $judoka->punten_totaal,
+                $judoka->wimpel_punten_totaal,
             ];
 
             $judokaLogs = $puntenPerJudoka->get($judoka->id, collect());
