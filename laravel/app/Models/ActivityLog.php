@@ -54,7 +54,6 @@ class ActivityLog extends Model
             'nieuwe_judoka' => 'Nieuwe judoka',
             'meld_af' => 'Afmelding',
             'herstel_judoka' => 'Herstel judoka',
-            'naar_wachtruimte' => 'Naar wachtruimte',
             'verwijder_uit_poule' => 'Verwijder uit poule',
             'registreer_uitslag' => 'Uitslag geregistreerd',
             'plaats_judoka' => 'Judoka geplaatst',

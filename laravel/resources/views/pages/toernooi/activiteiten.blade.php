@@ -82,7 +82,6 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 @switch($log->actie)
                                     @case('verplaats_judoka')
-                                    @case('naar_wachtruimte')
                                     @case('verwijder_uit_poule')
                                         bg-yellow-100 text-yellow-800
                                         @break
