@@ -175,7 +175,7 @@
                     <li>{!! __('<strong>Band filter</strong> - Optioneel: t/m oranje, vanaf groen, etc.') !!}</li>
                     <li>{!! __('<strong>Max kg verschil</strong> - 0 = vaste gewichtsklassen, >0 = variabel (max gewichtsverschil binnen 1 poule)') !!}</li>
                     <li>{!! __('<strong>Max leeftijdsverschil (v.lft)</strong> - 0 = categorie leeftijd aanhouden, >0 = max leeftijdsverschil binnen 1 poule') !!}</li>
-                    <li>{!! __('<strong>Wedstrijdsysteem</strong> - Poules, Kruisfinale of Eliminatie') !!}</li>
+                    <li>{!! __('<strong>Wedstrijdsysteem</strong> - Poules, Wimpeltoernooi, Kruisfinale of Eliminatie') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Eigen preset opslaan') }}</h4>
@@ -556,7 +556,7 @@
         </section>
 
         {{-- Wedstrijddag Poules --}}
-        <section id="wedstrijddag-poules" class="help-section bg-white rounded-lg shadow p-6" data-keywords="wedstrijddag overpoelen afwezig te zwaar">
+        <section id="wedstrijddag-poules" class="help-section bg-white rounded-lg shadow p-6" data-keywords="wedstrijddag overpoelen afwezig te zwaar zoek match gewichtsrange">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <span class="text-2xl">&#128259;</span> {{ __('Wedstrijddag Poules (Overpoelen)') }}
             </h2>
@@ -668,10 +668,12 @@
                     </thead>
                     <tbody>
                         <tr class="border-b"><td class="py-1"><span class="text-green-600 font-bold">{{ __('Groen') }}</span></td><td class="py-1">{{ __('Bevestiging → geel wordt groen, oud-groen neutraal') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-yellow-600 font-bold">{{ __('Geel') }}</span></td><td class="py-1">{{ __('Geel wordt neutraal (deselecteren)') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-yellow-600 font-bold">{{ __('Geel') }}</span></td><td class="py-1">{{ __('Geel wordt neutraal, blauw schuift op naar geel') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-blue-600 font-bold">{{ __('Blauw') }}</span></td><td class="py-1">{{ __('Blauw wordt neutraal (deselecteren)') }}</td></tr>
                         <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('geen groen') }})</td><td class="py-1">{{ __('Wordt groen (eerste keuze)') }}</td></tr>
                         <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('wel groen, geen geel') }})</td><td class="py-1">{{ __('Wordt geel') }}</td></tr>
-                        <tr><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('wel groen, wel geel') }})</td><td class="py-1">{{ __('Melding: eerst gele uitzetten') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('wel groen + geel, geen blauw') }})</td><td class="py-1">{{ __('Wordt blauw') }}</td></tr>
+                        <tr><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('alle slots bezet') }})</td><td class="py-1">{{ __('Melding: klik op een gekleurde wedstrijd om te deselecteren') }}</td></tr>
                     </tbody>
                 </table>
 
@@ -746,9 +748,6 @@
                     <li>{{ __('Reik medailles uit') }}</li>
                     <li>{!! __('Markeer als <strong>Uitgereikt</strong>') !!}</li>
                 </ol>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Auto-refresh') }}</h4>
-                <p>{{ __('Interface vernieuwt automatisch elke 10 seconden.') }}</p>
             </div>
         </section>
 
