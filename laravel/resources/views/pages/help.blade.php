@@ -487,10 +487,11 @@
                 <p>{{ __('Vrijwilligers (mat, weging, spreker, dojo) krijgen toegang via URL + PIN:') }}</p>
                 <ol class="list-decimal list-inside space-y-1">
                     <li>{!! __('Organisator maakt toegang aan via <strong>Instellingen &gt; Organisatie</strong>') !!}</li>
-                    <li>{{ __('Vrijwilliger ontvangt URL + PIN (via WhatsApp)') }}</li>
+                    <li>{{ __('Vrijwilliger ontvangt URL + PIN (via WhatsApp of email)') }}</li>
                     <li>{{ __('Opent URL, voert PIN in, device wordt gebonden') }}</li>
                     <li>{{ __('Daarna: device wordt herkend, direct naar interface') }}</li>
                 </ol>
+                <p class="mt-2">{!! __('<strong>Tip:</strong> De interface kan ook als app (PWA) geïnstalleerd worden op telefoon of tablet voor een volledig schermervaring.') !!}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Toegangen beheren') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
@@ -543,7 +544,7 @@
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Twee gewichtsvelden') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('<strong>Ingeschreven gewicht</strong> - Van import (voor voorbereiding)') !!}</li>
-                    <li>{!! __('<strong>Gewogen gewicht</strong> - Van weging (voor wedstrijddag)') !!}</li>
+                    <li>{!! __('<strong>Gewogen gewicht</strong> - Gewogen op de wedstrijddag') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Aanwezigheid') }}</h4>
@@ -569,11 +570,16 @@
                     <li>{!! __('Zichtbaar via <strong>info-icoon</strong> in poule header') !!}</li>
                 </ul>
 
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Te zware/lichte judoka\'s') }}</h4>
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Te zware/lichte judoka\'s (vaste gewichtsklassen)') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>{!! __('Verschijnen in <strong>wachtruimte</strong> (rechts)') !!}</li>
-                    <li>{{ __('Sleep naar geschikte poule') }}</li>
-                    <li>{!! __('Of gebruik <strong>Zoek match</strong> knop') !!}</li>
+                    <li>{{ __('Judoka\'s met afwijkend gewicht worden gemarkeerd') }}</li>
+                    <li>{!! __('Gebruik <strong>Zoek match</strong> om een geschikte poule te vinden, of sleep direct naar een andere poule') !!}</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Gewichtsrange overschreden (variabele gewichtsklassen)') }}</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>{{ __('Poule wordt oranje gemarkeerd als de gewichtsrange te groot is') }}</li>
+                    <li>{!! __('Gebruik <strong>Zoek match</strong> bij de lichtste of zwaarste judoka om een betere poule te vinden, of sleep direct') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Naar Zaaloverzicht sturen') }}</h4>
@@ -609,7 +615,7 @@
                         <tr class="border-b">
                             <td class="py-1"><span class="inline-block w-4 h-4 bg-white border border-gray-300 rounded"></span> {{ __('Wit') }}</td>
                             <td class="py-1">{{ __('Klaar voor activatie') }}</td>
-                            <td class="py-1"><strong>{{ __('Klik om te activeren') }}</strong></td>
+                            <td class="py-1"><strong>{{ __('Controleer de mat en klik om te activeren') }}</strong></td>
                         </tr>
                         <tr>
                             <td class="py-1"><span class="inline-block w-4 h-4 bg-green-500 rounded"></span> {{ __('Groen') }}</td>
@@ -648,6 +654,7 @@
                 <ul class="list-disc list-inside space-y-1">
                     <li><span class="text-green-600 font-bold">{{ __('Groen') }}</span> - {{ __('Huidige wedstrijd (nu op de mat)') }}</li>
                     <li><span class="text-yellow-600 font-bold">{{ __('Geel') }}</span> - {{ __('Volgende wedstrijd (judoka\'s klaarzetten)') }}</li>
+                    <li><span class="text-blue-600 font-bold">{{ __('Blauw') }}</span> - {{ __('Klaar maken') }}</li>
                     <li><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> - {{ __('Nog niet aan de beurt') }}</li>
                 </ul>
 
