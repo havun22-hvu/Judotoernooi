@@ -95,6 +95,18 @@ class AutoFixService
                 'error' => $serviceError->getMessage(),
                 'original_exception' => get_class($e),
             ]);
+
+            // Mark last proposal as failed if it exists and is still pending
+            if (isset($proposal) && $proposal->status === 'pending') {
+                try {
+                    $proposal->update([
+                        'status' => 'failed',
+                        'apply_error' => 'Service error: ' . $serviceError->getMessage(),
+                    ]);
+                } catch (Throwable $updateError) {
+                    // Ignore - we're already in error handling
+                }
+            }
         }
     }
 
@@ -320,15 +332,30 @@ class AutoFixService
             return "OLD code block found multiple times in {$targetFile}. Fix is ambiguous.";
         }
 
-        // Backup original file
-        $backupPath = $fullPath . '.autofix-backup.' . date('YmdHis');
-        if (!copy($fullPath, $backupPath)) {
-            return "Could not create backup of {$targetFile}.";
+        // Backup original file to storage/ (www-data has write access there)
+        $backupDir = storage_path('app/autofix-backups');
+        if (!is_dir($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+        $backupName = str_replace(['/', '\\'], '_', $targetFile) . '.' . date('YmdHis');
+        $backupPath = $backupDir . '/' . $backupName;
+        try {
+            if (!copy($fullPath, $backupPath)) {
+                return "Could not create backup of {$targetFile}.";
+            }
+        } catch (Throwable $copyError) {
+            return "Could not create backup of {$targetFile}: " . $copyError->getMessage();
         }
 
         // Apply the replacement
         $newContent = str_replace($oldCode, $newCode, $fileContent);
-        file_put_contents($fullPath, $newContent);
+        try {
+            file_put_contents($fullPath, $newContent);
+        } catch (Throwable $writeError) {
+            // Restore from backup if write fails
+            copy($backupPath, $fullPath);
+            return "Could not write to {$targetFile}: " . $writeError->getMessage();
+        }
 
         // Clear caches
         if (function_exists('opcache_invalidate')) {
