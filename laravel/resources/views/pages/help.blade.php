@@ -294,7 +294,7 @@
                 <span class="text-2xl">&#127942;</span> {{ __('Wedstrijdsystemen') }}
             </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
-                <p>{{ __('Per categorie kun je kiezen uit drie wedstrijdsystemen:') }}</p>
+                <p>{{ __('Per categorie kun je kiezen uit vier wedstrijdsystemen:') }}</p>
 
                 <table class="min-w-full text-sm mt-2">
                     <thead>
@@ -309,6 +309,11 @@
                             <td class="py-1"><strong>{{ __('Poules') }}</strong></td>
                             <td class="py-1">{{ __('Beginners, recreatief') }}</td>
                             <td class="py-1">{{ __('Iedereen tegen iedereen, veel wedstrijdervaring') }}</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-1"><strong>{{ __('Wimpeltoernooi') }}</strong></td>
+                            <td class="py-1">{{ __('Beginners, puntencompetitie') }}</td>
+                            <td class="py-1">{{ __('Poules met puntentelling over meerdere toernooien') }}</td>
                         </tr>
                         <tr class="border-b">
                             <td class="py-1"><strong>{{ __('Kruisfinale') }}</strong></td>
