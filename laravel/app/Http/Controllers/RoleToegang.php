@@ -432,11 +432,11 @@ class RoleToegang extends Controller
 
         // Wimpel milestone-uitreikingen voor spreker (puntencompetitie)
         $wimpelUitreikingen = \App\Models\WimpelUitreiking::where('uitgereikt', false)
-            ->whereHas('wimpelJudoka', function ($q) use ($toernooi) {
+            ->whereHas('stamJudoka', function ($q) use ($toernooi) {
                 $q->where('organisator_id', $toernooi->organisator_id);
             })
             ->where('toernooi_id', $toernooi->id)
-            ->with(['wimpelJudoka', 'milestone'])
+            ->with(['stamJudoka', 'milestone'])
             ->get()
             ->sortBy('milestone.punten')
             ->values();

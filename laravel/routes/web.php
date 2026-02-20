@@ -268,9 +268,10 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::delete('wimpeltoernooi/milestones/{milestone}', [WimpelController::class, 'destroyMilestone'])->name('organisator.wimpel.milestones.destroy');
     Route::post('wimpeltoernooi/verwerk-toernooi', [WimpelController::class, 'verwerkToernooi'])->name('organisator.wimpel.verwerk');
     Route::get('wimpeltoernooi/export/{format}', [WimpelController::class, 'export'])->name('organisator.wimpel.export');
-    Route::get('wimpeltoernooi/{wimpelJudoka}', [WimpelController::class, 'show'])->name('organisator.wimpel.show');
-    Route::post('wimpeltoernooi/{wimpelJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
-    Route::post('wimpeltoernooi/{wimpelJudoka}/bevestig', [WimpelController::class, 'bevestigJudoka'])->name('organisator.wimpel.bevestig');
+    Route::get('wimpeltoernooi/{stamJudoka}', [WimpelController::class, 'show'])->name('organisator.wimpel.show');
+    Route::post('wimpeltoernooi/{stamJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
+    Route::post('wimpeltoernooi/{stamJudoka}/bevestig', [WimpelController::class, 'bevestigJudoka'])->name('organisator.wimpel.bevestig');
+    Route::post('wimpeltoernooi/{stamJudoka}/stuur-naar-spreker', [WimpelController::class, 'stuurNaarSpreker'])->name('organisator.wimpel.stuur-naar-spreker');
 
     // Stambestand (organisator level - persistent judoka database)
     Route::post('judokas/import', [StamJudokaController::class, 'importUpload'])->name('organisator.stambestand.import.upload');

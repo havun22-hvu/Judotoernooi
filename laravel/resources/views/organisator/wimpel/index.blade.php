@@ -30,11 +30,11 @@
                 @foreach($openUitreikingen as $uitreiking)
                     <div class="flex items-center gap-3 bg-white rounded px-3 py-2 border border-yellow-200">
                         <span class="text-yellow-600 font-bold text-lg">&#9733;</span>
-                        <span class="font-medium">{{ $uitreiking->wimpelJudoka->naam }}</span>
+                        <span class="font-medium">{{ $uitreiking->stamJudoka->naam }}</span>
                         <span class="text-gray-400">&mdash;</span>
                         <span class="text-yellow-700 font-medium">{{ $uitreiking->milestone->omschrijving }}</span>
                         <span class="text-xs text-gray-400">({{ $uitreiking->milestone->punten }} pt)</span>
-                        <a href="{{ route('organisator.wimpel.show', [$organisator, $uitreiking->wimpelJudoka]) }}"
+                        <a href="{{ route('organisator.wimpel.show', [$organisator, $uitreiking->stamJudoka]) }}"
                            class="ml-auto text-blue-600 hover:text-blue-800 text-sm">Bekijk</a>
                     </div>
                 @endforeach
@@ -101,9 +101,9 @@
                                 Geb.jaar
                                 <span x-show="sortKolom === 'geboortejaar'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
                             </th>
-                            <th @click="sorteer('punten_totaal')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                            <th @click="sorteer('wimpel_punten_totaal')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Punten
-                                <span x-show="sortKolom === 'punten_totaal'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                                <span x-show="sortKolom === 'wimpel_punten_totaal'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Volgende milestone</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
@@ -114,18 +114,18 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-medium">
                                     <a :href="judoka.url" class="text-blue-600 hover:text-blue-800" x-text="judoka.naam"></a>
-                                    <span x-show="judoka.is_nieuw" class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1">NIEUW</span>
+                                    <span x-show="judoka.wimpel_is_nieuw" class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1">NIEUW</span>
                                 </td>
                                 <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geboortejaar"></td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full" x-text="judoka.punten_totaal"></span>
+                                    <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full" x-text="judoka.wimpel_punten_totaal"></span>
                                 </td>
                                 <td class="px-4 py-3 text-gray-600 text-sm">
                                     <template x-if="judoka.volgende">
                                         <span>
                                             <span x-text="judoka.volgende.punten + ' pt'"></span>
                                             &rarr; <span x-text="judoka.volgende.omschrijving"></span>
-                                            <span class="text-xs text-gray-400" x-text="'(nog ' + (judoka.volgende.punten - judoka.punten_totaal) + ')'"></span>
+                                            <span class="text-xs text-gray-400" x-text="'(nog ' + (judoka.volgende.punten - judoka.wimpel_punten_totaal) + ')'"></span>
                                         </span>
                                     </template>
                                     <template x-if="!judoka.volgende">
@@ -133,7 +133,7 @@
                                     </template>
                                 </td>
                                 <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
-                                    <template x-if="judoka.is_nieuw">
+                                    <template x-if="judoka.wimpel_is_nieuw">
                                         <button @click="bevestigJudoka(judoka.id)"
                                                 class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1 rounded"
                                                 :disabled="verwerking">
@@ -161,7 +161,7 @@ function wimpelPage() {
         verwerking: false,
         feedback: '',
         feedbackType: 'success',
-        sortKolom: 'punten_totaal',
+        sortKolom: 'wimpel_punten_totaal',
         sortRichting: 'desc',
         judokas: @php
             $judokaData = $judokas->map(function($j) use ($organisator) {
@@ -169,8 +169,8 @@ function wimpelPage() {
                     'id' => $j->id,
                     'naam' => $j->naam,
                     'geboortejaar' => $j->geboortejaar,
-                    'punten_totaal' => $j->punten_totaal,
-                    'is_nieuw' => $j->is_nieuw,
+                    'wimpel_punten_totaal' => $j->wimpel_punten_totaal,
+                    'wimpel_is_nieuw' => $j->wimpel_is_nieuw,
                     'url' => route('organisator.wimpel.show', [$organisator, $j]),
                     'volgende' => $j->volgendeMilestone ? [
                         'punten' => $j->volgendeMilestone->punten,

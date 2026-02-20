@@ -10,7 +10,7 @@ class WimpelUitreiking extends Model
     protected $table = 'wimpel_uitreikingen';
 
     protected $fillable = [
-        'wimpel_judoka_id',
+        'stam_judoka_id',
         'wimpel_milestone_id',
         'toernooi_id',
         'uitgereikt',
@@ -22,9 +22,9 @@ class WimpelUitreiking extends Model
         'uitgereikt_at' => 'datetime',
     ];
 
-    public function wimpelJudoka(): BelongsTo
+    public function stamJudoka(): BelongsTo
     {
-        return $this->belongsTo(WimpelJudoka::class);
+        return $this->belongsTo(StamJudoka::class);
     }
 
     public function milestone(): BelongsTo

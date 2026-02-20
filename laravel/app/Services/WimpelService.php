@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Poule;
+use App\Models\StamJudoka;
 use App\Models\Toernooi;
-use App\Models\WimpelJudoka;
 use App\Models\WimpelMilestone;
 use App\Models\WimpelPuntenLog;
 use App\Models\WimpelUitreiking;
@@ -84,33 +84,33 @@ class WimpelService
                     continue;
                 }
 
-                $wimpelJudoka = $this->matchJudoka($organisator, $judoka);
-                $isNieuw = $wimpelJudoka->wasRecentlyCreated;
-                $oudePunten = $wimpelJudoka->punten_totaal;
+                $stamJudoka = $this->matchJudoka($organisator, $judoka);
+                $isNieuw = $stamJudoka->wasRecentlyCreated;
+                $oudePunten = $stamJudoka->wimpel_punten_totaal;
 
                 WimpelPuntenLog::create([
-                    'wimpel_judoka_id' => $wimpelJudoka->id,
+                    'stam_judoka_id' => $stamJudoka->id,
                     'toernooi_id' => $toernooi->id,
                     'poule_id' => $poule->id,
                     'punten' => $aantalWins,
                     'type' => 'automatisch',
                 ]);
 
-                $wimpelJudoka->increment('punten_totaal', $aantalWins);
+                $stamJudoka->increment('wimpel_punten_totaal', $aantalWins);
 
                 if ($isNieuw) {
                     $result['nieuwe_judokas'][] = [
-                        'naam' => $wimpelJudoka->naam,
-                        'geboortejaar' => $wimpelJudoka->geboortejaar,
+                        'naam' => $stamJudoka->naam,
+                        'geboortejaar' => $stamJudoka->geboortejaar,
                         'punten' => $aantalWins,
                     ];
                 }
 
-                $bereikt = $this->checkMilestones($wimpelJudoka, $oudePunten, $toernooi->id);
+                $bereikt = $this->checkMilestones($stamJudoka, $oudePunten, $toernooi->id);
                 if (!empty($bereikt)) {
                     $result['milestones'][] = [
-                        'judoka' => $wimpelJudoka->naam,
-                        'punten' => $wimpelJudoka->punten_totaal,
+                        'judoka' => $stamJudoka->naam,
+                        'punten' => $stamJudoka->wimpel_punten_totaal,
                         'milestones' => $bereikt,
                     ];
                 }
@@ -131,20 +131,33 @@ class WimpelService
     }
 
     /**
-     * Zoek of maak WimpelJudoka op basis van naam + geboortejaar
+     * Zoek of maak StamJudoka op basis van naam + geboortejaar.
+     * New stam_judokas created here get wimpel_is_nieuw = true.
      */
-    public function matchJudoka(Organisator $organisator, Judoka $judoka): WimpelJudoka
+    public function matchJudoka(Organisator $organisator, Judoka $judoka): StamJudoka
     {
         $naam = Judoka::formatNaam($judoka->naam);
 
-        return WimpelJudoka::firstOrCreate(
+        $stamJudoka = StamJudoka::firstOrCreate(
             [
                 'organisator_id' => $organisator->id,
                 'naam' => $naam,
                 'geboortejaar' => $judoka->geboortejaar,
             ],
-            ['punten_totaal' => 0]
+            [
+                'geslacht' => $judoka->geslacht ?? 'M',
+                'band' => $judoka->band ?? 'wit',
+                'wimpel_punten_totaal' => 0,
+                'wimpel_is_nieuw' => true,
+            ]
         );
+
+        // If existing stam_judoka was found but has no wimpel data yet, mark as new for wimpel
+        if (!$stamJudoka->wasRecentlyCreated && $stamJudoka->wimpel_punten_totaal == 0 && !$stamJudoka->wimpel_is_nieuw) {
+            $stamJudoka->update(['wimpel_is_nieuw' => true]);
+        }
+
+        return $stamJudoka;
     }
 
     /**
@@ -164,34 +177,34 @@ class WimpelService
     /**
      * Handmatige punten aanpassing (+/-)
      */
-    public function handmatigAanpassen(WimpelJudoka $wimpelJudoka, int $punten, ?string $notitie = null): array
+    public function handmatigAanpassen(StamJudoka $stamJudoka, int $punten, ?string $notitie = null): array
     {
-        $oudePunten = $wimpelJudoka->punten_totaal;
+        $oudePunten = $stamJudoka->wimpel_punten_totaal;
 
-        DB::transaction(function () use ($wimpelJudoka, $punten, $notitie) {
+        DB::transaction(function () use ($stamJudoka, $punten, $notitie) {
             WimpelPuntenLog::create([
-                'wimpel_judoka_id' => $wimpelJudoka->id,
+                'stam_judoka_id' => $stamJudoka->id,
                 'toernooi_id' => null,
                 'punten' => $punten,
                 'type' => 'handmatig',
                 'notitie' => $notitie,
             ]);
 
-            $wimpelJudoka->increment('punten_totaal', $punten);
+            $stamJudoka->increment('wimpel_punten_totaal', $punten);
         });
 
-        return $this->checkMilestones($wimpelJudoka->fresh(), $oudePunten, null);
+        return $this->checkMilestones($stamJudoka->fresh(), $oudePunten, null);
     }
 
     /**
      * Check welke milestones gepasseerd zijn tussen oud en nieuw puntentotaal.
      * Maakt wimpel_uitreikingen records aan voor de spreker queue.
      */
-    public function checkMilestones(WimpelJudoka $wimpelJudoka, int $oudePunten, ?int $toernooiId = null): array
+    public function checkMilestones(StamJudoka $stamJudoka, int $oudePunten, ?int $toernooiId = null): array
     {
-        $milestones = WimpelMilestone::where('organisator_id', $wimpelJudoka->organisator_id)
+        $milestones = WimpelMilestone::where('organisator_id', $stamJudoka->organisator_id)
             ->where('punten', '>', $oudePunten)
-            ->where('punten', '<=', $wimpelJudoka->punten_totaal)
+            ->where('punten', '<=', $stamJudoka->wimpel_punten_totaal)
             ->orderBy('punten')
             ->get();
 
@@ -199,7 +212,7 @@ class WimpelService
         foreach ($milestones as $milestone) {
             WimpelUitreiking::firstOrCreate(
                 [
-                    'wimpel_judoka_id' => $wimpelJudoka->id,
+                    'stam_judoka_id' => $stamJudoka->id,
                     'wimpel_milestone_id' => $milestone->id,
                 ],
                 [
