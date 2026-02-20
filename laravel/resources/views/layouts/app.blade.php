@@ -146,7 +146,7 @@
                              @click.self="showAbout = false">
                             <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center">
-                                    <h2 class="text-xl font-bold">JudoToernooi</h2>
+                                    <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
                                 </div>
                                 <div class="px-6 py-4 space-y-3">

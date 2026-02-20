@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Dashboard') }} - JudoToernooi</title>
+    <title>{{ __('Dashboard') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -11,7 +11,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-bold text-gray-800">JudoToernooi</h1>
+                    <h1 class="text-xl font-bold text-gray-800">{{ __('JudoToernooi') }}</h1>
                 </div>
 
                 {{-- Desktop menu --}}
@@ -119,7 +119,7 @@
             <div class="flex space-x-3">
                 <a href="{{ route('organisator.wimpel.index', $organisator) }}"
                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    Wimpeltoernooi
+                    {{ __('Wimpeltoernooi') }}
                 </a>
                 <a href="{{ route('organisator.stambestand.index', $organisator) }}"
                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
