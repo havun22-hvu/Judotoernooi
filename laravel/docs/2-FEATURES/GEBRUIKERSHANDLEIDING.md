@@ -569,7 +569,7 @@ Het systeem houdt **twee aparte gewichten** bij per judoka:
 | **Zaaloverzicht** | `gewicht` (ingeschreven) | Idem |
 | **Weeglijst** | `gewicht` (ingeschreven) | Idem |
 | **Wedstrijddag Poules** | `gewicht_gewogen` of `gewicht` | Toont actueel gewogen gewicht |
-| **Wachtruimte** | `gewicht_gewogen` | Judoka's die overgepouled moeten worden |
+| **Afwijkend in poule** | `gewicht_gewogen` | Judoka's gemarkeerd die overgepouled moeten worden |
 
 **Belangrijk:** De voorbereidingsviews veranderen NOOIT op basis van weging. Alleen de **Wedstrijddag Poules** pagina toont mutaties.
 
@@ -594,9 +594,8 @@ Het systeem controleert automatisch:
 - **Bovengrens**: Eigen gewichtsklasse + tolerantie
 
 Bij afwijking:
-- Judoka wordt automatisch uit poule gehaald (niet meer zichtbaar in poule)
-- Info via **ⓘ icoon** in poule header (toont naam + reden)
-- Judoka verschijnt in **wachtruimte** van de nieuwe gewichtsklasse voor overpoelen
+- Judoka **blijft in poule** maar wordt gemarkeerd (rode stip/badge "afwijkend gewicht")
+- Organisator verplaatst judoka via drag & drop of 🔍 Zoek Match naar juiste gewichtsklasse
 
 ### Weging Sluiten
 
@@ -648,15 +647,18 @@ Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden 
 ### Pagina: Wedstrijddag Poules
 
 1. Ga naar **Wedstrijddag Poules** pagina
-2. Per blok zie je alle categorieën met hun poules (inclusief lege poules voor overpoelen)
-3. **ⓘ icoon** in poule header = klik voor info over afwezige/verwijderde judoka's
-4. **Wachtruimte** (rechts) = gewogen judoka's die buiten hun gewichtsklasse vallen
+2. Per blok zie je alle categorieën met hun poules
+3. **ⓘ icoon** in poule header = klik voor info over afwezige judoka's
+4. **Afwijkende judoka's** zijn gemarkeerd in hun poule (rode stip/badge)
 
 ### Workflow Overpoelen
 
-1. Bekijk ⓘ icoon bij poules voor info over afwezige judoka's
-2. Afwezige judoka's zijn al automatisch uit de poule (niet getoond)
-3. Sleep judoka's uit wachtruimte naar juiste poule
+**Vaste gewichtsklassen:** Judoka weegt buiten klasse → gemarkeerd in poule
+**Variabele gewichten:** Poule range te groot → poule gemarkeerd, lichtste/zwaarste gehighlight
+
+1. Bekijk gemarkeerde judoka's / poules
+2. Afwezige judoka's zijn automatisch uit de poule (zichtbaar bij ⓘ)
+3. Sleep afwijkende judoka's naar juiste poule, of gebruik 🔍 Zoek Match
 4. Let op: max 6 judoka's per poule
 5. Statistieken updaten automatisch
 
