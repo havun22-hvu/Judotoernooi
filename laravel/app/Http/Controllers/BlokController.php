@@ -640,7 +640,7 @@ class BlokController extends Controller
             // Check if poule was created AFTER weging was closed (wedstrijddag poule)
             // These should be deleted entirely, not just reset
             if ($blok->weging_gesloten_op && $poule->created_at > $blok->weging_gesloten_op) {
-                // Move judokas back to wachtruimte (remove poule_id)
+                // Remove judokas from poule
                 $poule->judokas()->update(['poule_id' => null]);
                 $poule->delete();
                 $verwijderdePoules++;
@@ -718,7 +718,7 @@ class BlokController extends Controller
 
     /**
      * Get category statuses for wedstrijddag overview
-     * Returns: wachtruimte_count, is_activated (has wedstrijden), is_sent (doorgestuurd_op set)
+     * Returns: is_activated (has wedstrijden), is_sent (doorgestuurd_op set)
      */
     private function getCategoryStatuses(Toernooi $toernooi): array
     {

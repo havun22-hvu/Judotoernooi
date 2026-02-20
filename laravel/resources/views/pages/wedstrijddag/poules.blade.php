@@ -227,7 +227,7 @@
         <div x-show="open" x-collapse>
             @if($heeftVariabeleCategorieen)
             {{-- ==================== VARIABEL TOERNOOI ==================== --}}
-            {{-- Geen headers, geen wachtruimte, alles in 4-kolom grid --}}
+            {{-- Geen headers, alles in 4-kolom grid --}}
             @php
                 $allePoules = collect();
                 $eliminatiePoules = collect();
@@ -642,51 +642,6 @@
                             @endforeach
                         </div>
 
-                        {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën (niet dynamisch) --}}
-                        @php
-                            // Check of deze categorie dynamisch is via de eerste poule
-                            $eerstePouleInCategorie = $category['poules']->first();
-                            $categorieIsDynamisch = $eerstePouleInCategorie && $eerstePouleInCategorie->isDynamisch();
-                        @endphp
-                        @if(!$categorieIsDynamisch)
-                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
-                            <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
-                                <span>{{ __('Wachtruimte') }}</span>
-                                <span class="text-xs text-orange-400 wachtruimte-count">{{ count($category['wachtruimte']) }}</span>
-                            </div>
-                            <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
-                                @forelse($category['wachtruimte'] as $judoka)
-                                <div
-                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item group"
-                                    data-judoka-id="{{ $judoka->id }}"
-                                >
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex items-center gap-1 flex-1 min-w-0">
-                                            <span class="text-red-500 text-xs flex-shrink-0">●</span>
-                                            <div class="min-w-0">
-                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
-                                                <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-1 flex-shrink-0">
-                                            <div class="text-right text-xs">
-                                                <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
-                                                <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
-                                            </div>
-                                            <button
-                                                onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
-                                                class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="{{ __('Zoek geschikte poule') }}"
-                                            >🔍</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                @empty
-                                <div class="text-sm text-gray-400 italic py-2 text-center">{{ __('Leeg') }}</div>
-                                @endforelse
-                            </div>
-                        </div>
-                        @endif
                     </div>
                     @endif
                 </div>
@@ -858,7 +813,7 @@ const __eliminatieOmzetten = @json(__('Eliminatie omzetten naar'));
 const __poulesKruisfinale = @json(__('poules + kruisfinale'));
 const __alleenPoules = @json(__('alleen poules'));
 const __pouleVerwijderen = @json(__('Poule verwijderen?'));
-const __foutBijVerplaatsenWachtruimte = @json(__('Fout bij verplaatsen naar wachtruimte'));
+
 
 // Meld judoka af (kan niet deelnemen) - moet vroeg gedefinieerd zijn voor poule-card buttons
 async function meldJudokaAf(judokaId, naam) {
@@ -1338,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     }
 
-    // Initialize sortable on all poule containers (voor drag TUSSEN poules EN naar wachtruimte)
+    // Initialize sortable on all poule containers (voor drag TUSSEN poules)
     document.querySelectorAll('.sortable-poule').forEach(container => {
         new Sortable(container, {
             group: 'wedstrijddag-poules',
@@ -1350,80 +1305,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const judokaId = evt.item.dataset.judokaId;
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;
-                const naarWachtruimte = evt.to.classList.contains('sortable-wachtruimte');
 
                 // Direct DOM update
                 if (vanPouleId) updatePouleFromDOM(vanPouleId);
                 if (naarPouleId) updatePouleFromDOM(naarPouleId);
-
-                // Van poule naar wachtruimte
-                if (naarWachtruimte && vanPouleId) {
-                    // Update wachtruimte count
-                    const countEl = evt.to.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
-                    if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
-
-                    try {
-                        const response = await fetch(naarWachtruimteUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                            body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
-                        });
-                        const data = await response.json();
-                        if (!data.success) {
-                            console.error('Server error:', data);
-                            alert('Fout: ' + (data.error || data.message));
-                            return; // Niet herladen zodat we kunnen debuggen
-                        }
-
-                        // Update poule markering op basis van hervalidatie
-                        if (data.van_poule) {
-                            const pouleCard = document.getElementById('poule-' + data.van_poule.id) || document.querySelector(`.poule-card[data-poule-id="${data.van_poule.id}"]`);
-                            if (pouleCard) {
-                                // Update titel en counts
-                                updatePouleTitel(pouleCard, data.van_poule);
-                                updatePouleCountsFromServer(pouleCard, data.van_poule);
-
-                                // Update problematische markering (gewichtsrange)
-                                const pouleHeader = pouleCard.querySelector('.poule-header');
-                                if (data.van_poule.is_problematisch) {
-                                    pouleCard.classList.add('border-2', 'border-orange-400');
-                                    if (pouleHeader) {
-                                        pouleHeader.classList.remove('bg-blue-700');
-                                        pouleHeader.classList.add('bg-orange-600');
-                                        // Update subtitle kleur
-                                        const subtitle = pouleHeader.querySelector('.poule-stats');
-                                        if (subtitle) {
-                                            subtitle.classList.remove('text-blue-200');
-                                            subtitle.classList.add('text-orange-200');
-                                        }
-                                    }
-                                } else {
-                                    // Verwijder alle probleem styling
-                                    pouleCard.classList.remove('border-2', 'border-orange-400', 'border-red-300');
-                                    if (pouleHeader) {
-                                        pouleHeader.classList.remove('bg-orange-600', 'bg-red-600');
-                                        pouleHeader.classList.add('bg-blue-700');
-                                        // Update subtitle kleur
-                                        const subtitle = pouleHeader.querySelector('.poule-stats');
-                                        if (subtitle) {
-                                            subtitle.classList.remove('text-orange-200', 'text-red-200');
-                                            subtitle.classList.add('text-blue-200');
-                                        }
-                                    }
-                                }
-                            }
-                            // Update gewichtsrange box bovenaan
-                            updateGewichtsrangeBox(data.van_poule.id, data.van_poule.is_problematisch);
-                            // Update problematische poules (< 3 of >= 6 judokas)
-                            updateProblematischePoules(data.van_poule, data.van_poule.aantal_judokas > 0 && data.van_poule.aantal_judokas < 3);
-                            updateTeVeelJudokas(data.van_poule, data.van_poule.aantal_judokas >= 6);
-                        }
-                    } catch (error) {
-                        console.error('Fetch error naar wachtruimte:', error);
-                        alert('Fout bij verplaatsen naar wachtruimte: ' + error.message);
-                    }
-                    return;
-                }
 
                 // Van poule naar poule
                 const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
@@ -1566,64 +1451,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
-    // Initialize sortable on wachtruimte (bidirectioneel: van EN naar wachtruimte)
-    document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
-        new Sortable(container, {
-            group: {
-                name: 'wedstrijddag-poules',
-                pull: true,
-                put: true  // Bidirectioneel: ook NAAR wachtruimte kunnen slepen
-            },
-            animation: 150,
-            ghostClass: 'bg-orange-200',
-            sort: false,
-            onEnd: async function(evt) {
-                const judokaId = evt.item.dataset.judokaId;
-                const naarPouleId = evt.to.dataset.pouleId;
-                const naarWachtruimte = evt.to.classList.contains('sortable-wachtruimte');
-                const vanWachtruimte = evt.from.classList.contains('sortable-wachtruimte');
-                const vanPouleId = evt.from.dataset.pouleId;
-
-                // Van wachtruimte naar poule
-                if (vanWachtruimte && naarPouleId) {
-                    updatePouleFromDOM(naarPouleId);
-
-                    // Update wachtruimte count
-                    const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
-                    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
-
-                    const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
-                        .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
-
-                    try {
-                        const response = await fetch(verplaatsUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                            body: JSON.stringify({ judoka_id: judokaId, poule_id: naarPouleId, from_poule_id: null, positions: positions })
-                        });
-                        const data = await response.json();
-                        if (!data.success) {
-                            alert('Fout: ' + (data.error || data.message));
-                            window.location.reload();
-                        } else if (data.naar_poule) {
-                            // Update gewichtsrange, counts en problematische poules
-                            const naarPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.naar_poule.id}"]`);
-                            if (naarPouleCard) {
-                                updatePouleTitel(naarPouleCard, data.naar_poule);
-                                updatePouleCountsFromServer(naarPouleCard, data.naar_poule);
-                                updatePouleGewichtsStyling(naarPouleCard, data.naar_poule.is_gewicht_problematisch);
-                            }
-                            updateGewichtsrangeBox(data.naar_poule.id, data.naar_poule.is_gewicht_problematisch);
-                            updateProblematischePoules(data.naar_poule, data.naar_poule.aantal_judokas > 0 && data.naar_poule.aantal_judokas < 3);
-                            updateTeVeelJudokas(data.naar_poule, data.naar_poule.aantal_judokas >= 6);
-                        }
-                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen'); window.location.reload(); }
-                }
-                // Note: "van poule naar wachtruimte" wordt afgehandeld door sortable-poule handler (onEnd triggert op FROM container)
-            }
-        });
-    });
 
     // Update poule titel met nieuwe gewichtsrange (variabele categorieën)
     function updatePouleTitel(pouleCard, pouleData) {
@@ -1848,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
 const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", $toernooi->routeParamsWith(["judoka" => "__JUDOKA_ID__"])) }}';
-const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi->routeParams()) }}';
+
 
 // Huidige judoka in modal (voor afmelden)
 let zoekMatchJudokaId = null;

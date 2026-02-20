@@ -556,7 +556,7 @@
         </section>
 
         {{-- Wedstrijddag Poules --}}
-        <section id="wedstrijddag-poules" class="help-section bg-white rounded-lg shadow p-6" data-keywords="wedstrijddag overpoelen wachtruimte afwezig te zwaar">
+        <section id="wedstrijddag-poules" class="help-section bg-white rounded-lg shadow p-6" data-keywords="wedstrijddag overpoelen afwezig te zwaar">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <span class="text-2xl">&#128259;</span> {{ __('Wedstrijddag Poules (Overpoelen)') }}
             </h2>

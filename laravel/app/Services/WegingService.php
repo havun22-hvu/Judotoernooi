@@ -46,12 +46,6 @@ class WegingService
                 'opmerking' => $opmerking,
             ]);
 
-            // Bij vaste gewichtsklassen en overpoulen: verplaats naar wachtruimte
-            // Check per CATEGORIE, niet per toernooi (toernooi kan mix hebben)
-            if (!$binnenKlasse && $this->heeftVasteGewichtsklassenVoorJudoka($judoka)) {
-                $this->verplaatsOverpoulerNaarWachtruimte($judoka);
-            }
-
             // Verwijder uit poules als afwezig
             $judoka->verwijderUitPoulesIndienNodig();
 
@@ -63,124 +57,6 @@ class WegingService
                 'opmerking' => $opmerking,
             ];
         });
-    }
-
-    /**
-     * Check of de CATEGORIE van deze judoka vaste gewichtsklassen gebruikt
-     * (niet per toernooi, want toernooi kan mix van vast + variabel hebben)
-     */
-    private function heeftVasteGewichtsklassenVoorJudoka(Judoka $judoka): bool
-    {
-        $toernooi = $judoka->toernooi;
-
-        // Guard: toernooi moet bestaan
-        if (!$toernooi) {
-            return true; // Default: vaste klassen (veiligste optie)
-        }
-
-        $categorieKey = $judoka->categorie_key;
-
-        // Probeer categorie config op te halen
-        $config = $toernooi->getAlleGewichtsklassen();
-
-        // Als we de categorie_key hebben, check die specifieke categorie
-        if ($categorieKey && isset($config[$categorieKey])) {
-            $maxKgVerschil = $config[$categorieKey]['max_kg_verschil'] ?? 0;
-            return $maxKgVerschil == 0;
-        }
-
-        // Fallback: zoek op leeftijdsklasse label
-        foreach ($config as $key => $cat) {
-            if (($cat['label'] ?? $key) === $judoka->leeftijdsklasse) {
-                $maxKgVerschil = $cat['max_kg_verschil'] ?? 0;
-                return $maxKgVerschil == 0;
-            }
-        }
-
-        // Default: neem aan dat het vaste klassen zijn (veiligste optie)
-        return true;
-    }
-
-    /**
-     * Verplaats overpouler naar wachtruimte (bij vaste gewichtsklassen)
-     * - Onthoud de oude poule
-     * - Verwijder uit poule
-     * - Update gewichtsklasse naar de juiste nieuwe klasse
-     */
-    private function verplaatsOverpoulerNaarWachtruimte(Judoka $judoka): void
-    {
-        // Vind de voorronde poule waar de judoka in zit
-        $oudePoule = $judoka->poules()->where('type', 'voorronde')->first();
-
-        if (!$oudePoule) {
-            return;
-        }
-
-        // Sla de oude poule op voor de (i) popup
-        $judoka->update([
-            'overpouled_van_poule_id' => $oudePoule->id,
-        ]);
-
-        // Verwijder uit de poule (gaat naar wachtruimte)
-        $oudePoule->judokas()->detach($judoka->id);
-        $oudePoule->updateStatistieken();
-
-        // Bepaal nieuwe gewichtsklasse op basis van gewogen gewicht
-        $nieuweKlasse = $this->bepaalNieuweGewichtsklasse($judoka);
-        if ($nieuweKlasse) {
-            $judoka->update(['gewichtsklasse' => $nieuweKlasse]);
-        }
-    }
-
-    /**
-     * Bepaal nieuwe gewichtsklasse op basis van gewogen gewicht
-     * Gebruikt de werkelijke gewichtsklassen uit de leeftijdscategorie
-     */
-    private function bepaalNieuweGewichtsklasse(Judoka $judoka): ?string
-    {
-        $gewicht = $judoka->gewicht_gewogen;
-        if (!$gewicht) return null;
-
-        $tolerantie = $judoka->toernooi->gewicht_tolerantie ?? 0.5;
-
-        // Haal beschikbare gewichtsklassen op voor deze leeftijdscategorie
-        $klassen = Judoka::where('leeftijdsklasse', $judoka->leeftijdsklasse)
-            ->where('toernooi_id', $judoka->toernooi_id)
-            ->whereNotNull('gewichtsklasse')
-            ->distinct()
-            ->pluck('gewichtsklasse')
-            ->toArray();
-
-        // Sorteer klassen van licht naar zwaar
-        usort($klassen, function ($a, $b) {
-            $aNum = floatval(preg_replace('/[^0-9.]/', '', $a));
-            $bNum = floatval(preg_replace('/[^0-9.]/', '', $b));
-            $aPlus = str_starts_with($a, '+');
-            $bPlus = str_starts_with($b, '+');
-
-            if ($aPlus && !$bPlus) return 1;
-            if (!$aPlus && $bPlus) return -1;
-            return $aNum - $bNum;
-        });
-
-        // Vind de laagste klasse waar het gewicht in past (met tolerantie)
-        foreach ($klassen as $klasse) {
-            $isPlusKlasse = str_starts_with($klasse, '+');
-            $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
-
-            if ($isPlusKlasse) {
-                // +78 = boven 78kg (dit is altijd de laatste optie)
-                return $klasse;
-            } else {
-                // -30 = max 30kg (+ tolerantie)
-                if ($gewicht <= $limiet + $tolerantie) {
-                    return $klasse;
-                }
-            }
-        }
-
-        // Fallback: hoogste klasse (+ klasse als die bestaat)
-        return end($klassen) ?: null;
     }
 
     /**

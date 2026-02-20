@@ -26,18 +26,6 @@ class WedstrijddagController extends Controller
             ->with(['judokas.club', 'judokas.toernooi', 'blok', 'mat'])
             ->get();
 
-        // Wachtruimte: judoka's die gewogen zijn maar nog GEEN poule hebben
-        // (niet afwezig, afwijkend gewicht blijft nu in poule - org kiest wie eruit gaat)
-        $judokasNaarWachtruimte = Judoka::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('gewicht_gewogen')
-            ->where(function ($q) {
-                $q->whereNull('aanwezigheid')
-                  ->orWhere('aanwezigheid', '!=', 'afwezig');
-            })
-            ->whereDoesntHave('poules') // Geen poule = naar wachtruimte
-            ->with('club')
-            ->get();
-
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
         // Laad gewichtsklassen config voor custom labels
@@ -51,7 +39,7 @@ class WedstrijddagController extends Controller
         }
 
         // Group by blok first, then by category within each blok
-        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $tolerantie, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
             // Get sort order from preset config - use max_leeftijd for proper young-to-old sorting
@@ -84,7 +72,7 @@ class WedstrijddagController extends Controller
                     }
 
                     // Dynamisch (max_kg_verschil > 0): lege automatische poules NIET tonen
-                    // Vast (max_kg_verschil = 0): lege poules WEL tonen (wachtruimte)
+                    // Vast (max_kg_verschil = 0): lege poules WEL tonen
                     return $maxKgVerschil == 0;
                 })
                 ->groupBy(function ($poule) {
@@ -111,26 +99,12 @@ class WedstrijddagController extends Controller
                         'leeftijd_sort' => $leeftijdVolgorde[$leeftijdsklasse] ?? 99,
                         'gewicht_sort' => $gewichtNum,
                         'poules' => $categoryPoules->sortBy('nummer'),
-                        'wachtruimte' => [],
                         'is_eliminatie' => $isEliminatie,
                     ];
                 })->sortBy([
                 ['leeftijd_sort', 'asc'], // Eerst leeftijdscategorie (mini's → jeugd → dames/heren)
                 ['gewicht_sort', 'asc'],  // Dan gewicht (licht naar zwaar)
             ])->values();
-
-            // Add wachtruimte judokas to their NEW category (based on actual weight)
-            foreach ($judokasNaarWachtruimte as $judoka) {
-                $nieuweKey = $this->bepaalNieuweCategorie($judoka);
-                if (!$nieuweKey) continue;
-
-                $categories = $categories->map(function ($cat) use ($judoka, $nieuweKey) {
-                    if ($cat['key'] === $nieuweKey) {
-                        $cat['wachtruimte'][] = $judoka;
-                    }
-                    return $cat;
-                });
-            }
 
             return [
                 'id' => $blok->id,
@@ -225,7 +199,7 @@ class WedstrijddagController extends Controller
                     'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokasOud),
                 ];
             } else {
-                // From wachtruimte - detach from ALL current poules
+                // No current poule - detach from ALL current poules
                 foreach ($judoka->poules as $oudePoule) {
                     $oudePoule->judokas()->detach($judoka->id);
                     $oudePoule->updateStatistieken();
@@ -459,58 +433,6 @@ class WedstrijddagController extends Controller
     }
 
     /**
-     * Verplaats judoka naar wachtruimte (uit poule halen)
-     * Judoka kan later naar andere poule gesleept worden of via Zoek Match
-     */
-    public function naarWachtruimte(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $validated = $request->validate([
-            'judoka_id' => 'required|exists:judokas,id',
-            'from_poule_id' => 'required|exists:poules,id',
-        ]);
-
-        return DB::transaction(function () use ($validated, $toernooi) {
-            $judoka = Judoka::findOrFail($validated['judoka_id']);
-            $oudePoule = Poule::findOrFail($validated['from_poule_id']);
-
-            // Verwijder uit oude poule
-            $oudePoule->judokas()->detach($judoka->id);
-            $oudePoule->updateStatistieken();
-            $oudePoule->refresh();
-            $oudePoule->load('judokas');
-
-            // Bereken actieve judoka's voor response
-            $actieveJudokas = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
-
-            // Hervalideer of poule nog problematisch is
-            $probleem = $oudePoule->isProblematischNaWeging();
-
-            // Bereken nieuwe gewichtsrange voor titel update
-            $gewichtsRange = $oudePoule->getGewichtsRange();
-
-            ActivityLogger::log($toernooi, 'naar_wachtruimte', "{$judoka->naam} naar wachtruimte vanuit poule {$oudePoule->nummer}", [
-                'model' => $judoka,
-                'properties' => ['van_poule_id' => $oudePoule->id],
-                'interface' => 'hoofdjury',
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => "{$judoka->naam} verplaatst naar wachtruimte",
-                'van_poule' => [
-                    'id' => $oudePoule->id,
-                    'titel' => $oudePoule->titel,
-                    'aantal_judokas' => $actieveJudokas,
-                    'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
-                    'is_problematisch' => $probleem !== null,
-                    'probleem' => $probleem,
-                    'gewichts_range' => $gewichtsRange,
-                ],
-            ]);
-        });
-    }
-
-    /**
      * Verwijder judoka definitief uit poule (voor afwezige/verplaatste judoka's)
      */
     public function verwijderUitPoule(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
@@ -552,52 +474,6 @@ class WedstrijddagController extends Controller
                 ],
             ]);
         });
-    }
-
-    /**
-     * Determine new category for judoka based on actual weight
-     */
-    private function bepaalNieuweCategorie(Judoka $judoka): ?string
-    {
-        $gewicht = $judoka->gewicht_gewogen;
-        if (!$gewicht) return null;
-
-        // Build label to key mapping from preset config
-        $toernooi = $judoka->toernooi;
-        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-        
-        $labelToKey = [];
-        foreach ($gewichtsklassenConfig as $key => $data) {
-            $label = $data['label'] ?? $key;
-            $labelToKey[$label] = $key;
-        }
-
-        $configKey = $labelToKey[$judoka->leeftijdsklasse] ?? null;
-        if (!$configKey) return null;
-
-        // Get weight classes from preset config (key is 'gewichten', values are strings like "-20", "+29")
-        $gewichten = $gewichtsklassenConfig[$configKey]['gewichten'] ?? [];
-        if (empty($gewichten)) return null;
-
-        // Find matching weight class
-        foreach ($gewichten as $klasse) {
-            $isPlusKlasse = str_starts_with($klasse, '+');
-            $limiet = (float) str_replace(['+', '-'], '', $klasse);
-
-            if ($isPlusKlasse) {
-                // +29 means minimum 29kg
-                if ($gewicht >= $limiet) {
-                    return $judoka->leeftijdsklasse . '|' . $klasse;
-                }
-            } else {
-                // -20 means maximum 20kg
-                if ($gewicht <= $limiet) {
-                    return $judoka->leeftijdsklasse . '|' . $klasse;
-                }
-            }
-        }
-
-        return null;
     }
 
     /**
