@@ -324,17 +324,19 @@ class PouleIndelingService
                         // Calculate matches
                         $poule->updateStatistieken();
 
-                        // Check gewichtsverschil binnen poule (max 4kg)
-                        $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
-                        if (count($gewichten) >= 2) {
-                            $verschil = max($gewichten) - min($gewichten);
-                            if ($verschil > 4) {
-                                $statistieken['waarschuwingen'][] = [
-                                    'type' => 'warning',
-                                    'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtRange}",
-                                    'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max 4kg)",
-                                    'poule_nummer' => $pouleNummer,
-                                ];
+                        // Check gewichtsverschil binnen poule tegen categorie max
+                        if ($maxKg > 0) {
+                            $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                            if (count($gewichten) >= 2) {
+                                $verschil = max($gewichten) - min($gewichten);
+                                if ($verschil > $maxKg) {
+                                    $statistieken['waarschuwingen'][] = [
+                                        'type' => 'warning',
+                                        'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtRange}",
+                                        'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max {$maxKg}kg)",
+                                        'poule_nummer' => $pouleNummer,
+                                    ];
+                                }
                             }
                         }
 
@@ -409,17 +411,19 @@ class PouleIndelingService
                         // Calculate matches
                         $poule->updateStatistieken();
 
-                        // Check gewichtsverschil binnen poule (max 4kg)
-                        $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
-                        if (count($gewichten) >= 2) {
-                            $verschil = max($gewichten) - min($gewichten);
-                            if ($verschil > 4) {
-                                $statistieken['waarschuwingen'][] = [
-                                    'type' => 'warning',
-                                    'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtsklasse}",
-                                    'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max 4kg)",
-                                    'poule_nummer' => $pouleNummer,
-                                ];
+                        // Check gewichtsverschil binnen poule tegen categorie max
+                        if ($maxKg > 0) {
+                            $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                            if (count($gewichten) >= 2) {
+                                $verschil = max($gewichten) - min($gewichten);
+                                if ($verschil > $maxKg) {
+                                    $statistieken['waarschuwingen'][] = [
+                                        'type' => 'warning',
+                                        'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtsklasse}",
+                                        'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max {$maxKg}kg)",
+                                        'poule_nummer' => $pouleNummer,
+                                    ];
+                                }
                             }
                         }
 
