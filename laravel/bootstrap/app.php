@@ -148,8 +148,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 404);
             }
 
-            return redirect()->back()
-                ->with('error', 'Dit item bestaat niet meer. Mogelijk is het verwijderd of verplaatst door de organisator.');
+            // SaaS redirect: ingelogd → eigen dashboard, niet ingelogd → login
+            $organisator = auth('organisator')->user();
+            if ($organisator) {
+                return redirect()->route('organisator.dashboard', $organisator)
+                    ->with('error', 'Pagina niet gevonden.');
+            }
+
+            return redirect()->route('organisator.login')
+                ->with('error', 'Pagina niet gevonden. Log in om verder te gaan.');
         });
 
         // Handle 419 Page Expired (CSRF token expired)
