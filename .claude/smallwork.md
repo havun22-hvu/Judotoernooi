@@ -50,7 +50,7 @@
 
 ### Fix: VARIABEL vs VAST toernooi layout
 - **Type:** Bug fix
-- **Wat:** Aparte layouts voor variabel (4 kolommen, geen headers) vs vast (headers + wachtruimte)
+- **Wat:** Aparte layouts voor variabel (4 kolommen, geen headers) vs vast (headers + gewichtsklasse rijen)
 - **Bestanden:** poules.blade.php, ToernooiController.php
 
 ### Fix: Titel formaat met slashes

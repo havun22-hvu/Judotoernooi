@@ -31,7 +31,6 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 4. **DB transactions in WedstrijddagController** - `D:\GitHub\JudoToernooi\laravel\app\Http\Controllers\WedstrijddagController.php`
    → Wrap deze methods in `DB::transaction()`:
-   - `naarWachtruimte()` (regel 465) - detach + updateStatistieken
    - `verwijderUitPoule()` (regel 514) - detach + stats
    - `zetOmNaarPoules()` (regel 602) - create poules + attach + delete oude poule
    - `afmeldenJudoka()` (regel ~890) - update + detach
