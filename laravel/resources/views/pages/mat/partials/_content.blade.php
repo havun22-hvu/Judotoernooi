@@ -358,6 +358,7 @@
                                         :title="getWedstrijdTitel(poule, w, idx)"
                                         colspan="2">
                                         <div class="text-xs font-bold" x-text="(idx + 1)"></div>
+                                        {{-- DO NOT REMOVE: wp/jp sub-labels — see WEDSTRIJDSCHEMA.md "Kolom Headers (UI)" --}}
                                         <div class="flex justify-center gap-0 text-gray-400" style="font-size: 9px; line-height: 1;">
                                             <span class="w-5 text-center">wp</span>
                                             <span class="w-7 text-center">jp</span>
