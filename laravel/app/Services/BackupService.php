@@ -34,7 +34,9 @@ class BackupService
             mkdir($this->backupDir, 0755, true);
         }
 
-        $command = "mysqldump --single-transaction --quick {$database} 2>/dev/null | gzip > {$file}";
+        $dbArg = escapeshellarg($database);
+        $fileArg = escapeshellarg($file);
+        $command = "mysqldump --single-transaction --quick {$dbArg} 2>/dev/null | gzip > {$fileArg}";
         exec($command, $output, $returnCode);
 
         if ($returnCode === 0) {
