@@ -63,6 +63,7 @@
                             'debugSlots' => $debugSlots,
                             'visualSlotWit' => $wed['_layout']['visual_slot_wit'],
                             'visualSlotBlauw' => $wed['_layout']['visual_slot_blauw'],
+                            'rondeIdx' => 99,
                         ])
                     @endforeach
                 </div>
