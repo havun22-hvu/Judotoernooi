@@ -98,6 +98,47 @@
     </div>
     @endif
 
+    {{-- Milestone handmatig toevoegen --}}
+    @php
+        $bestaandeUitreikingIds = $stamJudoka->wimpelUitreikingen->pluck('wimpel_milestone_id')->toArray();
+        $beschikbareMilestones = $milestones->filter(fn($ms) => !in_array($ms->id, $bestaandeUitreikingIds));
+    @endphp
+    @if($beschikbareMilestones->isNotEmpty())
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3">Milestone handmatig toevoegen</h2>
+        <p class="text-sm text-gray-500 mb-3">Voeg een historische milestone toe die al eerder is uitgereikt.</p>
+
+        <div x-show="handmatigFeedback" x-transition x-cloak
+             :class="handmatigFeedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+             class="border rounded px-4 py-3 mb-3">
+            <span x-text="handmatigFeedback"></span>
+        </div>
+
+        <form @submit.prevent="handmatigToevoegen()" class="flex flex-wrap items-end gap-3">
+            <div class="min-w-48">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Milestone</label>
+                <select x-model="handmatigMilestoneId" required
+                        class="w-full border rounded px-3 py-2">
+                    <option value="">-- Kies milestone --</option>
+                    @foreach($beschikbareMilestones as $ms)
+                        <option value="{{ $ms->id }}">{{ $ms->punten }} pt &mdash; {{ $ms->omschrijving }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Datum uitgereikt</label>
+                <input type="date" x-model="handmatigDatum" required max="{{ date('Y-m-d') }}"
+                       class="border rounded px-3 py-2">
+            </div>
+            <button type="submit"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    :disabled="handmatigSaving">
+                Toevoegen
+            </button>
+        </form>
+    </div>
+    @endif
+
     {{-- Handmatige aanpassing --}}
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-lg font-semibold mb-3">Punten aanpassen</h2>
@@ -191,6 +232,11 @@ function judokaDetail() {
         sprekerSaving: false,
         sprekerFeedback: '',
         sprekerFeedbackType: 'success',
+        handmatigMilestoneId: '',
+        handmatigDatum: '{{ date('Y-m-d') }}',
+        handmatigSaving: false,
+        handmatigFeedback: '',
+        handmatigFeedbackType: 'success',
 
         async aanpassen() {
             if (!this.aantalPunten || this.aantalPunten == 0) return;
@@ -257,6 +303,39 @@ function judokaDetail() {
             }
             this.sprekerSaving = false;
             setTimeout(() => this.sprekerFeedback = '', 3000);
+        },
+
+        async handmatigToevoegen() {
+            if (!this.handmatigMilestoneId) return;
+
+            this.handmatigSaving = true;
+            try {
+                const res = await fetch('{{ route("organisator.wimpel.handmatig-uitreiken", [$organisator, $stamJudoka]) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        milestone_id: this.handmatigMilestoneId,
+                        datum: this.handmatigDatum,
+                    }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.handmatigFeedback = 'Milestone toegevoegd';
+                    this.handmatigFeedbackType = 'success';
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    this.handmatigFeedback = data.message || 'Er ging iets mis';
+                    this.handmatigFeedbackType = 'error';
+                }
+            } catch (e) {
+                this.handmatigFeedback = 'Verbindingsfout';
+                this.handmatigFeedbackType = 'error';
+            }
+            this.handmatigSaving = false;
         },
 
         showFeedback(msg, type) {
