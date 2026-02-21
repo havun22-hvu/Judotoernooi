@@ -102,7 +102,7 @@
 <body class="bg-white min-h-screen">
     <!-- Header -->
     <header class="absolute top-0 left-0 right-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-4 pt-8 pb-6 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <img src="/icon-512x512.png" alt="Logo" class="w-8 h-8 rounded-full">
                 <span class="text-white font-bold text-xl">{{ __('JudoToernooi') }}</span>
