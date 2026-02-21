@@ -116,7 +116,7 @@
                     @if(Auth::guard('organisator')->check())
                     {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
                     <div class="relative" x-data="{ open: false, showAbout: false }">
-                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 👑
                             @else
@@ -146,7 +146,8 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="showAbout = false">
+                             @click.self="showAbout = false"
+                             @keydown.escape.window="showAbout = false">
                             <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center">
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
