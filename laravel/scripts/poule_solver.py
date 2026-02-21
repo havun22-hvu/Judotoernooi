@@ -299,7 +299,7 @@ def herverdeel_kleine_poules(
 
                     # Kan lichtste naar een andere poule?
                     for andere in poules:
-                        if andere is target or andere is kleine or andere.size >= 6:
+                        if andere is target or andere is kleine or andere.size >= max_size:
                             continue
                         if past_in_poule(lichtste, andere, max_kg, max_lft, max_band):
                             # CASCADE UITVOEREN!
@@ -321,7 +321,7 @@ def herverdeel_kleine_poules(
             # STRATEGIE 4: Directe plaatsing - steel van volle poule als orphan daar past
             if kleine.size == 1 and kleine in poules and kleine.judokas:
                 orphan = kleine.judokas[0]
-                for target in [p for p in poules if p is not kleine and 4 <= p.size <= 5]:
+                for target in [p for p in poules if p is not kleine and min_size <= p.size < max_size]:
                     if past_in_poule(orphan, target, max_kg, max_lft, max_band):
                         # Orphan past! Verplaats direct
                         kleine.judokas.remove(orphan)
@@ -406,6 +406,9 @@ def verdeel_judokas(
 
                 for target in poules:
                     if target is kleine or target.size < min_grootte:
+                        continue
+                    # Nooit groter dan max voorkeur
+                    if target.size >= max_grootte:
                         continue
                     # Check leeftijd en band strikt
                     if not all(abs(orphan.leeftijd - j.leeftijd) <= max_lft for j in target.judokas):
