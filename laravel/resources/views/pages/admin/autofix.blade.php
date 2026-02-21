@@ -33,124 +33,137 @@
     </div>
 </div>
 
-{{-- Proposals table --}}
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    @if($proposals->isEmpty())
-        <div class="p-8 text-center text-gray-500">
+{{-- Proposals --}}
+<div class="space-y-3">
+    @forelse($proposals as $proposal)
+        @php
+            $statusColor = match($proposal->status) {
+                'applied' => 'green',
+                'failed' => 'red',
+                'pending' => 'yellow',
+                default => 'gray',
+            };
+            $statusLabel = match($proposal->status) {
+                'applied' => 'Toegepast',
+                'failed' => 'Mislukt',
+                'pending' => 'In behandeling',
+                default => $proposal->status,
+            };
+            // Extract just the filename from the path
+            $shortFile = basename($proposal->file);
+            // Parse ANALYSIS line from claude_analysis
+            $analysisLine = '';
+            if ($proposal->claude_analysis && preg_match('/ANALYSIS:\s*(.+?)(?:\n|$)/i', $proposal->claude_analysis, $m)) {
+                $analysisLine = trim($m[1]);
+            }
+        @endphp
+
+        <div class="bg-white rounded-lg shadow">
+            {{-- Header row - clickable --}}
+            <button onclick="toggleDetail({{ $proposal->id }})" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800 whitespace-nowrap">
+                            {{ $statusLabel }}
+                        </span>
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ class_basename($proposal->exception_class) }}
+                                <span class="text-gray-400 font-normal">in {{ $shortFile }}:{{ $proposal->line }}</span>
+                            </div>
+                            <div class="text-xs text-gray-500 truncate">
+                                {{ Str::limit($proposal->exception_message, 100) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 ml-4 shrink-0">
+                        @if($proposal->organisator_naam)
+                            <span class="text-xs text-gray-500">{{ $proposal->organisator_naam }}</span>
+                        @endif
+                        <span class="text-xs text-gray-400">{{ $proposal->created_at->format('d-m H:i') }}</span>
+                        <svg id="arrow-{{ $proposal->id }}" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                {{-- Claude's samenvatting --}}
+                @if($analysisLine)
+                    <div class="mt-1 text-xs text-blue-600 italic">
+                        Claude: {{ Str::limit($analysisLine, 120) }}
+                    </div>
+                @endif
+            </button>
+
+            {{-- Detail panel --}}
+            <div id="detail-{{ $proposal->id }}" class="hidden border-t border-gray-100 px-4 py-4 bg-gray-50 rounded-b-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="space-y-2">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Bestand</span>
+                            <div class="text-sm font-mono text-gray-700">{{ $proposal->file }}:{{ $proposal->line }}</div>
+                        </div>
+                        @if($proposal->url)
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">URL</span>
+                            <div class="text-sm text-gray-700 break-all">{{ $proposal->http_method }} {{ $proposal->url }}</div>
+                        </div>
+                        @endif
+                        @if($proposal->route_name)
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Route</span>
+                            <div class="text-sm font-mono text-gray-700">{{ $proposal->route_name }}</div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="space-y-2">
+                        @if($proposal->organisator_naam)
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Gebruiker</span>
+                            <div class="text-sm text-gray-700">{{ $proposal->organisator_naam }}</div>
+                        </div>
+                        @endif
+                        @if($proposal->toernooi_naam)
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Toernooi</span>
+                            <div class="text-sm text-gray-700">{{ $proposal->toernooi_naam }}</div>
+                        </div>
+                        @endif
+                        @if($proposal->applied_at)
+                        <div>
+                            <span class="text-xs font-semibold text-green-600 uppercase">Toegepast op</span>
+                            <div class="text-sm text-green-700">{{ $proposal->applied_at->format('d-m-Y H:i:s') }}</div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                @if($proposal->apply_error)
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                    <span class="text-xs font-semibold text-red-600 uppercase">Waarom mislukt</span>
+                    <div class="text-sm text-red-700 mt-1">{{ $proposal->apply_error }}</div>
+                </div>
+                @endif
+
+                <div>
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Claude analyse</span>
+                    <pre class="mt-1 text-xs bg-white border rounded p-3 whitespace-pre-wrap max-h-64 overflow-y-auto text-gray-800">{{ $proposal->claude_analysis }}</pre>
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
             Nog geen AutoFix proposals. Errors worden automatisch geanalyseerd wanneer ze optreden.
         </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Exception</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gebruiker / Toernooi</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestand</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijdstip</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach($proposals as $proposal)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 text-sm text-gray-600">{{ $proposal->id }}</td>
-                        <td class="px-4 py-3">
-                            @if($proposal->status === 'applied')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Toegepast
-                                </span>
-                            @elseif($proposal->status === 'failed')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Mislukt
-                                </span>
-                            @elseif($proposal->status === 'pending')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    In behandeling
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    {{ $proposal->status }}
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="text-sm font-medium text-gray-900">{{ class_basename($proposal->exception_class) }}</div>
-                            <div class="text-xs text-gray-500 truncate max-w-xs">{{ Str::limit($proposal->exception_message, 80) }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            @if($proposal->organisator_naam)
-                                <div class="text-sm font-medium text-gray-900">{{ $proposal->organisator_naam }}</div>
-                            @else
-                                <div class="text-sm text-gray-400 italic">Niet ingelogd</div>
-                            @endif
-                            @if($proposal->toernooi_naam)
-                                <div class="text-xs text-gray-500">{{ $proposal->toernooi_naam }}</div>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="text-sm text-gray-700 font-mono">{{ $proposal->file }}:{{ $proposal->line }}</div>
-                        </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                            {{ $proposal->created_at->format('d-m H:i') }}
-                        </td>
-                        <td class="px-4 py-3">
-                            <button onclick="toggleDetail({{ $proposal->id }})" class="text-blue-600 hover:text-blue-800 text-sm">
-                                Bekijk
-                            </button>
-                        </td>
-                    </tr>
-                    <tr id="detail-{{ $proposal->id }}" class="hidden bg-gray-50">
-                        <td colspan="7" class="px-4 py-4">
-                            <div class="space-y-3">
-                                @if($proposal->url)
-                                <div>
-                                    <span class="text-xs font-medium text-gray-500">URL:</span>
-                                    <span class="text-sm text-gray-700">{{ $proposal->http_method }} {{ $proposal->url }}</span>
-                                </div>
-                                @endif
-
-                                @if($proposal->route_name)
-                                <div>
-                                    <span class="text-xs font-medium text-gray-500">Route:</span>
-                                    <span class="text-sm text-gray-700 font-mono">{{ $proposal->route_name }}</span>
-                                </div>
-                                @endif
-
-                                @if($proposal->apply_error)
-                                <div>
-                                    <span class="text-xs font-medium text-red-500">Apply error:</span>
-                                    <span class="text-sm text-red-700">{{ $proposal->apply_error }}</span>
-                                </div>
-                                @endif
-
-                                @if($proposal->applied_at)
-                                <div>
-                                    <span class="text-xs font-medium text-green-500">Toegepast op:</span>
-                                    <span class="text-sm text-green-700">{{ $proposal->applied_at }}</span>
-                                </div>
-                                @endif
-
-                                <div>
-                                    <span class="text-xs font-medium text-gray-500">Claude analyse:</span>
-                                    <pre class="mt-1 text-xs bg-white border rounded p-3 overflow-x-auto whitespace-pre-wrap max-h-64 overflow-y-auto">{{ $proposal->claude_analysis }}</pre>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif
+    @endforelse
 </div>
 
 <script>
 function toggleDetail(id) {
     const el = document.getElementById('detail-' + id);
+    const arrow = document.getElementById('arrow-' + id);
     el.classList.toggle('hidden');
+    arrow.classList.toggle('rotate-180');
 }
 </script>
 @endsection
