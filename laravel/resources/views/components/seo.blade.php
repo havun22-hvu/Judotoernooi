@@ -58,3 +58,14 @@
 <meta name="twitter:description" content="{{ $description }}">
 @endif
 <meta name="twitter:image" content="{{ $ogImageUrl }}">
+
+{{-- Google Analytics (GA4) --}}
+@if(app()->environment('production'))
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-42KGYDWS5J"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-42KGYDWS5J');
+</script>
+@endif
