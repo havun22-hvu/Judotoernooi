@@ -50,7 +50,7 @@
 <meta property="og:site_name" content="{{ __('JudoToernooi') }}">
 
 {{-- Twitter Card --}}
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 @if($title)
 <meta name="twitter:title" content="{{ $title }}">
 @endif
