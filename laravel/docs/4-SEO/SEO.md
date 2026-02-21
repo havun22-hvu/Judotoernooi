@@ -73,6 +73,26 @@ Bevat:
 ### App Layout
 - `@stack('seo')` in `<head>` voor child pages die SEO tags willen toevoegen via `@push('seo')`
 
+## Google Analytics (GA4)
+
+- **Measurement ID:** `G-42KGYDWS5J`
+- **Property:** JudoToernooi (Sport categorie)
+- **Laden:** Alleen in production (`app()->environment('production')`)
+- **Locatie:** Via `<x-seo />` component (alle publieke pagina's)
+- **Dashboard:** https://analytics.google.com
+
+### Google Search Console
+
+- **URL:** https://search.google.com/search-console
+- **Verificatie:** DNS TXT record (via mijn.host nameservers)
+- **Sitemap:** Ingediend (`/sitemap.xml`)
+
+### Bing Webmaster Tools
+
+- **URL:** https://www.bing.com/webmasters
+- **Verificatie:** Geïmporteerd vanuit Google Search Console
+- **Sitemap:** Handmatig ingediend (`/sitemap.xml`)
+
 ## Twitter Card
 
 Type: `summary_large_image` (grotere preview bij delen op social media)
