@@ -20,3 +20,18 @@ __pycache__/
 laravel/scripts/debug_output.json
 laravel/scripts/test_input.json
 laravel/.phpunit.cache/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Temp/debug files
+cookies*.txt
+test_cookies.txt
+nul
+%TEMP%*
+
+# Storage app files (generated/uploaded)
+laravel/storage/app/*.zip
+laravel/storage/app/*.sqlite
+laravel/storage/app/*.pdf
+laravel/storage/app/*.png
