@@ -330,27 +330,33 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-3 gap-6" x-data="{ lightbox: null }">
                 <!-- Screenshot: Poule-overzicht -->
-                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Poule-overzicht.png'">
                     <img src="/images/Poule-overzicht.png" alt="{{ __('Poule-overzicht') }}" class="w-full h-auto" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Poule-overzicht met automatische indeling') }}</p>
                     </div>
                 </div>
                 <!-- Screenshot: Zaaloverzicht -->
-                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Zaaloverzicht.png'">
                     <img src="/images/Zaaloverzicht.png" alt="{{ __('Zaaloverzicht') }}" class="w-full h-auto" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Zaaloverzicht met matten en blokken') }}</p>
                     </div>
                 </div>
                 <!-- Screenshot: Mat-interface -->
-                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Mat-interface.png'">
                     <img src="/images/Mat-interface.png" alt="{{ __('Mat-interface') }}" class="w-full h-auto" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Live wedstrijdschema met beurtaanduiding') }}</p>
                     </div>
+                </div>
+
+                <!-- Lightbox popup -->
+                <div x-show="lightbox" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click="lightbox = null" @keydown.escape.window="lightbox = null" style="display:none">
+                    <img :src="lightbox" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl" @click.stop>
+                    <button @click="lightbox = null" class="absolute top-4 right-4 text-white text-4xl leading-none hover:text-gray-300">&times;</button>
                 </div>
             </div>
         </div>
