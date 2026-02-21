@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +9,37 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="📺 LIVE {{ $toernooi->naam }}">
     <title>📺 LIVE - {{ $toernooi->naam }}</title>
+    <x-seo
+        :title="'LIVE - ' . $toernooi->naam"
+        :description="__('Live uitslagen en poule-indelingen voor :naam op :datum', ['naam' => $toernooi->naam, 'datum' => $toernooi->datum->format('d-m-Y')])"
+        type="article"
+    />
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": "{{ $toernooi->naam }}",
+        "sport": "Judo",
+        "startDate": "{{ $toernooi->datum->toIso8601String() }}",
+        @if($toernooi->locatie)
+        "location": {
+            "@type": "Place",
+            "name": "{{ $toernooi->locatie }}"
+        },
+        @endif
+        "organizer": {
+            "@type": "Organization",
+            "name": "{{ $toernooi->organisator?->organisatie_naam ?? $toernooi->organisatie ?? 'Organisator' }}"
+        },
+        "url": "{{ url()->current() }}",
+        "numberOfAttendees": {{ $totaalJudokas }},
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+    }
+    </script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }

@@ -6,9 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ $title ?? config('app.name', __('JudoToernooi')) }}</title>
-
-        <!-- Canonical URL (SEO) -->
-        <link rel="canonical" href="https://judotournament.org{{ request()->getPathInfo() }}">
+        <x-seo :title="$title ?? config('app.name', __('JudoToernooi'))" />
 
         <!-- Favicons -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
