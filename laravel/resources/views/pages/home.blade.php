@@ -144,7 +144,7 @@
             <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
             <div class="absolute bottom-20 right-10 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
         </div>
-        <div class="max-w-4xl mx-auto px-4 pt-48 pb-16 text-center relative z-1">
+        <div class="max-w-4xl mx-auto px-4 pt-64 pb-16 text-center relative z-1">
                 <p class="text-blue-300 font-medium mb-3 text-sm uppercase tracking-wider">{{ __('Toernooi Management Software') }}</p>
                 <h1 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
                     {{ __('Uw judotoernooi in minuten, niet in weken') }}
