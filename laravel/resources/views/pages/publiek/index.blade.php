@@ -42,6 +42,31 @@
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
     }
     </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "JudoToernooi",
+                "item": "{{ config('app.url') }}"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "{{ $toernooi->organisator?->organisatie_naam ?? 'Organisator' }}",
+                "item": "{{ config('app.url') }}/{{ $toernooi->organisator?->slug }}"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "{{ $toernooi->naam }}"
+            }
+        ]
+    }
+    </script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }

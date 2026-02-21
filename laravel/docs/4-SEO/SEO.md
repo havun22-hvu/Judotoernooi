@@ -26,6 +26,7 @@ JudoToernooi ondersteunt NL + EN via `__()` helpers. Alle SEO tags zijn taalafha
 | Pagina | Component | Props |
 |--------|-----------|-------|
 | Homepage (`home.blade.php`) | `<x-seo>` | title, description |
+| Help (`help.blade.php`) | `<x-seo>` via `@push('seo')` | title, description |
 | Legal pages (`legal-layout.blade.php`) | `<x-seo>` | title |
 | Publieke toernooi (`publiek/index.blade.php`) | `<x-seo>` | title, description, type=article |
 | Error pages (`errors/layout.blade.php`) | `<x-seo>` | noindex=true |
@@ -43,8 +44,8 @@ JudoToernooi ondersteunt NL + EN via `__()` helpers. Alle SEO tags zijn taalafha
 **Controller:** `App\Http\Controllers\SitemapController`
 
 Bevat:
-- Statische pagina's (home, help, legal pages) met prioriteit
-- Actieve toernooien (niet afgesloten, datum < 3 maanden geleden)
+- Statische pagina's (home, help, legal pages) met prioriteit + lastmod
+- Actieve toernooien (niet afgesloten, datum < 3 maanden geleden) met lastmod
 - hreflang per URL (nl + en)
 
 ## JSON-LD Structured Data
@@ -57,11 +58,20 @@ Bevat:
 
 ### Publieke toernooi pagina
 - `SportsEvent` schema (naam, sport=Judo, datum, locatie, organisator, aantal deelnemers)
+- `BreadcrumbList` schema (Home → Organisator → Toernooi)
 
 ## Performance
 
+### Nginx (server-side)
+- **Gzip compression** op alle content types (CSS, JS, JSON, XML, etc.)
+- **Cache headers** voor static assets: 30 dagen (CSS, JS, images, fonts), 1 uur (XML, JSON, manifests)
+- **HSTS** header in production (via SecurityHeaders middleware)
+
 ### Preconnect
 - Publieke toernooi pagina: `<link rel="preconnect">` + `<link rel="dns-prefetch">` voor `js.pusher.com`
+
+### App Layout
+- `@stack('seo')` in `<head>` voor child pages die SEO tags willen toevoegen via `@push('seo')`
 
 ## Twitter Card
 

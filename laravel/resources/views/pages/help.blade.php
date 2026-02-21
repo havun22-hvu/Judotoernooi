@@ -2,6 +2,13 @@
 
 @section('title', __('Help & Handleiding'))
 
+@push('seo')
+<x-seo
+    :title="__('Help & Handleiding') . ' - JudoToernooi'"
+    :description="__('Handleiding voor JudoToernooi: toernooi aanmaken, poule-indeling, weging, mat-interface, eliminatie en meer. Stap voor stap uitgelegd.')"
+/>
+@endpush
+
 @section('content')
 <div x-data="helpPage()" class="max-w-4xl mx-auto" style="min-width: 56rem;">
     {{-- Header --}}
