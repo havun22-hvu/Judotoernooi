@@ -354,7 +354,7 @@
                 </div>
                 <!-- Screenshot: Eliminatie-bracket -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Eliminatie-bracket.png'">
-                    <img src="/images/Eliminatie-bracket.png" alt="{{ __('Eliminatie-bracket') }}" class="w-full h-auto" loading="lazy">
+                    <img src="/images/Eliminatie-bracket.png" alt="{{ __('Eliminatie-bracket') }}" class="w-full max-h-64 object-cover object-top" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Eliminatie-bracket met A en B groep') }}</p>
                     </div>
