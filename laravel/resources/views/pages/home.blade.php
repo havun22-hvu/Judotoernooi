@@ -333,21 +333,21 @@
             <div class="grid md:grid-cols-2 gap-6" x-data="{ lightbox: null }">
                 <!-- Screenshot: Poule-overzicht -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Poule-overzicht.png'">
-                    <img src="/images/Poule-overzicht.png" alt="{{ __('Poule-overzicht') }}" class="w-full h-auto" loading="lazy">
+                    <img src="/images/Poule-overzicht.png" alt="{{ __('Poule-overzicht') }}" class="w-full max-h-64 object-cover object-top" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Poule-overzicht met automatische indeling') }}</p>
                     </div>
                 </div>
                 <!-- Screenshot: Zaaloverzicht -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Zaaloverzicht.png'">
-                    <img src="/images/Zaaloverzicht.png" alt="{{ __('Zaaloverzicht') }}" class="w-full h-auto" loading="lazy">
+                    <img src="/images/Zaaloverzicht.png" alt="{{ __('Zaaloverzicht') }}" class="w-full max-h-64 object-cover object-top" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Zaaloverzicht met matten en blokken') }}</p>
                     </div>
                 </div>
                 <!-- Screenshot: Mat-interface -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Mat-interface.png'">
-                    <img src="/images/Mat-interface.png" alt="{{ __('Mat-interface') }}" class="w-full h-auto" loading="lazy">
+                    <img src="/images/Mat-interface.png" alt="{{ __('Mat-interface') }}" class="w-full max-h-64 object-cover object-top" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Live wedstrijdschema met beurtaanduiding') }}</p>
                     </div>
