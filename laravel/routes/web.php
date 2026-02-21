@@ -30,6 +30,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocalSyncController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\CheckToernooiRol;
 use App\Http\Middleware\CheckFreemiumPrint;
 use Illuminate\Support\Facades\Route;
@@ -156,6 +157,9 @@ Route::post('/locale/{locale}', function (\Illuminate\Http\Request $request, str
 
     return redirect()->back();
 })->name('locale.switch');
+
+// Sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Homepage
 Route::get('/', fn() => view('pages.home'))->name('home');

@@ -1,16 +1,54 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('JudoToernooi') }} - {{ __('Professioneel Toernooi Management') }}</title>
-    <meta name="description" content="{{ __('Organiseer uw judotoernooi professioneel met JudoToernooi. Van inschrijving tot eindstand, alles in een platform.') }}">
+    <x-seo
+        :title="__('JudoToernooi') . ' - ' . __('Professioneel Toernooi Management')"
+        :description="__('Organiseer uw judotoernooi professioneel met JudoToernooi. Van inschrijving tot eindstand, alles in een platform.')"
+    />
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Havun",
+        "url": "{{ config('app.url') }}",
+        "logo": "{{ config('app.url') }}/icon-512x512.png",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "havun22@gmail.com",
+            "contactType": "customer service"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "JudoToernooi",
+        "applicationCategory": "SportsApplication",
+        "operatingSystem": "Web",
+        "description": "{{ __('Organiseer uw judotoernooi professioneel met JudoToernooi. Van inschrijving tot eindstand, alles in een platform.') }}",
+        "url": "{{ config('app.url') }}",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Havun"
+        }
+    }
+    </script>
 </head>
 <body class="bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 min-h-screen">
     <!-- Header -->
