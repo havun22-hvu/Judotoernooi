@@ -81,4 +81,30 @@ class OrganisatorFactory extends Factory
             'is_test' => true,
         ]);
     }
+
+    /**
+     * Indicate this organisator has an active wimpel subscription.
+     */
+    public function wimpelAbo(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'wimpel_abo_actief' => true,
+            'wimpel_abo_start' => now()->subMonth(),
+            'wimpel_abo_einde' => now()->addYear(),
+            'wimpel_abo_prijs' => 50.00,
+        ]);
+    }
+
+    /**
+     * Indicate this organisator has an expiring wimpel subscription (<30 days).
+     */
+    public function wimpelAboBijnaVerlopen(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'wimpel_abo_actief' => true,
+            'wimpel_abo_start' => now()->subYear()->addDays(15),
+            'wimpel_abo_einde' => now()->addDays(15),
+            'wimpel_abo_prijs' => 50.00,
+        ]);
+    }
 }
