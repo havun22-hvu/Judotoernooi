@@ -60,6 +60,7 @@
     $herkomstBlauw = $herkomstBlauw ?? '';
     $visualSlotWit = $visualSlotWit ?? ($wed['_layout']['visual_slot_wit'] ?? 0);
     $visualSlotBlauw = $visualSlotBlauw ?? ($wed['_layout']['visual_slot_blauw'] ?? 0);
+    $rondeIdx = $rondeIdx ?? 99;
 @endphp
 
 <div class="absolute w-32 bracket-potje"
@@ -77,7 +78,8 @@
              data-wedstrijd-id="{{ $wed['id'] }}"
              data-positie="wit"
              data-poule-id="{{ $pouleId }}"
-             data-bewoner="{{ $witBewoner }}">
+             data-bewoner="{{ $witBewoner }}"
+             data-ronde-idx="{{ $rondeIdx }}">
             @if($wed['wit'])
                 <div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
                      data-drag="{{ $witDragData }}">
@@ -105,7 +107,8 @@
              data-wedstrijd-id="{{ $wed['id'] }}"
              data-positie="blauw"
              data-poule-id="{{ $pouleId }}"
-             data-bewoner="{{ $blauwBewoner }}">
+             data-bewoner="{{ $blauwBewoner }}"
+             data-ronde-idx="{{ $rondeIdx }}">
             @if($wed['blauw'])
                 <div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
                      data-drag="{{ $blauwDragData }}">

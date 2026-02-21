@@ -2457,8 +2457,9 @@ window._markValidBracketTargets = function(dragItem) {
                     isValid = true;
                 }
             } else if (!isLocked) {
-                // Seeding: only empty slots
-                if (!heeftBewoner) isValid = true;
+                // Seeding: only empty slots in the FIRST round (rondeIdx 0)
+                const dropRondeIdx = drop.getAttribute('data-ronde-idx');
+                if (!heeftBewoner && dropRondeIdx === '0') isValid = true;
             }
         } else if (handler === 'dropInSwap') {
             if (!isLocked) isValid = true;
