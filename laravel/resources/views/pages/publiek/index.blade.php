@@ -16,6 +16,8 @@
     />
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <link rel="preconnect" href="https://js.pusher.com" crossorigin>
+    <link rel="dns-prefetch" href="https://js.pusher.com">
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script type="application/ld+json">
     {

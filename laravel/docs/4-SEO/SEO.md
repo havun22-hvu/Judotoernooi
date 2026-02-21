@@ -50,11 +50,22 @@ Bevat:
 ## JSON-LD Structured Data
 
 ### Homepage
-- `Organization` schema (Havun, logo, contactpunt)
-- `SoftwareApplication` schema (JudoToernooi, gratis, sport-categorie)
+- `Organization` schema (Havun, logo, contactpunt, talen)
+- `WebSite` schema (naam, URL, talen, publisher)
+- `SoftwareApplication` schema (JudoToernooi, gratis, sport-categorie, featureList, talen)
+- `FAQPage` schema (3 veelgestelde vragen met antwoorden, NL+EN vertaald)
 
 ### Publieke toernooi pagina
 - `SportsEvent` schema (naam, sport=Judo, datum, locatie, organisator, aantal deelnemers)
+
+## Performance
+
+### Preconnect
+- Publieke toernooi pagina: `<link rel="preconnect">` + `<link rel="dns-prefetch">` voor `js.pusher.com`
+
+## Twitter Card
+
+Type: `summary_large_image` (grotere preview bij delen op social media)
 
 ## hreflang Strategie
 

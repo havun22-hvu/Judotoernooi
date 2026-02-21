@@ -25,7 +25,21 @@
         "contactPoint": {
             "@type": "ContactPoint",
             "email": "havun22@gmail.com",
-            "contactType": "customer service"
+            "contactType": "customer service",
+            "availableLanguage": ["Dutch", "English"]
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "JudoToernooi",
+        "url": "{{ config('app.url') }}",
+        "inLanguage": ["nl", "en"],
+        "publisher": {
+            "@type": "Organization",
+            "name": "Havun"
         }
     }
     </script>
@@ -35,9 +49,11 @@
         "@type": "SoftwareApplication",
         "name": "JudoToernooi",
         "applicationCategory": "SportsApplication",
+        "applicationSubCategory": "Tournament Management",
         "operatingSystem": "Web",
         "description": "{{ __('Organiseer uw judotoernooi professioneel met JudoToernooi. Van inschrijving tot eindstand, alles in een platform.') }}",
         "url": "{{ config('app.url') }}",
+        "inLanguage": ["nl", "en"],
         "offers": {
             "@type": "Offer",
             "price": "0",
@@ -46,15 +62,51 @@
         "author": {
             "@type": "Organization",
             "name": "Havun"
-        }
+        },
+        "featureList": "{{ __('Poule indeling, Digitale weging, Live uitslagen, Eliminatie brackets, Coach portal, Real-time synchronisatie') }}"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "{{ __('Wat is JudoToernooi?') }}",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{ __('JudoToernooi is een online platform waarmee judoclubs hun toernooien professioneel kunnen organiseren. Van inschrijving en weging tot poule-indeling en live uitslagen - alles in een systeem.') }}"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "{{ __('Hoe werkt de poule-indeling?') }}",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{ __('De poule-indeling gebeurt automatisch op basis van leeftijd, gewicht en band. Het systeem maakt eerlijke poules met een druk op de knop, rekening houdend met alle judoregels.') }}"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "{{ __('Kunnen ouders live meekijken?') }}",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{ __('Ja! Via de publieke pagina kunnen ouders en toeschouwers live meekijken wanneer hun kind aan de beurt is. Ze ontvangen notificaties en kunnen hun favoriete judoka volgen.') }}"
+                }
+            }
+        ]
     }
     </script>
 </head>
-<body class="bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 min-h-screen">
+<body class="bg-white min-h-screen">
     <!-- Header -->
     <header class="absolute top-0 left-0 right-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-            <div class="text-white font-bold text-xl">{{ __('JudoToernooi') }}</div>
+            <div class="flex items-center gap-2">
+                <img src="/icon-512x512.png" alt="Logo" class="w-8 h-8 rounded-full">
+                <span class="text-white font-bold text-xl">{{ __('JudoToernooi') }}</span>
+            </div>
             <div class="flex items-center gap-4">
                 {{-- Taalkiezer --}}
                 <div class="relative" x-data="{ open: false }">
@@ -87,82 +139,305 @@
     </header>
 
     <!-- Hero Section -->
-    <main class="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <!-- Logo -->
-        <div class="mb-8">
-            <img src="/icon-512x512.png" alt="{{ __('JudoToernooi') }} Logo" class="w-32 h-32 rounded-full shadow-2xl mx-auto">
+    <section class="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 min-h-screen flex items-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
         </div>
-
-        <!-- Title -->
-        <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
-            {{ __('JudoToernooi') }}
-        </h1>
-        <p class="text-xl md:text-2xl text-blue-200 mb-12 max-w-2xl">
-            {{ __('Professioneel toernooi management voor judoclubs. Van inschrijving tot eindstand, alles in een platform.') }}
-        </p>
-
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 mb-16">
-            <a href="{{ route('login') }}"
-               class="bg-white text-blue-800 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg">
-                {{ __('Inloggen als Organisator') }}
-            </a>
-            <a href="{{ route('register') }}"
-               class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition">
-                {{ __('Account Aanmaken') }}
-            </a>
-        </div>
-
-        <!-- Features -->
-        <div class="grid md:grid-cols-3 gap-8 max-w-5xl text-left">
-            <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-                <div class="text-3xl mb-3">🥋</div>
-                <h3 class="text-white font-semibold text-lg mb-2">{{ __('Poule Indeling') }}</h3>
-                <p class="text-blue-200 text-sm">
-                    {{ __('Automatische indeling op basis van leeftijd, gewicht en band. Eerlijke poules met een druk op de knop.') }}
+        <div class="max-w-7xl mx-auto px-4 py-32 grid lg:grid-cols-2 gap-12 items-center relative z-1">
+            <div>
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                    {{ __('Uw judotoernooi in minuten, niet in weken') }}
+                </h1>
+                <p class="text-xl text-blue-100 mb-8 leading-relaxed">
+                    {{ __('Van inschrijving tot eindstand: alles wat u nodig heeft in een platform. Automatische poule-indeling, digitale weging, live uitslagen en meer.') }}
                 </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ route('register') }}"
+                       class="bg-white text-blue-800 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg text-center">
+                        {{ __('Gratis Proberen') }}
+                    </a>
+                    <a href="{{ route('login') }}"
+                       class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition text-center">
+                        {{ __('Inloggen als Organisator') }}
+                    </a>
+                </div>
             </div>
-            <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-                <div class="text-3xl mb-3">⚖️</div>
-                <h3 class="text-white font-semibold text-lg mb-2">{{ __('Digitale Weging') }}</h3>
-                <p class="text-blue-200 text-sm">
-                    {{ __('QR-codes voor snelle weging. Real-time overzicht van wie gewogen is en wie nog moet.') }}
-                </p>
-            </div>
-            <div class="bg-white/10 backdrop-blur rounded-xl p-6">
-                <div class="text-3xl mb-3">📊</div>
-                <h3 class="text-white font-semibold text-lg mb-2">{{ __('Live Uitslagen') }}</h3>
-                <p class="text-blue-200 text-sm">
-                    {{ __('Mat-interface voor juryleden. Ouders kunnen live meekijken wanneer hun kind aan de beurt is.') }}
-                </p>
+            <!-- Screenshot placeholder -->
+            <div class="hidden lg:block">
+                <div class="bg-white/10 backdrop-blur rounded-2xl p-2 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
+                    <div class="bg-gradient-to-br from-blue-600/30 to-blue-800/30 rounded-xl aspect-[4/3] flex items-center justify-center border border-white/20">
+                        <div class="text-center text-white/60">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                            </svg>
+                            <p class="text-sm font-medium">{{ __('Screenshot: Dashboard') }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Coach Info -->
-        <div class="mt-16 text-center">
-            <p class="text-blue-300 text-sm">
-                {{ __('Bent u coach en heeft u een link ontvangen? Gebruik de link uit de uitnodiging om uw judoka\'s in te schrijven.') }}
+    <!-- USP Balk -->
+    <section class="bg-blue-700 py-6">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-2xl">&#9889;</span>
+                    <span class="text-white font-semibold text-sm">{{ __('Setup in minuten') }}</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-2xl">&#127919;</span>
+                    <span class="text-white font-semibold text-sm">{{ __('Alles-in-een platform') }}</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-2xl">&#128241;</span>
+                    <span class="text-white font-semibold text-sm">{{ __('Werkt op elk apparaat') }}</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-2xl">&#128274;</span>
+                    <span class="text-white font-semibold text-sm">{{ __('Veilig & betrouwbaar') }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    {{ __('Alles voor uw toernooi') }}
+                </h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    {{ __('Geen losse spreadsheets, geen papieren lijsten. Een compleet platform dat alles regelt.') }}
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1: Poule-indeling -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#129355;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Slimme Poule-indeling') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Automatische indeling op basis van leeftijd, gewicht en band. Eerlijke poules met een druk op de knop. Handmatig aanpassen kan altijd.') }}
+                    </p>
+                </div>
+
+                <!-- Feature 2: Digitale Weging -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#9878;&#65039;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Digitale Weging') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Scan de QR-code, voer het gewicht in, klaar. Real-time overzicht van wie gewogen is en wie nog moet. Geen papieren weeglijsten meer.') }}
+                    </p>
+                </div>
+
+                <!-- Feature 3: Wedstrijdschema's -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#128203;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Live Wedstrijdschema\'s') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Overzichtelijke mat-interface met kleurcodes. Juryleden zien direct wie er aan de beurt is. Ouders kunnen live meekijken.') }}
+                    </p>
+                </div>
+
+                <!-- Feature 4: Wimpelcompetitie -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#127942;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Wimpelcompetitie') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Organiseer teamtoernooien en wimpelcompetities. Clubscores worden automatisch berekend. Perfect voor regionale competities.') }}
+                    </p>
+                </div>
+
+                <!-- Feature 5: Club & Judoka Database -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#128100;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Club & Judoka Database') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Uw clubs en judoka\'s worden bewaard tussen toernooien. Geen dubbel werk: importeer vanuit uw bestaande administratie of hergebruik eerdere inschrijvingen.') }}
+                    </p>
+                </div>
+
+                <!-- Feature 6: Veiligheid & Backup -->
+                <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-5">
+                        <span class="text-2xl">&#128737;&#65039;</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Veiligheid & Backup') }}</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ __('Automatische backups elke minuut tijdens de wedstrijddag. Noodpakket downloaden voor offline gebruik. Alles printen als backup.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hoe werkt het? -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    {{ __('In 3 stappen klaar') }}
+                </h2>
+                <p class="text-lg text-gray-600">
+                    {{ __('Geen technische kennis nodig. Als u kunt klikken, kunt u een toernooi organiseren.') }}
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Maak een toernooi aan') }}</h3>
+                    <p class="text-gray-600">
+                        {{ __('Kies uw instellingen: gewichtsklassen, wedstrijdsysteem, aantal matten. Gebruik een template of begin vanaf nul.') }}
+                    </p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Importeer deelnemers') }}</h3>
+                    <p class="text-gray-600">
+                        {{ __('Upload een Excel-bestand of laat coaches zelf inschrijven via het Coach Portaal. Judoka\'s worden automatisch ingedeeld.') }}
+                    </p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Start de wedstrijddag') }}</h3>
+                    <p class="text-gray-600">
+                        {{ __('Weeg de judoka\'s, activeer de matten en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshot sectie -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    {{ __('Gebouwd voor de wedstrijddag') }}
+                </h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    {{ __('Ontworpen door judoka\'s, voor judoka\'s. Elke functie is getest op echte toernooien.') }}
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Screenshot placeholder 1 -->
+                <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl aspect-video flex items-center justify-center border border-blue-200">
+                    <div class="text-center text-blue-500">
+                        <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="font-medium text-sm">{{ __('Screenshot: Poule-overzicht') }}</p>
+                    </div>
+                </div>
+                <!-- Screenshot placeholder 2 -->
+                <div class="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl aspect-video flex items-center justify-center border border-green-200">
+                    <div class="text-center text-green-500">
+                        <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="font-medium text-sm">{{ __('Screenshot: Mat-interface') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Meer features -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                    {{ __('En nog veel meer...') }}
+                </h2>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3">
+                @foreach([
+                    __('Eliminatie-brackets'),
+                    __('Coach Portaal'),
+                    __('Digitale weegkaarten'),
+                    __('Multi-mat ondersteuning'),
+                    __('Installeerbaar als app (PWA)'),
+                    __('Meertalig (NL/EN)'),
+                    __('Coach Kaarten & QR'),
+                    __('Zaaloverzicht'),
+                    __('Blokplanning'),
+                    __('Excel import/export'),
+                    __('Automatische herclassificatie'),
+                    __('Spreker-interface'),
+                    __('Noodpakket (offline)'),
+                    __('Poules printen'),
+                    __('Medailles & prijzen'),
+                ] as $feature)
+                    <span class="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-medium border border-blue-100">
+                        {{ $feature }}
+                    </span>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <!-- Coach info -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-3xl mx-auto px-4 text-center">
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <span class="text-3xl mb-4 block">&#129358;</span>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Bent u coach?') }}</h3>
+                <p class="text-gray-600">
+                    {{ __('Heeft u een link ontvangen van een toernooi-organisator? Gebruik die link om uw judoka\'s in te schrijven via het Coach Portaal. Geen account nodig.') }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA onderaan -->
+    <section class="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-center">
+        <div class="max-w-3xl mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+                {{ __('Klaar om uw toernooi te organiseren?') }}
+            </h2>
+            <p class="text-xl text-blue-200 mb-8">
+                {{ __('Maak gratis een account aan en ontdek hoe makkelijk het kan.') }}
             </p>
+            <a href="{{ route('register') }}"
+               class="inline-block bg-white text-blue-800 px-10 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg">
+                {{ __('Gratis Account Aanmaken') }}
+            </a>
         </div>
-    </main>
+    </section>
 
     <!-- Footer -->
-    <footer class="absolute bottom-0 left-0 right-0 py-4">
+    <footer class="bg-gray-900 py-8">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-blue-300 mb-1">
-                <a href="{{ route('legal.terms') }}" class="hover:text-white">Voorwaarden</a>
-                <span class="text-blue-500">•</span>
-                <a href="{{ route('legal.privacy') }}" class="hover:text-white">Privacy</a>
-                <span class="text-blue-500">•</span>
-                <a href="{{ route('legal.cookies') }}" class="hover:text-white">Cookies</a>
-                <span class="text-blue-500">•</span>
-                <a href="mailto:havun22@gmail.com" class="hover:text-white">Contact</a>
+            <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-400 mb-2">
+                <a href="{{ route('legal.terms') }}" class="hover:text-white">{{ __('Voorwaarden') }}</a>
+                <span class="text-gray-600">&bull;</span>
+                <a href="{{ route('legal.privacy') }}" class="hover:text-white">{{ __('Privacy') }}</a>
+                <span class="text-gray-600">&bull;</span>
+                <a href="{{ route('legal.cookies') }}" class="hover:text-white">{{ __('Cookies') }}</a>
+                <span class="text-gray-600">&bull;</span>
+                <a href="mailto:havun22@gmail.com" class="hover:text-white">{{ __('Contact') }}</a>
             </div>
-            <div class="text-center text-xs text-blue-400">
+            <div class="text-center text-xs text-gray-500">
                 &copy; {{ date('Y') }} Havun
-                <span class="mx-1">•</span>
+                <span class="mx-1">&bull;</span>
                 KvK 98516000
-                <span class="mx-1">•</span>
+                <span class="mx-1">&bull;</span>
                 BTW-vrij (KOR)
             </div>
         </div>
