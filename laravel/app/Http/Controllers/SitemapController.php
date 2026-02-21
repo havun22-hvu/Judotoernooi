@@ -11,15 +11,16 @@ class SitemapController extends Controller
     {
         $appUrl = rtrim(config('app.url'), '/');
         $locales = config('app.available_locales', ['nl', 'en']);
+        $now = now()->toW3cString();
 
-        // Static pages
+        // Static pages with lastmod
         $staticPages = [
-            ['url' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
-            ['url' => '/help', 'priority' => '0.5', 'changefreq' => 'monthly'],
-            ['url' => '/algemene-voorwaarden', 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => '/privacyverklaring', 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => '/cookiebeleid', 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => '/disclaimer', 'priority' => '0.3', 'changefreq' => 'yearly'],
+            ['url' => '/', 'priority' => '1.0', 'changefreq' => 'weekly', 'lastmod' => $now],
+            ['url' => '/help', 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => $now],
+            ['url' => '/algemene-voorwaarden', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => '2026-01-01T00:00:00+01:00'],
+            ['url' => '/privacyverklaring', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => '2026-01-01T00:00:00+01:00'],
+            ['url' => '/cookiebeleid', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => '2026-01-01T00:00:00+01:00'],
+            ['url' => '/disclaimer', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => '2026-01-01T00:00:00+01:00'],
         ];
 
         // Active public tournaments (not closed, with a date in the future or recent past)
@@ -40,6 +41,7 @@ class SitemapController extends Controller
             foreach ($locales as $locale) {
                 $xml .= '    <xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . $appUrl . $page['url'] . '?locale=' . $locale . '" />' . "\n";
             }
+            $xml .= '    <lastmod>' . $page['lastmod'] . '</lastmod>' . "\n";
             $xml .= '    <changefreq>' . $page['changefreq'] . '</changefreq>' . "\n";
             $xml .= '    <priority>' . $page['priority'] . '</priority>' . "\n";
             $xml .= '  </url>' . "\n";
