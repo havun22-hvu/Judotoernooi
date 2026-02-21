@@ -270,8 +270,7 @@ class BlokController extends Controller
         $this->verdelingService->verdeelOverMatten($toernooi);
 
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
-            ->with('success', 'Verdeel de poules over de matten en klik "Einde Voorbereiding"; de weegkaarten worden dan aangepast.');
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams());
     }
 
     public function sluitWeging(Organisator $organisator, Toernooi $toernooi, Blok $blok): RedirectResponse
