@@ -56,6 +56,19 @@
             <p class="text-gray-500 text-sm mt-1">{{ __('Typ om te zoeken, klik op Route voor navigatie') }}</p>
         </div>
 
+        @if($organisator->heeftWimpelAbo())
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <label class="flex items-center">
+                <input type="checkbox" name="is_wimpel_toernooi" value="1" {{ old('is_wimpel_toernooi') ? 'checked' : '' }}
+                       class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <div>
+                    <span class="text-gray-700 font-bold">{{ __('Wimpel puntencompetitie') }}</span>
+                    <p class="text-sm text-gray-600 mt-1">{{ __('Dit toernooi valt onder je wimpel abonnement. Onbeperkt judoka\'s, alleen puntencompetitie.') }}</p>
+                </div>
+            </label>
+        </div>
+        @endif
+
         <div class="flex justify-end space-x-4">
             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                 {{ __('Annuleren') }}

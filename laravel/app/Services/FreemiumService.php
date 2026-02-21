@@ -42,10 +42,21 @@ class FreemiumService
     }
 
     /**
+     * Check if a toernooi is on the wimpel subscription
+     */
+    public function isWimpelAbo(Toernooi $toernooi): bool
+    {
+        return $toernooi->plan_type === 'wimpel_abo';
+    }
+
+    /**
      * Get the effective max judokas for a toernooi
      */
     public function getEffectiveMaxJudokas(Toernooi $toernooi): int
     {
+        if ($this->isWimpelAbo($toernooi)) {
+            return PHP_INT_MAX;
+        }
         if ($this->isPaidTier($toernooi)) {
             return $toernooi->paid_max_judokas ?? self::FREE_MAX_JUDOKAS;
         }
@@ -105,7 +116,7 @@ class FreemiumService
      */
     public function canUsePrint(Toernooi $toernooi): bool
     {
-        return $this->isPaidTier($toernooi);
+        return $this->isPaidTier($toernooi) || $this->isWimpelAbo($toernooi);
     }
 
     /**
@@ -149,7 +160,7 @@ class FreemiumService
      */
     public function needsUpgrade(Toernooi $toernooi): bool
     {
-        if ($this->isPaidTier($toernooi)) {
+        if ($this->isPaidTier($toernooi) || $this->isWimpelAbo($toernooi)) {
             return false;
         }
 
@@ -163,13 +174,15 @@ class FreemiumService
     public function getStatus(Toernooi $toernooi): array
     {
         $isFreeTier = $this->isFreeTier($toernooi);
+        $isWimpelAbo = $this->isWimpelAbo($toernooi);
         $huidigeJudokas = $toernooi->judokas()->count();
         $maxJudokas = $this->getEffectiveMaxJudokas($toernooi);
 
         return [
             'plan_type' => $toernooi->plan_type,
             'is_free_tier' => $isFreeTier,
-            'is_paid_tier' => !$isFreeTier,
+            'is_paid_tier' => $this->isPaidTier($toernooi),
+            'is_wimpel_abo' => $isWimpelAbo,
             'current_judokas' => $huidigeJudokas,
             'max_judokas' => $maxJudokas,
             'remaining_slots' => $this->getRemainingJudokaSlots($toernooi),

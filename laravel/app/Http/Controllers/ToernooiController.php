@@ -62,6 +62,16 @@ class ToernooiController extends Controller
     {
         $toernooi = $this->toernooiService->initialiseerToernooi($request->validated());
 
+        // Activate wimpel_abo plan if org has subscription and checkbox is checked
+        if ($request->boolean('is_wimpel_toernooi') && $organisator->heeftWimpelAbo()) {
+            $toernooi->update([
+                'plan_type' => 'wimpel_abo',
+                'wedstrijd_systeem' => collect($toernooi->getAlleGewichtsklassen())
+                    ->mapWithKeys(fn($v, $k) => [$k => 'punten_competitie'])
+                    ->all(),
+            ]);
+        }
+
         return redirect()
             ->route('toernooi.show', $toernooi->routeParams())
             ->with('success', 'Toernooi succesvol aangemaakt');
@@ -223,6 +233,13 @@ class ToernooiController extends Controller
         }
         if (array_key_exists('dubbel_bij_4_judokas', $data)) {
             $data['dubbel_bij_4_judokas'] = (bool) $data['dubbel_bij_4_judokas'];
+        }
+
+        // Enforce punten_competitie for wimpel_abo tournaments
+        if ($toernooi->isWimpelAbo() && !empty($data['wedstrijd_systeem'])) {
+            $data['wedstrijd_systeem'] = collect($data['wedstrijd_systeem'])
+                ->map(fn() => 'punten_competitie')
+                ->all();
         }
 
         // Check of categorieën zijn gewijzigd

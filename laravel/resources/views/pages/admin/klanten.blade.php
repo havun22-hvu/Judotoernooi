@@ -65,7 +65,10 @@
                         @if($klant->kyc_compleet)
                             <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">KYC</span>
                         @endif
-                        @if(!$klant->is_test && !$klant->kortingsregeling && !$klant->kyc_compleet)
+                        @if($klant->heeftWimpelAbo())
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Wimpel</span>
+                        @endif
+                        @if(!$klant->is_test && !$klant->kortingsregeling && !$klant->kyc_compleet && !$klant->heeftWimpelAbo())
                             <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </div>

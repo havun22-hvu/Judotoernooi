@@ -3,6 +3,16 @@
 @section('title', __('Instellingen'))
 
 @section('content')
+@if($toernooi->isWimpelAbo())
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+    <div class="flex items-center">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+            {{ __('Wimpel Abonnement') }}
+        </span>
+        <span class="text-sm text-gray-600">{{ __('Alle categorieën staan vast op puntencompetitie.') }}</span>
+    </div>
+</div>
+@endif
 <!-- Fixed toast voor autosave status -->
 <div id="save-status" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium hidden bg-white border"></div>
 
@@ -907,6 +917,7 @@
                 window.initieleGewichtsklassen = @json($gewichtsklassen);
                 window.initieleWedstrijdSysteem = @json(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? []);
                 window.initialePuntenCompWedstrijden = @json(old('punten_competitie_wedstrijden', $toernooi->punten_competitie_wedstrijden) ?? []);
+                window.isWimpelAbo = @json($toernooi->isWimpelAbo());
             </script>
 
             <div class="mt-4 flex gap-2">
@@ -1270,12 +1281,14 @@
                         <div class="flex items-center gap-1">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
-                                    onchange="togglePuntenCompSelect(this); checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item'))">
-                                <option value="punten_competitie" ${systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
-                                <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
+                                    onchange="togglePuntenCompSelect(this); checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item'))"
+                                    ${window.isWimpelAbo ? 'disabled' : ''}>
+                                <option value="punten_competitie" ${window.isWimpelAbo || systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
+                                ${!window.isWimpelAbo ? `<option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
                                 <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale</option>
-                                <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
+                                <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>` : ''}
                             </select>
+                            ${window.isWimpelAbo ? `<input type="hidden" name="wedstrijd_systeem[${key}]" value="punten_competitie">` : ''}
                             <select name="punten_competitie_wedstrijden[${key}]"
                                     class="pc-aantal-select border rounded px-1 py-1 text-xs bg-white ${systeem === 'punten_competitie' ? '' : 'hidden'}"
                                     title="Aantal wedstrijden per judoka">

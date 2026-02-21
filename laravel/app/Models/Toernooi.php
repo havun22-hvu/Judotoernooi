@@ -675,10 +675,21 @@ class Toernooi extends Model
     }
 
     /**
+     * Check if this tournament is a wimpel subscription tournament
+     */
+    public function isWimpelAbo(): bool
+    {
+        return ($this->plan_type ?? 'free') === 'wimpel_abo';
+    }
+
+    /**
      * Get the effective max judokas limit based on plan
      */
     public function getEffectiveMaxJudokas(): int
     {
+        if ($this->isWimpelAbo()) {
+            return PHP_INT_MAX;
+        }
         if ($this->isPaidTier()) {
             return $this->paid_max_judokas ?? 50;
         }
@@ -704,11 +715,11 @@ class Toernooi extends Model
     }
 
     /**
-     * Check if print functionality is available (paid tier only)
+     * Check if print functionality is available (paid or wimpel_abo)
      */
     public function canUsePrint(): bool
     {
-        return $this->isPaidTier();
+        return $this->isPaidTier() || $this->isWimpelAbo();
     }
 
     /**
@@ -716,7 +727,7 @@ class Toernooi extends Model
      */
     public function needsUpgrade(): bool
     {
-        if ($this->isPaidTier()) {
+        if ($this->isPaidTier() || $this->isWimpelAbo()) {
             return false;
         }
         return $this->judokas()->count() >= 50;

@@ -81,11 +81,23 @@ class AdminController extends Controller
             'website' => 'nullable|url|max:255',
             'is_test' => 'boolean',
             'kortingsregeling' => 'boolean',
+            'wimpel_abo_actief' => 'boolean',
+            'wimpel_abo_start' => 'nullable|date',
+            'wimpel_abo_einde' => 'nullable|date|after_or_equal:wimpel_abo_start',
+            'wimpel_abo_prijs' => 'nullable|numeric|min:0',
+            'wimpel_abo_notities' => 'nullable|string|max:1000',
         ]);
 
         // Handle boolean checkboxes
         $validated['is_test'] = $request->has('is_test');
         $validated['kortingsregeling'] = $request->has('kortingsregeling');
+        $validated['wimpel_abo_actief'] = $request->has('wimpel_abo_actief');
+
+        // Auto-fill start/end dates when activating wimpel abo
+        if ($validated['wimpel_abo_actief'] && !$klant->wimpel_abo_actief) {
+            $validated['wimpel_abo_start'] = $validated['wimpel_abo_start'] ?? now()->toDateString();
+            $validated['wimpel_abo_einde'] = $validated['wimpel_abo_einde'] ?? now()->addYear()->toDateString();
+        }
 
         $klant->update($validated);
 

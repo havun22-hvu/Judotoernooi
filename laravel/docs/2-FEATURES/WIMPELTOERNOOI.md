@@ -4,6 +4,15 @@
 
 Een doorlopend puntensysteem per organisator, waarbij judoka's over meerdere **puntencompetitie** toernooien punten sparen. Bij het bereiken van milestones (bijv. 10, 20, 30 punten) ontvangt de judoka een prijsje.
 
+## Abonnement
+
+Organisatoren die regelmatig wimpeltoernooien organiseren (bijv. 4x/jaar) kunnen een **wimpel jaarabonnement** afnemen. Zie `FREEMIUM.md` → "Wimpel Abonnement" voor details.
+
+- Jaarprijs ~€50 (vs 4x €20 = €80 los)
+- Onbeperkt puntencompetitie toernooien
+- Geen judoka-limiet
+- Admin activeert via Klantenbeheer
+
 ## Scope
 
 - **Alleen puntencompetitie** toernooien tellen mee
