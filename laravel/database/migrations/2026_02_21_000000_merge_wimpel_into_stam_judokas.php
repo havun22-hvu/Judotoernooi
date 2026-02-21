@@ -94,10 +94,12 @@ return new class extends Migration
                 $table->foreign('stam_judoka_id')->references('id')->on('stam_judokas')->cascadeOnDelete();
             });
 
-            // Drop old unique constraint and FK, then add new
+            // Drop FK first (MySQL requires FK dropped before unique index)
+            Schema::table('wimpel_uitreikingen', function (Blueprint $table) {
+                $table->dropForeign(['wimpel_judoka_id']);
+            });
             Schema::table('wimpel_uitreikingen', function (Blueprint $table) {
                 $table->dropUnique('wimpel_uitreik_judoka_milestone_unique');
-                $table->dropForeign(['wimpel_judoka_id']);
                 $table->dropColumn('wimpel_judoka_id');
                 $table->foreign('stam_judoka_id')->references('id')->on('stam_judokas')->cascadeOnDelete();
                 $table->unique(['stam_judoka_id', 'wimpel_milestone_id'], 'wimpel_uitreik_stam_milestone_unique');
