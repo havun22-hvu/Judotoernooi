@@ -308,7 +308,7 @@ class Organisator extends Authenticatable
             return false;
         }
 
-        return $this->wimpel_abo_einde->diffInDays(now()) <= 30;
+        return $this->wimpel_abo_einde->lte(now()->addDays(30));
     }
 
     /**
