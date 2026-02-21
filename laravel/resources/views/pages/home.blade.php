@@ -330,7 +330,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-8">
+            <div class="grid md:grid-cols-3 gap-6">
                 <!-- Screenshot: Poule-overzicht -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
                     <img src="/images/Poule-overzicht.png" alt="{{ __('Poule-overzicht') }}" class="w-full h-auto" loading="lazy">
@@ -343,6 +343,13 @@
                     <img src="/images/Zaaloverzicht.png" alt="{{ __('Zaaloverzicht') }}" class="w-full h-auto" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Zaaloverzicht met matten en blokken') }}</p>
+                    </div>
+                </div>
+                <!-- Screenshot: Mat-interface -->
+                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                    <img src="/images/Mat-interface.png" alt="{{ __('Mat-interface') }}" class="w-full h-auto" loading="lazy">
+                    <div class="bg-white px-4 py-3 text-center">
+                        <p class="font-medium text-gray-700 text-sm">{{ __('Live wedstrijdschema met beurtaanduiding') }}</p>
                     </div>
                 </div>
             </div>
