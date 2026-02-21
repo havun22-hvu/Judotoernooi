@@ -163,11 +163,11 @@
                 </span>
                 <span class="flex items-center gap-1">
                     <span class="w-3 h-3 rounded bg-yellow-400"></span>
-                    <span class="text-gray-600">{{ __('Klaar') }}</span>
+                    <span class="text-gray-600">{{ __('Klaar staan') }}</span>
                 </span>
                 <span class="flex items-center gap-1">
                     <span class="w-3 h-3 rounded bg-blue-400"></span>
-                    <span class="text-gray-600">{{ __('Gereed') }}</span>
+                    <span class="text-gray-600">{{ __('Gereed maken') }}</span>
                 </span>
             </div>
         </div>
