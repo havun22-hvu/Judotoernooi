@@ -330,7 +330,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6" x-data="{ lightbox: null }">
+            <div class="grid md:grid-cols-2 gap-6" x-data="{ lightbox: null }">
                 <!-- Screenshot: Poule-overzicht -->
                 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Poule-overzicht.png'">
                     <img src="/images/Poule-overzicht.png" alt="{{ __('Poule-overzicht') }}" class="w-full h-auto" loading="lazy">
@@ -350,6 +350,13 @@
                     <img src="/images/Mat-interface.png" alt="{{ __('Mat-interface') }}" class="w-full h-auto" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-700 text-sm">{{ __('Live wedstrijdschema met beurtaanduiding') }}</p>
+                    </div>
+                </div>
+                <!-- Screenshot: Eliminatie-bracket -->
+                <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-shadow" @click="lightbox = '/images/Eliminatie-bracket.png'">
+                    <img src="/images/Eliminatie-bracket.png" alt="{{ __('Eliminatie-bracket') }}" class="w-full h-auto" loading="lazy">
+                    <div class="bg-white px-4 py-3 text-center">
+                        <p class="font-medium text-gray-700 text-sm">{{ __('Eliminatie-bracket met A en B groep') }}</p>
                     </div>
                 </div>
 
