@@ -156,7 +156,7 @@
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('register') }}"
                        class="bg-white text-blue-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition shadow-lg text-center">
-                        {{ __('Gratis Account Aanmaken') }}
+                        {{ __('Account Aanmaken') }}
                     </a>
                     <a href="{{ route('login') }}"
                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition text-center">
@@ -416,11 +416,11 @@
                 {{ __('Klaar om uw toernooi te organiseren?') }}
             </h2>
             <p class="text-xl text-blue-200 mb-8">
-                {{ __('Maak gratis een account aan en ontdek hoe makkelijk het kan.') }}
+                {{ __('Maak een account aan en ontdek hoe makkelijk het kan.') }}
             </p>
             <a href="{{ route('register') }}"
                class="inline-block bg-white text-blue-800 px-10 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg">
-                {{ __('Gratis Account Aanmaken') }}
+                {{ __('Account Aanmaken') }}
             </a>
         </div>
     </section>
