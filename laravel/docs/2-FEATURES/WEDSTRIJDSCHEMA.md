@@ -37,6 +37,19 @@ Judoka 4 │ ██████ │ ██████ │ ██████ �
 - `□` = Wit vak, invulbaar (judoka speelt in deze wedstrijd)
 - `██` = Grijs vak, geblokkeerd (judoka speelt niet in deze wedstrijd)
 
+### Kolom Headers (UI)
+Elke wedstrijdkolom heeft **twee regels** in de header:
+1. **Wedstrijdnummer** (1, 2, 3...) — klikbaar voor beurt-aanduiding (groen/geel/blauw)
+2. **Sub-labels "wp jp"** — kleine grijze tekst die aangeeft welk invoerveld WP is en welk JP
+
+```
+│  1   │  2   │  3   │
+│ wp jp│ wp jp│ wp jp│
+```
+
+**Implementatie:** `_content.blade.php` — sub-labels als inline `<div>` met `font-size: 9px` onder het wedstrijdnummer.
+De breedte van `wp` (w-5) en `jp` (w-7) komt overeen met de invoervelden eronder.
+
 ## Puntensysteem
 
 ### Winstpunten (WP)
