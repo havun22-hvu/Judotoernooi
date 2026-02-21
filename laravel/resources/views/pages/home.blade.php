@@ -101,7 +101,7 @@
 </head>
 <body class="bg-white min-h-screen">
     <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 relative z-10">
+    <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <img src="/icon-512x512.png" alt="Logo" class="w-8 h-8 rounded-full">
@@ -426,7 +426,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 py-8">
+    <footer class="bg-gray-900 py-8 sticky bottom-0 z-20">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-400 mb-2">
                 <a href="{{ route('legal.terms') }}" class="hover:text-white">{{ __('Voorwaarden') }}</a>
