@@ -91,12 +91,17 @@ class StamJudoka extends Model
     }
 
     /**
-     * Alle bereikte milestones
+     * Alle bereikte milestones (via punten OF handmatig uitgereikt)
      */
     public function getBereikteWimpelMilestones()
     {
+        $handmatigIds = $this->wimpelUitreikingen()->pluck('wimpel_milestone_id');
+
         return WimpelMilestone::where('organisator_id', $this->organisator_id)
-            ->where('punten', '<=', $this->wimpel_punten_totaal)
+            ->where(function ($q) use ($handmatigIds) {
+                $q->where('punten', '<=', $this->wimpel_punten_totaal)
+                  ->orWhereIn('id', $handmatigIds);
+            })
             ->orderBy('punten')
             ->get();
     }

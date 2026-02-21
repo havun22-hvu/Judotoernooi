@@ -258,6 +258,36 @@ class WimpelController extends Controller
         ]);
     }
 
+    public function handmatigUitreiken(Request $request, Organisator $organisator, StamJudoka $stamJudoka): JsonResponse
+    {
+        $this->authorizeAccess($organisator);
+        $this->authorizeJudoka($organisator, $stamJudoka);
+
+        $validated = $request->validate([
+            'milestone_id' => 'required|exists:wimpel_milestones,id',
+            'datum' => 'required|date|before_or_equal:today',
+        ]);
+
+        $milestone = WimpelMilestone::findOrFail($validated['milestone_id']);
+
+        if ($milestone->organisator_id !== $organisator->id) {
+            abort(403);
+        }
+
+        WimpelUitreiking::updateOrCreate(
+            [
+                'stam_judoka_id' => $stamJudoka->id,
+                'wimpel_milestone_id' => $milestone->id,
+            ],
+            [
+                'uitgereikt' => true,
+                'uitgereikt_at' => $validated['datum'],
+            ]
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     private function authorizeAccess(Organisator $organisator): void
     {
         $loggedIn = auth('organisator')->user();

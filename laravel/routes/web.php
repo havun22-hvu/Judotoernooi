@@ -276,6 +276,7 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::post('wimpeltoernooi/{stamJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
     Route::post('wimpeltoernooi/{stamJudoka}/bevestig', [WimpelController::class, 'bevestigJudoka'])->name('organisator.wimpel.bevestig');
     Route::post('wimpeltoernooi/{stamJudoka}/stuur-naar-spreker', [WimpelController::class, 'stuurNaarSpreker'])->name('organisator.wimpel.stuur-naar-spreker');
+    Route::post('wimpeltoernooi/{stamJudoka}/handmatig-uitreiken', [WimpelController::class, 'handmatigUitreiken'])->name('organisator.wimpel.handmatig-uitreiken');
 
     // Stambestand (organisator level - persistent judoka database)
     Route::post('judokas/import', [StamJudokaController::class, 'importUpload'])->name('organisator.stambestand.import.upload');
