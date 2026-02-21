@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organisator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -33,6 +34,9 @@ class HealthCheckTest extends TestCase
     #[Test]
     public function health_detailed_endpoint_returns_more_info(): void
     {
+        $org = Organisator::factory()->create();
+        $this->actingAs($org, 'organisator');
+
         $response = $this->getJson('/health/detailed');
 
         $response->assertStatus(200)
