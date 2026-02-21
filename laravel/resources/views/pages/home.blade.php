@@ -188,7 +188,7 @@
                 </div>
                 <div class="flex flex-col items-center gap-2">
                     <span class="text-2xl">&#128241;</span>
-                    <span class="text-white font-semibold text-sm">{{ __('Werkt op elk apparaat') }}</span>
+                    <span class="text-white font-semibold text-sm">{{ __('PC, laptop, tablet & touchscreen') }}</span>
                 </div>
                 <div class="flex flex-col items-center gap-2">
                     <span class="text-2xl">&#128274;</span>
