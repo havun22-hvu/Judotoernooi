@@ -360,10 +360,19 @@
                     </div>
                 </div>
 
-                <!-- Lightbox popup -->
-                <div x-show="lightbox" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click="lightbox = null" @keydown.escape.window="lightbox = null" style="display:none">
-                    <img :src="lightbox" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl" @click.stop>
-                    <button @click="lightbox = null" class="absolute top-4 right-4 text-white text-4xl leading-none hover:text-gray-300">&times;</button>
+                <!-- Lightbox popup (zoombaar: klik op afbeelding om te zoomen) -->
+                <div x-show="lightbox" x-transition.opacity
+                     x-data="{ zoomed: false }"
+                     class="fixed inset-0 z-50 bg-black/80"
+                     :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
+                     @click="lightbox = null; zoomed = false"
+                     @keydown.escape.window="lightbox = null; zoomed = false"
+                     style="display:none">
+                    <img :src="lightbox"
+                         :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl'"
+                         @click.stop="zoomed = !zoomed">
+                    <button @click.stop="lightbox = null; zoomed = false"
+                            class="fixed top-4 right-4 text-white text-4xl leading-none hover:text-gray-300 z-10">&times;</button>
                 </div>
             </div>
         </div>
