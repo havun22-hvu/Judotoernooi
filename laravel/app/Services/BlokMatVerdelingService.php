@@ -957,9 +957,9 @@ class BlokMatVerdelingService
                     // Eliminatie: always show as A-groep entry (B is added separately below)
                     if ($p->type === 'eliminatie') {
                         $aWedstrijden = $p->wedstrijden->where('groep', 'A')->count();
-                        // Fallback naar cached waarde als bracket nog niet gegenereerd is
-                        if ($aWedstrijden === 0 && $p->aantal_wedstrijden > 0) {
-                            $aWedstrijden = $p->aantal_wedstrijden;
+                        // Fallback: use A-bracket formula (N-1) if bracket not generated yet
+                        if ($aWedstrijden === 0 && $p->aantal_judokas > 0) {
+                            $aWedstrijden = $p->berekenAWedstrijden();
                         }
                         $pouleEntries->push([
                             'id' => $p->id,
@@ -1009,6 +1009,11 @@ class BlokMatVerdelingService
                 // B-groep entries for eliminatie poules where b_mat_id = this mat
                 foreach ($bPoules as $p) {
                     $bWedstrijden = $p->wedstrijden->where('groep', 'B')->count();
+                    $bJudokas = max(0, $p->aantal_judokas - 2);
+                    // Fallback: use B-bracket formula if bracket not generated yet
+                    if ($bWedstrijden === 0 && $bJudokas > 0) {
+                        $bWedstrijden = $p->berekenBWedstrijden();
+                    }
                     $pouleEntries->push([
                         'id' => $p->id,
                         'nummer' => $p->nummer,
@@ -1017,7 +1022,7 @@ class BlokMatVerdelingService
                         'gewichtsklasse' => $p->gewichtsklasse,
                         'type' => $p->type,
                         'groep' => 'B',
-                        'judokas' => max(0, $p->aantal_judokas - 2),
+                        'judokas' => $bJudokas,
                         'wedstrijden' => $bWedstrijden,
                     ]);
                 }

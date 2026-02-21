@@ -206,6 +206,28 @@ class Poule extends Model
     }
 
     /**
+     * Calculate A-bracket matches: N - 1
+     */
+    public function berekenAWedstrijden(?int $aantalJudokas = null): int
+    {
+        $aantal = $aantalJudokas ?? $this->aantal_judokas;
+        return max(0, $aantal - 1);
+    }
+
+    /**
+     * Calculate B-bracket matches: N - 4 (2 brons) or N - 3 (1 brons)
+     * N here = number of judokas in the full poule (B receives N-2 losers)
+     */
+    public function berekenBWedstrijden(?int $aantalJudokas = null): int
+    {
+        $aantal = $aantalJudokas ?? $this->aantal_judokas;
+        if ($aantal < 5) return 0;
+
+        $aantalBrons = $this->toernooi?->aantal_brons ?? 2;
+        return max(0, $aantal - ($aantalBrons == 2 ? 4 : 3));
+    }
+
+    /**
      * Update statistics: count all judokas in poule
      *
      * Note: Filtering (absent, wrong weight class) is handled by MOVING judokas
