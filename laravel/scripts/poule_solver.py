@@ -433,7 +433,64 @@ def verdeel_judokas(
         # Verwijder lege poules
         poules = [p for p in poules if p.size > 0]
 
-    # STAP 5: Identificeer overgebleven orphans
+    # STAP 5: Split volle poules om orphans te plaatsen
+    orphan_poules = [p for p in poules if 0 < p.size < min_grootte]
+    if orphan_poules:
+        logging.debug(f"Stap 5: {len(orphan_poules)} orphan poules, probeer split")
+        for kleine in orphan_poules[:]:
+            if kleine not in poules or kleine.size == 0:
+                continue
+
+            for orphan in kleine.judokas[:]:
+                # Zoek een volle poule waar orphan qua gewicht bij past
+                beste_target = None
+                for target in poules:
+                    if target is kleine or target.size < max_grootte:
+                        continue  # Alleen volle poules splitten
+                    if not past_in_poule(orphan, target, max_kg, max_lft, max_band):
+                        continue
+                    beste_target = target
+                    break
+
+                if beste_target:
+                    # Split: combineer orphan + target judoka's, herverdeel in 2 poules
+                    alle = beste_target.judokas + [orphan]
+                    alle.sort(key=lambda j: j.gewicht)
+                    totaal = len(alle)
+
+                    # Zoek beste split-punt: probeer alle mogelijke verdelingen
+                    beste_split = None
+                    beste_split_score = float('inf')
+                    for split_at in range(min_grootte, totaal - min_grootte + 1):
+                        p1_test = Poule(judokas=alle[:split_at])
+                        p2_test = Poule(judokas=alle[split_at:])
+
+                        # Valideer constraints
+                        if p1_test.gewicht_range > max_kg or p2_test.gewicht_range > max_kg:
+                            continue
+                        if max_lft > 0 and ((p1_test.max_leeftijd - p1_test.min_leeftijd) > max_lft or
+                                            (p2_test.max_leeftijd - p2_test.min_leeftijd) > max_lft):
+                            continue
+
+                        # Score: hoe dicht bij voorkeur?
+                        score = bereken_grootte_penalty(p1_test.size, voorkeur) + bereken_grootte_penalty(p2_test.size, voorkeur)
+                        if score < beste_split_score:
+                            beste_split_score = score
+                            beste_split = split_at
+
+                    if beste_split is not None:
+                        p1 = Poule(judokas=alle[:beste_split])
+                        p2 = Poule(judokas=alle[beste_split:])
+                        poules.remove(beste_target)
+                        kleine.judokas.remove(orphan)
+                        poules.append(p1)
+                        poules.append(p2)
+                        logging.debug(f"    Split: orphan J{orphan.id}({orphan.gewicht}kg) + poule van {beste_target.size} → {p1.size}+{p2.size}")
+
+        # Verwijder lege poules
+        poules = [p for p in poules if p.size > 0]
+
+    # STAP 6: Identificeer overgebleven orphans
     orphans = []
     for poule in poules:
         if poule.size < min_grootte:
