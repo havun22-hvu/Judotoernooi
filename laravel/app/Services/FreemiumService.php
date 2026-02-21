@@ -121,10 +121,12 @@ class FreemiumService
 
     /**
      * Get available upgrade options for a toernooi
+     * Bij re-upgrade: prijs = verschil met al betaalde staffel
      */
     public function getUpgradeOptions(Toernooi $toernooi): array
     {
         $huidigeJudokas = $toernooi->judokas()->count();
+        $alBetaald = $this->getAlBetaaldePrijs($toernooi);
 
         return collect(self::STAFFELS)
             ->filter(fn($staffel) => $staffel['max'] > $huidigeJudokas)
@@ -132,11 +134,24 @@ class FreemiumService
                 'tier' => $key,
                 'min' => $staffel['min'],
                 'max' => $staffel['max'],
-                'prijs' => $staffel['prijs'],
-                'label' => "{$staffel['min']}-{$staffel['max']} judoka's",
+                'prijs' => max(0, $staffel['prijs'] - $alBetaald),
+                'volle_prijs' => $staffel['prijs'],
+                'label' => "Tot {$staffel['max']} judoka's",
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Get the price already paid for this toernooi (from successful payments)
+     */
+    public function getAlBetaaldePrijs(Toernooi $toernooi): float
+    {
+        if (!$this->isPaidTier($toernooi) || !$toernooi->paid_tier) {
+            return 0;
+        }
+
+        return self::STAFFELS[$toernooi->paid_tier]['prijs'] ?? 0;
     }
 
     /**

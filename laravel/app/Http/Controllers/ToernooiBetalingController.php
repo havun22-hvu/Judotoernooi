@@ -105,7 +105,8 @@ class ToernooiBetalingController extends Controller
             return back()->with('error', 'Ongeldige staffel geselecteerd.');
         }
 
-        $prijs = $tierInfo['prijs'];
+        $alBetaald = $this->freemiumService->getAlBetaaldePrijs($toernooi);
+        $prijs = max(0, $tierInfo['prijs'] - $alBetaald);
         $maxJudokas = $tierInfo['max'];
 
         $organisator = Auth::guard('organisator')->user();

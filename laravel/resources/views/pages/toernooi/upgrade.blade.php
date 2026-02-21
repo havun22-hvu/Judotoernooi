@@ -267,7 +267,11 @@
         </div>
 
         {{-- Pricing info --}}
-        <p class="text-sm text-gray-500 text-center">{{ __('Prijzen: €10 per 50 judoka\'s (boven de gratis 50)') }}</p>
+        @if($isReUpgrade ?? false)
+            <p class="text-sm text-gray-500 text-center">{{ __('Je betaalt alleen het verschil met je huidige staffel') }}</p>
+        @else
+            <p class="text-sm text-gray-500 text-center">{{ __('Prijzen: €10 per 50 judoka\'s (boven de gratis 50)') }}</p>
+        @endif
     @endif
     @endif
 </div>
