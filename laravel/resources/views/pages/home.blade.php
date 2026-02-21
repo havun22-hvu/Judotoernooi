@@ -166,7 +166,7 @@
         </div>
 
         <!-- Scroll indicator -->
-        <div class="text-center pb-6 relative z-1">
+        <div class="text-center pt-10 pb-6 relative z-1">
             <p class="text-blue-300 text-sm mb-2">{{ __('Ontdek alle mogelijkheden') }}</p>
             <svg class="w-6 h-6 mx-auto text-blue-300 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
