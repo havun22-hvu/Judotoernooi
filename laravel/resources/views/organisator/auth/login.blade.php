@@ -127,12 +127,14 @@
                 </a>
             </div>
 
+            {{-- DO NOT REMOVE: Login submit button --}}
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                 {{ __('Inloggen') }}
             </button>
         </form>
 
+        {{-- DO NOT REMOVE: Registration link for new users --}}
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 {{ __('Nog geen account?') }}

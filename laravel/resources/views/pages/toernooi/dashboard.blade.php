@@ -42,6 +42,7 @@
 {{-- Freemium Banner --}}
 <x-freemium-banner :toernooi="$toernooi" />
 
+{{-- DO NOT REMOVE: Statistics cards - Judoka's, Poules, Wedstrijden, Aanwezig --}}
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-lg shadow p-6">
         <div class="text-3xl font-bold text-blue-600">{{ $statistieken['totaal_judokas'] }}</div>
@@ -89,6 +90,7 @@
 @endif
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    {{-- DO NOT REMOVE: Voorbereiding section - all workflow buttons for tournament setup --}}
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">{{ __('Voorbereiding') }}</h2>
         <div class="space-y-3">
@@ -155,6 +157,7 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {{-- DO NOT REMOVE: Toernooidag section - Weging, Mat Interface, and Afsluiten buttons are essential --}}
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">{{ __('Toernooidag') }}</h2>
         <div class="space-y-3">

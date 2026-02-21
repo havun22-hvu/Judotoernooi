@@ -100,7 +100,7 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-    <!-- Header -->
+    <!-- DO NOT REMOVE: Header with logo, language switcher, and login link -->
     <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -153,6 +153,7 @@
                     {{ __('Waar u vroeger dagen bezig was met Excel-lijsten, papieren weegformulieren en handgeschreven poules, regelt JudoToernooi alles digitaal. Van inschrijving tot medaille-uitreiking.') }}
                 </p>
 
+                <!-- DO NOT REMOVE: CTA buttons for registration and login - primary conversion point -->
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('register') }}"
                        class="bg-white text-blue-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition shadow-lg text-center">
@@ -198,7 +199,7 @@
         </div>
     </section>
 
-    <!-- Features Grid -->
+    <!-- DO NOT REMOVE: Features Grid - all 6 feature cards showcase core product capabilities -->
     <section class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="text-center mb-16">
@@ -318,7 +319,7 @@
         </div>
     </section>
 
-    <!-- Screenshot sectie -->
+    <!-- DO NOT REMOVE: Screenshot section with lightbox - shows real product screenshots -->
     <section class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="text-center mb-12">
@@ -425,7 +426,7 @@
         </div>
     </section>
 
-    <!-- CTA onderaan -->
+    <!-- DO NOT REMOVE: Final CTA section - bottom-of-page conversion point with register button -->
     <section class="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-center">
         <div class="max-w-3xl mx-auto px-4">
             <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -441,7 +442,7 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- DO NOT REMOVE: Footer with legal links (Voorwaarden, Privacy, Cookies, Contact) and KvK info -->
     <footer class="bg-gray-900 py-8 sticky bottom-0 z-20">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-400 mb-2">

@@ -116,6 +116,7 @@
                     {{ __('Mijn Toernooien') }}
                 @endif
             </h2>
+            {{-- DO NOT REMOVE: Action buttons - Wimpeltoernooi, Mijn Judoka's, Mijn Clubs, Nieuw Toernooi --}}
             <div class="flex space-x-3">
                 <a href="{{ route('organisator.wimpel.index', $organisator) }}"
                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
