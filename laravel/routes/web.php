@@ -630,7 +630,7 @@ Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
 Route::prefix('{organisator}/{toernooi}')->group(function () {
     Route::prefix('toegang')->name('toegang.')->group(function () {
         Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show');
-        Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify');
+        Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify')->middleware('throttle:5,1');
     });
 
     // Device-bound interfaces
