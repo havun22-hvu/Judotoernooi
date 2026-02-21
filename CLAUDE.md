@@ -114,6 +114,27 @@ Je bouwt een **SaaS product** dat door betalende klanten wordt gebruikt. Denk bi
 | **Code standaarden** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
 | **Error handling** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/STABILITY.md` |
 
+### BESCHERM BESTAANDE CODE (5 lagen)
+
+Hoe verder de app vordert, hoe belangrijker het is dat werkende code niet onbedoeld kapot gaat.
+**Bij ELKE wijziging aan een view of component: LEES EERST wat er staat en waarom.**
+
+**5 beschermingslagen (gebruik ze!):**
+
+| # | Laag | Beschermt tegen | Hoe |
+|---|------|----------------|-----|
+| 1 | **MD docs** | Onbegrip (waarom bestaat dit?) | Beschrijf functie + implementatie in feature docs |
+| 2 | **DO NOT REMOVE comment** | Onoplettendheid (per ongeluk wissen) | `{{-- DO NOT REMOVE: [wat + waarom] --}}` in de view |
+| 3 | **Tests** | Code-regressie (het werkt niet meer) | PHPUnit/Feature test die de output checkt |
+| 4 | **CLAUDE.md regels** | Alle toekomstige sessies | Deze sectie + specifieke regels |
+| 5 | **Memory** | Context verlies tussen sessies | `memory/MEMORY.md` kritieke regels |
+
+**Regels:**
+- Views met `DO NOT REMOVE` comments: **NIET aanraken** zonder expliciete toestemming
+- Bij twijfel of iets bewust geplaatst is: **VRAAG aan gebruiker**
+- Verwijder NOOIT UI-elementen die je niet begrijpt — lees eerst de docs
+- Na een fix: controleer dat bestaande functionaliteit nog intact is
+
 ### Workflow: Local → GitHub → Server
 ```
 ALTIJD: Edit lokaal → Push naar GitHub → Deploy naar staging/production
