@@ -26,7 +26,7 @@ class SitemapController extends Controller
         // Active public tournaments (not closed, with a date in the future or recent past)
         $toernooien = Toernooi::with('organisator')
             ->where('datum', '>=', now()->subMonths(3))
-            ->whereNull('afgesloten_op')
+            ->whereNull('afgesloten_at')
             ->whereHas('organisator')
             ->get();
 
