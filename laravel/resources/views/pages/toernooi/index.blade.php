@@ -6,7 +6,7 @@
 <div class="flex justify-between items-center mb-8">
     <div>
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Havun Admin Dashboard') }}</h1>
-        <p class="text-gray-500 mt-1">{{ __('Overzicht van alle klanten (organisatoren) en hun toernooien') }}</p>
+        <p class="text-gray-500 mt-1">{{ __('Overzicht van alle klanten (organisatoren)') }}<br>{{ __('en hun toernooien') }}</p>
     </div>
     <div class="flex gap-4">
         <a href="{{ route('admin.klanten') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
