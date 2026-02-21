@@ -139,43 +139,89 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 min-h-screen flex items-center relative overflow-hidden">
+    <section class="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 relative overflow-hidden">
         <div class="absolute inset-0 opacity-10">
             <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
             <div class="absolute bottom-20 right-10 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
         </div>
-        <div class="max-w-7xl mx-auto px-4 py-32 grid lg:grid-cols-2 gap-12 items-center relative z-1">
+        <div class="max-w-7xl mx-auto px-4 pt-28 pb-16 grid lg:grid-cols-2 gap-12 items-center relative z-1">
             <div>
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                <p class="text-blue-300 font-medium mb-3 text-sm uppercase tracking-wider">{{ __('Toernooi Management Software') }}</p>
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
                     {{ __('Uw judotoernooi in minuten, niet in weken') }}
                 </h1>
-                <p class="text-xl text-blue-100 mb-8 leading-relaxed">
-                    {{ __('Van inschrijving tot eindstand: alles wat u nodig heeft in een platform. Automatische poule-indeling, digitale weging, live uitslagen en meer.') }}
+                <p class="text-lg text-blue-100 mb-6 leading-relaxed">
+                    {{ __('Waar u vroeger dagen bezig was met Excel-lijsten, papieren weegformulieren en handgeschreven poules, regelt JudoToernooi alles digitaal. Van inschrijving tot medaille-uitreiking.') }}
                 </p>
+
+                <!-- USP checklist in hero -->
+                <ul class="space-y-3 mb-8 text-blue-100">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>{{ __('Automatische poule-indeling op leeftijd, gewicht en band') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>{{ __('Digitale weging met QR-codes — geen papier meer') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>{{ __('Live wedstrijdschema op telefoon, tablet en scherm') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>{{ __('Ouders en coaches volgen live mee — geen vragen meer aan de rand') }}</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>{{ __('Noodpakket & backups — uw toernooi stopt nooit') }}</span>
+                    </li>
+                </ul>
+
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="{{ route('register') }}"
-                       class="bg-white text-blue-800 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg text-center">
-                        {{ __('Gratis Proberen') }}
+                       class="bg-white text-blue-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition shadow-lg text-center">
+                        {{ __('Gratis Account Aanmaken') }}
                     </a>
                     <a href="{{ route('login') }}"
                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition text-center">
-                        {{ __('Inloggen als Organisator') }}
+                        {{ __('Inloggen') }}
                     </a>
                 </div>
             </div>
-            <!-- Screenshot placeholder -->
+            <!-- Right side: key stats / social proof -->
             <div class="hidden lg:block">
-                <div class="bg-white/10 backdrop-blur rounded-2xl p-2 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                    <div class="bg-gradient-to-br from-blue-600/30 to-blue-800/30 rounded-xl aspect-[4/3] flex items-center justify-center border border-white/20">
-                        <div class="text-center text-white/60">
-                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
-                            </svg>
-                            <p class="text-sm font-medium">{{ __('Screenshot: Dashboard') }}</p>
-                        </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20 text-center">
+                        <div class="text-3xl mb-2">&#129355;</div>
+                        <h3 class="text-white font-bold text-lg mb-1">{{ __('Poules') }}</h3>
+                        <p class="text-blue-200 text-sm">{{ __('Automatisch eerlijk ingedeeld op leeftijd, gewicht en band') }}</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20 text-center">
+                        <div class="text-3xl mb-2">&#9878;&#65039;</div>
+                        <h3 class="text-white font-bold text-lg mb-1">{{ __('Weging') }}</h3>
+                        <p class="text-blue-200 text-sm">{{ __('QR-code scannen, gewicht invoeren, klaar') }}</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20 text-center">
+                        <div class="text-3xl mb-2">&#128250;</div>
+                        <h3 class="text-white font-bold text-lg mb-1">{{ __('Live') }}</h3>
+                        <p class="text-blue-200 text-sm">{{ __('Ouders zien real-time wanneer hun kind vecht') }}</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20 text-center">
+                        <div class="text-3xl mb-2">&#128737;&#65039;</div>
+                        <h3 class="text-white font-bold text-lg mb-1">{{ __('Veilig') }}</h3>
+                        <p class="text-blue-200 text-sm">{{ __('Elke minuut backup, noodpakket voor offline gebruik') }}</p>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="text-center pb-6 relative z-1">
+            <p class="text-blue-300 text-sm mb-2">{{ __('Ontdek alle mogelijkheden') }}</p>
+            <svg class="w-6 h-6 mx-auto text-blue-300 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
         </div>
     </section>
 
