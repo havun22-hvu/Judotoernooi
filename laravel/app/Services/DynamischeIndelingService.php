@@ -351,6 +351,7 @@ class DynamischeIndelingService
         if ($tolerantie > 0) {
             $maxKgSoft = $maxKg + $tolerantie;
             $minSize = min($this->config['poule_grootte_voorkeur'] ?? [3]);
+            $maxSize = max($this->config['poule_grootte_voorkeur'] ?? [6]);
 
             foreach ($poules as $ki => &$kleine) {
                 if (count($kleine['judokas']) >= $minSize) continue;
@@ -364,6 +365,8 @@ class DynamischeIndelingService
 
                     foreach ($poules as $ti => &$target) {
                         if ($ti === $ki || count($target['judokas']) < $minSize) continue;
+                        // Nooit groter dan max voorkeur
+                        if (count($target['judokas']) >= $maxSize) continue;
 
                         $past = true;
                         $maxVerschil = 0;
