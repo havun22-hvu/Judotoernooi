@@ -42,6 +42,11 @@ class Organisator extends Authenticatable
         'is_premium',
         'live_refresh_interval',
         'locale',
+        'wimpel_abo_actief',
+        'wimpel_abo_start',
+        'wimpel_abo_einde',
+        'wimpel_abo_prijs',
+        'wimpel_abo_notities',
     ];
 
     protected $casts = [
@@ -51,6 +56,10 @@ class Organisator extends Authenticatable
         'kortingsregeling' => 'boolean',
         'kyc_compleet' => 'boolean',
         'live_refresh_interval' => 'integer',
+        'wimpel_abo_actief' => 'boolean',
+        'wimpel_abo_start' => 'date',
+        'wimpel_abo_einde' => 'date',
+        'wimpel_abo_prijs' => 'decimal:2',
     ];
 
     protected static function booted(): void
@@ -278,6 +287,28 @@ class Organisator extends Authenticatable
             'kyc_compleet' => true,
             'kyc_ingevuld_op' => now(),
         ]);
+    }
+
+    /**
+     * Check if organisator has an active wimpel subscription
+     */
+    public function heeftWimpelAbo(): bool
+    {
+        return $this->wimpel_abo_actief
+            && $this->wimpel_abo_einde
+            && $this->wimpel_abo_einde->isFuture();
+    }
+
+    /**
+     * Check if wimpel subscription expires within 30 days
+     */
+    public function wimpelAboBijnaVerlopen(): bool
+    {
+        if (!$this->heeftWimpelAbo()) {
+            return false;
+        }
+
+        return $this->wimpel_abo_einde->diffInDays(now()) <= 30;
     }
 
     /**

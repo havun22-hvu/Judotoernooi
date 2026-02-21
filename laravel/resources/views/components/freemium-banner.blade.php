@@ -42,6 +42,24 @@
             </a>
         </div>
     </div>
+@elseif($toernooi->isWimpelAbo())
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                    {{ __('Wimpel Abonnement') }}
+                </span>
+                <span class="text-sm text-gray-600">{{ __('Onbeperkt puntencompetitie') }}</span>
+            </div>
+            @if($toernooi->organisator?->wimpelAboBijnaVerlopen())
+                <span class="text-xs text-orange-600 font-medium">
+                    {{ __('Abo verloopt :datum', ['datum' => $toernooi->organisator->wimpel_abo_einde->format('d-m-Y')]) }}
+                </span>
+            @else
+                <span class="text-xs text-blue-600">{{ __('Alle functies actief') }}</span>
+            @endif
+        </div>
+    </div>
 @elseif($toernooi->isPaidTier())
     <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
         <div class="flex items-center justify-between">

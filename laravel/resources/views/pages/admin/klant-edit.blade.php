@@ -129,7 +129,56 @@
                 </label>
             </div>
 
-            <div class="flex justify-end">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 mt-6">Wimpel Abonnement</h2>
+            <div class="p-4 border rounded-lg {{ $klant->heeftWimpelAbo() ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200' }}">
+                <label class="flex items-center mb-4">
+                    <input type="checkbox" name="wimpel_abo_actief" value="1"
+                           {{ old('wimpel_abo_actief', $klant->wimpel_abo_actief) ? 'checked' : '' }}
+                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Wimpel abonnement actief</span>
+                        <p class="text-xs text-gray-500">Onbeperkt puntencompetitie toernooien</p>
+                    </div>
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Startdatum</label>
+                        <input type="date" name="wimpel_abo_start"
+                               value="{{ old('wimpel_abo_start', $klant->wimpel_abo_start?->format('Y-m-d')) }}"
+                               class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Einddatum</label>
+                        <input type="date" name="wimpel_abo_einde"
+                               value="{{ old('wimpel_abo_einde', $klant->wimpel_abo_einde?->format('Y-m-d')) }}"
+                               class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prijs per jaar</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">&euro;</span>
+                            <input type="number" name="wimpel_abo_prijs" step="0.01" min="0"
+                                   value="{{ old('wimpel_abo_prijs', $klant->wimpel_abo_prijs) }}"
+                                   class="w-full border rounded pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="50.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notities</label>
+                        <input type="text" name="wimpel_abo_notities"
+                               value="{{ old('wimpel_abo_notities', $klant->wimpel_abo_notities) }}"
+                               class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Bijv. betaald via factuur">
+                    </div>
+                </div>
+                @if($klant->wimpelAboBijnaVerlopen())
+                    <div class="mt-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm text-yellow-800">
+                        Abonnement verloopt op {{ $klant->wimpel_abo_einde->format('d-m-Y') }} ({{ $klant->wimpel_abo_einde->diffForHumans() }})
+                    </div>
+                @endif
+            </div>
+
+            <div class="flex justify-end mt-6">
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
                     Opslaan
                 </button>
