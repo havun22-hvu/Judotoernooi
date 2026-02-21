@@ -59,6 +59,7 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
+    {{-- DO NOT REMOVE: Main navigation bar with logo, menu tabs, language switcher, and user dropdown --}}
     <nav class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
@@ -68,6 +69,7 @@
                     @php
                         $currentRoute = Route::currentRouteName();
                     @endphp
+                    {{-- DO NOT REMOVE: Navigation menu tabs - all 8 tabs are essential for toernooi workflow --}}
                     <div class="hidden md:flex space-x-4">
                         <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __("Judoka's") }}</a>
                         <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Poules') }}</a>
@@ -81,7 +83,7 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-4">
-                    {{-- Taalkiezer --}}
+                    {{-- DO NOT REMOVE: Language switcher (NL/EN) - essential for multi-language support --}}
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
@@ -112,7 +114,7 @@
                     </div>
 
                     @if(Auth::guard('organisator')->check())
-                    {{-- Organisator ingelogd - dropdown menu --}}
+                    {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
                     <div class="relative" x-data="{ open: false, showAbout: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
@@ -235,6 +237,7 @@
         @yield('content')
     </main>
 
+    {{-- DO NOT REMOVE: Footer with legal links (Voorwaarden, Privacy, Cookies, Contact) and KvK info --}}
     <footer class="bg-gray-800 text-white py-4 mt-auto shrink-0">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-300 mb-1">
@@ -256,7 +259,7 @@
         </div>
     </footer>
 
-    {{-- Idle Timeout - Auto logout after 20 minutes inactivity --}}
+    {{-- DO NOT REMOVE: Idle Timeout - Auto logout after 20 minutes inactivity (security feature) --}}
     @if(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
     <script>
         (function() {
@@ -329,7 +332,7 @@
     </script>
     @endif
 
-    {{-- Global fetch interceptor - redirect to login on session expire --}}
+    {{-- DO NOT REMOVE: Global fetch interceptor - redirects to login on 401/419 session expire --}}
     <script>
         (function() {
             const originalFetch = window.fetch;
@@ -403,8 +406,7 @@
         }
     </script>
 
-    {{-- Noodplan Live Backup Sync --}}
-    {{-- Automatisch actief op elke toernooi pagina --}}
+    {{-- DO NOT REMOVE: Noodplan Live Backup Sync - syncs data to localStorage every 30s for offline emergency access --}}
     @if(isset($toernooi) && $toernooi)
     <script>
         (function() {

@@ -155,12 +155,14 @@
             });
             </script>
 
+            {{-- DO NOT REMOVE: Registration submit button --}}
             <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                 Account aanmaken
             </button>
         </form>
 
+        {{-- DO NOT REMOVE: Login link for existing users --}}
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Al een account?
