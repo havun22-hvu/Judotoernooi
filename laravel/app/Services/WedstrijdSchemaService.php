@@ -504,13 +504,16 @@ class WedstrijdSchemaService
                 }
             }
 
+            // Wedstrijd is gespeeld als er een winnaar is OF als beide scores ingevuld zijn (inclusief 0-0 gelijkspel)
+            $isGespeeld = $winnaarId !== null || ($scoreWit !== '' && $scoreBlauw !== '');
+
             $wedstrijd->update([
                 'winnaar_id' => $winnaarId,
                 'score_wit' => $scoreWit,
                 'score_blauw' => $scoreBlauw,
                 'uitslag_type' => $type,
-                'is_gespeeld' => true,
-                'gespeeld_op' => now(),
+                'is_gespeeld' => $isGespeeld,
+                'gespeeld_op' => $isGespeeld ? now() : null,
             ]);
 
             // Update pool standings

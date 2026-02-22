@@ -1350,14 +1350,23 @@ function matInterface() {
                             w.wpScores[w.wit.id] = 0;
                             w.wpScores[w.blauw.id] = 2;
                         } else if (w.is_gespeeld && !w.winnaar_id) {
-                            // Gelijkspel: beide krijgen 1 WP
-                            w.wpScores[w.wit.id] = 1;
-                            w.wpScores[w.blauw.id] = 1;
+                            // Gelijkspel: alleen WP=1 toekennen als er ook daadwerkelijk scores zijn
+                            // (score_wit/score_blauw kunnen "0" zijn bij echt gelijkspel)
+                            const heeftScores = (w.score_wit !== null && w.score_wit !== '' && w.score_wit !== undefined) ||
+                                                (w.score_blauw !== null && w.score_blauw !== '' && w.score_blauw !== undefined);
+                            if (heeftScores) {
+                                w.wpScores[w.wit.id] = 1;
+                                w.wpScores[w.blauw.id] = 1;
+                            }
                         }
 
-                        // Parse JP from scores
-                        if (w.score_wit) w.jpScores[w.wit.id] = parseInt(w.score_wit) || 0;
-                        if (w.score_blauw) w.jpScores[w.blauw.id] = parseInt(w.score_blauw) || 0;
+                        // Parse JP from scores — "0" is een geldige score, alleen lege string skippen
+                        if (w.score_wit !== null && w.score_wit !== '' && w.score_wit !== undefined) {
+                            w.jpScores[w.wit.id] = parseInt(w.score_wit) || 0;
+                        }
+                        if (w.score_blauw !== null && w.score_blauw !== '' && w.score_blauw !== undefined) {
+                            w.jpScores[w.blauw.id] = parseInt(w.score_blauw) || 0;
+                        }
                     }
 
                     return w;
@@ -1668,6 +1677,13 @@ function matInterface() {
         async saveScore(wedstrijd, poule) {
             // Skip if no judokas (eliminatie TBD)
             if (!wedstrijd.wit || !wedstrijd.blauw) {
+                return;
+            }
+
+            // Skip save als JP blanco is voor beide — alleen WP zonder JP is geen geldige uitslag
+            const witJpDefined = wedstrijd.jpScores[wedstrijd.wit.id] !== undefined;
+            const blauwJpDefined = wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined;
+            if (!witJpDefined && !blauwJpDefined) {
                 return;
             }
 
