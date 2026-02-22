@@ -727,7 +727,7 @@
                         <tr><td class="py-1"><strong>10</strong> ({{ __('ippon') }})</td><td class="py-1">{{ __('Winnaar') }}</td><td class="py-1">{{ __('Winnaar WP = 2, verliezer WP = 0') }}</td></tr>
                     </tbody>
                 </table>
-                <p class="text-sm text-orange-600 mt-2">{!! __('<strong>Let op:</strong> Blanco JP ≠ 0 JP. Blanco = niet gespeeld, 0 = gelijkspel (geen punten behaald).') !!}</p>
+                <p class="text-sm text-orange-600 mt-2">{!! __('<strong>Let op:</strong> Blanco JP ≠ 0 JP. Blanco = niet gespeeld, 0 = gelijkspel (geen judopunten behaald, wel 1 wedstrijdpunt).') !!}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Blessure / Uitval') }}</h4>
                 <p class="mb-2"><strong>{{ __('Tijdens een wedstrijd:') }}</strong></p>
