@@ -687,6 +687,7 @@
                     <li>{!! __('Klik op <span class="text-yellow-600 font-bold">geel</span> → geel gaat uit, blauw schuift op naar geel') !!}</li>
                     <li>{!! __('Klik op <span class="text-green-600 font-bold">groen</span> → wedstrijd gaat niet door, geel wordt groen, blauw wordt geel') !!}</li>
                 </ul>
+                <p class="text-sm text-gray-500 mt-2">{{ __('Deze kleuren zijn direct zichtbaar in de publieke app, spreker interface en op het scorebord. Zo weten judoka\'s, coaches en publiek precies welke wedstrijd nu speelt en wie moet klaarmaken.') }}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Puntensysteem') }}</h4>
                 <table class="min-w-full text-sm mt-2">

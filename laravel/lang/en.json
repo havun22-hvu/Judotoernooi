@@ -2258,5 +2258,6 @@
     "Uitzetten (de andere beurten schuiven door):": "Deselecting (other turns shift up):",
     "Klik op <span class=\"text-blue-600 font-bold\">blauw</span> → blauw gaat uit": "Click <span class=\"text-blue-600 font-bold\">blue</span> → blue turns off",
     "Klik op <span class=\"text-yellow-600 font-bold\">geel</span> → geel gaat uit, blauw schuift op naar geel": "Click <span class=\"text-yellow-600 font-bold\">yellow</span> → yellow turns off, blue shifts to yellow",
-    "Klik op <span class=\"text-green-600 font-bold\">groen</span> → wedstrijd gaat niet door, geel wordt groen, blauw wordt geel": "Click <span class=\"text-green-600 font-bold\">green</span> → match cancelled, yellow becomes green, blue becomes yellow"
+    "Klik op <span class=\"text-green-600 font-bold\">groen</span> → wedstrijd gaat niet door, geel wordt groen, blauw wordt geel": "Click <span class=\"text-green-600 font-bold\">green</span> → match cancelled, yellow becomes green, blue becomes yellow",
+    "Deze kleuren zijn direct zichtbaar in de publieke app, spreker interface en op het scorebord. Zo weten judoka's, coaches en publiek precies welke wedstrijd nu speelt en wie moet klaarmaken.": "These colors are instantly visible in the public app, announcer interface and on the scoreboard. This way judokas, coaches and spectators always know which match is playing and who should get ready."
 }
