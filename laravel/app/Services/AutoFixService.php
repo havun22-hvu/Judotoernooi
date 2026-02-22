@@ -131,6 +131,8 @@ class AutoFixService
 
     /**
      * Gather source code context from the stack trace.
+     * When the error originates in vendor code, follows the stack trace
+     * to find the first project file as the real fix target.
      */
     protected function gatherCodeContext(Throwable $e): string
     {
@@ -140,13 +142,25 @@ class AutoFixService
         $seen = [];
 
         $primaryFile = $e->getFile();
-        if (file_exists($primaryFile) && $this->isProjectFile($primaryFile)) {
+        $errorIsInVendor = !$this->isProjectFile($primaryFile);
+
+        // Include vendor error location as reference (not editable, but informative)
+        if ($errorIsInVendor) {
+            $vendorRelPath = $this->relativePath($primaryFile);
+            $vendorContent = $this->readFileWithContext($primaryFile, $e->getLine(), 10);
+            $context[] = "=== {$vendorRelPath} (VENDOR - error origin, NOT editable) ===\n{$vendorContent}";
+        }
+
+        if (file_exists($primaryFile) && !$errorIsInVendor) {
             $relPath = $this->relativePath($primaryFile);
             $seen[$relPath] = true;
             $content = $this->readFileWithContext($primaryFile, $e->getLine(), 20);
             $context[] = "=== {$relPath} (error at line {$e->getLine()}) ===\n{$content}";
         }
 
+        // Walk the stack trace for project files
+        // When error is in vendor, the first project file is the likely fix target
+        $foundProjectFile = false;
         foreach ($e->getTrace() as $frame) {
             if (count($context) >= $maxFiles) {
                 break;
@@ -164,8 +178,15 @@ class AutoFixService
             $seen[$relPath] = true;
 
             $line = $frame['line'] ?? 1;
-            $content = $this->readFileWithContext($file, $line, 10);
-            $context[] = "=== {$relPath} (line {$line}) ===\n{$content}";
+            // First project file in a vendor-originated error gets more context
+            $contextLines = ($errorIsInVendor && !$foundProjectFile) ? 20 : 10;
+            $label = ($errorIsInVendor && !$foundProjectFile)
+                ? "{$relPath} (FIX TARGET - called vendor code at line {$line})"
+                : "{$relPath} (line {$line})";
+            $foundProjectFile = true;
+
+            $content = $this->readFileWithContext($file, $line, $contextLines);
+            $context[] = "=== {$label} ===\n{$content}";
         }
 
         $result = implode("\n\n", $context);
@@ -214,6 +235,7 @@ class AutoFixService
             . "- Only make MINIMAL changes to fix the specific error\n"
             . "- Never change .env, config files, or database schema\n"
             . "- Never add new dependencies\n"
+            . "- Never modify vendor/ files - if the error originates in vendor code, fix the PROJECT file that calls it (marked as FIX TARGET)\n"
             . "- Prefer defensive fixes (null checks, try/catch) over structural changes";
 
         try {
