@@ -906,6 +906,19 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         if (matEl) {
             const comp = Alpine.$data(matEl);
             if (comp) {
+                // Na winnaar doorschuif: markeer bron-wedstrijd als gespeeld in Alpine data
+                // Zodat isBracketLocked() true retourneert en swap ruimte verdwijnt
+                if (!isSeeding && data.wedstrijdId) {
+                    const poule = comp.poules.find(p => p.poule_id == pouleId);
+                    if (poule) {
+                        const wed = poule.wedstrijden.find(w => w.id == data.wedstrijdId);
+                        if (wed) {
+                            wed.is_gespeeld = true;
+                            wed.winnaar_id = data.judokaId;
+                        }
+                    }
+                }
+
                 if (result.updated_slots) {
                     comp.updateAlleBracketSlots(result.updated_slots, pouleId);
                 }
