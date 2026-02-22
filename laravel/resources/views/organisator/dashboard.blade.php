@@ -7,23 +7,19 @@
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <nav class="bg-white shadow-sm" x-data="{ mobileOpen: false }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {{-- DO NOT REMOVE: Same blue navbar as app.blade.php — consistent navigation across all pages --}}
+    <nav class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-bold text-gray-800">{{ __('JudoToernooi') }}</h1>
+                    <span class="text-xl font-bold">{{ __('JudoToernooi') }}</span>
                 </div>
-
-                {{-- Desktop menu --}}
-                <div class="hidden sm:flex items-center space-x-4">
-                    @if($organisator->isSitebeheerder())
-                    <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
-                    @endif
-                    {{-- Taalkiezer --}}
+                <div class="flex items-center space-x-4">
+                    {{-- Language switcher --}}
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false" class="text-gray-500 hover:text-gray-700 text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
-                            <svg class="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -42,61 +38,75 @@
                             </form>
                         </div>
                     </div>
-                    <span class="text-gray-600">{{ $organisator->naam }}</span>
-                    @if($organisator->isSitebeheerder())
-                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ __('Sitebeheerder') }}</span>
-                    @endif
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-gray-600 hover:text-gray-800">
-                            {{ __('Uitloggen') }}
-                        </button>
-                    </form>
-                </div>
 
-                {{-- Hamburger button (mobile) --}}
-                <div class="flex items-center sm:hidden">
-                    <button @click="mobileOpen = !mobileOpen" class="text-gray-600 hover:text-gray-800 focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path x-show="!mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                            <path x-show="mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
+                    {{-- User dropdown (same as app.blade.php) --}}
+                    <div class="relative" x-data="{ open: false, showAbout: false }">
+                        <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                            @if($organisator->isSitebeheerder())
+                                👑
+                            @else
+                                📋
+                            @endif
+                            {{ $organisator->naam }}
+                            <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                            @if($organisator->isSitebeheerder())
+                            <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Alle Toernooien') }}</a>
+                            @endif
+                            <a href="{{ route('organisator.dashboard', ['organisator' => $organisator->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
+                            <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
+                            <hr class="my-1">
+                            <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">🔄 {{ __('Forceer Update') }}</button>
+                            <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
+                            </form>
+                        </div>
 
-        {{-- Mobile menu --}}
-        <div x-show="mobileOpen" x-transition class="sm:hidden border-t bg-white">
-            <div class="px-4 py-3 space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600 font-medium">{{ $organisator->naam }}</span>
-                    @if($organisator->isSitebeheerder())
-                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ __('Sitebeheerder') }}</span>
-                    @endif
+                        {{-- About modal --}}
+                        <div x-show="showAbout" x-cloak
+                             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                             @click.self="showAbout = false"
+                             @keydown.escape.window="showAbout = false">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="showAbout = false">
+                                <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
+                                    <button type="button" @click="showAbout = false"
+                                            class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
+                                    <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
+                                    <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
+                                </div>
+                                <div class="px-6 py-4 space-y-3">
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Versie') }}</p>
+                                        <p class="font-medium text-gray-800">v{{ config('toernooi.version') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Laatste update') }}</p>
+                                        <p class="font-medium text-gray-800">{{ config('toernooi.version_date') }}</p>
+                                    </div>
+                                    <hr>
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Ontwikkeld door') }}</p>
+                                        <p class="font-medium text-gray-800">Havun</p>
+                                        <p class="text-sm text-gray-500">havun22@gmail.com</p>
+                                    </div>
+                                    <hr>
+                                    <button type="button" onclick="location.reload(true)"
+                                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
+                                        {{ __('Ververs app') }}
+                                    </button>
+                                </div>
+                                <div class="px-6 py-3 bg-gray-50 text-center">
+                                    <button type="button" @click="showAbout = false" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                @if($organisator->isSitebeheerder())
-                <a href="{{ route('admin.index') }}" class="block text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
-                @endif
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-500 text-sm">{{ __('Taal') }}:</span>
-                    <form action="{{ route('locale.switch', 'nl') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-1 {{ app()->getLocale() === 'nl' ? 'font-bold' : 'opacity-60' }}">
-                            @include('partials.flag-icon', ['lang' => 'nl']) <span class="text-sm">Nederlands</span>
-                        </button>
-                    </form>
-                    <form action="{{ route('locale.switch', 'en') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-1 {{ app()->getLocale() === 'en' ? 'font-bold' : 'opacity-60' }}">
-                            @include('partials.flag-icon', ['lang' => 'en']) <span class="text-sm">English</span>
-                        </button>
-                    </form>
-                </div>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium">{{ __('Uitloggen') }}</button>
-                </form>
             </div>
         </div>
     </nav>
