@@ -433,44 +433,6 @@ class ToernooiController extends Controller
         return view('organisator.dashboard', compact('organisator', 'toernooien'));
     }
 
-    /**
-     * Show organisator settings page
-     */
-    public function organisatorInstellingen(\App\Models\Organisator $organisator): View
-    {
-        $loggedIn = auth('organisator')->user();
-
-        // Verify access: either viewing own settings or is sitebeheerder
-        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
-            abort(403, 'Je hebt geen toegang tot deze instellingen.');
-        }
-
-        return view('organisator.instellingen', compact('organisator'));
-    }
-
-    /**
-     * Update organisator settings
-     */
-    public function organisatorInstellingenUpdate(\App\Models\Organisator $organisator, Request $request): RedirectResponse
-    {
-        $loggedIn = auth('organisator')->user();
-
-        // Verify access
-        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
-            abort(403, 'Je hebt geen toegang tot deze instellingen.');
-        }
-
-        $validated = $request->validate([
-            'live_refresh_interval' => 'nullable|integer|in:5,10,15,30,60',
-        ]);
-
-        $organisator->update([
-            'live_refresh_interval' => $validated['live_refresh_interval'] ?: null,
-        ]);
-
-        return back()->with('success', 'Instellingen opgeslagen.');
-    }
-
     public function updateWachtwoorden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $rollen = ['admin', 'jury', 'weging', 'mat', 'spreker'];

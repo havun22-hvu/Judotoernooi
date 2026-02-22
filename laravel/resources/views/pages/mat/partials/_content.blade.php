@@ -554,6 +554,8 @@ window.checkAdminWachtwoord = async function(wachtwoord) {
 // === SWAP RUIMTE VOOR SEEDING ===
 // Tijdelijke opslag voor judoka's tijdens het seeden
 window.swapRuimte = {}; // { pouleId: [{ id, naam }, ...] }
+window.swapCount = {}; // { pouleId: aantalSwaps }
+const MAX_SEEDING_SWAPS = 4;
 
 // Haal swap judoka's op voor een poule
 window.getSwapJudokas = function(pouleId) {
@@ -583,6 +585,11 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
+    // Max seeding swaps check
+    if (!isLocked && (window.swapCount[pouleId] || 0) >= MAX_SEEDING_SWAPS) {
+        alert(`⚠️ Maximum aantal seeding swaps bereikt (${MAX_SEEDING_SWAPS}). De bracket is nu vastgezet.`);
+        return;
+    }
 
     // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
@@ -794,6 +801,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         // Bepaal of dit seeding (move) of winnaar doorschuif (copy) is
         const isSeeding = !isWinnaarDoorschuif && !isLocked;
 
+        // Max seeding swaps check
+        if (isSeeding && (window.swapCount[data.pouleId] || 0) >= MAX_SEEDING_SWAPS) {
+            alert(`⚠️ Maximum aantal seeding swaps bereikt (${MAX_SEEDING_SWAPS}). De bracket is nu vastgezet.`);
+            return false;
+        }
+
         if (isSeeding) {
             // SEEDING MODE: Verplaatsen binnen zelfde ronde (MOVE)
             if (data.targetHuidigeJudoka) {
@@ -815,7 +828,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-        
+
                     },
                     body: JSON.stringify({
                         wedstrijd_id: data.wedstrijdId,
@@ -824,6 +837,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     })
                 });
             }
+
+            // Seeding swap teller ophogen
+            window.swapCount[data.pouleId] = (window.swapCount[data.pouleId] || 0) + 1;
         } else {
             // WEDSTRIJD WINNEN: Doorschuiven naar volgende ronde (COPY)
             // WINNAAR DOORSCHUIF: Judoka blijft in vorige ronde met groene stip
