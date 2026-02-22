@@ -891,6 +891,33 @@
 
 ---
 
+## Sessie: 22 februari 2026
+
+### Feat: Handmatige milestone uitreiking (wimpel)
+- **Type:** Feature
+- **Wat:** Organisator kan historische milestone handmatig markeren als uitgereikt met datum
+- **Bestanden:** WimpelController.php, StamJudoka.php, show.blade.php, web.php
+- **Details:**
+  - Nieuw blok op judoka detail pagina met dropdown (beschikbare milestones) + datumveld
+  - `handmatigUitreiken()` maakt WimpelUitreiking aan met `uitgereikt: true`
+  - Punten worden NIET aangepast (puur historische registratie)
+  - `getBereikteWimpelMilestones()` toont nu ook handmatig uitgereikt (niet alleen via punten)
+  - Unique constraint handled via `updateOrCreate`
+
+### Security: Hardening audit fixes
+- **Type:** Security
+- **Wat:** 6 security fixes doorgevoerd na volledige audit
+- **Bestanden:** SecurityHeaders.php, BackupService.php, web.php, production+staging .env
+- **Fixes:**
+  1. CSP `unsafe-eval` verwijderd uit script-src (HIGH)
+  2. `APP_DEBUG=false` op production+staging .env (HIGH)
+  3. `SESSION_ENCRYPT=true` op production+staging .env (HIGH)
+  4. `SESSION_SECURE_COOKIE=true` toegevoegd op production+staging .env (HIGH)
+  5. `throttle:5,1` rate limiting op device PIN verify route (MEDIUM)
+  6. `escapeshellarg()` op database/file in BackupService mysqldump (MEDIUM)
+
+---
+
 <!--
 TEMPLATE:
 
