@@ -776,7 +776,7 @@ Per wedstrijd voer je de score in via de matrix (WP en JP kolommen):
 | **7** (waza-ari) | Winnaar | Winnaar WP = 2, verliezer WP = 0 |
 | **10** (ippon) | Winnaar | Winnaar WP = 2, verliezer WP = 0 |
 
-**Belangrijk:** Blanco JP ≠ 0 JP. Blanco = niet gespeeld, 0 = gelijkspel (geen punten behaald).
+**Belangrijk:** Blanco JP ≠ 0 JP. Blanco = niet gespeeld, 0 = gelijkspel (geen judopunten behaald, wel 1 wedstrijdpunt).
 
 **Tip:** JP invoer bepaalt automatisch de WP. WP kan ook handmatig aangepast worden, maar JP is leidend.
 
