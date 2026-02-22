@@ -127,6 +127,9 @@ Route::post('/error-report', function (\Illuminate\Http\Request $request) {
     return response()->json(['success' => true]);
 })->middleware('throttle:5,1')->name('error.report');
 
+// Standalone scoreboard (development/testing)
+Route::get('/scoreboard', fn () => view('pages.mat.scoreboard', ['toernooi' => null, 'wedstrijd' => null]))->name('scoreboard.standalone');
+
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->middleware('auth:organisator')->name('health.detailed');
