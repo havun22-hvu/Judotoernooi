@@ -148,10 +148,10 @@
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
                              @click.self="showAbout = false"
                              @keydown.escape.window="showAbout = false">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden relative" @click.outside="showAbout = false">
-                                <button type="button" @click="showAbout = false"
-                                        class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none z-10">&times;</button>
-                                <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="showAbout = false">
+                                <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
+                                    <button type="button" @click="showAbout = false"
+                                            class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
                                 </div>
