@@ -595,6 +595,15 @@
                     <li>{!! __('Knop wordt <strong>&#10003;</strong> (groen)') !!}</li>
                     <li>{{ __('Poule is nu klaar voor activatie in Zaaloverzicht') }}</li>
                 </ol>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Uitval voor eerste wedstrijd') }}</h4>
+                <p>{{ __('Als een judoka uitvalt vóór de eerste wedstrijd (bv. blessure bij warming-up):') }}</p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>{{ __('Zet de judoka op afwezig (hier op Wedstrijddag Poules)') }}</li>
+                    <li>{{ __('Ga naar Zaaloverzicht → reset het wedstrijdschema (chip terug naar wit)') }}</li>
+                    <li>{{ __('Klik de witte chip opnieuw → nieuw schema zonder de afwezige judoka') }}</li>
+                </ol>
+                <p class="text-sm text-gray-500 mt-1">{{ __('De poule-indeling (voorbereiding) blijft ongewijzigd. Alleen het wedstrijdschema wordt opnieuw gegenereerd.') }}</p>
             </div>
         </section>
 
@@ -706,16 +715,32 @@
                     <thead>
                         <tr class="border-b">
                             <th class="text-left py-1">{{ __('Invoer JP') }}</th>
-                            <th class="text-left py-1">{{ __('Resultaat') }}</th>
+                            <th class="text-left py-1">{{ __('Betekenis') }}</th>
+                            <th class="text-left py-1">{{ __('WP resultaat') }}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="border-b"><td class="py-1"><strong>{{ __('Leeg (blanco)') }}</strong></td><td class="py-1">{{ __('Reset alle scores (WP en JP) voor deze wedstrijd') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><strong>0</strong></td><td class="py-1">{{ __('Gelijkspel: beide WP=1, beide JP=0') }}</td></tr>
-                        <tr><td class="py-1"><strong>5, 7, 10</strong></td><td class="py-1">{{ __('Winnaar: deze judoka WP=2, tegenstander WP=0 en JP=0') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>{{ __('Blanco (leeg)') }}</strong></td><td class="py-1">{{ __('Niet gespeeld') }}</td><td class="py-1">{{ __('Blanco (geen WP)') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>0</strong></td><td class="py-1">{{ __('Gelijkspel') }}</td><td class="py-1">{{ __('Beide WP = 1') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>5</strong> ({{ __('yuko') }})</td><td class="py-1">{{ __('Winnaar') }}</td><td class="py-1">{{ __('Winnaar WP = 2, verliezer WP = 0') }}</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>7</strong> ({{ __('waza-ari') }})</td><td class="py-1">{{ __('Winnaar') }}</td><td class="py-1">{{ __('Winnaar WP = 2, verliezer WP = 0') }}</td></tr>
+                        <tr><td class="py-1"><strong>10</strong> ({{ __('ippon') }})</td><td class="py-1">{{ __('Winnaar') }}</td><td class="py-1">{{ __('Winnaar WP = 2, verliezer WP = 0') }}</td></tr>
                     </tbody>
                 </table>
-                <p class="text-sm text-gray-500 mt-2">{!! __('<strong>Tip:</strong> WP handmatig invoeren vult de tegenstander niet automatisch in.') !!}</p>
+                <p class="text-sm text-orange-600 mt-2">{!! __('<strong>Let op:</strong> Blanco JP ≠ 0 JP. Blanco = niet gespeeld, 0 = gelijkspel (geen punten behaald).') !!}</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Blessure / Uitval') }}</h4>
+                <p class="mb-2"><strong>{{ __('Tijdens een wedstrijd:') }}</strong></p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>{{ __('Tegenstander wint met ippon (JP = 10)') }}</li>
+                    <li>{{ __('Resterende wedstrijden: geef tegenstanders JP = 10 (ippon door opgave)') }}</li>
+                </ul>
+                <p class="mb-2 mt-2"><strong>{{ __('Voor de eerste wedstrijd (bv. warming-up blessure):') }}</strong></p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>{{ __('Wedstrijddag Poules → judoka op afwezig zetten') }}</li>
+                    <li>{{ __('Zaaloverzicht → wedstrijdschema resetten (chip terug naar wit)') }}</li>
+                    <li>{{ __('Witte chip opnieuw klikken → nieuw schema zonder afwezige judoka') }}</li>
+                </ol>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Ranking') }}</h4>
                 <ol class="list-decimal list-inside space-y-1">
