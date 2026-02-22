@@ -2250,5 +2250,13 @@
     "Zet de judoka op afwezig (hier op Wedstrijddag Poules)": "Set the judoka as absent (here on Match Day Pools)",
     "Ga naar Zaaloverzicht → reset het wedstrijdschema (chip terug naar wit)": "Go to Hall Overview → reset the match schedule (chip back to white)",
     "Klik de witte chip opnieuw → nieuw schema zonder de afwezige judoka": "Click the white chip again → new schedule without the absent judoka",
-    "De poule-indeling (voorbereiding) blijft ongewijzigd. Alleen het wedstrijdschema wordt opnieuw gegenereerd.": "The pool assignment (preparation) remains unchanged. Only the match schedule is regenerated."
+    "De poule-indeling (voorbereiding) blijft ongewijzigd. Alleen het wedstrijdschema wordt opnieuw gegenereerd.": "The pool assignment (preparation) remains unchanged. Only the match schedule is regenerated.",
+    "Aanzetten:": "Selecting:",
+    "Klik een wedstrijdnummer → wordt <span class=\"text-green-600 font-bold\">groen</span> (nu aan de beurt)": "Click a match number → becomes <span class=\"text-green-600 font-bold\">green</span> (now playing)",
+    "Klik het volgende nummer → wordt <span class=\"text-yellow-600 font-bold\">geel</span> (klaarstaan)": "Click the next number → becomes <span class=\"text-yellow-600 font-bold\">yellow</span> (stand by)",
+    "Klik nog een nummer → wordt <span class=\"text-blue-600 font-bold\">blauw</span> (klaarmaken)": "Click another number → becomes <span class=\"text-blue-600 font-bold\">blue</span> (get ready)",
+    "Uitzetten (de andere beurten schuiven door):": "Deselecting (other turns shift up):",
+    "Klik op <span class=\"text-blue-600 font-bold\">blauw</span> → blauw gaat uit": "Click <span class=\"text-blue-600 font-bold\">blue</span> → blue turns off",
+    "Klik op <span class=\"text-yellow-600 font-bold\">geel</span> → geel gaat uit, blauw schuift op naar geel": "Click <span class=\"text-yellow-600 font-bold\">yellow</span> → yellow turns off, blue shifts to yellow",
+    "Klik op <span class=\"text-green-600 font-bold\">groen</span> → wedstrijd gaat niet door, geel wordt groen, blauw wordt geel": "Click <span class=\"text-green-600 font-bold\">green</span> → match cancelled, yellow becomes green, blue becomes yellow"
 }

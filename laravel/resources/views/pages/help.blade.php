@@ -675,23 +675,18 @@
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Wedstrijd selecteren (klikken op nummer)') }}</h4>
-                <table class="min-w-full text-sm mt-2">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-1">{{ __('Klik op') }}</th>
-                            <th class="text-left py-1">{{ __('Resultaat') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b"><td class="py-1"><span class="text-green-600 font-bold">{{ __('Groen') }}</span></td><td class="py-1">{{ __('Bevestiging → geel wordt groen, oud-groen neutraal') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-yellow-600 font-bold">{{ __('Geel') }}</span></td><td class="py-1">{{ __('Geel wordt neutraal, blauw schuift op naar geel') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-blue-600 font-bold">{{ __('Blauw') }}</span></td><td class="py-1">{{ __('Blauw wordt neutraal (deselecteren)') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('geen groen') }})</td><td class="py-1">{{ __('Wordt groen (eerste keuze)') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('wel groen, geen geel') }})</td><td class="py-1">{{ __('Wordt geel') }}</td></tr>
-                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('wel groen + geel, geen blauw') }})</td><td class="py-1">{{ __('Wordt blauw') }}</td></tr>
-                        <tr><td class="py-1"><span class="text-gray-600 font-bold">{{ __('Grijs') }}</span> ({{ __('alle slots bezet') }})</td><td class="py-1">{{ __('Melding: klik op een gekleurde wedstrijd om te deselecteren') }}</td></tr>
-                    </tbody>
-                </table>
+                <p class="mb-2"><strong>{{ __('Aanzetten:') }}</strong></p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>{!! __('Klik een wedstrijdnummer → wordt <span class="text-green-600 font-bold">groen</span> (nu aan de beurt)') !!}</li>
+                    <li>{!! __('Klik het volgende nummer → wordt <span class="text-yellow-600 font-bold">geel</span> (klaarstaan)') !!}</li>
+                    <li>{!! __('Klik nog een nummer → wordt <span class="text-blue-600 font-bold">blauw</span> (klaarmaken)') !!}</li>
+                </ol>
+                <p class="mb-2 mt-3"><strong>{{ __('Uitzetten (de andere beurten schuiven door):') }}</strong></p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>{!! __('Klik op <span class="text-blue-600 font-bold">blauw</span> → blauw gaat uit') !!}</li>
+                    <li>{!! __('Klik op <span class="text-yellow-600 font-bold">geel</span> → geel gaat uit, blauw schuift op naar geel') !!}</li>
+                    <li>{!! __('Klik op <span class="text-green-600 font-bold">groen</span> → wedstrijd gaat niet door, geel wordt groen, blauw wordt geel') !!}</li>
+                </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Puntensysteem') }}</h4>
                 <table class="min-w-full text-sm mt-2">
