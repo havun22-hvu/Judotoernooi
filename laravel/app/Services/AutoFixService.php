@@ -236,7 +236,9 @@ class AutoFixService
             . "- Never change .env, config files, or database schema\n"
             . "- Never add new dependencies\n"
             . "- Never modify vendor/ files - if the error originates in vendor code, fix the PROJECT file that calls it (marked as FIX TARGET)\n"
-            . "- Prefer defensive fixes (null checks, try/catch) over structural changes";
+            . "- ALWAYS use try/catch as your PRIMARY fix strategy. Wrap the failing call in a try/catch block that catches the specific exception (or \\Throwable for unknown types). Log the error and return a safe fallback. This is the safest and most reliable auto-fix pattern.\n"
+            . "- Do NOT change the arguments or logic of the failing call - wrap it in try/catch instead\n"
+            . "- For vendor exceptions (RuntimeException, TypeError, etc): the vendor code is correct, the input/data is wrong. Catch the exception in the calling project code and handle gracefully.";
 
         try {
             $response = Http::timeout(30)->post($url, [
