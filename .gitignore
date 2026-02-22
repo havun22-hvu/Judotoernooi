@@ -35,3 +35,15 @@ laravel/storage/app/*.zip
 laravel/storage/app/*.sqlite
 laravel/storage/app/*.pdf
 laravel/storage/app/*.png
+laravel/storage/app/autofix-backups/
+laravel/storage/app/imports/
+laravel/storage/app/public/
+
+# Public symlink & test data
+laravel/public/storage
+laravel/public/testdata/
+
+# Root-level test/import files
+*.xlsx
+*.csv
+*.pdf
