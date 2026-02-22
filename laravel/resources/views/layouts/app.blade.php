@@ -59,6 +59,17 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
+    {{-- DO NOT REMOVE: Impersonate banner — shows when sitebeheerder is viewing as another organisator --}}
+    @if(session('impersonating_from'))
+    <div class="bg-yellow-400 text-yellow-900 px-4 py-2 text-center text-sm font-medium z-[60] relative">
+        Je bekijkt als <strong>{{ Auth::guard('organisator')->user()?->naam }}</strong>
+        &mdash;
+        <form action="{{ route('admin.impersonate.stop') }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="underline font-bold hover:text-yellow-700">Terug naar admin</button>
+        </form>
+    </div>
+    @endif
     {{-- DO NOT REMOVE: Main navigation bar with logo, menu tabs, language switcher, and user dropdown --}}
     <nav class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
