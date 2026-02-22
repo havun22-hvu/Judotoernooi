@@ -118,6 +118,8 @@
             </h2>
             {{-- DO NOT REMOVE: Action buttons - Wimpeltoernooi, Mijn Judoka's, Mijn Clubs, Nieuw Toernooi --}}
             <div class="flex space-x-3">
+                @if(!$organisator->isSitebeheerder() || auth('organisator')->id() !== $organisator->id)
+                {{-- Wimpel knop alleen tonen voor reguliere organisatoren, niet voor sitebeheerder op eigen "alle toernooien" dashboard --}}
                 <a href="{{ route('organisator.wimpel.index', $organisator) }}"
                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     {{ __('Wimpeltoernooi') }}
@@ -130,6 +132,7 @@
                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
                     {{ __('Mijn Clubs') }}
                 </a>
+                @endif
                 <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     {{ __('Nieuw Toernooi') }}
