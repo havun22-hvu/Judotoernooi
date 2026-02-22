@@ -84,6 +84,12 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
+                        <form action="{{ route('admin.impersonate', $klant) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="text-orange-600 hover:text-orange-800 text-sm font-medium">
+                                {{ __('Inloggen als') }}
+                            </button>
+                        </form>
                         <a href="{{ route('admin.klanten.edit', $klant) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                             {{ __('Bewerken') }}
                         </a>

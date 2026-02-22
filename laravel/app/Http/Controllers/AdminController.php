@@ -6,6 +6,7 @@ use App\Models\AutofixProposal;
 use App\Models\Organisator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -123,6 +124,50 @@ class AdminController extends Controller
         ];
 
         return view('pages.admin.autofix', compact('proposals', 'stats'));
+    }
+
+    /**
+     * Impersonate: log in as another organisator (sitebeheerder only)
+     */
+    public function impersonate(Organisator $klant): RedirectResponse
+    {
+        $this->checkSitebeheerder();
+
+        $admin = auth('organisator')->user();
+
+        if ($admin->id === $klant->id) {
+            return redirect()->route('admin.klanten')
+                ->with('error', 'Je kunt niet als jezelf impersoneren');
+        }
+
+        session()->put('impersonating_from', $admin->id);
+        Auth::guard('organisator')->login($klant);
+
+        return redirect()->route('organisator.dashboard', ['organisator' => $klant->slug]);
+    }
+
+    /**
+     * Stop impersonating and return to admin account
+     */
+    public function impersonateStop(): RedirectResponse
+    {
+        $adminId = session('impersonating_from');
+
+        if (!$adminId) {
+            return redirect()->route('admin.klanten');
+        }
+
+        $admin = Organisator::find($adminId);
+
+        if (!$admin || !$admin->isSitebeheerder()) {
+            session()->forget('impersonating_from');
+            return redirect()->route('login');
+        }
+
+        session()->forget('impersonating_from');
+        Auth::guard('organisator')->login($admin);
+
+        return redirect()->route('admin.klanten');
     }
 
     /**

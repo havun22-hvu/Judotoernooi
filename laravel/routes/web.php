@@ -224,6 +224,10 @@ Route::middleware('auth:organisator')->group(function () {
     Route::put('admin/klanten/{klant}', [AdminController::class, 'updateKlant'])->name('admin.klanten.update');
     Route::delete('admin/klanten/{klant}', [AdminController::class, 'destroyKlant'])->name('admin.klanten.destroy');
 
+    // Impersonate (sitebeheerder only)
+    Route::post('admin/impersonate/stop', [AdminController::class, 'impersonateStop'])->name('admin.impersonate.stop');
+    Route::post('admin/impersonate/{klant}', [AdminController::class, 'impersonate'])->name('admin.impersonate');
+
     // AutoFix overzicht (sitebeheerder only)
     Route::get('admin/autofix', [AdminController::class, 'autofix'])->name('admin.autofix');
 });

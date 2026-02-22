@@ -1,6 +1,6 @@
 # Rollen Hierarchie - JudoToernooi
 
-> **Laatst bijgewerkt:** 2026-01-04
+> **Laatst bijgewerkt:** 2026-02-22
 
 ---
 
@@ -16,6 +16,18 @@
 - **Authenticatie:**
   - Production: email + wachtwoord
   - Local/Staging: simpele pincode
+
+### Impersonate (Sitebeheerder → Organisator)
+- **Doel:** Sitebeheerder kan tijdelijk inloggen als een organisator
+- **Gebruik:** Klantenbeheer (`/admin/klanten`) → "Inloggen als" knop per klant
+- **Werking:**
+  - Originele admin ID wordt opgeslagen in sessie (`impersonating_from`)
+  - Auth guard schakelt over naar de doelorganisator
+  - Gele balk bovenaan elke pagina toont: "Je bekijkt als [naam] — Terug naar admin"
+  - Klik "Terug" → sessie wordt hersteld naar originele admin
+- **Zichtbaar als:** Alles wat de organisator normaal ziet (dashboard, wimpel, toernooien)
+- **Routes:** `POST /admin/impersonate/{klant}`, `POST /admin/impersonate/stop`
+- **Security:** Alleen `isSitebeheerder()` kan impersoneren, niet zichzelf
 
 ---
 
