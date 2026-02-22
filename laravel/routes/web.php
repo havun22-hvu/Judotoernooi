@@ -267,10 +267,6 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::get('toernooi/nieuw', [ToernooiController::class, 'create'])->name('toernooi.create');
     Route::post('toernooi', [ToernooiController::class, 'store'])->name('toernooi.store');
 
-    // Organisator instellingen
-    Route::get('instellingen', [ToernooiController::class, 'organisatorInstellingen'])->name('organisator.instellingen');
-    Route::put('instellingen', [ToernooiController::class, 'organisatorInstellingenUpdate'])->name('organisator.instellingen.update');
-
     // Wimpeltoernooi (organisator level - persistent across tournaments)
     Route::get('wimpeltoernooi', [WimpelController::class, 'index'])->name('organisator.wimpel.index');
     Route::get('wimpeltoernooi/instellingen', [WimpelController::class, 'instellingen'])->name('organisator.wimpel.instellingen');
