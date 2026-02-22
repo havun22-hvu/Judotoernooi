@@ -422,13 +422,8 @@ class ToernooiController extends Controller
         // Fresh load to ensure we have latest toernooien (not cached from login)
         $organisator = $organisator->fresh();
 
-        if ($loggedIn->isSitebeheerder() && $loggedIn->id === $organisator->id) {
-            // Sitebeheerder viewing own dashboard sees all toernooien
-            $toernooien = Toernooi::with('organisator')->whereNotNull('organisator_id')->orderBy('datum', 'desc')->get();
-        } else {
-            // Regular organisator or sitebeheerder viewing another organisator
-            $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
-        }
+        // Everyone sees only their own toernooien — sitebeheerder uses /admin for other organisatoren
+        $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
 
         // Restore organisator's locale when returning to dashboard
         $locale = $organisator->locale ?? config('app.locale');
