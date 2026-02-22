@@ -63,6 +63,23 @@ Route: `/admin` (alleen voor sitebeheerder)
 - Klantenbeheer: `/admin/klanten` (bewerken, is_test/kortingsregeling, verwijderen)
 - Per organisator: toernooien, statistieken, status
 
+## CRITICAL: Sessie Start - Sync met Server
+
+AutoFix kan code wijzigen op production en staging. Bij sessie start ALTIJD eerst synchroniseren:
+
+```bash
+# 1. Server: commit & push AutoFix wijzigingen (production)
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/laravel && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
+
+# 2. Server: commit & push AutoFix wijzigingen (staging)
+ssh root@188.245.159.115 "cd /var/www/staging.judotoernooi/laravel && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
+
+# 3. Lokaal: pull server wijzigingen
+cd D:\GitHub\JudoToernooi && git pull
+```
+
+**Waarom?** AutoFix draait op production+staging en kan bestanden aanpassen. Zonder sync werk je op verouderde code.
+
 ## Rules (ALWAYS follow)
 
 ### DENK ALS SAAS-BOUWER, NIET ALS PROBLEEMOPLOSSER
