@@ -204,9 +204,9 @@
             <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                 <div class="flex justify-between items-start mb-3">
                     <h3 class="text-lg font-bold text-gray-800">{{ $toernooi->naam }}</h3>
-                    @if($organisator->isSitebeheerder())
+                    @if($organisator->isSitebeheerder() && $toernooi->organisator_id !== $organisator->id)
                     <span class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800">
-                        Admin
+                        Admin ({{ $toernooi->organisator?->naam }})
                     </span>
                     @elseif($toernooi->pivot)
                     <span class="text-xs px-2 py-1 rounded
