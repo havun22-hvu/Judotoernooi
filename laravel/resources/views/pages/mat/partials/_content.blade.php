@@ -884,6 +884,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
         }
 
+        // Na succesvolle drop vanuit swap: verwijder uit swap data + DOM
+        if (data.fromSwap && data.pouleId) {
+            window.removeFromSwap(data.pouleId, data.judokaId);
+            // Verwijder chip direct uit DOM (Alpine herkent window.swapRuimte niet als reactief)
+            const swapContainer = document.getElementById('swap-ruimte-' + data.pouleId);
+            if (swapContainer) {
+                swapContainer.querySelectorAll('.bracket-judoka').forEach(el => {
+                    try {
+                        const dragData = JSON.parse(el.getAttribute('data-drag') || '{}');
+                        if (dragData.judokaId === data.judokaId) el.remove();
+                    } catch(e) {}
+                });
+            }
+        }
+
         // Update bracket slots via pure DOM (geen Alpine re-render!)
         // Skip Reverb reload voor eigen actie (voorkomt scroll-reset op mobiel)
         window._skipBracketReload = Date.now();
