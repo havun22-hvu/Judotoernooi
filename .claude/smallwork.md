@@ -918,6 +918,19 @@
 
 ---
 
+## Sessie: 23 februari 2026
+
+### Fix: Git push credentials op servers
+- **Type:** Infrastructure
+- **Wat:** Servers konden niet naar GitHub pushen (HTTPS remote, geen credentials). Dedicated SSH deploy key aangemaakt (`deploy_judotoernooi`) met read-write rechten. SSH config Host alias `github-judotoernooi` toegevoegd. Remote URLs omgezet op production + staging.
+- **Bestanden:** Server: `~/.ssh/config`, `~/.ssh/deploy_judotoernooi`
+- **GitHub:** Deploy key `server-deploy-judotoernooi` (read-write)
+
+### Chore: Repo opschonen - junk files verwijderd
+- **Type:** Cleanup
+- **Wat:** 25+ bestanden verwijderd uit git tracking: test data (xlsx/csv/pdf), server uploads (coach-fotos, pagina-afbeeldingen), autofix backups, public/storage symlink, testdata CSVs. `.gitignore` bijgewerkt met 6 nieuwe regels.
+- **Bestanden:** `.gitignore`, diverse verwijderde bestanden
+
 <!--
 TEMPLATE:
 
