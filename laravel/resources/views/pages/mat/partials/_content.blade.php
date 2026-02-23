@@ -920,8 +920,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 }
 
                 if (!isSeeding && data.wedstrijdId) {
-                    // Winnaar doorschuif: herlaad bracket HTML zodat drag data
-                    // verse isLocked=true bevat (voorkomt seeding targets na lock)
+                    // Winnaar doorschuif: herlaad wedstrijden data (updated_at sync)
+                    // + bracket HTML (verse drag data met isLocked=true)
+                    await comp.laadWedstrijden();
                     comp.laadBracketHtml(pouleId, 'A');
                     comp.laadBracketHtml(pouleId, 'B');
                 } else if (result.updated_slots) {
