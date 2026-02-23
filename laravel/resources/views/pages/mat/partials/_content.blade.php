@@ -923,6 +923,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     // Winnaar doorschuif: herlaad bracket HTML zodat drag data
                     // verse isLocked=true bevat (voorkomt seeding targets na lock)
                     comp.laadBracketHtml(pouleId, 'A');
+                    comp.laadBracketHtml(pouleId, 'B');
                 } else if (result.updated_slots) {
                     comp.updateAlleBracketSlots(result.updated_slots, pouleId);
                 }
