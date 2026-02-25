@@ -28,5 +28,27 @@ return [
         \Illuminate\Database\Eloquent\ModelNotFoundException::class,
         \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException::class,
         \Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException::class,
+        // Tinker/PsySH errors - user syntax errors, not fixable
+        'Psy\Exception\ParseErrorException',
+        'Psy\Exception\ErrorException',
+        // Missing artisan commands - not fixable by code changes
+        'Symfony\Component\Console\Exception\NamespaceNotFoundException',
+        'Symfony\Component\Console\Exception\CommandNotFoundException',
+    ],
+
+    // File path patterns to exclude (errors from these paths are ignored)
+    'excluded_file_patterns' => [
+        '#/tmp/#',
+        '#vendor/psy/#',
+        '#vendor/laravel/tinker/#',
+    ],
+
+    // Files that should never be modified by AutoFix
+    'protected_files' => [
+        'artisan',
+        'public/index.php',
+        'bootstrap/app.php',
+        'composer.json',
+        'composer.lock',
     ],
 ];

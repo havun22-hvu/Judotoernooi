@@ -44,6 +44,18 @@ class AutoFixService
                     continue;
                 }
 
+                // Check if Claude recommends NOTIFY_ONLY (no code fix possible)
+                if ($this->isNotifyOnly($analysis['analysis'])) {
+                    $proposal = $this->createProposal($e, $file, $line, $codeContext, $analysis, $attempt);
+                    $proposal->update(['status' => 'notify_only']);
+                    $this->sendNotifyOnlyNotification($e, $file, $line, $proposal);
+                    Log::info('AutoFix: NOTIFY_ONLY - no code fix, notification sent', [
+                        'proposal_id' => $proposal->id,
+                        'exception' => get_class($e),
+                    ]);
+                    return;
+                }
+
                 // Create proposal record
                 $proposal = $this->createProposal($e, $file, $line, $codeContext, $analysis, $attempt);
 
@@ -115,8 +127,34 @@ class AutoFixService
      */
     protected function shouldProcess(Throwable $e): bool
     {
+        // Check excluded exception classes (supports both instanceof and string comparison)
         foreach (config('autofix.excluded_exceptions', []) as $excluded) {
-            if ($e instanceof $excluded) {
+            if ($e instanceof $excluded || get_class($e) === $excluded) {
+                return false;
+            }
+        }
+
+        // Check excluded file path patterns
+        $errorFile = $e->getFile();
+        foreach (config('autofix.excluded_file_patterns', []) as $pattern) {
+            if (preg_match($pattern, $errorFile)) {
+                Log::info('AutoFix: Skipping excluded file pattern', ['file' => $errorFile, 'pattern' => $pattern]);
+                return false;
+            }
+        }
+
+        // Skip errors from files outside the project
+        if (!$this->isProjectFile($errorFile)) {
+            // Check if there's at least one project file in the stack trace
+            $hasProjectFile = false;
+            foreach ($e->getTrace() as $frame) {
+                if (isset($frame['file']) && $this->isProjectFile($frame['file'])) {
+                    $hasProjectFile = true;
+                    break;
+                }
+            }
+            if (!$hasProjectFile) {
+                Log::info('AutoFix: Skipping - no project file in stack trace', ['file' => $this->relativePath($errorFile)]);
                 return false;
             }
         }
@@ -126,7 +164,36 @@ class AutoFixService
             return false;
         }
 
+        // Check if the same file was already fixed by AutoFix in the past 24 hours
+        $fixTargetFile = $this->findFixTargetFile($e);
+        if ($fixTargetFile && AutofixProposal::where('file', $fixTargetFile)
+            ->where('status', 'applied')
+            ->where('applied_at', '>=', now()->subHours(24))
+            ->exists()) {
+            Log::info('AutoFix: Skipping - file was already fixed in past 24h', ['file' => $fixTargetFile]);
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Find the most likely fix target file from the exception.
+     */
+    protected function findFixTargetFile(Throwable $e): ?string
+    {
+        if ($this->isProjectFile($e->getFile())) {
+            return $this->relativePath($e->getFile());
+        }
+
+        foreach ($e->getTrace() as $frame) {
+            $file = $frame['file'] ?? '';
+            if ($file && $this->isProjectFile($file)) {
+                return $this->relativePath($file);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -154,8 +221,11 @@ class AutoFixService
         if (file_exists($primaryFile) && !$errorIsInVendor) {
             $relPath = $this->relativePath($primaryFile);
             $seen[$relPath] = true;
-            $content = $this->readFileWithContext($primaryFile, $e->getLine(), 20);
-            $context[] = "=== {$relPath} (error at line {$e->getLine()}) ===\n{$content}";
+            $content = $this->readFileForContext($primaryFile, $e->getLine());
+            $label = $this->isFullFileContent($primaryFile)
+                ? "{$relPath} (FULL FILE - error at line {$e->getLine()}, fix the code here)"
+                : "{$relPath} (error at line {$e->getLine()})";
+            $context[] = "=== {$label} ===\n{$content}";
         }
 
         // Walk the stack trace for project files
@@ -178,14 +248,19 @@ class AutoFixService
             $seen[$relPath] = true;
 
             $line = $frame['line'] ?? 1;
-            // First project file in a vendor-originated error gets more context
-            $contextLines = ($errorIsInVendor && !$foundProjectFile) ? 20 : 10;
-            $label = ($errorIsInVendor && !$foundProjectFile)
-                ? "{$relPath} (FIX TARGET - called vendor code at line {$line})"
-                : "{$relPath} (line {$line})";
+
+            if ($errorIsInVendor && !$foundProjectFile) {
+                // First project file in a vendor error: send full file
+                $content = $this->readFileForContext($file, $line);
+                $label = $this->isFullFileContent($file)
+                    ? "{$relPath} (FULL FILE - FIX TARGET, called vendor code at line {$line})"
+                    : "{$relPath} (FIX TARGET - called vendor code at line {$line})";
+            } else {
+                $content = $this->readFileWithContext($file, $line, 10);
+                $label = "{$relPath} (line {$line})";
+            }
             $foundProjectFile = true;
 
-            $content = $this->readFileWithContext($file, $line, $contextLines);
             $context[] = "=== {$label} ===\n{$content}";
         }
 
@@ -225,20 +300,28 @@ class AutoFixService
         $systemPrompt = "You are a Laravel debugging expert. A production error occurred in JudoToernooi (a judo tournament app). "
             . "Your fix will be AUTOMATICALLY APPLIED to the production server. Be extremely careful and precise.\n\n"
             . "Provide your response in EXACTLY this format:\n\n"
+            . "ACTION: FIX | NOTIFY_ONLY\n"
             . "ANALYSIS: [1-2 sentences explaining the cause]\n\n"
+            . "If ACTION is FIX, also include:\n"
             . "FILE: [relative path to file, e.g. app/Services/MyService.php]\n"
             . "OLD:\n```php\n[exact code to find and replace - copy EXACTLY from the source]\n```\n"
             . "NEW:\n```php\n[replacement code]\n```\n\n"
             . "RISK: [low/medium/high]\n\n"
+            . "FIX STRATEGY (in order of preference):\n"
+            . "1. NULL SAFETY: If the error contains 'on null', use ?-> or null checks\n"
+            . "2. COLUMN/SCHEMA: If a column doesn't exist, respond with ACTION: NOTIFY_ONLY. Do NOT propose a code fix. A migration or schema change is needed.\n"
+            . "3. MISSING RESOURCE: If a command/class/file doesn't exist, respond with ACTION: NOTIFY_ONLY. The resource needs to be created manually.\n"
+            . "4. LOGIC FIX: If the code has a logical error, fix the logic minimally\n"
+            . "5. TRY/CATCH: Only as a LAST RESORT, and NEVER around entrypoints (artisan, index.php) or entire method bodies\n\n"
             . "CRITICAL RULES:\n"
             . "- The OLD block must match the EXACT code in the file (including whitespace)\n"
             . "- Only make MINIMAL changes to fix the specific error\n"
             . "- Never change .env, config files, or database schema\n"
             . "- Never add new dependencies\n"
             . "- Never modify vendor/ files - if the error originates in vendor code, fix the PROJECT file that calls it (marked as FIX TARGET)\n"
-            . "- ALWAYS use try/catch as your PRIMARY fix strategy. Wrap the failing call in a try/catch block that catches the specific exception (or \\Throwable for unknown types). Log the error and return a safe fallback. This is the safest and most reliable auto-fix pattern.\n"
-            . "- Do NOT change the arguments or logic of the failing call - wrap it in try/catch instead\n"
-            . "- For vendor exceptions (RuntimeException, TypeError, etc): the vendor code is correct, the input/data is wrong. Catch the exception in the calling project code and handle gracefully.";
+            . "- Never modify the 'artisan' file\n"
+            . "- Never wrap entire method bodies in try/catch\n"
+            . "- Never invent code that you don't see in the provided context";
 
         try {
             $response = Http::timeout(30)->post($url, [
@@ -331,6 +414,26 @@ class AutoFixService
 
         if (!file_exists($fullPath)) {
             return "Target file not found: {$targetFile}";
+        }
+
+        // Check if file is protected
+        if (in_array($targetFile, config('autofix.protected_files', []))) {
+            return "Target file is protected and cannot be modified by AutoFix: {$targetFile}";
+        }
+
+        // Check if file was already modified by AutoFix in the past 24 hours
+        $backupDir = storage_path('app/autofix-backups');
+        $backupPrefix = str_replace(['/', '\\'], '_', $targetFile) . '.';
+        if (is_dir($backupDir)) {
+            $cutoff = now()->subHours(24)->format('YmdHis');
+            foreach (scandir($backupDir) as $backupFile) {
+                if (str_starts_with($backupFile, $backupPrefix)) {
+                    $timestamp = substr($backupFile, strlen($backupPrefix));
+                    if ($timestamp >= $cutoff) {
+                        return "File {$targetFile} was already modified by AutoFix in the past 24 hours. Manual review needed.";
+                    }
+                }
+            }
         }
 
         // Parse OLD and NEW code blocks
@@ -479,6 +582,56 @@ class AutoFixService
     }
 
     /**
+     * Check if Claude's response indicates NOTIFY_ONLY (no code fix possible).
+     */
+    protected function isNotifyOnly(string $analysis): bool
+    {
+        return (bool) preg_match('/ACTION:\s*NOTIFY_ONLY/i', $analysis);
+    }
+
+    /**
+     * Send notification email when Claude determines no code fix is possible.
+     */
+    protected function sendNotifyOnlyNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal): void
+    {
+        $email = config('autofix.email');
+        if (!$email) {
+            return;
+        }
+
+        try {
+            // Extract analysis from Claude's response
+            $analysisText = $proposal->claude_analysis;
+            if (preg_match('/ANALYSIS:\s*(.+?)(?:\n\n|$)/s', $analysisText, $match)) {
+                $analysisText = trim($match[1]);
+            }
+
+            $body = "[AutoFix] Handmatige actie nodig - geen code fix mogelijk\n\n"
+                . "Exception: " . get_class($e) . "\n"
+                . "Message: " . $e->getMessage() . "\n"
+                . "File: {$file}:{$line}\n"
+                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
+                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
+                . "--- Claude's analyse ---\n"
+                . $analysisText . "\n\n"
+                . "Dit probleem kan niet automatisch opgelost worden. "
+                . "Waarschijnlijk is een migration, schema wijziging, of handmatige interventie nodig.";
+
+            Mail::raw($body, function ($message) use ($email, $e) {
+                $message->to($email)
+                    ->subject('[AutoFix] Handmatige actie nodig - ' . class_basename(get_class($e)));
+            });
+
+            $proposal->update(['email_sent_at' => now()]);
+
+        } catch (Throwable $mailError) {
+            Log::warning('AutoFix: NOTIFY_ONLY email failed', [
+                'error' => $mailError->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Try to resolve the current toernooi from route parameters.
      */
     protected function resolveToernooi(): ?object
@@ -527,6 +680,39 @@ class AutoFixService
             '',
             $path
         );
+    }
+
+    /**
+     * Read a file for context: full file if < 50KB, otherwise 100 lines around target.
+     */
+    protected function readFileForContext(string $path, int $targetLine): string
+    {
+        if ($this->isFullFileContent($path)) {
+            $content = file_get_contents($path);
+            if ($content === false) {
+                return '[Could not read file]';
+            }
+            // Add line numbers
+            $lines = explode("\n", $content);
+            $result = [];
+            foreach ($lines as $i => $line) {
+                $lineNum = $i + 1;
+                $marker = ($lineNum === $targetLine) ? ' >>>' : '    ';
+                $result[] = sprintf('%s %4d | %s', $marker, $lineNum, $line);
+            }
+            return implode("\n", $result);
+        }
+
+        // Large file: 100 lines around the error
+        return $this->readFileWithContext($path, $targetLine, 100);
+    }
+
+    /**
+     * Check if a file is small enough to send in full (< 50KB).
+     */
+    protected function isFullFileContent(string $path): bool
+    {
+        return file_exists($path) && filesize($path) < 50000;
     }
 
     /**
