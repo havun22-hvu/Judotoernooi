@@ -182,6 +182,12 @@ class AutoFixService
      */
     protected function findFixTargetFile(Throwable $e): ?string
     {
+        // ViewException: blade file from message has priority
+        $bladeFile = $this->extractBladeFile($e);
+        if ($bladeFile) {
+            return $this->relativePath($bladeFile);
+        }
+
         if ($this->isProjectFile($e->getFile())) {
             return $this->relativePath($e->getFile());
         }
@@ -191,6 +197,25 @@ class AutoFixService
             if ($file && $this->isProjectFile($file)) {
                 return $this->relativePath($file);
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract the original blade file path from a ViewException message.
+     * ViewException messages end with "(View: /path/to/file.blade.php)".
+     */
+    protected function extractBladeFile(Throwable $e): ?string
+    {
+        if (!preg_match('/\(View:\s*(.+?\.blade\.php)\)/', $e->getMessage(), $match)) {
+            return null;
+        }
+
+        $bladePath = trim($match[1]);
+
+        if (file_exists($bladePath) && $this->isProjectFile($bladePath)) {
+            return $bladePath;
         }
 
         return null;
@@ -210,12 +235,26 @@ class AutoFixService
 
         $primaryFile = $e->getFile();
         $errorIsInVendor = !$this->isProjectFile($primaryFile);
+        $foundProjectFile = false;
 
         // Include vendor error location as reference (not editable, but informative)
         if ($errorIsInVendor) {
             $vendorRelPath = $this->relativePath($primaryFile);
             $vendorContent = $this->readFileWithContext($primaryFile, $e->getLine(), 10);
             $context[] = "=== {$vendorRelPath} (VENDOR - error origin, NOT editable) ===\n{$vendorContent}";
+        }
+
+        // ViewException: extract the original blade file from the exception message
+        $bladeFile = $this->extractBladeFile($e);
+        if ($bladeFile) {
+            $bladeRelPath = $this->relativePath($bladeFile);
+            $seen[$bladeRelPath] = true;
+            $content = $this->readFileForContext($bladeFile, 1);
+            $label = $this->isFullFileContent($bladeFile)
+                ? "{$bladeRelPath} (FULL FILE - BLADE FILE - FIX TARGET)"
+                : "{$bladeRelPath} (BLADE FILE - FIX TARGET)";
+            $context[] = "=== {$label} ===\n{$content}";
+            $foundProjectFile = true;
         }
 
         if (file_exists($primaryFile) && !$errorIsInVendor) {
@@ -230,7 +269,6 @@ class AutoFixService
 
         // Walk the stack trace for project files
         // When error is in vendor, the first project file is the likely fix target
-        $foundProjectFile = false;
         foreach ($e->getTrace() as $frame) {
             if (count($context) >= $maxFiles) {
                 break;
