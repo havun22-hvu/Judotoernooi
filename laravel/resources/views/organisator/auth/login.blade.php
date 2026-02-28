@@ -534,15 +534,16 @@ document.addEventListener('keydown', e => {
         const data = await res.json();
         document.getElementById('loading-state').classList.add('hidden');
 
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        // Touchscreen = biometrie (smartphone, tablet, iPad), geen touch = QR (PC)
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
         if (data.has_device && data.has_pin) {
             document.getElementById('pin-login-section').classList.remove('hidden');
             document.getElementById('welcome-user').textContent = `Welkom terug${data.user_name ? ', ' + data.user_name : ''}!`;
-            if (isMobile && data.has_biometric && window.PublicKeyCredential) {
+            if (isTouchDevice && data.has_biometric && window.PublicKeyCredential) {
                 document.getElementById('biometric-btn').classList.remove('hidden');
                 setTimeout(() => startBiometric(), 500);
-            } else if (!isMobile) {
+            } else if (!isTouchDevice) {
                 document.getElementById('qr-btn').classList.remove('hidden');
             }
         } else {
