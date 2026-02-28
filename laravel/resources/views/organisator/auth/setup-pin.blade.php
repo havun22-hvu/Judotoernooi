@@ -181,15 +181,16 @@ async function confirmPin() {
         });
         const data = await res.json();
         if (data.success) {
-            // Check if device supports platform authenticator (fingerprint/face)
-            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            let hasPlatformAuth = false;
-            if (isTouchDevice && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            // Biometric only on smartphones (small screen = likely has fingerprint sensor)
+            // Tablets (Samsung Tab A etc) get PIN/pattern prompt instead of fingerprint → skip
+            const isSmartphone = Math.min(screen.width, screen.height) < 550;
+            let canBiometric = false;
+            if (isSmartphone && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
                 try {
-                    hasPlatformAuth = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                } catch (e) { hasPlatformAuth = false; }
+                    canBiometric = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                } catch (e) { canBiometric = false; }
             }
-            if (hasPlatformAuth) {
+            if (canBiometric) {
                 showBiometricSetup();
             } else {
                 // No platform authenticator: skip biometric, go to dashboard
