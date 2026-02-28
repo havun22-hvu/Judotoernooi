@@ -20,13 +20,46 @@ class PasskeyController extends Controller
 {
     public function registerOptions(AttestationRequest $request): JsonResponse
     {
-        return response()->json($request->toCreate());
+        // Ensure laragear uses the organisator guard (belt-and-suspenders)
+        $request->setUserResolver(function ($guard = null) {
+            return Auth::guard('organisator')->user();
+        });
+
+        try {
+            $options = $request->toCreate();
+            Log::info('PASSKEY REGISTER OPTIONS - Success', [
+                'organisator_id' => Auth::guard('organisator')->id(),
+            ]);
+            return response()->json($options);
+        } catch (\Exception $e) {
+            Log::error('PASSKEY REGISTER OPTIONS - Failed', [
+                'error' => $e->getMessage(),
+                'organisator_id' => Auth::guard('organisator')->id(),
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function register(AttestedRequest $request): JsonResponse
     {
-        $request->save();
-        return response()->json(['success' => true, 'message' => 'Passkey succesvol geregistreerd!']);
+        // Ensure laragear uses the organisator guard
+        $request->setUserResolver(function ($guard = null) {
+            return Auth::guard('organisator')->user();
+        });
+
+        try {
+            $request->save();
+            Log::info('PASSKEY REGISTER - Success', [
+                'organisator_id' => Auth::guard('organisator')->id(),
+            ]);
+            return response()->json(['success' => true, 'message' => 'Passkey succesvol geregistreerd!']);
+        } catch (\Exception $e) {
+            Log::error('PASSKEY REGISTER - Failed', [
+                'error' => $e->getMessage(),
+                'organisator_id' => Auth::guard('organisator')->id(),
+            ]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function loginOptions(AssertionRequest $request): JsonResponse
