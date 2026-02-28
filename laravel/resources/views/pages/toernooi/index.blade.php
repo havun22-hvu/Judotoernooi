@@ -236,7 +236,7 @@
 @if($toernooienZonderOrganisator->count() > 0)
 <div class="bg-white rounded-lg shadow mb-6 overflow-hidden mt-8">
     <div class="bg-orange-50 px-6 py-4 border-b">
-        <h2 class="text-lg font-bold text-orange-800">⚠️ Toernooien zonder organisator ({{ $toernooienZonderOrganisator->count() }})</h2>
+        <h2 class="text-lg font-bold text-orange-800">⚠️ {{ __('Toernooien zonder organisator') }} ({{ $toernooienZonderOrganisator->count() }})</h2>
         <div class="text-sm text-orange-600">{{ __('Deze toernooien hebben geen gekoppelde klant - mogelijk legacy data') }}</div>
     </div>
     <table class="min-w-full">
