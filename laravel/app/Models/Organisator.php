@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
+use Laragear\WebAuthn\WebAuthnAuthentication;
 
-class Organisator extends Authenticatable
+class Organisator extends Authenticatable implements WebAuthnAuthenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, WebAuthnAuthentication;
 
     protected $table = 'organisators';
 
@@ -214,6 +216,14 @@ class Organisator extends Authenticatable
     public function vrijwilligers(): HasMany
     {
         return $this->hasMany(Vrijwilliger::class);
+    }
+
+    /**
+     * Get all auth devices for this organisator
+     */
+    public function authDevices(): HasMany
+    {
+        return $this->hasMany(AuthDevice::class);
     }
 
     public function stamJudokas(): HasMany
