@@ -7,6 +7,8 @@ use App\Http\Controllers\CoachPortalController;
 use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
 use App\Http\Controllers\OrganisatorAuthController;
+use App\Http\Controllers\Auth\PinAuthController;
+use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\PouleController;
 use App\Http\Controllers\RoleToegang;
 use App\Http\Controllers\ToernooiController;
@@ -200,6 +202,36 @@ Route::middleware('guest:organisator')->group(function () {
 // Authenticated routes
 Route::middleware('auth:organisator')->group(function () {
     Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
+});
+
+// Unified Login System - PIN, Passkey, QR routes (public, no auth)
+Route::prefix('auth')->group(function () {
+    // PIN auth (public)
+    Route::post('pin/check-device', [PinAuthController::class, 'checkDevice']);
+    Route::post('pin/login', [PinAuthController::class, 'loginWithPin']);
+
+    // Passkey/WebAuthn (public)
+    Route::post('passkey/login/options', [PasskeyController::class, 'loginOptions']);
+    Route::post('passkey/login', [PasskeyController::class, 'login']);
+
+    // Token login (exchange device token for session)
+    Route::get('token-login/{token}', [PasskeyController::class, 'tokenLogin']);
+
+    // QR login flow (public)
+    Route::post('qr/generate', [PasskeyController::class, 'qrGenerate']);
+    Route::get('qr/{token}/status', [PasskeyController::class, 'qrStatus']);
+    Route::get('qr/approve/{token}', [PasskeyController::class, 'qrApproveShow']);
+    Route::post('qr/approve/{token}', [PasskeyController::class, 'qrApprove']);
+    Route::get('qr/complete/{token}', [PasskeyController::class, 'qrComplete']);
+});
+
+// Unified Login System - Protected routes (auth required)
+Route::prefix('auth')->middleware('auth:organisator')->group(function () {
+    Route::get('setup-pin', fn() => view('organisator.auth.setup-pin'))->name('auth.setup-pin');
+    Route::post('pin/setup', [PinAuthController::class, 'setupPin']);
+    Route::post('pin/biometric', [PinAuthController::class, 'enableBiometric']);
+    Route::post('passkey/register/options', [PasskeyController::class, 'registerOptions']);
+    Route::post('passkey/register', [PasskeyController::class, 'register']);
 });
 
 // Alias for organisator.login (used in bootstrap/app.php and controllers)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuthDevice;
 use App\Models\Organisator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,7 @@ class OrganisatorAuthController extends Controller
 
         if (Auth::guard('organisator')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            session()->save();
 
             /** @var Organisator $organisator */
             $organisator = Auth::guard('organisator')->user();
@@ -54,6 +56,15 @@ class OrganisatorAuthController extends Controller
             // Restore saved locale preference
             if ($organisator->locale) {
                 $request->session()->put('locale', $organisator->locale);
+            }
+
+            // Check if device needs PIN setup (fingerprint from login form)
+            $fingerprint = $request->input('fingerprint');
+            if ($fingerprint && strlen($fingerprint) === 64) {
+                $device = AuthDevice::findByFingerprint($organisator->id, $fingerprint);
+                if (!$device || !$device->hasPin()) {
+                    return redirect()->route('auth.setup-pin');
+                }
             }
 
             // Sitebeheerder goes to admin dashboard, regular organisator to their dashboard

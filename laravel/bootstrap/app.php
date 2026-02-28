@@ -53,9 +53,28 @@ return Application::configure(basePath: dirname(__DIR__))
             'coach-kaart/*/activeer',  // Coach card activation (public, uses pincode)
             'coach-kaart/*/checkin',   // Coach check-in (public)
             'coach-kaart/*/checkout',  // Coach check-out (public)
+            'auth/pin/*',              // Unified Login: PIN auth
+            'auth/passkey/*',          // Unified Login: Passkey/WebAuthn
+            'auth/qr/*',              // Unified Login: QR login
+            'auth/token-login/*',     // Unified Login: Token exchange
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // JSON responses for auth/* API routes
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('auth/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Niet ingelogd.'], 401);
+            }
+        });
+
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
+            if ($request->is('auth/*') && $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Validatiefout.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+        });
         // Handle custom JudoToernooi exceptions
         $exceptions->render(function (\App\Exceptions\JudoToernooiException $e, $request) {
             $e->log();

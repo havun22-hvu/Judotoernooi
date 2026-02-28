@@ -6,6 +6,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.2",
+        "laragear/webauthn": "*",
         "laravel/framework": "^11.0",
         "laravel/reverb": "^1.7",
         "laravel/sanctum": "^4.0",
