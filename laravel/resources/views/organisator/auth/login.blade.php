@@ -536,16 +536,20 @@ document.addEventListener('keydown', e => {
 
         // Touchscreen = biometrie (smartphone, tablet, iPad), geen touch = QR (PC)
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        let hasPlatformAuth = false;
+        if (isTouchDevice && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            try { hasPlatformAuth = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch(e) {}
+        }
 
         if (data.has_device && data.has_pin) {
             document.getElementById('pin-login-section').classList.remove('hidden');
             document.getElementById('welcome-user').textContent = `Welkom terug${data.user_name ? ', ' + data.user_name : ''}!`;
-            if (isTouchDevice && data.has_biometric && window.PublicKeyCredential) {
-                // Touchscreen + passkey registered → toon biometrie knop + auto-start
+            if (hasPlatformAuth && data.has_biometric && window.PublicKeyCredential) {
+                // Touch device with platform authenticator + passkey registered → biometric button + auto-start
                 document.getElementById('biometric-btn').classList.remove('hidden');
                 setTimeout(() => startBiometric(), 500);
             } else if (!isTouchDevice) {
-                // Desktop → toon QR knop
+                // Desktop → QR button
                 document.getElementById('qr-btn').classList.remove('hidden');
             }
         } else {

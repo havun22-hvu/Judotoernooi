@@ -181,12 +181,18 @@ async function confirmPin() {
         });
         const data = await res.json();
         if (data.success) {
-            // Check if touch device with WebAuthn support → offer biometric
+            // Check if device supports platform authenticator (fingerprint/face)
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            if (isTouchDevice && window.PublicKeyCredential) {
+            let hasPlatformAuth = false;
+            if (isTouchDevice && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+                try {
+                    hasPlatformAuth = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                } catch (e) { hasPlatformAuth = false; }
+            }
+            if (hasPlatformAuth) {
                 showBiometricSetup();
             } else {
-                // Desktop: skip biometric, go to dashboard
+                // No platform authenticator: skip biometric, go to dashboard
                 document.getElementById('step-title').textContent = 'PIN ingesteld!';
                 document.getElementById('step-subtitle').textContent = 'Doorsturen naar dashboard...';
                 document.getElementById('pin-section').classList.add('hidden');
