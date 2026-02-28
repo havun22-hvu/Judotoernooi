@@ -108,6 +108,19 @@
 
             <p id="pin-error" class="text-center text-red-500 text-sm mb-4 hidden"></p>
 
+            <!-- Biometric fallback message -->
+            <div id="biometric-fallback" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-center">
+                <p class="text-sm text-gray-700 mb-2">{{ __('Biometrie niet gelukt? Gebruik een andere methode:') }}</p>
+                <div class="flex gap-2 justify-center">
+                    <button type="button" onclick="document.getElementById('biometric-fallback').classList.add('hidden')" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                        {{ __('PIN invoeren') }}
+                    </button>
+                    <button type="button" onclick="showPasswordLogin()" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">
+                        {{ __('Wachtwoord') }}
+                    </button>
+                </div>
+            </div>
+
             <!-- Numpad -->
             <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
                 <button type="button" onclick="addPin('1')" class="numpad-btn">1</button>
@@ -138,7 +151,14 @@
                 </button>
             </div>
 
-            <div class="text-center mt-6">
+            <!-- Password hint after failed PIN attempts -->
+            <div id="password-hint" class="hidden mt-4">
+                <button type="button" onclick="showPasswordLogin()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
+                    {{ __('Inloggen met wachtwoord') }}
+                </button>
+            </div>
+
+            <div class="text-center mt-4">
                 <button type="button" onclick="showPasswordLogin()" class="text-sm text-blue-600 hover:underline">
                     {{ __('Ander account? Login met wachtwoord') }}
                 </button>
@@ -247,6 +267,7 @@
 <script>
 let deviceFingerprint = null;
 let currentPin = '';
+let pinAttempts = 0;
 
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]').content;
@@ -347,7 +368,13 @@ async function submitPin() {
         if (data.success) {
             window.location.href = data.redirect || '/';
         } else {
-            showPinError(data.message || 'Onjuiste PIN');
+            pinAttempts++;
+            if (pinAttempts >= 3) {
+                showPinError('PIN 3x fout. Probeer wachtwoord.');
+                showPasswordHint();
+            } else {
+                showPinError(data.message || 'Onjuiste PIN');
+            }
         }
     } catch (err) {
         showPinError('Er ging iets mis');
@@ -403,8 +430,18 @@ async function startBiometric() {
             showPinError('Biometrie mislukt');
         }
     } catch (err) {
-        if (err.name !== 'NotAllowedError') showPinError('Biometrie geannuleerd');
+        // Any biometric failure → show fallback options
+        showBiometricFallback();
     }
+}
+
+function showBiometricFallback() {
+    document.getElementById('pin-error').classList.add('hidden');
+    document.getElementById('biometric-fallback').classList.remove('hidden');
+}
+
+function showPasswordHint() {
+    document.getElementById('password-hint').classList.remove('hidden');
 }
 
 // QR Code functions
