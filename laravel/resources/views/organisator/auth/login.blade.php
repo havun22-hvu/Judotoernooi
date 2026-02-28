@@ -541,9 +541,11 @@ document.addEventListener('keydown', e => {
             document.getElementById('pin-login-section').classList.remove('hidden');
             document.getElementById('welcome-user').textContent = `Welkom terug${data.user_name ? ', ' + data.user_name : ''}!`;
             if (isTouchDevice && data.has_biometric && window.PublicKeyCredential) {
+                // Touchscreen + passkey registered → toon biometrie knop + auto-start
                 document.getElementById('biometric-btn').classList.remove('hidden');
                 setTimeout(() => startBiometric(), 500);
             } else if (!isTouchDevice) {
+                // Desktop → toon QR knop
                 document.getElementById('qr-btn').classList.remove('hidden');
             }
         } else {
