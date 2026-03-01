@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FactuurService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,6 +27,7 @@ class ToernooiBetaling extends Model
         'max_judokas',
         'status',
         'betaald_op',
+        'factuurnummer',
     ];
 
     protected $casts = [
@@ -65,5 +67,8 @@ class ToernooiBetaling extends Model
             'paid_at' => now(),
             'toernooi_betaling_id' => $this->id,
         ]);
+
+        // Generate and send invoice
+        app(FactuurService::class)->verstuurFactuur($this);
     }
 }
