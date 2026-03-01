@@ -160,7 +160,7 @@ class PasskeyController extends Controller
             'token' => $token->token,
             'expires_in' => 300,
             'approve_url' => $approveUrl,
-            'qr_svg' => $qrSvg,
+            'qr_svg' => (string) $qrSvg,
         ]);
     }
 
