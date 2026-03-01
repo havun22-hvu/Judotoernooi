@@ -76,7 +76,7 @@
 
             <div class="mb-4">
                 <label for="telefoon" class="block text-sm font-medium text-gray-700 mb-1">
-                    Telefoonnummer <span class="text-gray-400">(optioneel)</span>
+                    {{ __('Telefoonnummer') }} <span class="text-gray-400">({{ __('optioneel') }})</span>
                 </label>
                 <input type="tel"
                        id="telefoon"
@@ -87,7 +87,7 @@
 
             <div class="mb-4">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                    Wachtwoord <span class="text-gray-400">(min. 8 tekens)</span>
+                    {{ __('Wachtwoord') }} <span class="text-gray-400">({{ __('min. 8 tekens') }})</span>
                 </label>
                 <div class="relative">
                     <input type="password"
@@ -113,7 +113,7 @@
 
             <div class="mb-6">
                 <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
-                    Wachtwoord bevestigen
+                    {{ __('Wachtwoord bevestigen') }}
                 </label>
                 <div class="relative">
                     <input type="password"
@@ -133,6 +133,7 @@
                 </div>
             </div>
             <script>
+            const __t = { registering: @json(__('Bezig met registreren...')) };
             function togglePassword(fieldId) {
                 const input = document.getElementById(fieldId);
                 const eyeOpen = document.getElementById('eye-open-' + fieldId);
@@ -150,7 +151,7 @@
             document.getElementById('registerForm').addEventListener('submit', function() {
                 const btn = document.getElementById('submitBtn');
                 btn.disabled = true;
-                btn.textContent = 'Bezig met registreren...';
+                btn.textContent = __t.registering;
                 btn.classList.add('opacity-75', 'cursor-not-allowed');
             });
             </script>
@@ -158,16 +159,16 @@
             {{-- DO NOT REMOVE: Registration submit button --}}
             <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                Account aanmaken
+                {{ __('Account aanmaken') }}
             </button>
         </form>
 
         {{-- DO NOT REMOVE: Login link for existing users --}}
         <div class="mt-6 text-center">
             <p class="text-gray-600">
-                Al een account?
+                {{ __('Al een account?') }}
                 <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                    Log hier in
+                    {{ __('Log hier in') }}
                 </a>
             </p>
         </div>

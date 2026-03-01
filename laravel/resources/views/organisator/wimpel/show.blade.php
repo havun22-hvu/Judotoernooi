@@ -221,6 +221,14 @@
 </div>
 
 <script>
+const __t = {
+    errorAdjusting: @json(__('Fout bij aanpassen')),
+    somethingWentWrong: @json(__('Er ging iets mis')),
+    connectionError: @json(__('Verbindingsfout')),
+    confirmAdjustAdd: @json(__('+:punten punten bijschrijven?')),
+    confirmAdjustSubtract: @json(__(':punten punten aftrekken?')),
+    confirmSendToSpeaker: @json(__('" :omschrijving" naar spreker sturen?')),
+};
 function judokaDetail() {
     return {
         puntenTotaal: {{ $stamJudoka->wimpel_punten_totaal }},
@@ -242,8 +250,10 @@ function judokaDetail() {
             if (!this.aantalPunten || this.aantalPunten == 0) return;
 
             const punten = parseInt(this.aantalPunten);
-            const actie = punten > 0 ? `+${punten} punten bijschrijven` : `${punten} punten aftrekken`;
-            if (!confirm(`${actie}?`)) return;
+            const actie = punten > 0
+                ? __t.confirmAdjustAdd.replace(':punten', punten)
+                : __t.confirmAdjustSubtract.replace(':punten', punten);
+            if (!confirm(actie)) return;
 
             this.saving = true;
             try {
@@ -267,16 +277,16 @@ function judokaDetail() {
                     this.showFeedback('Punten aangepast', 'success');
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    this.showFeedback('Fout bij aanpassen', 'error');
+                    this.showFeedback(__t.errorAdjusting, 'error');
                 }
             } catch (e) {
-                this.showFeedback('Verbindingsfout', 'error');
+                this.showFeedback(__t.connectionError, 'error');
             }
             this.saving = false;
         },
 
         async stuurNaarSpreker(milestoneId, omschrijving) {
-            if (!confirm(`"${omschrijving}" naar spreker sturen?`)) return;
+            if (!confirm(__t.confirmSendToSpeaker.replace(':omschrijving', omschrijving))) return;
 
             this.sprekerSaving = true;
             try {
@@ -294,11 +304,11 @@ function judokaDetail() {
                     this.sprekerFeedback = data.message;
                     this.sprekerFeedbackType = 'success';
                 } else {
-                    this.sprekerFeedback = data.error || 'Er ging iets mis';
+                    this.sprekerFeedback = data.error || __t.somethingWentWrong;
                     this.sprekerFeedbackType = 'error';
                 }
             } catch (e) {
-                this.sprekerFeedback = 'Verbindingsfout';
+                this.sprekerFeedback = __t.connectionError;
                 this.sprekerFeedbackType = 'error';
             }
             this.sprekerSaving = false;
@@ -328,11 +338,11 @@ function judokaDetail() {
                     this.handmatigFeedbackType = 'success';
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    this.handmatigFeedback = data.message || 'Er ging iets mis';
+                    this.handmatigFeedback = data.message || __t.somethingWentWrong;
                     this.handmatigFeedbackType = 'error';
                 }
             } catch (e) {
-                this.handmatigFeedback = 'Verbindingsfout';
+                this.handmatigFeedback = __t.connectionError;
                 this.handmatigFeedbackType = 'error';
             }
             this.handmatigSaving = false;

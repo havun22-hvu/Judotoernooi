@@ -175,12 +175,13 @@
         </div>
 
         <script>
+            const __t = { confirmDeleteTemplate: @json(__('Weet je zeker dat je deze template wilt verwijderen?')) };
             function templateManager() {
                 return {
                     open: false,
                     templates: @json($organisator->toernooiTemplates ?? []),
                     async deleteTemplate(id) {
-                        if (!confirm('Weet je zeker dat je deze template wilt verwijderen?')) return;
+                        if (!confirm(__t.confirmDeleteTemplate)) return;
                         const response = await fetch(`/{{ $organisator->slug }}/templates/${id}`, {
                             method: 'DELETE',
                             headers: {

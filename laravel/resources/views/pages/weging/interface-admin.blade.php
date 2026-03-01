@@ -171,6 +171,11 @@
 </div>
 
 <script>
+const __t = {
+    confirmCloseBlock: @json(__('Weegtijd Blok :blok sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')),
+    saveError: @json(__('Fout bij opslaan')),
+};
+
 // Countdown timer - toont alleen na starttijd, met alert bij einde
 function countdown(starttijd, eindtijd, blokNummer) {
     return {
@@ -261,7 +266,7 @@ function weeglijst() {
 
         sluitWeegtijd() {
             if (!this.blokFilter) return;
-            if (!confirm('Weegtijd Blok ' + this.blokFilter + ' sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')) return;
+            if (!confirm(__t.confirmCloseBlock.replace(':blok', this.blokFilter))) return;
 
             const blokId = this.blokIds[this.blokFilter];
             const form = document.createElement('form');
@@ -436,11 +441,11 @@ function weeglijst() {
                     this.filterJudokas();
                     this.closeEditModal();
                 } else {
-                    alert(data.message || 'Fout bij opslaan');
+                    alert(data.message || __t.saveError);
                 }
             } catch (err) {
                 console.error('Save failed:', err);
-                alert('Fout bij opslaan');
+                alert(__t.saveError);
             } finally {
                 this.editSaving = false;
             }

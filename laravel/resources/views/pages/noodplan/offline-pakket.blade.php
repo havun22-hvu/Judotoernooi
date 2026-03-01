@@ -205,6 +205,10 @@ tr:hover { background: #f9fafb; }
 <script>
 const DATA = {!! $jsonData !!};
 
+// i18n constants
+const __uploadMislukt = @json(__('Upload mislukt'));
+const __uploadMisluktDetails = @json(__('Upload mislukt: :error. Probeer het later opnieuw of voer de scores handmatig in.'));
+
 // localStorage key for offline scores
 const STORAGE_KEY = 'offline_' + DATA.toernooi.id;
 
@@ -694,11 +698,11 @@ async function uploadResultaten() {
             updateUploadBtn();
             renderScores();
         } else {
-            throw new Error(result.error || 'Upload mislukt');
+            throw new Error(result.error || __uploadMislukt);
         }
     } catch(e) {
         statusEl.className = 'upload-status error';
-        statusEl.textContent = 'Upload mislukt: ' + e.message + '. Probeer het later opnieuw of voer de scores handmatig in.';
+        statusEl.textContent = __uploadMisluktDetails.replace(':error', e.message);
     }
 }
 

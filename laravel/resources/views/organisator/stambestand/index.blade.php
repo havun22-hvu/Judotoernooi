@@ -222,6 +222,11 @@
 </div>
 
 <script>
+const __t = {
+    errorSaving: @json(__('Fout bij opslaan')),
+    connectionError: @json(__('Verbindingsfout')),
+    confirmDelete: @json(__('" :naam" verwijderen uit het stambestand?')),
+};
 function stambestandPage() {
     return {
         zoek: '',
@@ -372,7 +377,7 @@ function stambestandPage() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    const errors = data.errors ? Object.values(data.errors).flat().join(', ') : (data.message || 'Fout bij opslaan');
+                    const errors = data.errors ? Object.values(data.errors).flat().join(', ') : (data.message || __t.errorSaving);
                     this.feedback = errors;
                     this.feedbackType = 'error';
                     this.saving = false;
@@ -391,7 +396,7 @@ function stambestandPage() {
                     this.feedbackType = 'success';
                 }
             } catch (e) {
-                this.feedback = 'Verbindingsfout';
+                this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
 
@@ -414,13 +419,13 @@ function stambestandPage() {
                     this.feedbackType = 'success';
                 }
             } catch (e) {
-                this.feedback = 'Verbindingsfout';
+                this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
         },
 
         async deleteJudoka(judoka) {
-            if (!confirm(`"${judoka.naam}" verwijderen uit het stambestand?`)) return;
+            if (!confirm(__t.confirmDelete.replace(':naam', judoka.naam))) return;
 
             try {
                 const response = await fetch(`{{ url($organisator->slug . '/judokas') }}/${judoka.id}`, {
@@ -437,7 +442,7 @@ function stambestandPage() {
                     this.feedbackType = 'success';
                 }
             } catch (e) {
-                this.feedback = 'Verbindingsfout';
+                this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
         },

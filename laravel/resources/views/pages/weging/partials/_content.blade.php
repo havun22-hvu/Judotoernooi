@@ -113,6 +113,16 @@
 </div>
 
 <script>
+const __t = {
+    noClub: @json(__('Geen club')),
+    noResults: @json(__('Geen resultaten')),
+    sessionExpired: @json(__('Sessie verlopen - herlaad pagina')),
+    registerError: @json(__('Fout bij registreren')),
+    noConnection: @json(__('Geen verbinding met server')),
+    noJudokasWeighed: @json(__('Nog geen judoka\'s gewogen')),
+    areYouSure: @json(__('Weet je zeker dat dit klopt?')),
+};
+
 // Base URL for API calls (new URL structure: /organisator/toernooi)
 const apiBaseUrl = '{{ url("/{$toernooi->organisator->slug}/{$toernooi->slug}") }}';
 
@@ -247,12 +257,12 @@ async function searchJudoka(query) {
                     <div onclick="selectJudoka(${JSON.stringify(j).replace(/"/g, '&quot;')})"
                          class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0">
                         <div class="font-medium text-gray-800">${j.naam}</div>
-                        <div class="text-sm text-gray-600">${j.club || 'Geen club'} | ${j.gewichtsklasse} kg</div>
+                        <div class="text-sm text-gray-600">${j.club || __t.noClub} | ${j.gewichtsklasse} kg</div>
                     </div>
                 `).join('');
                 results.classList.remove('hidden');
             } else {
-                results.innerHTML = '<div class="p-3 text-gray-500 text-center">Geen resultaten</div>';
+                results.innerHTML = '<div class="p-3 text-gray-500 text-center">' + __t.noResults + '</div>';
                 results.classList.remove('hidden');
             }
         } catch (e) {
@@ -291,7 +301,7 @@ function selectJudoka(judoka) {
 
     document.getElementById('judoka-info-compact').innerHTML = `
         <div class="font-bold text-lg truncate">${judoka.naam}${gewichtDisplay ? ` • ${gewichtDisplay}` : ''}</div>
-        <div class="text-sm text-gray-600">${judoka.club || 'Geen club'}</div>
+        <div class="text-sm text-gray-600">${judoka.club || __t.noClub}</div>
         ${isGewogen ? `<div class="text-green-600 font-medium">✓ ${judoka.gewicht_gewogen} kg</div>` : ''}
         ${vorigeWegingen.length > 0 ? `<div class="text-green-600 text-sm">${vorigeGewichten}</div>` : ''}
         ${maxBereikt ? `
@@ -344,7 +354,7 @@ async function registreerGewicht(skipAfwijkingCheck = false) {
             `Opgegeven: ${opgegevenGewicht} kg\n` +
             `Gewogen: ${gewogenGewicht} kg\n` +
             `Verschil: ${verschil > 0 ? '+' : ''}${verschil} kg (${richting})\n\n` +
-            `Weet je zeker dat dit klopt?`
+            __t.areYouSure
         );
         if (!bevestigd) return;
     }
@@ -373,7 +383,7 @@ async function registreerGewicht(skipAfwijkingCheck = false) {
         if (!response.ok) {
             let errorMsg = data.message || `HTTP ${response.status}`;
             if (response.status === 419) {
-                errorMsg = 'Sessie verlopen - herlaad pagina';
+                errorMsg = __t.sessionExpired;
             }
             feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
             feedback.textContent = errorMsg;
@@ -425,13 +435,13 @@ async function registreerGewicht(skipAfwijkingCheck = false) {
             }
         } else {
             feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
-            feedback.textContent = data.message || 'Fout bij registreren';
+            feedback.textContent = data.message || __t.registerError;
             feedback.classList.remove('hidden');
         }
     } catch (e) {
         console.error('Register error:', e);
         feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
-        feedback.textContent = 'Geen verbinding met server';
+        feedback.textContent = __t.noConnection;
         feedback.classList.remove('hidden');
     } finally {
         btn.disabled = false;
@@ -580,7 +590,7 @@ function updateHistoryDisplay() {
 
     const list = document.getElementById('history-list');
     if (history.length === 0) {
-        list.innerHTML = '<p class="text-gray-400 text-center">Nog geen judoka\'s gewogen</p>';
+        list.innerHTML = '<p class="text-gray-400 text-center">' + __t.noJudokasWeighed + '</p>';
         return;
     }
 

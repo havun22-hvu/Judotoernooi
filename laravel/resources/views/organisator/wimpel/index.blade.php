@@ -155,6 +155,11 @@
 </div>
 
 <script>
+const __t = {
+    connectionError: @json(__('Verbindingsfout')),
+    somethingWentWrong: @json(__('Er ging iets mis')),
+    confirmProcess: @json(__('Punten bijschrijven van ":naam"?')),
+};
 function wimpelPage() {
     return {
         zoek: '',
@@ -224,13 +229,13 @@ function wimpelPage() {
                     location.reload();
                 }
             } catch (e) {
-                this.feedback = 'Verbindingsfout';
+                this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
         },
 
         async verwerkToernooi(toernooiId, naam) {
-            if (!confirm(`Punten bijschrijven van "${naam}"?`)) return;
+            if (!confirm(__t.confirmProcess.replace(':naam', naam))) return;
 
             this.verwerking = true;
             this.feedback = '';
@@ -253,11 +258,11 @@ function wimpelPage() {
                     this.feedbackType = 'success';
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    this.feedback = data.error || 'Er ging iets mis';
+                    this.feedback = data.error || __t.somethingWentWrong;
                     this.feedbackType = 'error';
                 }
             } catch (e) {
-                this.feedback = 'Verbindingsfout';
+                this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
 

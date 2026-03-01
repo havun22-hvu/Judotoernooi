@@ -2440,5 +2440,10 @@
     "Je wilt :naam naar de swap verplaatsen.": "You want to move :naam to the swap area.",
     "deze judoka": "this judoka",
     ":naam terugplaatsen naar vorige ronde?": "Move :naam back to previous round?",
-    "Dit reset de uitslag van de bron-wedstrijd.": "This resets the result of the source match."
+    "Dit reset de uitslag van de bron-wedstrijd.": "This resets the result of the source match.",
+    "Goedkeuren...": "Approving...",
+    "Goedkeuren mislukt": "Approval failed",
+    "Weet je zeker dat dit klopt?": "Are you sure this is correct?",
+    "Fout bij laden notities": "Error loading notes",
+    "Onjuist wachtwoord": "Incorrect password"
 }

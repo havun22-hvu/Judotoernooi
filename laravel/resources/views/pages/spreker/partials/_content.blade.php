@@ -657,6 +657,8 @@ const __templateOpgeslagen = @json(__('Template ":naam" opgeslagen!'));
 const __templateBijgewerkt = @json(__('Template ":naam" bijgewerkt!'));
 const __ofKiesAndereTemplate = @json(__('Of kies andere template:'));
 const __kiesTemplateOmTeOverschrijven = @json(__('Kies template om te overschrijven:'));
+const __foutBijLadenNotities = @json(__('Fout bij laden notities:'));
+const __foutBijOpslaanNotities = @json(__('Fout bij opslaan notities:'));
 
 // Terug functie - zet afgeroepen poule terug naar klaar
 async function zetTerug(pouleId, button) {
@@ -773,7 +775,7 @@ function sprekerInterface() {
                     this.hasUnsavedChanges = false;
                 }
             } catch (err) {
-                console.error('Fout bij laden notities:', err);
+                console.error(__foutBijLadenNotities, err);
             }
         },
 
@@ -873,7 +875,7 @@ function sprekerInterface() {
                     this.showFeedback(__notitiesOpgeslagen);
                 }
             } catch (err) {
-                console.error('Fout bij opslaan notities:', err);
+                console.error(__foutBijOpslaanNotities, err);
                 alert(__foutBijOpslaan);
             }
         },

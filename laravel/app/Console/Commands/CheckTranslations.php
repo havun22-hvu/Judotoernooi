@@ -80,8 +80,9 @@ class CheckTranslations extends Command
                 $lines = explode("\n", $scriptContent);
 
                 foreach ($lines as $lineIndex => $line) {
-                    // Skip translation lines
-                    if (str_contains($line, '__t.') || str_contains($line, '@json(') || str_contains($line, "__(")) {
+                    // Skip translation lines (both __t object pattern and __ prefixed constants)
+                    if (str_contains($line, '__t.') || str_contains($line, '@json(') || str_contains($line, "__(")
+                        || preg_match('/\$\{__\w+/', $line) || preg_match('/\b__[a-zA-Z]/', $line)) {
                         continue;
                     }
                     // Skip comments
