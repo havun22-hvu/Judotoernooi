@@ -99,6 +99,7 @@ class ToernooiBetalingController extends Controller
 
         $validated = $request->validate([
             'tier' => 'required|string',
+            'payment_provider' => 'nullable|string|in:mollie,stripe',
         ]);
 
         $tierInfo = $this->freemiumService->getTierInfo($validated['tier']);
@@ -139,8 +140,9 @@ class ToernooiBetalingController extends Controller
                 ->with('success', '✓ Test upgrade succesvol - geen betaling nodig');
         }
 
-        $provider = PaymentProviderFactory::forToernooi($toernooi);
-        $providerName = $provider->getName();
+        // Upgrade payments: provider comes from the form (user clicks Mollie or Stripe button)
+        $providerName = $validated['payment_provider'] ?? 'mollie';
+        $provider = PaymentProviderFactory::make($providerName);
 
         // Create betaling record
         $betaling = ToernooiBetaling::create([
