@@ -3,7 +3,7 @@
 @section('title', __('Havun Admin - Alle Organisatoren'))
 
 @section('content')
-<div x-data="{ tab: 'overzicht' }">
+<div x-data="{ tab: 'overzicht' }" class="w-full">
 
 {{-- Header --}}
 <div class="flex justify-between items-center mb-6">
@@ -39,10 +39,13 @@
     </button>
 </nav>
 
+{{-- Tab content wrapper - vaste breedte ongeacht actieve tab --}}
+<div class="w-full min-w-0">
+
 {{-- ============================================================ --}}
 {{-- TAB: Overzicht                                                --}}
 {{-- ============================================================ --}}
-<div x-show="tab === 'overzicht'" x-cloak>
+<div x-show="tab === 'overzicht'" x-cloak class="w-full">
 
     {{-- KPI's --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -207,7 +210,7 @@
 {{-- ============================================================ --}}
 {{-- TAB: Klanten                                                  --}}
 {{-- ============================================================ --}}
-<div x-show="tab === 'klanten'" x-cloak>
+<div x-show="tab === 'klanten'" x-cloak class="w-full">
 
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold text-gray-800">{{ __('Klanten & Toernooien') }}</h2>
@@ -444,7 +447,7 @@
 {{-- ============================================================ --}}
 {{-- TAB: Betalingen                                               --}}
 {{-- ============================================================ --}}
-<div x-show="tab === 'betalingen'" x-cloak>
+<div x-show="tab === 'betalingen'" x-cloak class="w-full">
 
     <div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
         <div class="bg-green-50 px-6 py-3 border-b">
@@ -489,7 +492,7 @@
 {{-- ============================================================ --}}
 {{-- TAB: Activiteit                                               --}}
 {{-- ============================================================ --}}
-<div x-show="tab === 'activiteit'" x-cloak>
+<div x-show="tab === 'activiteit'" x-cloak class="w-full">
 
     <div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
         <div class="bg-gray-50 px-6 py-3 border-b">
@@ -538,7 +541,7 @@
 {{-- ============================================================ --}}
 {{-- TAB: Systeem                                                  --}}
 {{-- ============================================================ --}}
-<div x-show="tab === 'systeem'" x-cloak>
+<div x-show="tab === 'systeem'" x-cloak class="w-full">
 
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold text-gray-800">{{ __('Systeem Status') }}</h2>
@@ -580,6 +583,8 @@
     </div>
 
 </div>
+
+</div>{{-- end tab content wrapper --}}
 
 </div>{{-- end x-data --}}
 
