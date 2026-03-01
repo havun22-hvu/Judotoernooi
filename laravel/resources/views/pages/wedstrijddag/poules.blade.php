@@ -813,6 +813,11 @@ const __eliminatieOmzetten = @json(__('Eliminatie omzetten naar'));
 const __poulesKruisfinale = @json(__('poules + kruisfinale'));
 const __alleenPoules = @json(__('alleen poules'));
 const __pouleVerwijderen = @json(__('Poule verwijderen?'));
+const __fout = @json(__('Fout'));
+const __onbekendeFout = @json(__('Onbekende fout'));
+const __verkeerdeGewichtsklasse = @json(__('Verkeerde gewichtsklasse'));
+const __onbekend = @json(__('Onbekend'));
+const __judokasDoor = @json(__("judoka's door"));
 
 
 // Meld judoka af (kan niet deelnemen) - moet vroeg gedefinieerd zijn voor poule-card buttons
@@ -834,7 +839,7 @@ async function meldJudokaAf(judokaId, naam) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Fout: ' + (data.message || 'Onbekende fout'));
+            alert(__fout + ': ' + (data.message || __onbekendeFout));
         }
     } catch (error) {
         console.error('Error:', error);
@@ -867,7 +872,7 @@ async function updateKruisfinale(pouleId, plaatsen) {
                 const infoDiv = card.querySelector('.kruisfinale-info');
                 const aantalVoorrondes = card.dataset.aantalVoorrondes || '?';
                 if (infoDiv) {
-                    infoDiv.textContent = `${aantalVoorrondes} ${__poules} × top ${plaatsen} = ${data.aantal_judokas} ${__judokas} door`;
+                    infoDiv.textContent = `${aantalVoorrondes} ${__poules} × top ${plaatsen} = ${data.aantal_judokas} ${__judokasDoor}`;
                 }
             }
         } else {
@@ -1010,7 +1015,7 @@ async function verifieerPoules() {
     } catch (error) {
         console.error('Error:', error);
         resultaatDiv.className = 'bg-red-50 border border-red-300 rounded-lg p-4';
-        resultaatDiv.innerHTML = '<p class="text-red-700">Fout bij verificatie</p>';
+        resultaatDiv.innerHTML = '<p class="text-red-700">' + __foutBijVerificatie + '</p>';
     }
 }
 
@@ -1019,7 +1024,7 @@ function wedstrijddagPoules() {
 }
 
 async function verwijderUitPoule(judokaId, pouleId) {
-    if (!confirm('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?')) return;
+    if (!confirm(__verwijderUitPouleBevestiging)) return;
 
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi->routeParams()) }}', {
@@ -1045,7 +1050,7 @@ async function verwijderUitPoule(judokaId, pouleId) {
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij verwijderen');
+        alert(__foutBijVerwijderen);
     }
 }
 
@@ -1068,15 +1073,15 @@ async function naarZaaloverzichtPoule(pouleId, btn) {
             btn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-orange-500', 'hover:bg-orange-400');
             btn.classList.add('bg-green-500', 'hover:bg-green-600');
             btn.innerHTML = '✓';
-            btn.title = 'Doorgestuurd';
+            btn.title = __doorgestuurd;
         } else {
             const data = await response.json().catch(() => ({}));
-            alert('Fout bij doorsturen: ' + (data.message || response.status));
+            alert(__foutBijDoorsturen + ': ' + (data.message || response.status));
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     } catch (error) {
-        alert('Netwerk fout: ' + error.message);
+        alert(__netwerkFout + ': ' + error.message);
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
@@ -1099,7 +1104,7 @@ document.getElementById('nieuwe-poule-form').addEventListener('submit', async fu
     const blokNummer = document.getElementById('nieuwe-poule-blok').value;
 
     if (!categorie) {
-        alert('Selecteer een categorie');
+        alert(__selecteerEenCategorie);
         return;
     }
 
@@ -1123,11 +1128,11 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse, blokNummer) {
         } else {
             const data = await response.json().catch(() => ({}));
             console.error('Server error:', response.status, data);
-            alert('Fout bij aanmaken poule: ' + (data.message || response.status));
+            alert(__foutBijAanmakenPoule + ': ' + (data.message || response.status));
         }
     } catch (error) {
         console.error('Error creating poule:', error);
-        alert('Fout bij aanmaken poule: ' + error.message);
+        alert(__foutBijAanmakenPoule + ': ' + error.message);
     }
 }
 
@@ -1146,7 +1151,7 @@ function openNieuweJudokaModal(leeftijdsklasse, gewichtsklasse, poules) {
     poules.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
-        opt.textContent = 'Poule ' + p.nummer;
+        opt.textContent = __poule + ' ' + p.nummer;
         pouleSelect.appendChild(opt);
     });
 
@@ -1161,14 +1166,14 @@ function closeNieuweJudokaModal() {
 document.getElementById('nieuwe-judoka-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const naam = document.getElementById('nj-naam').value.trim();
-    if (!naam) { alert('Naam is verplicht'); return; }
+    if (!naam) { alert(__naamIsVerplicht); return; }
 
     const pouleId = document.getElementById('nj-poule').value;
-    if (!pouleId) { alert('Selecteer een poule'); return; }
+    if (!pouleId) { alert(__selecteerEenPoule); return; }
 
     const btn = this.querySelector('button[type="submit"]');
     btn.disabled = true;
-    btn.textContent = 'Bezig...';
+    btn.textContent = __bezig;
 
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
@@ -1194,14 +1199,14 @@ document.getElementById('nieuwe-judoka-form').addEventListener('submit', async f
             closeNieuweJudokaModal();
             window.location.reload();
         } else {
-            alert('Fout: ' + (data.message || 'Onbekende fout'));
+            alert(__fout + ': ' + (data.message || __onbekendeFout));
             btn.disabled = false;
-            btn.textContent = 'Toevoegen';
+            btn.textContent = __toevoegen;
         }
     } catch (error) {
-        alert('Netwerk fout: ' + error.message);
+        alert(__netwerkFout + ': ' + error.message);
         btn.disabled = false;
-        btn.textContent = 'Toevoegen';
+        btn.textContent = __toevoegen;
     }
 });
 
@@ -1332,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const data = await response.json();
                     if (!data.success) {
-                        alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
+                        alert(__fout + ': ' + (data.error || data.message || __onbekendeFout));
                         window.location.reload();
                     } else {
                         // Update gewichtsrange en problematische poules voor beide poules
@@ -1365,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Fout bij verplaatsen: ' + error.message);
+                    alert(__foutBijVerplaatsen + ': ' + error.message);
                     window.location.reload();
                 }
             }
@@ -1392,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (heeftProbleem) {
                     existingIcon.className = 'text-orange-500 text-xs flex-shrink-0';
                     existingIcon.textContent = '⚠';
-                    existingIcon.title = 'Verkeerde gewichtsklasse';
+                    existingIcon.title = __verkeerdeGewichtsklasse;
                 } else {
                     existingIcon.className = 'text-green-500 text-xs flex-shrink-0';
                     existingIcon.textContent = '●';
@@ -1529,8 +1534,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 container.innerHTML = `
                     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
-                        <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">1</span>)</h3>
-                        <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 actieve judoka's:</p>
+                        <h3 class="font-bold text-red-800 mb-2">${__problematischePoules} (<span id="problematische-count">1</span>)</h3>
+                        <p class="text-red-700 text-sm mb-3">${__dezePoulesMinder3}</p>
                         <div id="problematische-links" class="flex flex-wrap gap-2">
                             <a href="#poule-${pouleData.id}" data-probleem-poule="${pouleData.id}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                                 #${nummer} ${leeftijd} ${gewicht} (<span data-probleem-count="${pouleData.id}">${pouleData.aantal_judokas}</span>)
@@ -1704,7 +1709,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
         loading.classList.add('hidden');
 
         if (!data.success || !data.matches.length) {
-            content.innerHTML = '<p class="text-gray-500 text-center py-4">Geen geschikte poules gevonden</p>';
+            content.innerHTML = '<p class="text-gray-500 text-center py-4">' + __geenGeschiktePoules + '</p>';
             return;
         }
 
@@ -1714,7 +1719,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             const blokKey = match.blok_nummer || 0;
             if (!blokGroepen[blokKey]) {
                 blokGroepen[blokKey] = {
-                    naam: match.blok_naam || 'Onbekend',
+                    naam: match.blok_naam || __onbekend,
                     status: match.blok_status,
                     matches: []
                 };
@@ -1735,7 +1740,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             </div>
             <button onclick="meldJudokaAf(${judokaId}, '${data.judoka.naam.replace(/'/g, "\\'")}')"
                 class="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">
-                ✕ Afmelden
+                ✕ ${__afmelden}
             </button>
         </div>`;
 
@@ -1744,8 +1749,8 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             'earlier_closed': 'bg-yellow-100 text-yellow-800'
         };
         const blokLabels = {
-            'same': 'Huidig blok',
-            'earlier_closed': 'Eerder blok (weging gesloten)'
+            'same': __huidigBlok,
+            'earlier_closed': __eerderBlokWegingGesloten
         };
 
         for (const [blokNummer, blok] of sortedBlokken) {
@@ -1767,13 +1772,13 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
                     <div class="flex justify-between items-start">
                         <div>
                             <span class="font-medium">${statusIcon} #${match.poule_nummer} ${match.leeftijdsklasse}${match.gewichtsklasse ? ' ' + match.gewichtsklasse + ' kg' : ''}</span>
-                            ${match.categorie_overschrijding ? '<span class="text-orange-500 text-xs ml-1">(andere categorie)</span>' : ''}
+                            ${match.categorie_overschrijding ? '<span class="text-orange-500 text-xs ml-1">(' + __andereCategorie + ')</span>' : ''}
                             ${overschrijding}
                         </div>
                     </div>
                     <div class="text-sm text-gray-600 mt-1">
-                        <div>Nu: ${match.huidige_judokas} judoka's | ${match.huidige_leeftijd} | ${match.huidige_gewicht}</div>
-                        <div>Na: ${match.nieuwe_judokas} judoka's | ${match.nieuwe_leeftijd} | ${match.nieuwe_gewicht}</div>
+                        <div>${__nu}: ${match.huidige_judokas} ${__judokas} | ${match.huidige_leeftijd} | ${match.huidige_gewicht}</div>
+                        <div>${__na}: ${match.nieuwe_judokas} ${__judokas} | ${match.nieuwe_leeftijd} | ${match.nieuwe_gewicht}</div>
                     </div>
                 </div>`;
             }
@@ -1785,7 +1790,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     } catch (error) {
         console.error('Error:', error);
         loading.classList.add('hidden');
-        content.innerHTML = '<p class="text-red-500 text-center py-4">Fout bij laden</p>';
+        content.innerHTML = '<p class="text-red-500 text-center py-4">' + __foutBijLaden + '</p>';
     }
 }
 
@@ -1811,11 +1816,11 @@ async function selecteerPouleWedstrijddag(judokaId, vanPouleId, naarPouleId) {
             document.getElementById('zoek-match-modal').classList.add('hidden');
             window.location.reload();
         } else {
-            alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
+            alert(__fout + ': ' + (data.error || data.message || __onbekendeFout));
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij verplaatsen');
+        alert(__foutBijVerplaatsen);
     }
 }
 
