@@ -29,7 +29,7 @@
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4 mb-6 text-sm text-gray-600">
-                <p><strong>{{ __('Betalingskenmerk:') }}</strong> {{ $betaling->mollie_payment_id }}</p>
+                <p><strong>{{ __('Betalingskenmerk:') }}</strong> {{ $betaling->stripe_payment_id ?? $betaling->mollie_payment_id }}</p>
                 <p><strong>{{ __('Bedrag:') }}</strong> &euro;{{ number_format($betaling->bedrag, 2, ',', '.') }}</p>
                 <p><strong>{{ __('Betaald op:') }}</strong> {{ $betaling->betaald_op?->format('d-m-Y H:i') }}</p>
             </div>
@@ -45,15 +45,10 @@
             </div>
         @endif
 
-        <div class="flex justify-center space-x-4">
-            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
-                {{ __('Naar Toernooi Dashboard') }}
+        <div class="flex justify-center">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#organisatie" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                OK
             </a>
-            @if($toernooi->isPaidTier())
-            <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
-                {{ __('Naar Print/Noodplan') }}
-            </a>
-            @endif
         </div>
     </div>
 </div>
