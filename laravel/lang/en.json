@@ -2383,7 +2383,7 @@
     "Gekopieerd:": "Copied:",
     "Preset \":naam\" laden? Dit vervangt alle huidige instellingen.": "Load preset \":naam\"? This replaces all current settings.",
     "Preset \":naam\" definitief verwijderen?": "Permanently delete preset \":naam\"?",
-    "Je hebt \":naam\" geladen. Wat wil je doen?": "You have loaded \":naam\". What would you like to do?",
+    "Je hebt \":naam\" geladen. Wat wil je doen?": "You loaded \":naam\". What do you want to do?",
     "\":naam\" overschrijven": "Overwrite \":naam\"",
     "Nieuwe preset maken": "Create new preset",
     "Nieuwe preset": "New preset",
@@ -2447,10 +2447,6 @@
     "Fout bij laden notities": "Error loading notes",
     "Onjuist wachtwoord": "Incorrect password",
     "Er ging iets mis bij het opslaan": "Something went wrong while saving",
-    "Preset \":naam\" definitief verwijderen?": "Permanently delete preset \":naam\"?",
-    "Preset \":naam\" laden? Dit vervangt alle huidige instellingen.": "Load preset \":naam\"? This replaces all current settings.",
-    "Je hebt \":naam\" geladen. Wat wil je doen?": "You loaded \":naam\". What do you want to do?",
-    "\":naam\" overschrijven": "Overwrite \":naam\"",
     "Fout bij opslaan:": "Error saving:",
     "Reset Blok :nummer?": "Reset Block :nummer?",
     ":aantal wedstrijden worden verwijderd.": ":aantal matches will be deleted.",
@@ -2466,5 +2462,6 @@
     "- Alle poules": "- All pools",
     "- Alle wedstrijden": "- All matches",
     "- Alle resultaten": "- All results",
-    "Dit kan NIET ongedaan worden!": "This CANNOT be undone!"
+    "Dit kan NIET ongedaan worden!": "This CANNOT be undone!",
+    "Fout bij opslaan notities": "Error saving notes"
 }
