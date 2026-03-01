@@ -491,6 +491,12 @@
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // i18n for this script block
+            const __s1 = {
+                judokas: @json(__("judoka's")),
+                verwijder: @json(__('Verwijder')),
+            };
+
             const container = document.getElementById('voorkeur-container');
             const hiddenInput = document.getElementById('poule_grootte_voorkeur_input');
             const addBtn = document.getElementById('add-voorkeur-btn');
@@ -565,8 +571,8 @@
                 item.dataset.grootte = grootte;
                 item.innerHTML = `
                     <span class="font-bold text-blue-800 text-lg mr-2">${grootte}</span>
-                    <span class="text-blue-600 text-sm">judoka's</span>
-                    <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="Verwijder">&times;</button>
+                    <span class="text-blue-600 text-sm">${__s1.judokas}</span>
+                    <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="${__s1.verwijder}">&times;</button>
                 `;
                 container.appendChild(item);
                 updateHiddenInput();
@@ -618,7 +624,7 @@
                 updatePrioriteitInput();
                 // Update numbers
                 const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
-                const labels = { leeftijd: '📅 Leeftijd', gewicht: '🏋️ Gewicht', band: '🥋 Band' };
+                const labels = { leeftijd: '📅 ' + @json(__('Leeftijd')), gewicht: '🏋️ ' + @json(__('Gewicht')), band: '🥋 ' + @json(__('Band')) };
                 items.forEach((item, idx) => {
                     item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
                 });
@@ -936,6 +942,38 @@
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // i18n translations for this script block
+            const __t = {
+                confirmLeegCategorieen: @json(__('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?')),
+                confirmJbn2025: @json(__('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')),
+                confirmJbn2026: @json(__('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')),
+                confirmVerwijderCategorie: @json(__('Deze categorie verwijderen?')),
+                confirmLoadPreset: @json(__('Preset ":naam" laden? Dit vervangt alle huidige instellingen.')),
+                confirmDeletePreset: @json(__('Preset ":naam" definitief verwijderen?')),
+                presetOpslaan: @json(__('Preset opslaan')),
+                presetBijgewerkt: @json(__('Preset bijgewerkt')),
+                presetOpgeslagen: @json(__('Preset opgeslagen')),
+                presetVerwijderd: @json(__('Preset verwijderd')),
+                konPresetNietOpslaan: @json(__('Kon preset niet opslaan')),
+                konPresetNietVerwijderen: @json(__('Kon preset niet verwijderen')),
+                foutBijOpslaan: @json(__('Fout bij opslaan')),
+                erGingIetsMisBijOpslaan: @json(__('Er ging iets mis bij het opslaan')),
+                foutBijVerwijderen: @json(__('Fout bij verwijderen')),
+                erGingIetsMis: @json(__('Er ging iets mis')),
+                vulNaamIn: @json(__('Vul een naam in')),
+                eigenPresetPlaceholder: @json(__('Eigen preset...')),
+                jeHebtGeladen: @json(__('Je hebt ":naam" geladen. Wat wil je doen?')),
+                overschrijven: @json(__('":naam" overschrijven')),
+                nieuwePresetMaken: @json(__('Nieuwe preset maken')),
+                annuleren: @json(__('Annuleren')),
+                nieuwePreset: @json(__('Nieuwe preset')),
+                naamVoorPreset: @json(__('Naam voor preset:')),
+                opslaan: @json(__('Opslaan')),
+                kommaVergeten: @json(__("Komma vergeten? Gebruik komma's: -20, -23 (niet: -20 -23)")),
+                eliminatieVereisen: @json(__('Eliminatie en kruisfinale vereisen:')),
+                gewichtsklassenIngevuld: @json(__('gewichtsklassen ingevuld')),
+            };
+
             // Herstel scroll positie na preset opslaan (fallback)
             const presetScrollRestore = sessionStorage.getItem('preset_scroll_restore');
             if (presetScrollRestore) {
@@ -950,11 +988,7 @@
             const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
             const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
 
-            // i18n strings
-            const __confirmLeegCategorieen = @json(__('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?'));
-            const __confirmJbn2025 = @json(__('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?'));
-            const __confirmJbn2026 = @json(__('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?'));
-            const __confirmVerwijderCategorie = @json(__('Deze categorie verwijderen?'));
+            // i18n strings (moved to __t object above)
 
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
@@ -999,7 +1033,7 @@
 
             // Global functies voor radio buttons
             window.loadGeenStandaard = function() {
-                if (confirm(__confirmLeegCategorieen)) {
+                if (confirm(__t.confirmLeegCategorieen)) {
                     container.innerHTML = '';
                     updateJsonInput();
                 } else {
@@ -1009,7 +1043,7 @@
             }
 
             window.loadJbn2025 = function() {
-                if (confirm(__confirmJbn2025)) {
+                if (confirm(__t.confirmJbn2025)) {
                     renderCategorieen(jbn2025);
                 } else {
                     document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
@@ -1017,7 +1051,7 @@
             }
 
             window.loadJbn2026 = function() {
-                if (confirm(__confirmJbn2026)) {
+                if (confirm(__t.confirmJbn2026)) {
                     renderCategorieen(jbn2026);
                 } else {
                     document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
@@ -1103,7 +1137,7 @@
                     if (!kommaWarning) {
                         const warn = document.createElement('p');
                         warn.className = 'komma-warning text-red-600 text-xs mt-1 font-bold';
-                        warn.textContent = '⚠ Komma vergeten? Gebruik komma\'s: -20, -23 (niet: -20 -23)';
+                        warn.textContent = '⚠ ' + __t.kommaVergeten;
                         input.parentNode.appendChild(warn);
                     } else {
                         kommaWarning.classList.remove('hidden');
@@ -1156,8 +1190,8 @@
                     const redenen = [];
                     if (maxKg > 0) redenen.push('Δkg=0');
                     if (maxLft > 0) redenen.push('Δlft=0');
-                    if (!gewichten) redenen.push('gewichtsklassen ingevuld');
-                    const msg = 'Eliminatie en kruisfinale vereisen: ' + redenen.join(', ');
+                    if (!gewichten) redenen.push(__t.gewichtsklassenIngevuld);
+                    const msg = __t.eliminatieVereisen + ' ' + redenen.join(', ');
 
                     if (!systeemWarning) {
                         systeemWarning = document.createElement('p');
@@ -1409,7 +1443,7 @@
                         const contentType = response.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
                             eigenPresets = await response.json();
-                            presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
+                            presetsDropdown.innerHTML = '<option value="">' + __t.eigenPresetPlaceholder + '</option>';
                             eigenPresets.forEach(preset => {
                                 const option = document.createElement('option');
                                 option.value = String(preset.id);
@@ -1478,7 +1512,7 @@
                 const preset = eigenPresets.find(p => p.id == presetId);
                 if (!preset) return;
 
-                if (confirm(`Preset "${preset.naam}" laden? Dit vervangt alle huidige instellingen.`)) {
+                if (confirm(__t.confirmLoadPreset.replace(':naam', preset.naam))) {
                     renderCategorieen(preset.configuratie);
                     huidigePresetId = preset.id;
                     huidigePresetNaam = preset.naam;
@@ -1570,7 +1604,7 @@
                         hidePresetModal();
 
                         // 2. Toon success
-                        showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
+                        showAppToast(overschrijven ? '✓ ' + __t.presetBijgewerkt : '✓ ' + __t.presetOpgeslagen, 'success');
 
                         // 3. Update tracking VOORDAT we presets laden
                         huidigePresetId = data.id;
@@ -1582,11 +1616,11 @@
                         // 5. Update delete button
                         updateDeleteButton();
                     } else {
-                        showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
+                        showAppToast('✗ ' + (data.message || __t.konPresetNietOpslaan), 'error');
                     }
                 } catch (e) {
-                    console.error('Fout bij opslaan:', e);
-                    showAppToast('✗ Er ging iets mis bij het opslaan', 'error');
+                    console.error(__t.foutBijOpslaan + ':', e);
+                    showAppToast('✗ ' + __t.erGingIetsMisBijOpslaan, 'error');
                 }
             }
 
@@ -1594,17 +1628,17 @@
             document.getElementById('btn-save-preset').addEventListener('click', () => {
                 if (huidigePresetId && huidigePresetNaam) {
                     // Show 3-button modal
-                    showPresetModal('Preset opslaan', `
-                        <p class="mb-4 text-gray-600">Je hebt <strong>"${huidigePresetNaam}"</strong> geladen. Wat wil je doen?</p>
+                    showPresetModal(__t.presetOpslaan, `
+                        <p class="mb-4 text-gray-600">${__t.jeHebtGeladen.replace(':naam', huidigePresetNaam)}</p>
                         <div class="flex flex-col gap-2">
                             <button type="button" onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-                                📝 "${huidigePresetNaam}" overschrijven
+                                📝 ${__t.overschrijven.replace(':naam', huidigePresetNaam)}
                             </button>
                             <button type="button" onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-                                ➕ Nieuwe preset maken
+                                ➕ ${__t.nieuwePresetMaken}
                             </button>
                             <button type="button" onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
-                                Annuleren
+                                ${__t.annuleren}
                             </button>
                         </div>
                     `);
@@ -1616,17 +1650,17 @@
 
             // Show input for new preset name
             window.showNewPresetInput = function() {
-                showPresetModal('Nieuwe preset', `
+                showPresetModal(__t.nieuwePreset, `
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Naam voor preset:</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">${__t.naamVoorPreset}</label>
                         <input type="text" id="new-preset-naam" class="w-full border rounded px-3 py-2" placeholder="Bijv. Mijn toernooi preset" autofocus>
                     </div>
                     <div class="flex gap-2">
                         <button type="button" onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-                            💾 Opslaan
+                            💾 ${__t.opslaan}
                         </button>
                         <button type="button" onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
-                            Annuleren
+                            ${__t.annuleren}
                         </button>
                     </div>
                 `);
@@ -1638,7 +1672,7 @@
                 const input = document.getElementById('new-preset-naam');
                 const naam = input?.value?.trim();
                 if (!naam) {
-                    showAppToast('Vul een naam in', 'error');
+                    showAppToast(__t.vulNaamIn, 'error');
                     return;
                 }
                 savePreset(naam, false);
@@ -1661,7 +1695,7 @@
                 const preset = eigenPresets.find(p => p.id == presetId);
                 const presetNaam = preset?.naam || 'deze preset';
 
-                if (!confirm(`Preset "${presetNaam}" definitief verwijderen?`)) return;
+                if (!confirm(__t.confirmDeletePreset.replace(':naam', presetNaam))) return;
 
                 try {
                     const response = await fetch(`{{ url('organisator/presets') }}/${presetId}`, {
@@ -1673,7 +1707,7 @@
                     });
 
                     if (response.ok) {
-                        showAppToast('✓ Preset verwijderd', 'success');
+                        showAppToast('✓ ' + __t.presetVerwijderd, 'success');
                         // Reset state
                         if (huidigePresetId == presetId) {
                             huidigePresetId = null;
@@ -1685,11 +1719,11 @@
                         updateDeleteButton();
                     } else {
                         const data = await response.json();
-                        showAppToast('✗ ' + (data.error || 'Kon preset niet verwijderen'), 'error');
+                        showAppToast('✗ ' + (data.error || __t.konPresetNietVerwijderen), 'error');
                     }
                 } catch (e) {
-                    console.error('Fout bij verwijderen:', e);
-                    showAppToast('✗ Er ging iets mis', 'error');
+                    console.error(__t.foutBijVerwijderen + ':', e);
+                    showAppToast('✗ ' + __t.erGingIetsMis, 'error');
                 }
             });
 
@@ -1717,7 +1751,7 @@
             // Remove category
             container.addEventListener('click', (e) => {
                 if (e.target.classList.contains('remove-categorie')) {
-                    if (confirm(__confirmVerwijderCategorie)) {
+                    if (confirm(__t.confirmVerwijderCategorie)) {
                         e.target.closest('.gewichtsklasse-item').remove();
                         updateJsonInput();
                     }
@@ -1953,6 +1987,10 @@
 
     <script>
     function templateSave() {
+        const __t = {
+            templateOpgeslagen: @json(__('Template opgeslagen!')),
+            foutBijOpslaan: @json(__('Fout bij opslaan')),
+        };
         return {
             showForm: false,
             naam: '',
@@ -1976,17 +2014,17 @@
                     const data = await res.json();
                     if (res.ok) {
                         this.success = true;
-                        this.message = data.message || 'Template opgeslagen!';
+                        this.message = data.message || __t.templateOpgeslagen;
                         this.naam = '';
                         this.beschrijving = '';
                         setTimeout(() => { this.showForm = false; this.message = ''; }, 2000);
                     } else {
                         this.success = false;
-                        this.message = data.error || 'Fout bij opslaan';
+                        this.message = data.error || __t.foutBijOpslaan;
                     }
                 } catch (e) {
                     this.success = false;
-                    this.message = 'Fout bij opslaan';
+                    this.message = __t.foutBijOpslaan;
                 }
                 this.loading = false;
             }
@@ -2090,6 +2128,12 @@
 
     <script>
     function reverbStatus() {
+        const __t = {
+            konStatusNietOphalen: @json(__('Kon status niet ophalen')),
+            foutBijStarten: @json(__('Fout bij starten')),
+            foutBijHerstarten: @json(__('Fout bij herstarten')),
+            foutBijStoppen: @json(__('Fout bij stoppen')),
+        };
         return {
             running: false,
             loading: false,
@@ -2107,7 +2151,7 @@
                     this.running = data.running;
                     this.local = data.local || false;
                 } catch (e) {
-                    this.message = 'Kon status niet ophalen';
+                    this.message = __t.konStatusNietOphalen;
                 }
             },
             async start() {
@@ -2121,7 +2165,7 @@
                     this.message = data.message;
                     await this.checkStatus();
                 } catch (e) {
-                    this.message = 'Fout bij starten';
+                    this.message = __t.foutBijStarten;
                 }
                 this.loading = false;
             },
@@ -2136,7 +2180,7 @@
                     this.message = data.message;
                     await this.checkStatus();
                 } catch (e) {
-                    this.message = 'Fout bij herstarten';
+                    this.message = __t.foutBijHerstarten;
                 }
                 this.loading = false;
             },
@@ -2151,7 +2195,7 @@
                     this.message = data.message;
                     await this.checkStatus();
                 } catch (e) {
-                    this.message = 'Fout bij stoppen';
+                    this.message = __t.foutBijStoppen;
                 }
                 this.loading = false;
             }
@@ -3058,7 +3102,17 @@
     </div>
 
     <script>
-    const __ongeldigIpFormaat = @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100'));
+    const __tn = {
+        ongeldigIpFormaat: @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100')),
+        foutBijOpslaanNetwerkConfig: @json(__('Fout bij opslaan netwerk config:')),
+        foutBijDownloaden: @json(__('Fout bij downloaden:')),
+        foutBijOpslaan: @json(__('Fout bij opslaan:')),
+        gekopieerd: @json(__('Gekopieerd:')),
+        geenDataBeschikbaar: @json(__('Geen data beschikbaar (server offline en geen lokale cache).')),
+        ditBackupVanAnder: @json(__('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?')),
+        backupGeladen: @json(__('Backup geladen: :poules poules, :uitslagen uitslagen')),
+        ongeldigJsonBestand: @json(__('Ongeldig JSON bestand:')),
+    };
     function verbindingStatus() {
         return {
             wifiStatus: 'checking',
@@ -3153,7 +3207,7 @@
                         })
                     });
                 } catch (e) {
-                    console.error('Fout bij opslaan netwerk config:', e);
+                    console.error(__tn.foutBijOpslaanNetwerkConfig, e);
                 }
             },
 
@@ -3178,7 +3232,7 @@
                     const data = await response.json();
                     this.saveAsFile(data);
                 } catch (e) {
-                    alert('Fout bij downloaden: ' + e.message);
+                    alert(__tn.foutBijDownloaden + ' ' + e.message);
                 }
             },
 
@@ -3228,7 +3282,7 @@
                 // Valideer IP formaat
                 const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
                 if (!ipRegex.test(ip)) {
-                    alert(__ongeldigIpFormaat);
+                    alert(__tn.ongeldigIpFormaat);
                     return;
                 }
                 try {
@@ -3243,14 +3297,14 @@
                     this.primaryIp = ip;
                     this.editingIp = false;
                 } catch (e) {
-                    alert('Fout bij opslaan: ' + e.message);
+                    alert(__tn.foutBijOpslaan + ' ' + e.message);
                 }
             },
 
             copyUrl() {
                 const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
                 navigator.clipboard.writeText(url);
-                alert('Gekopieerd: ' + url);
+                alert(__tn.gekopieerd + ' ' + url);
             },
 
             loadFromStorage() {
@@ -3279,7 +3333,7 @@
                     if (data) {
                         this.saveAsFile(JSON.parse(data));
                     } else {
-                        alert('Geen data beschikbaar (server offline en geen lokale cache).');
+                        alert(__tn.geenDataBeschikbaar);
                     }
                 }
             },
@@ -3307,7 +3361,7 @@
                     try {
                         const data = JSON.parse(e.target.result);
                         if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
-                            if (!confirm(`Dit backup bestand is van een ander toernooi (ID: ${data.toernooi_id}). Toch laden?`)) {
+                            if (!confirm(__tn.ditBackupVanAnder.replace(':id', data.toernooi_id))) {
                                 return;
                             }
                         }
@@ -3331,9 +3385,9 @@
                         }
                         localStorage.setItem(countKey, count.toString());
                         this.loadFromStorage();
-                        alert(`Backup geladen: ${data.poules?.length || 0} poules, ${count} uitslagen`);
+                        alert(__tn.backupGeladen.replace(':poules', data.poules?.length || 0).replace(':uitslagen', count));
                     } catch (err) {
-                        alert('Ongeldig JSON bestand: ' + err.message);
+                        alert(__tn.ongeldigJsonBestand + ' ' + err.message);
                     }
                 };
                 reader.readAsText(file);
@@ -3495,6 +3549,15 @@ function togglePassword(button) {
 window.triggerAutoSave = function() {};
 
 (function() {
+    const __ta = {
+        opslaan: @json(__('Opslaan...')),
+        opgeslagen: @json(__('Opgeslagen')),
+        foutBijOpslaan: @json(__('Fout bij opslaan')),
+        onbekendeFout: @json(__('Onbekende fout')),
+        overlappendeCat: @json(__('Overlappende categorieën gedetecteerd!')),
+        overlapUitleg: @json(__("Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan.")),
+    };
+
     const form = document.getElementById('toernooi-form');
     if (!form) return;
 
@@ -3531,7 +3594,7 @@ window.triggerAutoSave = function() {};
             updateJsonInput();
         }
 
-        showStatus('Opslaan...', 'default');
+        showStatus(__ta.opslaan, 'default');
 
         const formData = new FormData(form);
 
@@ -3571,7 +3634,7 @@ window.triggerAutoSave = function() {};
         })
         .then(data => {
             if (data && data.success) {
-                showStatus('✓ Opgeslagen', 'success');
+                showStatus('✓ ' + __ta.opgeslagen, 'success');
                 markClean();
                 setTimeout(() => status.classList.add('hidden'), 2000);
 
@@ -3590,9 +3653,9 @@ window.triggerAutoSave = function() {};
                             <div class="flex items-start gap-3">
                                 <span class="text-2xl">⚠️</span>
                                 <div>
-                                    <p class="font-bold text-orange-800">Overlappende categorieën gedetecteerd!</p>
+                                    <p class="font-bold text-orange-800">${__ta.overlappendeCat}</p>
                                     <p class="text-sm text-orange-700">${data.overlapWarning}</p>
-                                    <p class="text-xs text-orange-600 mt-1">Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan.</p>
+                                    <p class="text-xs text-orange-600 mt-1">${__ta.overlapUitleg}</p>
                                 </div>
                             </div>
                         `;
@@ -3610,7 +3673,7 @@ window.triggerAutoSave = function() {};
                     alert(data.blokkenWarning);
                 }
             } else {
-                const errorMsg = data?.message || data?.error || 'Onbekende fout';
+                const errorMsg = data?.message || data?.error || __ta.onbekendeFout;
                 console.error('Save failed:', data);
                 showStatus('✗ ' + errorMsg, 'error');
                 setTimeout(() => status.classList.add('hidden'), 5000);
@@ -3618,7 +3681,7 @@ window.triggerAutoSave = function() {};
         })
         .catch((error) => {
             console.error('Auto-save error:', error);
-            showStatus('✗ ' + (error.message || 'Fout bij opslaan'), 'error');
+            showStatus('✗ ' + (error.message || __ta.foutBijOpslaan), 'error');
             setTimeout(() => status.classList.add('hidden'), 5000);
         });
     }
