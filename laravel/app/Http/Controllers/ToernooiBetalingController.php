@@ -157,7 +157,7 @@ class ToernooiBetalingController extends Controller
         ]);
 
         $description = "JudoToernooi Upgrade: {$toernooi->naam} - {$validated['tier']} judoka's";
-        $redirectUrl = route('toernooi.upgrade.succes', ['organisator' => $organisator, 'toernooi' => $toernooi, 'betaling' => $betaling]);
+        $redirectUrl = route('toernooi.edit', $toernooi->routeParams()) . '?upgrade=success';
         $cancelUrl = route('toernooi.upgrade.geannuleerd', $toernooi->routeParams());
         $webhookRoute = $providerName === 'stripe' ? route('stripe.webhook.toernooi') : route('mollie.webhook.toernooi');
 
