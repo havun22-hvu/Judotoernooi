@@ -144,6 +144,7 @@
                             @endif
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
+                            <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
                             <hr class="my-1">
                             <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">🔄 {{ __('Forceer Update') }}</button>
                             <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
