@@ -259,9 +259,19 @@
                 <form id="upgrade-form" action="{{ route('toernooi.upgrade.start', $toernooi->routeParams()) }}" method="POST">
                     @csrf
                     <input type="hidden" name="tier" id="selected-tier" value="">
-                    <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
-                        {{ __('Betalen via Mollie') }}
-                    </button>
+                    <input type="hidden" name="payment_provider" id="selected-provider" value="mollie">
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="submit" onclick="document.getElementById('selected-provider').value='mollie'"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                            {{ __('Betalen via Mollie') }}
+                        </button>
+                        <button type="submit" onclick="document.getElementById('selected-provider').value='stripe'"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                            {{ __('Betalen via Stripe') }}
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">{{ __('Mollie: iDEAL, Bancontact, creditcard (Europa) — Stripe: Creditcard, Google Pay, Apple Pay (wereldwijd)') }}</p>
                 </form>
             </div>
         </div>
