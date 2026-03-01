@@ -19,6 +19,8 @@ class ToernooiBetaling extends Model
         'toernooi_id',
         'organisator_id',
         'mollie_payment_id',
+        'payment_provider',
+        'stripe_payment_id',
         'bedrag',
         'tier',
         'max_judokas',

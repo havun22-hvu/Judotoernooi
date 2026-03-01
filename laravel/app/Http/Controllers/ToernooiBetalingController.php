@@ -7,6 +7,7 @@ use App\Models\Toernooi;
 use App\Models\ToernooiBetaling;
 use App\Services\FreemiumService;
 use App\Services\MollieService;
+use App\Services\PaymentProviderFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -138,11 +139,15 @@ class ToernooiBetalingController extends Controller
                 ->with('success', '✓ Test upgrade succesvol - geen betaling nodig');
         }
 
+        $provider = PaymentProviderFactory::forToernooi($toernooi);
+        $providerName = $provider->getName();
+
         // Create betaling record
         $betaling = ToernooiBetaling::create([
             'toernooi_id' => $toernooi->id,
             'organisator_id' => $organisator->id,
             'mollie_payment_id' => 'pending_' . uniqid(),
+            'payment_provider' => $providerName,
             'bedrag' => $prijs,
             'tier' => $validated['tier'],
             'max_judokas' => $maxJudokas,
@@ -151,90 +156,52 @@ class ToernooiBetalingController extends Controller
 
         $description = "JudoToernooi Upgrade: {$toernooi->naam} - {$validated['tier']} judoka's";
         $redirectUrl = route('toernooi.upgrade.succes', ['organisator' => $organisator, 'toernooi' => $toernooi, 'betaling' => $betaling]);
+        $cancelUrl = route('toernooi.upgrade.geannuleerd', $toernooi->routeParams());
+        $webhookRoute = $providerName === 'stripe' ? route('stripe.webhook.toernooi') : route('mollie.webhook.toernooi');
 
         // Simulation mode for staging
-        if ($this->mollieService->isSimulationMode()) {
-            $payment = $this->mollieService->simulatePayment([
+        if ($provider->isSimulationMode()) {
+            $result = $provider->simulatePayment([
                 'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
                 'description' => $description,
                 'redirectUrl' => $redirectUrl,
-                'webhookUrl' => route('mollie.webhook.toernooi'),
+                'webhookUrl' => $webhookRoute,
                 'metadata' => ['toernooi_betaling_id' => $betaling->id],
             ]);
 
-            $betaling->update(['mollie_payment_id' => $payment->id]);
+            $paymentIdField = $providerName === 'stripe' ? 'stripe_payment_id' : 'mollie_payment_id';
+            $betaling->update([$paymentIdField => $result->id]);
 
-            return redirect($payment->_links->checkout->href);
+            return redirect($result->checkoutUrl);
         }
 
-        // Real Mollie payment (Platform mode - goes to JudoToernooi)
+        // Real payment (Platform mode - goes to JudoToernooi)
         try {
-            $payment = $this->createPlatformPayment($toernooi, $betaling, $prijs, $description, $redirectUrl);
+            if (!$provider->isAvailable()) {
+                throw new \RuntimeException('Betaaldienst tijdelijk niet beschikbaar');
+            }
 
-            $betaling->update(['mollie_payment_id' => $payment->id]);
+            $result = $provider->createPlatformPayment([
+                'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => $redirectUrl,
+                'cancelUrl' => $cancelUrl,
+                'webhookUrl' => $webhookRoute,
+                'metadata' => [
+                    'toernooi_betaling_id' => $betaling->id,
+                    'toernooi_id' => $toernooi->id,
+                ],
+            ]);
 
-            return redirect($payment->_links->checkout->href);
+            $paymentIdField = $providerName === 'stripe' ? 'stripe_payment_id' : 'mollie_payment_id';
+            $betaling->update([$paymentIdField => $result->id]);
+
+            return redirect($result->checkoutUrl);
         } catch (\Exception $e) {
-            \Log::error('Toernooi upgrade payment failed', ['error' => $e->getMessage()]);
+            \Log::error('Toernooi upgrade payment failed', ['provider' => $providerName, 'error' => $e->getMessage()]);
             $betaling->update(['status' => ToernooiBetaling::STATUS_FAILED]);
 
             return back()->with('error', 'Fout bij aanmaken betaling: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Create a platform payment (goes to JudoToernooi's Mollie account)
-     *
-     * @throws \App\Exceptions\MollieException
-     */
-    private function createPlatformPayment(Toernooi $toernooi, ToernooiBetaling $betaling, float $prijs, string $description, string $redirectUrl): object
-    {
-        // Guard: check if Mollie service is available
-        if (!$this->mollieService->isAvailable()) {
-            throw \App\Exceptions\MollieException::apiError(
-                '/payments',
-                'Betaaldienst tijdelijk niet beschikbaar'
-            );
-        }
-
-        $apiKey = $this->mollieService->getPlatformApiKey();
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::timeout(15)
-                ->connectTimeout(5)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $apiKey,
-                    'Content-Type' => 'application/json',
-                ])->post(config('services.mollie.api_url') . '/payments', [
-                    'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
-                    'description' => $description,
-                    'redirectUrl' => $redirectUrl,
-                    'webhookUrl' => route('mollie.webhook.toernooi'),
-                    'metadata' => [
-                        'toernooi_betaling_id' => $betaling->id,
-                        'toernooi_id' => $toernooi->id,
-                    ],
-                ]);
-
-            if (!$response->successful()) {
-                throw \App\Exceptions\MollieException::apiError(
-                    '/payments',
-                    $response->body(),
-                    $response->status()
-                );
-            }
-
-            $result = $response->object();
-
-            // Guard: validate response has required fields
-            if (!isset($result->id) || !isset($result->_links->checkout->href)) {
-                throw \App\Exceptions\MollieException::invalidResponse('/payments', json_encode($result) ?: 'empty');
-            }
-
-            return $result;
-
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            throw \App\Exceptions\MollieException::timeout('/payments');
         }
     }
 

@@ -554,11 +554,13 @@ class ToernooiController extends Controller
         $validated = $request->validate([
             'betaling_actief' => 'boolean',
             'inschrijfgeld' => 'nullable|numeric|min:0|max:999.99',
+            'payment_provider' => 'nullable|in:mollie,stripe',
         ]);
 
         $toernooi->update([
             'betaling_actief' => $validated['betaling_actief'] ?? false,
             'inschrijfgeld' => $validated['inschrijfgeld'] ?? null,
+            'payment_provider' => $validated['payment_provider'] ?? 'mollie',
         ]);
 
         return redirect()

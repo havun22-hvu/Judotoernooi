@@ -2317,7 +2317,36 @@
                     </div>
                 </div>
 
-                <!-- Mollie Account Koppeling -->
+                <!-- Payment Provider Keuze -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <h3 class="font-bold mb-3">{{ __('Betaalprovider') }}</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-white transition {{ ($toernooi->payment_provider ?? 'mollie') === 'mollie' ? 'border-blue-500 bg-blue-50' : '' }}">
+                            <input type="radio" name="payment_provider" value="mollie"
+                                   {{ ($toernooi->payment_provider ?? 'mollie') === 'mollie' ? 'checked' : '' }}
+                                   class="mt-1">
+                            <div>
+                                <span class="font-medium">Mollie</span>
+                                <span class="text-gray-500 text-sm ml-1">— iDEAL, Bancontact, creditcard</span>
+                                <p class="text-xs text-gray-400">{{ __('Europa') }} | €0,29 + 0% {{ __('per transactie') }}</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-white transition {{ ($toernooi->payment_provider ?? 'mollie') === 'stripe' ? 'border-blue-500 bg-blue-50' : '' }}">
+                            <input type="radio" name="payment_provider" value="stripe"
+                                   {{ ($toernooi->payment_provider ?? 'mollie') === 'stripe' ? 'checked' : '' }}
+                                   class="mt-1">
+                            <div>
+                                <span class="font-medium">Stripe</span>
+                                <span class="text-gray-500 text-sm ml-1">— Creditcard, Google Pay, Apple Pay</span>
+                                <p class="text-xs text-gray-400">{{ __('Wereldwijd') }} | 1,5% + €0,25 {{ __('per transactie') }}</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Provider Account Koppeling -->
+                @if(($toernooi->payment_provider ?? 'mollie') === 'mollie')
+                {{-- Mollie Account --}}
                 <div class="p-4 border rounded-lg {{ $toernooi->mollie_onboarded ? 'bg-green-50 border-green-200' : 'bg-gray-50' }}">
                     <div class="flex items-center justify-between">
                         <div>
@@ -2354,6 +2383,45 @@
                         </div>
                     </div>
                 </div>
+                @else
+                {{-- Stripe Account --}}
+                <div class="p-4 border rounded-lg {{ $toernooi->stripe_account_id ? 'bg-green-50 border-green-200' : 'bg-gray-50' }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold flex items-center gap-2">
+                                @if($toernooi->stripe_account_id)
+                                <span class="text-green-600">✓</span>
+                                @endif
+                                Stripe Account
+                            </h3>
+                            @if($toernooi->stripe_account_id)
+                            <p class="text-sm text-green-700">
+                                {{ __('Gekoppeld') }}
+                                <span class="text-gray-500">({{ $toernooi->stripe_account_id }})</span>
+                            </p>
+                            @else
+                            <p class="text-sm text-gray-500">{{ __('Koppel je Stripe account om betalingen te ontvangen') }}</p>
+                            @endif
+                        </div>
+                        <div>
+                            @if($toernooi->stripe_account_id)
+                            <form action="{{ route('toernooi.stripe.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('{{ __('Weet je zeker dat je de Stripe koppeling wilt verbreken?') }}')">
+                                @csrf
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    {{ __('Ontkoppelen') }}
+                                </button>
+                            </form>
+                            @else
+                            <a href="{{ route('toernooi.stripe.authorize', $toernooi->routeParams()) }}" target="_blank"
+                               class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
+                                <span>{{ __('Koppel Stripe') }}</span>
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 @if($toernooi->betaling_actief)
                 <div class="p-4 bg-green-50 rounded-lg">

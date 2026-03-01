@@ -1,4 +1,4 @@
-# Betalingen - Mollie Integratie
+# Betalingen - Mollie & Stripe Integratie
 
 > Online betalingen voor judoscholen bij inschrijving van judoka's.
 
@@ -7,14 +7,42 @@
 
 ## Overzicht
 
-JudoToernooi ondersteunt twee betalingsmodi:
+JudoToernooi ondersteunt twee **betaalproviders** en twee **betalingsmodi** per provider:
+
+### Providers
+
+| Provider | Dekking | Methodes | Kosten |
+|----------|---------|----------|--------|
+| **Mollie** (standaard) | Europa | iDEAL, Bancontact, creditcard | €0,29 + 0% |
+| **Stripe** | Wereldwijd | Creditcard, Google Pay, Apple Pay | 1,5% + €0,25 |
+
+Keuze per toernooi via `payment_provider` veld (`'mollie'` of `'stripe'`).
+
+### Modi (per provider)
 
 | Modus | Beschrijving | Toeslag |
 |-------|--------------|---------|
-| **Connect** | Organisator koppelt eigen Mollie account | Geen |
-| **Platform** | Betalingen via JudoToernooi's Mollie | €0,50 per betaling |
+| **Connect** | Organisator koppelt eigen account (Mollie Connect / Stripe Connect) | Geen |
+| **Platform** | Betalingen via JudoToernooi's account | €0,50 per betaling |
 
-De organisator kiest de modus in de toernooi instellingen (tabblad Organisatie).
+De organisator kiest provider en modus in de toernooi instellingen (tabblad Organisatie).
+
+### Architectuur
+
+```
+PaymentProviderInterface
+├── MolliePaymentProvider (wraps MollieService)
+└── StripePaymentProvider (Stripe Checkout + Connect)
+
+PaymentProviderFactory::forToernooi($toernooi) → juiste provider
+```
+
+**Key files:**
+- `app/Contracts/PaymentProviderInterface.php` — Interface
+- `app/DTOs/PaymentResult.php` — Genormaliseerd resultaat
+- `app/Services/PaymentProviderFactory.php` — Factory
+- `app/Services/Payments/MolliePaymentProvider.php` — Mollie wrapper
+- `app/Services/Payments/StripePaymentProvider.php` — Stripe implementatie
 
 ---
 
@@ -379,8 +407,73 @@ MOLLIE_PLATFORM_API_KEY=live_xxx
 
 ---
 
+---
+
+## Stripe Integratie
+
+### Stripe Checkout (hosted page)
+
+Zelfde redirect-flow als Mollie:
+1. Maak Stripe Checkout Session aan
+2. Redirect naar Stripe hosted checkout page
+3. Na betaling: webhook ontvangt `checkout.session.completed`
+4. Update betaling status
+
+### Stripe Connect (voor coach betalingen)
+
+- OAuth flow vergelijkbaar met Mollie Connect
+- `stripe_account_id` opslaan na onboarding
+- Coach betalingen: `transfer_data.destination` = organisator's Stripe account
+- Application fee = platform toeslag
+
+### Stripe Direct (voor upgrade betalingen)
+
+- Altijd naar JudoToernooi's Stripe account (zelfde als Mollie Platform mode)
+
+### Stripe Database Velden
+
+```sql
+-- toernooien tabel (naast bestaande Mollie velden)
+payment_provider              VARCHAR(20) DEFAULT 'mollie'  -- 'mollie' | 'stripe'
+stripe_account_id             VARCHAR(255) NULL
+stripe_access_token           TEXT NULL                      -- encrypted!
+stripe_refresh_token          TEXT NULL                      -- encrypted!
+stripe_publishable_key        VARCHAR(255) NULL
+
+-- betalingen tabel
+payment_provider              VARCHAR(20) DEFAULT 'mollie'
+stripe_payment_id             VARCHAR(255) NULL
+
+-- toernooi_betalingen tabel
+payment_provider              VARCHAR(20) DEFAULT 'mollie'
+stripe_payment_id             VARCHAR(255) NULL
+```
+
+### Stripe Routes
+
+```php
+GET  /stripe/callback                              → OAuth callback
+POST /stripe/webhook                               → Coach payment webhook
+POST /stripe/webhook/toernooi                      → Upgrade payment webhook
+GET  /{org}/toernooi/{toernooi}/stripe/authorize   → Start OAuth
+POST /{org}/toernooi/{toernooi}/stripe/disconnect  → Disconnect
+```
+
+### Stripe Environment Variables
+
+```env
+STRIPE_KEY=           # pk_test_... of pk_live_...
+STRIPE_SECRET=        # sk_test_... of sk_live_...
+STRIPE_WEBHOOK_SECRET= # whsec_...
+STRIPE_CLIENT_ID=     # ca_...
+```
+
+---
+
 ## Referenties
 
 - [Mollie API Docs](https://docs.mollie.com/)
 - [Mollie Connect](https://docs.mollie.com/connect/overview)
+- [Stripe Checkout Docs](https://stripe.com/docs/payments/checkout)
+- [Stripe Connect](https://stripe.com/docs/connect)
 - [HavunCore Mollie Pattern](../../HavunCore/docs/kb/patterns/mollie-payments.md)

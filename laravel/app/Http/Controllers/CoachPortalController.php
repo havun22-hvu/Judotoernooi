@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Controllers\PubliekController;
 use App\Services\MollieService;
+use App\Services\PaymentProviderFactory;
 
 class CoachPortalController extends Controller
 {
@@ -696,10 +697,14 @@ class CoachPortalController extends Controller
         $totaalBedrag = $klaarVoorBetaling->count() * $toernooiModel->inschrijfgeld;
         $description = "{$toernooiModel->naam} - {$club->naam} - {$klaarVoorBetaling->count()} judoka's";
 
+        $provider = PaymentProviderFactory::forToernooi($toernooiModel);
+        $providerName = $provider->getName();
+
         $betaling = \App\Models\Betaling::create([
             'toernooi_id' => $toernooiModel->id,
             'club_id' => $club->id,
             'mollie_payment_id' => 'pending_' . uniqid(),
+            'payment_provider' => $providerName,
             'bedrag' => $totaalBedrag,
             'aantal_judokas' => $klaarVoorBetaling->count(),
             'status' => \App\Models\Betaling::STATUS_OPEN,
@@ -710,37 +715,39 @@ class CoachPortalController extends Controller
         }
 
         $redirectUrl = route('coach.portal.betaling.succes', $this->routeParams($organisator, $toernooi, $code));
+        $webhookRoute = $providerName === 'stripe' ? route('stripe.webhook') : route('mollie.webhook');
 
-        if ($this->mollieService->isSimulationMode()) {
-            $payment = $this->mollieService->simulatePayment([
+        if ($provider->isSimulationMode()) {
+            $result = $provider->simulatePayment([
                 'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
                 'description' => $description,
                 'redirectUrl' => $redirectUrl,
-                'webhookUrl' => route('mollie.webhook'),
+                'webhookUrl' => $webhookRoute,
                 'metadata' => ['betaling_id' => $betaling->id],
             ]);
 
-            $betaling->update(['mollie_payment_id' => $payment->id]);
+            $paymentIdField = $providerName === 'stripe' ? 'stripe_payment_id' : 'mollie_payment_id';
+            $betaling->update([$paymentIdField => $result->id]);
 
-            return redirect($payment->_links->checkout->href);
+            return redirect($result->checkoutUrl);
         }
 
         try {
-            $this->mollieService->ensureValidToken($toernooiModel);
-
-            $payment = $this->mollieService->createPayment($toernooiModel, [
+            $result = $provider->createPayment($toernooiModel, [
                 'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
                 'description' => $description,
                 'redirectUrl' => $redirectUrl,
-                'webhookUrl' => route('mollie.webhook'),
+                'cancelUrl' => route('coach.portal.betaling.geannuleerd', $this->routeParams($organisator, $toernooi, $code)),
+                'webhookUrl' => $webhookRoute,
                 'metadata' => ['betaling_id' => $betaling->id],
             ]);
 
-            $betaling->update(['mollie_payment_id' => $payment->id]);
+            $paymentIdField = $providerName === 'stripe' ? 'stripe_payment_id' : 'mollie_payment_id';
+            $betaling->update([$paymentIdField => $result->id]);
 
-            return redirect($payment->_links->checkout->href);
+            return redirect($result->checkoutUrl);
         } catch (\Exception $e) {
-            \Log::error('Mollie payment creation failed', ['error' => $e->getMessage()]);
+            \Log::error('Payment creation failed', ['provider' => $providerName, 'error' => $e->getMessage()]);
             $betaling->update(['status' => \App\Models\Betaling::STATUS_FAILED]);
 
             return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
