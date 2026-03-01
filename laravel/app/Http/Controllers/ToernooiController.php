@@ -163,11 +163,6 @@ class ToernooiController extends Controller
 
     public function edit(Organisator $organisator, Toernooi $toernooi): View
     {
-        // Flash success message when returning from upgrade payment
-        if (request()->query('upgrade') === 'success') {
-            session()->flash('success', __('Upgrade succesvol! Je toernooi is geüpgraded.'));
-        }
-
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
 
         // Clubs voor noodplan tab (weegkaarten, coachkaarten per club)
