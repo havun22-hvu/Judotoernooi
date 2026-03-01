@@ -265,6 +265,22 @@
     </div>
 
 <script>
+const __t = {
+    welcomeBack: @json(__('Welkom terug')),
+    pinWrong3x: @json(__('PIN 3x fout. Probeer wachtwoord.')),
+    incorrectPin: @json(__('Onjuiste PIN')),
+    somethingWrong: @json(__('Er ging iets mis')),
+    biometricNotSupported: @json(__('Biometrie niet ondersteund')),
+    noPasskeyFound: @json(__('Geen passkey gevonden')),
+    biometricFailed: @json(__('Biometrie mislukt')),
+    qrLoading: @json(__('QR code laden...')),
+    scanWithPhone: @json(__('Scan met je telefoon')),
+    qrLoadFailed: @json(__('QR laden mislukt')),
+    approved: @json(__('Goedgekeurd! Doorsturen...')),
+    refreshQr: @json(__('Vernieuw QR')),
+    qrExpired: @json(__('QR code verlopen')),
+};
+
 let deviceFingerprint = null;
 let currentPin = '';
 let pinAttempts = 0;
@@ -370,20 +386,20 @@ async function submitPin() {
         } else {
             pinAttempts++;
             if (pinAttempts >= 3) {
-                showPinError('PIN 3x fout. Probeer wachtwoord.');
+                showPinError(__t.pinWrong3x);
                 showPasswordHint();
             } else {
-                showPinError(data.message || 'Onjuiste PIN');
+                showPinError(data.message || __t.incorrectPin);
             }
         }
     } catch (err) {
-        showPinError('Er ging iets mis');
+        showPinError(__t.somethingWrong);
     }
 }
 
 async function startBiometric() {
     if (!window.PublicKeyCredential) {
-        showPinError('Biometrie niet ondersteund');
+        showPinError(__t.biometricNotSupported);
         return;
     }
     try {
@@ -391,9 +407,9 @@ async function startBiometric() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!optRes || !optRes.ok) { showPinError('Geen passkey gevonden'); return; }
+        if (!optRes || !optRes.ok) { showPinError(__t.noPasskeyFound); return; }
         const options = await optRes.json();
-        if (!options.challenge) { showPinError('Geen passkey gevonden'); return; }
+        if (!options.challenge) { showPinError(__t.noPasskeyFound); return; }
 
         const publicKeyOptions = {
             challenge: base64urlToBuffer(options.challenge),
@@ -427,7 +443,7 @@ async function startBiometric() {
         if (loginData.success && loginData.device_token) {
             window.location.href = '/auth/token-login/' + loginData.device_token;
         } else {
-            showPinError('Biometrie mislukt');
+            showPinError(__t.biometricFailed);
         }
     } catch (err) {
         // Any biometric failure → show fallback options
@@ -461,7 +477,7 @@ function toggleQrModal() {
 async function generateQr() {
     const container = document.getElementById('qr-container');
     container.innerHTML = '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>';
-    document.getElementById('qr-status').textContent = 'QR code laden...';
+    document.getElementById('qr-status').textContent = __t.qrLoading;
     document.getElementById('qr-timer').classList.add('hidden');
 
     try {
@@ -480,13 +496,13 @@ async function generateQr() {
             expiresIn = 300;
             const approveUrl = data.approve_url;
             container.innerHTML = data.qr_svg;
-            document.getElementById('qr-status').textContent = 'Scan met je telefoon';
+            document.getElementById('qr-status').textContent = __t.scanWithPhone;
             document.getElementById('qr-timer').classList.remove('hidden');
             startPolling();
             startTimer();
         }
     } catch (err) {
-        container.innerHTML = '<span class="text-red-500 text-xs">QR laden mislukt</span>';
+        container.innerHTML = '<span class="text-red-500 text-xs">' + __t.qrLoadFailed + '</span>';
     }
 }
 
@@ -499,7 +515,7 @@ function startPolling() {
             if (data.status === 'approved') {
                 clearInterval(pollInterval);
                 clearInterval(timerInterval);
-                document.getElementById('qr-status').textContent = 'Goedgekeurd! Doorsturen...';
+                document.getElementById('qr-status').textContent = __t.approved;
                 window.location.href = `/auth/qr/complete/${qrToken}`;
             } else if (data.status === 'expired') {
                 clearInterval(pollInterval);
@@ -526,8 +542,8 @@ function startTimer() {
 }
 
 function showQrExpired() {
-    document.getElementById('qr-container').innerHTML = '<button onclick="generateQr()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Vernieuw QR</button>';
-    document.getElementById('qr-status').textContent = 'QR code verlopen';
+    document.getElementById('qr-container').innerHTML = '<button onclick="generateQr()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">' + __t.refreshQr + '</button>';
+    document.getElementById('qr-status').textContent = __t.qrExpired;
     document.getElementById('qr-timer').classList.add('hidden');
     qrToken = null;
 }
@@ -581,7 +597,7 @@ document.addEventListener('keydown', e => {
 
         if (data.has_device && data.has_pin) {
             document.getElementById('pin-login-section').classList.remove('hidden');
-            document.getElementById('welcome-user').textContent = `Welkom terug${data.user_name ? ', ' + data.user_name : ''}!`;
+            document.getElementById('welcome-user').textContent = __t.welcomeBack + (data.user_name ? ', ' + data.user_name : '') + '!';
             if (canBiometric && data.has_biometric && window.PublicKeyCredential) {
                 // Smartphone with fingerprint + passkey registered → biometric button + auto-start
                 document.getElementById('biometric-btn').classList.remove('hidden');

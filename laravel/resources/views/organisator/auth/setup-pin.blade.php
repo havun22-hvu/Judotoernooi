@@ -99,6 +99,27 @@
     </div>
 
 <script>
+const __t = {
+    confirmPin: @json(__('Bevestig je PIN')),
+    enterSamePin: @json(__('Voer dezelfde PIN nogmaals in')),
+    pinsNoMatch: @json(__('PINs komen niet overeen. Probeer opnieuw.')),
+    choosePin: @json(__('Kies een 5-cijferige PIN')),
+    pinSubtitle: @json(__('Hiermee kun je sneller inloggen op dit apparaat')),
+    pinSet: @json(__('PIN ingesteld!')),
+    redirecting: @json(__('Doorsturen naar dashboard...')),
+    pinSetupError: @json(__('Fout bij instellen PIN')),
+    somethingWrong: @json(__('Er ging iets mis')),
+    biometricSetup: @json(__('Biometrie instellen')),
+    pinOnly: @json(__('Nee, alleen PIN gebruiken')),
+    registering: @json(__('Bezig met registreren...')),
+    passkeyError: @json(__('Kon passkey opties niet ophalen')),
+    biometricEnabled: @json(__('Biometrie ingeschakeld! Doorsturen...')),
+    registrationFailed: @json(__('Registratie mislukt')),
+    enableBiometric: @json(__('Ja, biometrie inschakelen')),
+    biometricCancelled: @json(__('Biometrie geannuleerd. Je kunt het later nog inschakelen.')),
+    biometricUnavailable: @json(__('Biometrie niet beschikbaar op dit apparaat.')),
+};
+
 let deviceFingerprint = null;
 let currentPin = '';
 let firstPin = null;
@@ -132,8 +153,8 @@ function addPin(digit) {
             currentPin = '';
             step = 2;
             updatePinDots();
-            document.getElementById('step-title').textContent = 'Bevestig je PIN';
-            document.getElementById('step-subtitle').textContent = 'Voer dezelfde PIN nogmaals in';
+            document.getElementById('step-title').textContent = __t.confirmPin;
+            document.getElementById('step-subtitle').textContent = __t.enterSamePin;
         } else {
             confirmPin();
         }
@@ -154,7 +175,7 @@ function updatePinDots() {
 
 async function confirmPin() {
     if (currentPin !== firstPin) {
-        document.getElementById('pin-error').textContent = 'PINs komen niet overeen. Probeer opnieuw.';
+        document.getElementById('pin-error').textContent = __t.pinsNoMatch;
         document.getElementById('pin-error').classList.remove('hidden');
         document.querySelectorAll('.pin-dot').forEach(dot => {
             dot.classList.add('animate-shake');
@@ -164,8 +185,8 @@ async function confirmPin() {
         firstPin = null;
         step = 1;
         updatePinDots();
-        document.getElementById('step-title').textContent = 'Kies een 5-cijferige PIN';
-        document.getElementById('step-subtitle').textContent = 'Hiermee kun je sneller inloggen op dit apparaat';
+        document.getElementById('step-title').textContent = __t.choosePin;
+        document.getElementById('step-subtitle').textContent = __t.pinSubtitle;
         return;
     }
 
@@ -194,17 +215,17 @@ async function confirmPin() {
                 showBiometricSetup();
             } else {
                 // No platform authenticator: skip biometric, go to dashboard
-                document.getElementById('step-title').textContent = 'PIN ingesteld!';
-                document.getElementById('step-subtitle').textContent = 'Doorsturen naar dashboard...';
+                document.getElementById('step-title').textContent = __t.pinSet;
+                document.getElementById('step-subtitle').textContent = __t.redirecting;
                 document.getElementById('pin-section').classList.add('hidden');
                 setTimeout(() => { window.location.href = dashboardUrl; }, 1000);
             }
         } else {
-            document.getElementById('pin-error').textContent = data.message || 'Fout bij instellen PIN';
+            document.getElementById('pin-error').textContent = data.message || __t.pinSetupError;
             document.getElementById('pin-error').classList.remove('hidden');
         }
     } catch (err) {
-        document.getElementById('pin-error').textContent = 'Er ging iets mis';
+        document.getElementById('pin-error').textContent = __t.somethingWrong;
         document.getElementById('pin-error').classList.remove('hidden');
     }
 }
@@ -212,16 +233,16 @@ async function confirmPin() {
 function showBiometricSetup() {
     document.getElementById('pin-section').classList.add('hidden');
     document.getElementById('biometric-section').classList.remove('hidden');
-    document.getElementById('step-title').textContent = 'Biometrie instellen';
+    document.getElementById('step-title').textContent = __t.biometricSetup;
     document.getElementById('step-subtitle').textContent = '';
-    document.getElementById('skip-link').textContent = 'Nee, alleen PIN gebruiken';
+    document.getElementById('skip-link').textContent = __t.pinOnly;
     document.getElementById('skip-link').href = dashboardUrl;
 }
 
 async function registerPasskey() {
     const btn = document.getElementById('biometric-enable-btn');
     btn.disabled = true;
-    btn.textContent = 'Bezig met registreren...';
+    btn.textContent = __t.registering;
 
     try {
         // Step 1: Get registration options from server
@@ -235,7 +256,7 @@ async function registerPasskey() {
         });
 
         if (!optRes.ok) {
-            throw new Error('Kon passkey opties niet ophalen');
+            throw new Error(__t.passkeyError);
         }
 
         const options = await optRes.json();
@@ -301,20 +322,20 @@ async function registerPasskey() {
                 body: JSON.stringify({ fingerprint: deviceFingerprint }),
             });
 
-            document.getElementById('biometric-success').textContent = 'Biometrie ingeschakeld! Doorsturen...';
+            document.getElementById('biometric-success').textContent = __t.biometricEnabled;
             document.getElementById('biometric-success').classList.remove('hidden');
             btn.classList.add('hidden');
             setTimeout(() => { window.location.href = dashboardUrl; }, 1000);
         } else {
-            throw new Error(regData.message || 'Registratie mislukt');
+            throw new Error(regData.message || __t.registrationFailed);
         }
     } catch (err) {
         btn.disabled = false;
-        btn.textContent = 'Ja, biometrie inschakelen';
+        btn.textContent = __t.enableBiometric;
         if (err.name === 'NotAllowedError') {
-            document.getElementById('biometric-error').textContent = 'Biometrie geannuleerd. Je kunt het later nog inschakelen.';
+            document.getElementById('biometric-error').textContent = __t.biometricCancelled;
         } else {
-            document.getElementById('biometric-error').textContent = err.message || 'Biometrie niet beschikbaar op dit apparaat.';
+            document.getElementById('biometric-error').textContent = err.message || __t.biometricUnavailable;
         }
         document.getElementById('biometric-error').classList.remove('hidden');
     }
