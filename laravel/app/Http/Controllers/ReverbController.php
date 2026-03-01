@@ -7,12 +7,16 @@ use Illuminate\Support\Facades\Process;
 
 class ReverbController extends Controller
 {
+    private function processName(): string
+    {
+        return app()->environment('staging') ? 'reverb-staging' : 'reverb';
+    }
+
     /**
      * Get Reverb status
      */
     public function status(): JsonResponse
     {
-        // Only on production/staging server
         if (app()->environment('local')) {
             return response()->json([
                 'running' => false,
@@ -21,16 +25,7 @@ class ReverbController extends Controller
             ]);
         }
 
-        // Staging heeft geen eigen Reverb server
-        if (app()->environment('staging')) {
-            return response()->json([
-                'running' => false,
-                'message' => 'Reverb niet beschikbaar op staging',
-                'staging' => true,
-            ]);
-        }
-
-        $result = Process::run('supervisorctl status reverb');
+        $result = Process::run('supervisorctl status ' . $this->processName());
         $output = $result->output();
 
         $running = str_contains($output, 'RUNNING');
@@ -55,7 +50,7 @@ class ReverbController extends Controller
         }
 
         try {
-            $result = Process::run('supervisorctl start reverb');
+            $result = Process::run('supervisorctl start ' . $this->processName());
 
             return response()->json([
                 'success' => $result->successful(),
@@ -84,7 +79,7 @@ class ReverbController extends Controller
         }
 
         try {
-            $result = Process::run('supervisorctl stop reverb');
+            $result = Process::run('supervisorctl stop ' . $this->processName());
 
             return response()->json([
                 'success' => $result->successful(),
@@ -113,7 +108,7 @@ class ReverbController extends Controller
         }
 
         try {
-            $result = Process::run('supervisorctl restart reverb');
+            $result = Process::run('supervisorctl restart ' . $this->processName());
 
             return response()->json([
                 'success' => $result->successful(),
