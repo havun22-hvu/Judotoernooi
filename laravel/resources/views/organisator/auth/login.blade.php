@@ -479,7 +479,7 @@ async function generateQr() {
             qrToken = data.token;
             expiresIn = 300;
             const approveUrl = data.approve_url;
-            container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(approveUrl)}" alt="QR" class="rounded">`;
+            container.innerHTML = data.qr_svg;
             document.getElementById('qr-status').textContent = 'Scan met je telefoon';
             document.getElementById('qr-timer').classList.remove('hidden');
             startPolling();

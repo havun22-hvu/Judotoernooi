@@ -152,11 +152,15 @@ class PasskeyController extends Controller
             'ip' => $request->ip(),
         ]);
 
+        $approveUrl = url('/auth/qr/approve/' . $token->token);
+        $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(180)->generate($approveUrl);
+
         return response()->json([
             'success' => true,
             'token' => $token->token,
             'expires_in' => 300,
-            'approve_url' => url('/auth/qr/approve/' . $token->token),
+            'approve_url' => $approveUrl,
+            'qr_svg' => $qrSvg,
         ]);
     }
 
