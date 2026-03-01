@@ -14,6 +14,8 @@ class Betaling extends Model
         'toernooi_id',
         'club_id',
         'mollie_payment_id',
+        'payment_provider',
+        'stripe_payment_id',
         'bedrag',
         'aantal_judokas',
         'status',

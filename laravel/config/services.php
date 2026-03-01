@@ -67,6 +67,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Stripe Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Stripe Checkout + Connect for international payments.
+    | Platform mode: betalingen gaan naar JudoToernooi's Stripe account
+    | Connect mode: betalingen gaan naar organisator's eigen Stripe account
+    |
+    */
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'client_id' => env('STRIPE_CLIENT_ID'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Error Notification
     |--------------------------------------------------------------------------
     |

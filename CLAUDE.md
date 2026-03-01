@@ -214,20 +214,30 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 ### Features
 - Toernooi management, deelnemers import, poule indeling
 - Weging interface, mat interface, eliminatie systeem
-- **Mollie betalingen** (Connect + Platform mode)
+- **Betalingen** (Mollie + Stripe, Connect + Platform mode)
 
-## Mollie Betalingen
+## Betalingen (Mollie + Stripe)
 
 > **Uitgebreide docs:** `.claude/context.md` en `laravel/docs/2-FEATURES/BETALINGEN.md`
 
+| Provider | Dekking | Toeslag (platform) |
+|----------|---------|-------------------|
+| **Mollie** (standaard) | Europa | €0,50 |
+| **Stripe** | Wereldwijd | €0,50 |
+
 | Modus | Geld naar | Toeslag |
 |-------|-----------|---------|
-| **Connect** | Organisator's eigen Mollie | Nee |
-| **Platform** | JudoToernooi's Mollie | €0,50 |
+| **Connect** | Organisator's eigen account | Nee |
+| **Platform** | JudoToernooi's account | €0,50 |
 
 **Key files:**
-- `app/Services/MollieService.php` - Hybride service
-- `config/services.php` - Mollie config
+- `app/Contracts/PaymentProviderInterface.php` - Interface
+- `app/DTOs/PaymentResult.php` - Genormaliseerd resultaat
+- `app/Services/PaymentProviderFactory.php` - Factory
+- `app/Services/Payments/MolliePaymentProvider.php` - Mollie wrapper
+- `app/Services/Payments/StripePaymentProvider.php` - Stripe implementatie
+- `app/Services/MollieService.php` - Bestaande Mollie service
+- `config/services.php` - Provider config
 - `app/Models/Toernooi.php` - Helper methods
 
 ## Knowledge Base

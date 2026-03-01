@@ -263,8 +263,8 @@ class MollieController extends Controller
     public function simulate(Request $request): View
     {
         $paymentId = $request->get('payment_id');
-        $betaling = Betaling::where('mollie_payment_id', $paymentId)->first()
-            ?? ToernooiBetaling::where('mollie_payment_id', $paymentId)->first();
+        $betaling = Betaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first()
+            ?? ToernooiBetaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first();
 
         return view('pages.betaling.simulate', [
             'paymentId' => $paymentId,
@@ -280,8 +280,8 @@ class MollieController extends Controller
         $paymentId = $request->input('payment_id');
         $status = $request->input('status', 'paid');
 
-        $betaling = Betaling::where('mollie_payment_id', $paymentId)->first();
-        $toernooiBetaling = ToernooiBetaling::where('mollie_payment_id', $paymentId)->first();
+        $betaling = Betaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first();
+        $toernooiBetaling = ToernooiBetaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first();
 
         if ($betaling) {
             $this->updateBetalingStatus($betaling, $status);

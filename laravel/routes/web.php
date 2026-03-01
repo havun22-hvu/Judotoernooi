@@ -20,6 +20,7 @@ use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\MollieController;
+use App\Http\Controllers\StripeController;
 use App\Http\Controllers\StamJudokaController;
 use App\Http\Controllers\WimpelController;
 use App\Http\Controllers\DeviceToegangController;
@@ -339,6 +340,13 @@ Route::middleware('throttle:webhook')->group(function () {
 Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
 Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
 
+// Stripe webhooks & callbacks (no auth, called by Stripe)
+Route::get('stripe/callback', [StripeController::class, 'callback'])->name('stripe.callback');
+Route::middleware('throttle:webhook')->group(function () {
+    Route::post('stripe/webhook', [StripeController::class, 'webhook'])->name('stripe.webhook');
+    Route::post('stripe/webhook/toernooi', [StripeController::class, 'webhookToernooi'])->name('stripe.webhook.toernooi');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Toernooi Beheer: /{org}/toernooi/{toernooi}/...
@@ -362,6 +370,10 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     // Mollie OAuth
     Route::get('mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
     Route::post('mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
+
+    // Stripe OAuth
+    Route::get('stripe/authorize', [StripeController::class, 'authorize'])->name('stripe.authorize');
+    Route::post('stripe/disconnect', [StripeController::class, 'disconnect'])->name('stripe.disconnect');
 
     // Upgrade routes (freemium)
     Route::get('upgrade', [ToernooiBetalingController::class, 'showUpgrade'])->name('upgrade');

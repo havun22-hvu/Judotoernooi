@@ -186,6 +186,11 @@ class Toernooi extends Model
         'mollie_token_expires_at',
         'mollie_onboarded',
         'mollie_organization_name',
+        'payment_provider',
+        'stripe_account_id',
+        'stripe_access_token',
+        'stripe_refresh_token',
+        'stripe_publishable_key',
         'punten_competitie_wedstrijden',
         'import_fouten',
         'local_server_primary_ip',
@@ -212,6 +217,8 @@ class Toernooi extends Model
         'code_dojo',
         'mollie_access_token',
         'mollie_refresh_token',
+        'stripe_access_token',
+        'stripe_refresh_token',
     ];
 
     protected $casts = [

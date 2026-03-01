@@ -50,6 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
             '*/*/scan-qr',     // Public QR scan API
             'mollie/webhook',
             'mollie/webhook/toernooi',
+            'stripe/webhook',
+            'stripe/webhook/toernooi',
             'coach-kaart/*/activeer',  // Coach card activation (public, uses pincode)
             'coach-kaart/*/checkin',   // Coach check-in (public)
             'coach-kaart/*/checkout',  // Coach check-out (public)
