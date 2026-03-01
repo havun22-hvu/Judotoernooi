@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
 @section('title', __('Havun Admin - Alle Organisatoren'))
+@section('main-class', 'max-w-7xl w-full mx-auto')
 
 @section('content')
-<div x-data="{ tab: 'overzicht' }" class="w-full">
+<div x-data="{ tab: 'overzicht' }" class="w-full max-w-7xl">
 
 {{-- Header --}}
 <div class="flex justify-between items-center mb-6">
@@ -40,7 +41,7 @@
 </nav>
 
 {{-- Tab content wrapper - vaste breedte ongeacht actieve tab --}}
-<div class="w-full min-w-0">
+<div class="w-full">
 
 {{-- ============================================================ --}}
 {{-- TAB: Overzicht                                                --}}
