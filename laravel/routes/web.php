@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BlokController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\HealthController;
@@ -232,6 +233,12 @@ Route::prefix('auth')->middleware('auth:organisator')->group(function () {
     Route::post('pin/biometric', [PinAuthController::class, 'enableBiometric']);
     Route::post('passkey/register/options', [PasskeyController::class, 'registerOptions']);
     Route::post('passkey/register', [PasskeyController::class, 'register']);
+
+    // Account settings
+    Route::get('account', [AccountController::class, 'show'])->name('auth.account');
+    Route::put('account', [AccountController::class, 'update'])->name('auth.account.update');
+    Route::put('account/password', [AccountController::class, 'updatePassword'])->name('auth.account.password');
+    Route::delete('account/device/{id}', [AccountController::class, 'removeDevice'])->name('auth.account.device.remove');
 });
 
 // Alias for organisator.login (used in bootstrap/app.php and controllers)
