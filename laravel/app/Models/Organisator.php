@@ -332,4 +332,11 @@ class Organisator extends Authenticatable implements WebAuthnAuthenticatable
         ]);
         return implode("\n", $parts);
     }
+    /**
+     * Override WebAuthn display name: Organisator uses "naam" not "name".
+     */
+    public function webAuthnData(): \Laragear\WebAuthn\WebAuthnData
+    {
+        return \Laragear\WebAuthn\WebAuthnData::make($this->email, $this->naam);
+    }
 }
