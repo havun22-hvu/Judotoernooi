@@ -46,7 +46,7 @@
         @endif
 
         <div class="flex justify-center">
-            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#organisatie" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=organisatie" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                 OK
             </a>
         </div>
