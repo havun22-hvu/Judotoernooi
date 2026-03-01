@@ -207,6 +207,10 @@
 </div>
 
 <script>
+const __t = {
+    confirmDeleteWithJudokas: @json(__('LET OP: ":naam" heeft :count judoka(s). Deze worden ook verwijderd! Doorgaan?')),
+    confirmDelete: @json(__('Weet je zeker dat je ":naam" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')),
+};
 function clubsPage() {
     return {
         editModal: false,
@@ -229,11 +233,11 @@ function clubsPage() {
 
 function confirmDelete(judokasCount, clubNaam) {
     if (judokasCount > 0) {
-        if (!confirm(`LET OP: "${clubNaam}" heeft ${judokasCount} judoka(s).\n\nDeze worden ook verwijderd!\n\nDoorgaan?`)) {
+        if (!confirm(__t.confirmDeleteWithJudokas.replace(':naam', clubNaam).replace(':count', judokasCount))) {
             return false;
         }
     }
-    return confirm(`Weet je zeker dat je "${clubNaam}" wilt verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
+    return confirm(__t.confirmDelete.replace(':naam', clubNaam));
 }
 </script>
 @endsection

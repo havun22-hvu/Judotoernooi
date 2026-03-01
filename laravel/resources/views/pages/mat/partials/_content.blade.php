@@ -38,6 +38,65 @@
     }
 </style>
 <script>
+    // === JAVASCRIPT TRANSLATION STRINGS ===
+    const __t = {
+        sessionExpired: @json(__('Sessie verlopen. De pagina wordt herladen.')),
+        serverErrorPasswordCheck: @json(__('Serverfout bij wachtwoord check (HTTP :status). Probeer de pagina te herladen.')),
+        couldNotCheckPassword: @json(__('Kon wachtwoord niet controleren (netwerkfout). Probeer de pagina te herladen.')),
+        incorrectPassword: @json(__('Onjuist wachtwoord! Actie geannuleerd.')),
+        deleteError: @json(__('Fout bij verwijderen')),
+        resetError: @json(__('Fout bij terugzetten')),
+        resetFailed: @json(__('Terugzetten mislukt')),
+        serverErrorNoJson: @json(__('Server fout (geen JSON response)')),
+        reloadAndRetry: @json(__('Herlaad de pagina en probeer opnieuw.')),
+        blocked: @json(__('GEBLOKKEERD')),
+        autoCorrections: @json(__('Automatische correcties uitgevoerd')),
+        networkError: @json(__('Netwerkfout')),
+        checkConnection: @json(__('Controleer je internetverbinding. De pagina wordt herladen.')),
+        placementError: @json(__('Fout bij plaatsen')),
+        noFinaleFound: @json(__('Geen finale gevonden!')),
+        wrongMatch: @json(__(':naam komt niet uit de juiste wedstrijd!')),
+        onlyParticipants: @json(__('Alleen deelnemers uit deze wedstrijd kunnen op :medaille geplaatst worden.')),
+        bronze: @json(__('brons')),
+        goldSilver: @json(__('goud/zilver')),
+        matchModifiedByOther: @json(__('Deze wedstrijd is gewijzigd door een ander apparaat.')),
+        errorLabel: @json(__('Fout')),
+        unknownError: @json(__('Onbekende fout')),
+        medalPlacementError: @json(__('Fout bij medaille plaatsing')),
+        deleteErrorShort: @json(__('Fout bij verwijderen')),
+        finishGreenFirst: @json(__('Eerst de groene wedstrijd afmaken!')),
+        bracketLoadError: @json(__('Fout bij laden bracket')),
+        bracketLoadErrorConsole: @json(__('Fout bij laden bracket HTML')),
+        advanceByesError: @json(__('Fout bij advance byes')),
+        loadError: @json(__('Fout bij laden')),
+        loadMatchesError: @json(__('Fout bij laden wedstrijden')),
+        serverError: @json(__('Server fout (:status). Probeer de pagina te herladen.')),
+        allRounds: @json(__('Alle rondes')),
+        fromRound: @json(__('Vanaf ronde :nummer')),
+        markDoneError: @json(__('Fout bij markeren')),
+        barrageError: @json(__('Fout bij maken barrage')),
+        noBarrageNeeded: @json(__('Geen barrage nodig')),
+        barrageCreated: @json(__('Barrage poule #:nummer aangemaakt op dezelfde mat!')),
+        saveSelectionError: @json(__('Fout bij opslaan selectie')),
+        selectMatFirst: @json(__('Selecteer eerst een mat.')),
+        allSlotsTaken: @json(__('Alle slots zijn bezet (groen + geel + blauw). Klik op een gekleurde wedstrijd om te deselecteren.')),
+        stopGreenMatch: @json(__('Groene wedstrijd stoppen? Geel wordt groen, blauw wordt geel.')),
+        noMatSelected: @json(__('Geen mat geselecteerd. Ververs de pagina.')),
+        maxSeedingSwaps: @json(__('Maximum aantal seeding swaps bereikt (:max). De bracket is nu vastgezet.')),
+        passwordOrPinPlaceholder: @json(__('Wachtwoord of pincode')),
+        cancelButton: @json(__('Annuleren')),
+        played: @json(__('Gespeeld')),
+        playingNow: @json(__('Speelt nu - klik om te stoppen (geel wordt groen, blauw wordt geel)')),
+        standingBy: @json(__('Staat klaar - klik om te deselecteren (blauw wordt geel)')),
+        gettingReady: @json(__('Gereed maken - klik om te deselecteren')),
+        clickToSelect: @json(__('Klik om te selecteren')),
+        barrageCreateFor: @json(__('Barrage maken voor: :namen?')),
+        wantToMoveToSwap: @json(__('Je wilt :naam naar de swap verplaatsen.')),
+        thisJudoka: @json(__('deze judoka')),
+        moveBackToPreviousRound: @json(__(':naam terugplaatsen naar vorige ronde?')),
+        thisResetsSourceMatch: @json(__('Dit reset de uitslag van de bron-wedstrijd.')),
+    };
+
     // Global CSRF-safe fetch: automatically refreshes token on 419 and retries once
     window.csrfFetch = async function(url, options = {}) {
         const token = () => document.querySelector('meta[name="csrf-token"]')?.content;
@@ -62,7 +121,7 @@
                 console.error('[CSRF] Failed to refresh token:', e);
             }
             // Fallback: reload page
-            alert('Sessie verlopen. De pagina wordt herladen.');
+            alert(__t.sessionExpired);
             location.reload();
         }
 
@@ -506,9 +565,9 @@ window.promptWachtwoord = function(bericht) {
         overlay.innerHTML = `
             <div style="background:white;border-radius:8px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
                 <div style="white-space:pre-line;margin-bottom:16px;font-size:14px;line-height:1.5;">${bericht.replace(/</g,'&lt;')}</div>
-                <input type="password" id="ww-input" style="width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:16px;box-sizing:border-box;" placeholder="Wachtwoord of pincode" autocomplete="off">
+                <input type="password" id="ww-input" style="width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:16px;box-sizing:border-box;" placeholder="${__t.passwordOrPinPlaceholder}" autocomplete="off">
                 <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
-                    <button id="ww-cancel" style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:white;cursor:pointer;font-size:14px;">Annuleren</button>
+                    <button id="ww-cancel" style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:white;cursor:pointer;font-size:14px;">${__t.cancelButton}</button>
                     <button id="ww-ok" style="padding:8px 16px;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer;font-size:14px;">OK</button>
                 </div>
             </div>`;
@@ -538,15 +597,15 @@ window.checkAdminWachtwoord = async function(wachtwoord) {
             body: JSON.stringify({ wachtwoord })
         });
         if (!response.ok) {
-            console.error('Wachtwoord check HTTP error:', response.status, response.statusText);
-            alert('⚠️ Serverfout bij wachtwoord check (HTTP ' + response.status + '). Probeer de pagina te herladen.');
+            console.error('Password check HTTP error:', response.status, response.statusText);
+            alert('⚠️ ' + __t.serverErrorPasswordCheck.replace(':status', response.status));
             return false;
         }
         const result = await response.json();
         return result.geldig === true;
     } catch (e) {
-        console.error('Wachtwoord check failed:', e);
-        alert('⚠️ Kon wachtwoord niet controleren (netwerkfout). Probeer de pagina te herladen.');
+        console.error('Password check failed:', e);
+        alert('⚠️ ' + __t.couldNotCheckPassword);
         return false;
     }
 };
@@ -587,17 +646,17 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
 
     // Max seeding swaps check
     if (!isLocked && (window.swapCount[pouleId] || 0) >= MAX_SEEDING_SWAPS) {
-        alert(`⚠️ Maximum aantal seeding swaps bereikt (${MAX_SEEDING_SWAPS}). De bracket is nu vastgezet.`);
+        alert('⚠️ ' + __t.maxSeedingSwaps.replace(':max', MAX_SEEDING_SWAPS));
         return;
     }
 
     // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
         const wachtwoord = await window.promptWachtwoord(
-            '🔒 BRACKET VERGRENDELD\n\n' +
-            `Je wilt ${data.judokaNaam || 'deze judoka'} naar de swap verplaatsen.\n` +
-            'Dit kan alleen door de organisator of hoofdjury.\n\n' +
-            'Voer het organisator wachtwoord of hoofdjury pincode in:'
+            '🔒 ' + __bracketVergrendeld + '\n\n' +
+            __t.wantToMoveToSwap.replace(':naam', data.judokaNaam || __t.thisJudoka) + '\n' +
+            __ditKanAlleenDoorAdmin + '\n\n' +
+            __voerAdminWachtwoordIn
         );
 
         if (!wachtwoord) {
@@ -606,7 +665,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
 
         const geldig = await window.checkAdminWachtwoord(wachtwoord);
         if (!geldig) {
-            alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
+            alert('❌ ' + __t.incorrectPassword);
             return;
         }
     }
@@ -632,7 +691,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
             });
             await response.json();
         } catch (err) {
-            console.error('Fout bij verwijderen:', err);
+            console.error('Delete error:', err);
         }
     }
 
@@ -723,7 +782,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
             const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
             if (isGeel || isBlauw) {
-                alert('⚠️ Eerst de groene wedstrijd afmaken!');
+                alert('⚠️ ' + __t.finishGreenFirst);
                 return false;
             }
         }
@@ -746,10 +805,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         if (isTerugplaatsen) {
             // REGEL 2: Terugplaatsen naar eigen vorige slot — wachtwoord vereist
             const wachtwoord = await window.promptWachtwoord(
-                `🔒 BRACKET VERGRENDELD\n\n` +
-                `${naam} terugplaatsen naar vorige ronde?\n` +
-                `Dit reset de uitslag van de bron-wedstrijd.\n\n` +
-                `Voer het organisator wachtwoord of hoofdjury pincode in:`
+                '🔒 ' + __bracketVergrendeld + '\n\n' +
+                __t.moveBackToPreviousRound.replace(':naam', naam) + '\n' +
+                __t.thisResetsSourceMatch + '\n\n' +
+                __voerAdminWachtwoordIn
             );
 
             if (!wachtwoord) {
@@ -758,7 +817,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             const geldig = await window.checkAdminWachtwoord(wachtwoord);
             if (!geldig) {
-                alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
+                alert('❌ ' + __t.incorrectPassword);
                 return false;
             }
 
@@ -780,10 +839,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 if (result.success) {
                     location.reload();
                 } else {
-                    alert('❌ ' + (result.error || 'Fout bij terugzetten'));
+                    alert('❌ ' + (result.error || __t.resetError));
                 }
             } catch (e) {
-                console.error('Terugzetten mislukt:', e);
+                console.error(__t.resetFailed + ':', e);
                 location.reload();
             }
             return false;
@@ -803,7 +862,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
         // Max seeding swaps check
         if (isSeeding && (window.swapCount[data.pouleId] || 0) >= MAX_SEEDING_SWAPS) {
-            alert(`⚠️ Maximum aantal seeding swaps bereikt (${MAX_SEEDING_SWAPS}). De bracket is nu vastgezet.`);
+            alert('⚠️ ' + __t.maxSeedingSwaps.replace(':max', MAX_SEEDING_SWAPS));
             return false;
         }
 
@@ -867,7 +926,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         try {
             result = await response.json();
         } catch (parseErr) {
-            alert('❌ Server fout (geen JSON response)\n\nStatus: ' + response.status + '\n\nHerlaad de pagina en probeer opnieuw.');
+            alert('❌ ' + __t.serverErrorNoJson + '\n\nStatus: ' + response.status + '\n\n' + __t.reloadAndRetry);
             location.reload();
             return false;
         }
@@ -875,13 +934,13 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         if (!response.ok) {
             console.error('[DROP] Server response:', response.status, result);
             const msg = result.error || result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Server status ' + response.status);
-            alert('❌ GEBLOKKEERD:\n\n' + msg);
+            alert('❌ ' + __t.blocked + ':\n\n' + msg);
             return false;
         }
 
         // Toon correcties aan admin als die er zijn
         if (result.correcties && result.correcties.length > 0) {
-            alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
+            alert('✅ ' + __t.autoCorrections + ':\n\n• ' + result.correcties.join('\n• '));
         }
 
         // Na succesvolle drop vanuit swap: verwijder uit swap data + DOM
@@ -947,9 +1006,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         console.error('Drop error:', err);
         const errMsg = err.message || String(err);
         if (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed')) {
-            alert('❌ Netwerkfout: ' + errMsg + '\n\nControleer je internetverbinding.\nDe pagina wordt herladen.');
+            alert('❌ ' + __t.networkError + ': ' + errMsg + '\n\n' + __t.checkConnection);
         } else {
-            alert('❌ Fout bij plaatsen: ' + errMsg);
+            alert('❌ ' + __t.placementError + ': ' + errMsg);
         }
         // Bij fout: location.reload() — zelfde als andere pages
         location.reload();
@@ -964,7 +1023,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     event.preventDefault();
 
     if (!finaleId) {
-        alert('❌ Geen finale gevonden!');
+        alert('❌ ' + __t.noFinaleFound);
         return;
     }
 
@@ -980,7 +1039,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
             const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
             const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
             if (isGeel || isBlauw) {
-                alert('⚠️ Eerst de groene wedstrijd afmaken!');
+                alert('⚠️ ' + __t.finishGreenFirst);
                 return;
             }
         }
@@ -988,8 +1047,8 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
 
     // Check of judoka uit de juiste wedstrijd komt
     if (data.wedstrijdId != finaleId) {
-        const medailleNaam = medaille === 'brons' ? 'brons' : 'goud/zilver';
-        alert(`❌ ${naam} komt niet uit de juiste wedstrijd!\n\nAlleen deelnemers uit deze wedstrijd kunnen op ${medailleNaam} geplaatst worden.`);
+        const medailleNaam = medaille === 'brons' ? __t.bronze : __t.goldSilver;
+        alert('❌ ' + __t.wrongMatch.replace(':naam', naam) + '\n\n' + __t.onlyParticipants.replace(':medaille', medailleNaam));
         return;
     }
 
@@ -1017,13 +1076,13 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
         const result = await response.json();
 
         if (response.status === 409 && result.conflict) {
-            alert(result.message || 'Deze wedstrijd is gewijzigd door een ander apparaat.');
+            alert(result.message || __t.matchModifiedByOther);
             location.reload();
             return;
         }
 
         if (!response.ok) {
-            alert('Fout:\n\n' + (result.error || 'Onbekende fout'));
+            alert(__t.errorLabel + ':\n\n' + (result.error || __t.unknownError));
             return;
         }
 
@@ -1059,8 +1118,8 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
         }
 
     } catch (err) {
-        console.error('Medaille drop error:', err);
-        alert('❌ Fout bij medaille plaatsing: ' + err.message);
+        console.error('Medal drop error:', err);
+        alert('❌ ' + __t.medalPlacementError + ': ' + err.message);
         location.reload();
     }
 };
@@ -1107,11 +1166,11 @@ window.verwijderJudoka = async function(event) {
         });
 
         if (!response.ok) {
-            alert('❌ Fout bij verwijderen');
+            alert('❌ ' + __t.deleteErrorShort);
             location.reload();
         }
     } catch (err) {
-        console.error('Verwijder error:', err);
+        console.error('Delete error:', err);
         location.reload();
     }
 };
@@ -1176,7 +1235,7 @@ window.updateBracketNav = function(pouleId, groep) {
 
     if (leftBtn) leftBtn.disabled = startRonde === 0;
     if (rightBtn) rightBtn.disabled = startRonde >= maxStart;
-    if (label) label.textContent = startRonde === 0 ? 'Alle rondes' : 'Vanaf ronde ' + (startRonde + 1);
+    if (label) label.textContent = startRonde === 0 ? __t.allRounds : __t.fromRound.replace(':nummer', startRonde + 1);
 };
 
 function matInterface() {
@@ -1346,17 +1405,17 @@ function matInterface() {
                 if (!contentType.includes('application/json')) {
                     console.error('[Mat] Non-JSON response:', response.status, contentType);
                     if (response.status === 401 || response.status === 419 || response.redirected) {
-                        alert('Sessie verlopen. De pagina wordt herladen.');
+                        alert(__t.sessionExpired);
                         location.reload();
                     } else {
-                        alert('Server fout (' + response.status + '). Probeer de pagina te herladen.');
+                        alert(__t.serverError.replace(':status', response.status));
                     }
                     this.poules = [];
                     return;
                 }
 
                 if (!response.ok) {
-                    let errorMsg = 'Fout bij laden wedstrijden: ' + response.status;
+                    let errorMsg = __t.loadMatchesError + ': ' + response.status;
                     try {
                         const errorData = await response.json();
                         errorMsg = errorData.error || errorMsg;
@@ -1432,11 +1491,11 @@ function matInterface() {
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
                 if (err.message && err.message.includes('Unexpected token')) {
-                    alert('Sessie verlopen. De pagina wordt herladen.');
+                    alert(__t.sessionExpired);
                     location.reload();
                     return;
                 }
-                alert('Fout bij laden: ' + err.message);
+                alert(__t.loadError + ': ' + err.message);
                 this.poules = [];
             } finally {
                 this._isLoadingWedstrijden = false;
@@ -1470,8 +1529,8 @@ function matInterface() {
                 });
 
                 if (!response.ok) {
-                    console.error('[Bracket] Fout bij laden HTML:', response.status);
-                    container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
+                    console.error('[Bracket] ' + __t.bracketLoadErrorConsole + ':', response.status);
+                    container.innerHTML = '<div class="text-red-500 text-sm py-2">' + __t.bracketLoadError + '</div>';
                     return;
                 }
 
@@ -1497,8 +1556,8 @@ function matInterface() {
                 // Pas beurtaanduiding kleuren toe
                 this.applyBeurtaanduiding();
             } catch (err) {
-                console.error('[Bracket] Exception bij laden:', err);
-                container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
+                console.error('[Bracket] Exception loading:', err);
+                container.innerHTML = '<div class="text-red-500 text-sm py-2">' + __t.bracketLoadError + '</div>';
             }
         },
 
@@ -1523,7 +1582,7 @@ function matInterface() {
                     this.laadBracketHtml(pouleId, 'B');
                 }
             } catch (err) {
-                console.error('[Bracket] Fout bij advance byes:', err);
+                console.error('[Bracket] ' + __t.advanceByesError + ':', err);
             }
         },
 
@@ -1766,7 +1825,7 @@ function matInterface() {
             // Check for conflict (another device modified this match)
             if (uitslagResponse.status === 409) {
                 const conflictData = await uitslagResponse.json();
-                alert(conflictData.message || 'Deze wedstrijd is gewijzigd door een ander apparaat.');
+                alert(conflictData.message || __t.matchModifiedByOther);
                 location.reload();
                 return;
             }
@@ -2000,7 +2059,7 @@ function matInterface() {
                     poule.spreker_klaar_tijd = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                 }
             } catch (err) {
-                alert('Fout bij markeren: ' + err.message);
+                alert(__t.markDoneError + ': ' + err.message);
             }
         },
 
@@ -2089,12 +2148,12 @@ function matInterface() {
         async maakBarrage(poule) {
             const barrageJudokas = this.getBarrageJudokas(poule);
             if (barrageJudokas.length < 3) {
-                alert('Geen barrage nodig');
+                alert(__t.noBarrageNeeded);
                 return;
             }
 
             const namen = barrageJudokas.map(j => j.naam).join(', ');
-            if (!confirm(`Barrage maken voor: ${namen}?`)) return;
+            if (!confirm(__t.barrageCreateFor.replace(':namen', namen))) return;
 
             try {
                 const response = await csrfFetch(`{{ route('toernooi.mat.barrage', $toernooi->routeParams()) }}`, {
@@ -2112,14 +2171,14 @@ function matInterface() {
 
                 const data = await response.json();
                 if (data.success) {
-                    alert(`Barrage poule #${data.barrage_poule.nummer} aangemaakt op dezelfde mat!`);
+                    alert(__t.barrageCreated.replace(':nummer', data.barrage_poule.nummer));
                     // Herlaad wedstrijden om barrage te tonen
                     this.laadWedstrijden();
                 } else {
-                    alert('Fout: ' + (data.error || 'Onbekende fout'));
+                    alert(__t.errorLabel + ': ' + (data.error || __t.unknownError));
                 }
             } catch (err) {
-                alert('Fout bij maken barrage: ' + err.message);
+                alert(__t.barrageError + ': ' + err.message);
             }
         },
 
@@ -2209,17 +2268,17 @@ function matInterface() {
         getWedstrijdTitel(poule, wedstrijd, idx) {
             const { huidige, volgende, gereedmaken } = this.getHuidigeEnVolgende(poule);
 
-            if (wedstrijd.is_gespeeld) return 'Gespeeld';
+            if (wedstrijd.is_gespeeld) return __t.played;
             if (huidige && wedstrijd.id === huidige.id) {
-                return 'Speelt nu - klik om te stoppen (geel→groen, blauw→geel)';
+                return __t.playingNow;
             }
             if (volgende && wedstrijd.id === volgende.id) {
-                return 'Staat klaar - klik om te deselecteren (blauw→geel)';
+                return __t.standingBy;
             }
             if (gereedmaken && wedstrijd.id === gereedmaken.id) {
-                return 'Gereed maken - klik om te deselecteren';
+                return __t.gettingReady;
             }
-            return 'Klik om te selecteren';
+            return __t.clickToSelect;
         },
 
         // Toggle wedstrijd selectie (groen/geel/blauw systeem) - MAT NIVEAU
@@ -2229,26 +2288,26 @@ function matInterface() {
         async toggleVolgendeWedstrijd(poule, wedstrijd) {
             // === VALIDATIE ===
             if (!wedstrijd || !wedstrijd.id) {
-                console.error('[Mat] Ongeldige wedstrijd:', wedstrijd);
+                console.error('[Mat] Invalid match:', wedstrijd);
                 return;
             }
 
             if (!this.matId) {
-                console.error('[Mat] Geen mat geselecteerd');
-                alert('Selecteer eerst een mat.');
+                console.error('[Mat] No mat selected');
+                alert(__t.selectMatFirst);
                 return;
             }
 
             // Niet toestaan voor echt gespeelde wedstrijden (met winnaar)
             if (wedstrijd.is_gespeeld && wedstrijd.winnaar_id) {
-                console.log('[Mat] Wedstrijd', wedstrijd.id, 'heeft al een winnaar, skip');
+                console.log('[Mat] Match', wedstrijd.id, 'already has a winner, skip');
                 return;
             }
 
             // === HUIDIGE STATUS OPHALEN ===
             // Initialiseer matSelectie als het null is
             if (!this.matSelectie) {
-                console.warn('[Mat] matSelectie is null, initialiseren...');
+                console.warn('[Mat] matSelectie is null, initializing...');
                 this.matSelectie = {
                     actieve_wedstrijd_id: null,
                     volgende_wedstrijd_id: null,
@@ -2260,10 +2319,10 @@ function matInterface() {
             const matVolgendeId = this.matSelectie.volgende_wedstrijd_id || null;
             const matGereedmakenId = this.matSelectie.gereedmaken_wedstrijd_id || null;
 
-            console.log('[Mat] Toggle wedstrijd', wedstrijd.id, '- Huidige status:', {
-                groen: matActieveId,
-                geel: matVolgendeId,
-                blauw: matGereedmakenId
+            console.log('[Mat] Toggle match', wedstrijd.id, '- Current status:', {
+                green: matActieveId,
+                yellow: matVolgendeId,
+                blue: matGereedmakenId
             });
 
             // === BEPAAL OF WEDSTRIJD AL GESELECTEERD IS ===
@@ -2278,51 +2337,51 @@ function matInterface() {
 
             if (isGroen) {
                 // DESELECTEER GROEN - vraag bevestiging, dan doorschuiven
-                if (!confirm('Groene wedstrijd stoppen?\n\nGeel → Groen, Blauw → Geel')) {
+                if (!confirm(__t.stopGreenMatch)) {
                     return;
                 }
                 nieuweGroen = matVolgendeId;  // geel → groen
                 nieuweGeel = matGereedmakenId; // blauw → geel
                 nieuweBlauw = null;            // blauw = null
-                console.log('[Mat] Groen gedeselecteerd, doorschuiven');
+                console.log('[Mat] Green deselected, shifting');
             }
             else if (isGeel) {
                 // DESELECTEER GEEL - blauw schuift door
                 nieuweGeel = matGereedmakenId; // blauw → geel
                 nieuweBlauw = null;             // blauw = null
-                console.log('[Mat] Geel gedeselecteerd, blauw → geel');
+                console.log('[Mat] Yellow deselected, blue becomes yellow');
             }
             else if (isBlauw) {
                 // DESELECTEER BLAUW - geen doorschuiving
                 nieuweBlauw = null;
-                console.log('[Mat] Blauw gedeselecteerd');
+                console.log('[Mat] Blue deselected');
             }
             else {
                 // NIEUWE SELECTIE - wedstrijd is nog niet geselecteerd
                 if (!matActieveId) {
                     // Geen groen → wordt groen
                     nieuweGroen = wedstrijd.id;
-                    console.log('[Mat] Wedstrijd', wedstrijd.id, '→ GROEN');
+                    console.log('[Mat] Match', wedstrijd.id, '→ GREEN');
                 }
                 else if (!matVolgendeId) {
                     // Wel groen, geen geel → wordt geel
                     nieuweGeel = wedstrijd.id;
-                    console.log('[Mat] Wedstrijd', wedstrijd.id, '→ GEEL');
+                    console.log('[Mat] Match', wedstrijd.id, '→ YELLOW');
                 }
                 else if (!matGereedmakenId) {
                     // Wel groen + geel, geen blauw → wordt blauw
                     nieuweBlauw = wedstrijd.id;
-                    console.log('[Mat] Wedstrijd', wedstrijd.id, '→ BLAUW');
+                    console.log('[Mat] Match', wedstrijd.id, '→ BLUE');
                 }
                 else {
                     // Alle slots bezet
-                    alert('Alle slots zijn bezet (groen + geel + blauw).\n\nKlik op een gekleurde wedstrijd om te deselecteren.');
+                    alert(__t.allSlotsTaken);
                     return;
                 }
             }
 
             // === OPSLAAN ===
-            console.log('[Mat] Nieuwe status:', { groen: nieuweGroen, geel: nieuweGeel, blauw: nieuweBlauw });
+            console.log('[Mat] New status:', { green: nieuweGroen, yellow: nieuweGeel, blue: nieuweBlauw });
             await this.setWedstrijdStatus(nieuweGroen, nieuweGeel, nieuweBlauw);
         },
 
@@ -2331,16 +2390,16 @@ function matInterface() {
         async setWedstrijdStatus(actieveId, volgendeId, gereedmakenId) {
             // === VALIDATIE ===
             if (!this.matId) {
-                console.error('[Mat] setWedstrijdStatus: geen matId!');
-                alert('Geen mat geselecteerd. Refresh de pagina.');
+                console.error('[Mat] setWedstrijdStatus: no matId!');
+                alert(__t.noMatSelected);
                 return false;
             }
 
             console.log('[Mat] setWedstrijdStatus:', {
                 mat_id: this.matId,
-                groen: actieveId,
-                geel: volgendeId,
-                blauw: gereedmakenId
+                green: actieveId,
+                yellow: volgendeId,
+                blue: gereedmakenId
             });
 
             // === OPTIMISTIC UPDATE - direct lokaal bijwerken voor snelle UI ===
@@ -2373,7 +2432,7 @@ function matInterface() {
                 });
 
                 if (!response.ok) {
-                    let errorMsg = 'Server fout';
+                    let errorMsg = __t.errorLabel;
                     try {
                         const errorData = await response.json();
                         errorMsg = errorData.error || errorData.message || errorMsg;
@@ -2384,7 +2443,7 @@ function matInterface() {
                 const data = await response.json();
                 if (data.success && data.mat) {
                     // Server bevestigd - sync met server response
-                    console.log('[Mat] Server bevestigd:', data.mat);
+                    console.log('[Mat] Server confirmed:', data.mat);
                     this.matSelectie = {
                         actieve_wedstrijd_id: data.mat.actieve_wedstrijd_id || null,
                         volgende_wedstrijd_id: data.mat.volgende_wedstrijd_id || null,
@@ -2395,14 +2454,14 @@ function matInterface() {
                     this.$nextTick(() => this.applyBeurtaanduiding());
                     return true;
                 } else {
-                    throw new Error(data.error || 'Onbekende server response');
+                    throw new Error(data.error || __t.unknownError);
                 }
             } catch (err) {
                 // === ROLLBACK bij fout ===
-                console.error('[Mat] setWedstrijdStatus FOUT:', err.message);
+                console.error('[Mat] setWedstrijdStatus error:', err.message);
                 this.matSelectie = oudeSelectie;
                 this.poules = [...this.poules];
-                alert('Fout bij opslaan selectie:\n' + err.message);
+                alert(__t.saveSelectionError + ':\n' + err.message);
                 return false;
             }
         },

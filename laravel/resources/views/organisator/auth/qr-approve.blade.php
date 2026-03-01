@@ -66,10 +66,16 @@
 
 @auth('organisator')
 <script>
+const __t = {
+    approving: @json(__('Goedkeuren...')),
+    approve: @json(__('Goedkeuren')),
+    approveFailed: @json(__('Goedkeuren mislukt')),
+    somethingWrong: @json(__('Er ging iets mis')),
+};
 async function approveLogin() {
     const btn = document.getElementById('approve-btn');
     btn.disabled = true;
-    btn.textContent = 'Goedkeuren...';
+    btn.textContent = __t.approving;
 
     try {
         const res = await fetch('/auth/qr/approve/{{ $token->token }}', {
@@ -85,16 +91,16 @@ async function approveLogin() {
             document.getElementById('approve-section').classList.add('hidden');
             document.getElementById('success-section').classList.remove('hidden');
         } else {
-            document.getElementById('error-msg').textContent = data.message || 'Goedkeuren mislukt';
+            document.getElementById('error-msg').textContent = data.message || __t.approveFailed;
             document.getElementById('error-msg').classList.remove('hidden');
             btn.disabled = false;
-            btn.textContent = 'Goedkeuren';
+            btn.textContent = __t.approve;
         }
     } catch (err) {
-        document.getElementById('error-msg').textContent = 'Er ging iets mis';
+        document.getElementById('error-msg').textContent = __t.somethingWrong;
         document.getElementById('error-msg').classList.remove('hidden');
         btn.disabled = false;
-        btn.textContent = 'Goedkeuren';
+        btn.textContent = __t.approve;
     }
 }
 </script>

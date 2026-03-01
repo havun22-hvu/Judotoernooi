@@ -115,6 +115,12 @@
 </div>
 
 <script>
+const __t = {
+    errorAdding: @json(__('Fout bij toevoegen')),
+    errorSaving: @json(__('Fout bij opslaan')),
+    errorDeleting: @json(__('Fout bij verwijderen')),
+    confirmDelete: @json(__('Milestone ":naam" verwijderen?')),
+};
 function milestonesPage() {
     return {
         milestones: @json($milestones),
@@ -151,7 +157,7 @@ function milestonesPage() {
                     this.showFeedback('Milestone toegevoegd', 'success');
                 }
             } catch (e) {
-                this.showFeedback('Fout bij toevoegen', 'error');
+                this.showFeedback(__t.errorAdding, 'error');
             }
             this.saving = false;
         },
@@ -186,12 +192,12 @@ function milestonesPage() {
                     this.showFeedback('Milestone bijgewerkt', 'success');
                 }
             } catch (e) {
-                this.showFeedback('Fout bij opslaan', 'error');
+                this.showFeedback(__t.errorSaving, 'error');
             }
         },
 
         async deleteMilestone(ms) {
-            if (!confirm(`Milestone "${ms.punten} pt - ${ms.omschrijving}" verwijderen?`)) return;
+            if (!confirm(__t.confirmDelete.replace(':naam', `${ms.punten} pt - ${ms.omschrijving}`))) return;
             try {
                 const url = '{{ route("organisator.wimpel.milestones.destroy", [$organisator, "__ID__"]) }}'.replace('__ID__', ms.id);
                 const res = await fetch(url, {
@@ -207,7 +213,7 @@ function milestonesPage() {
                     this.showFeedback('Milestone verwijderd', 'success');
                 }
             } catch (e) {
-                this.showFeedback('Fout bij verwijderen', 'error');
+                this.showFeedback(__t.errorDeleting, 'error');
             }
         },
 

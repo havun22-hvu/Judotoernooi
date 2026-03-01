@@ -566,6 +566,7 @@ const __omWijzigingenTeZien = @json(__('om wijzigingen te zien'));
 const isLocked = {{ $isLocked ? 'true' : 'false' }};
 const wegingTolerantie = {{ $toernooi->weging_tolerantie ?? 0.5 }};
 const __teZwaarVoor = @json(__('Te zwaar voor :klasse'));
+const __confirmUitschrijven = @json(__(':naam afmelden en uit poule verwijderen?'));
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi->routeParams()) }}';
@@ -706,7 +707,7 @@ async function verwijderPoule(pouleId, pouleNummer) {
 }
 
 async function uitschrijvenJudoka(judokaId, naam, pouleId) {
-    if (!confirm(`${naam} afmelden en uit poule verwijderen?`)) return;
+    if (!confirm(__confirmUitschrijven.replace(':naam', naam))) return;
 
     try {
         const response = await fetch(uitschrijvenUrl.replace('__JUDOKA_ID__', judokaId), {
@@ -1508,11 +1509,11 @@ async function verplaatsNaarPoule(judokaId, naarPouleId) {
             // Herlaad pagina om alle wijzigingen te tonen
             setTimeout(() => location.reload(), 500);
         } else {
-            showToast(data.message || 'Fout bij verplaatsen', true);
+            showToast(data.message || __foutBijVerplaatsen, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Fout bij verplaatsen', true);
+        showToast(__foutBijVerplaatsen, true);
     }
 }
 

@@ -234,6 +234,10 @@ const csrfToken = '{{ csrf_token() }}';
 const genereerUrl = '{{ route('toernooi.poule.eliminatie.genereer', $toernooi->routeParamsWith(['poule' => $poule])) }}';
 const uitslagUrl = '{{ route('toernooi.poule.eliminatie.uitslag', $toernooi->routeParamsWith(['poule' => $poule])) }}';
 
+// i18n constants
+const __foutBijGenererenBracket = @json(__('Fout bij genereren bracket'));
+const __foutBijOpslaanUitslag = @json(__('Fout bij opslaan uitslag'));
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toast-message');
@@ -262,7 +266,7 @@ async function genereerBracket() {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        showToast('Fout bij genereren bracket', 'error');
+        showToast(__foutBijGenererenBracket, 'error');
         console.error(error);
     }
 }
@@ -311,7 +315,7 @@ async function selectWinnaar(wedstrijdId, judokaId) {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        showToast('Fout bij opslaan uitslag', 'error');
+        showToast(__foutBijOpslaanUitslag, 'error');
         console.error(error);
     }
 }
