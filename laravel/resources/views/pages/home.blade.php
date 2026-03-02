@@ -239,7 +239,7 @@
                     <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-5">
                         <span class="text-2xl">&#128203;</span>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Live Wedstrijdschema\'s') }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __("Live Wedstrijdschema's") }}</h3>
                     <p class="text-gray-600 leading-relaxed">
                         {{ __('Overzichtelijke mat-interface met kleurcodes. Juryleden zien direct wie er aan de beurt is. Ouders kunnen live meekijken.') }}
                     </p>
@@ -263,7 +263,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Club & Judoka Database') }}</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        {{ __('Uw clubs en judoka\'s worden bewaard tussen toernooien. Geen dubbel werk: importeer vanuit uw bestaande administratie of hergebruik eerdere inschrijvingen.') }}
+                        {{ __("Uw clubs en judoka's worden bewaard tussen toernooien. Geen dubbel werk: importeer vanuit uw bestaande administratie of hergebruik eerdere inschrijvingen.") }}
                     </p>
                 </div>
 
@@ -305,14 +305,14 @@
                     <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Importeer deelnemers') }}</h3>
                     <p class="text-gray-600">
-                        {{ __('Upload een Excel-bestand of laat coaches zelf inschrijven via het Coach Portaal. Judoka\'s worden automatisch ingedeeld.') }}
+                        {{ __("Upload een Excel-bestand of laat coaches zelf inschrijven via het Coach Portaal. Judoka's worden automatisch ingedeeld.") }}
                     </p>
                 </div>
                 <div class="text-center">
                     <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Start de wedstrijddag') }}</h3>
                     <p class="text-gray-600">
-                        {{ __('Weeg de judoka\'s, activeer de matten en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.') }}
+                        {{ __("Weeg de judoka's, activeer de matten en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.") }}
                     </p>
                 </div>
             </div>
@@ -327,7 +327,7 @@
                     {{ __('Gebouwd voor de wedstrijddag') }}
                 </h2>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    {{ __('Ontworpen door judoka\'s, voor judoka\'s. Elke functie is getest op echte toernooien.') }}
+                    {{ __("Ontworpen door judoka's, voor judoka's. Elke functie is getest op echte toernooien.") }}
                 </p>
             </div>
 
@@ -420,7 +420,7 @@
                 <span class="text-3xl mb-4 block">&#129358;</span>
                 <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Bent u coach?') }}</h3>
                 <p class="text-gray-600">
-                    {{ __('Heeft u een link ontvangen van een toernooi-organisator? Gebruik die link om uw judoka\'s in te schrijven via het Coach Portaal. Geen account nodig.') }}
+                    {{ __("Heeft u een link ontvangen van een toernooi-organisator? Gebruik die link om uw judoka's in te schrijven via het Coach Portaal. Geen account nodig.") }}
                 </p>
             </div>
         </div>
