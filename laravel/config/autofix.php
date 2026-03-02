@@ -41,6 +41,7 @@ return [
         '#/tmp/#',
         '#vendor/psy/#',
         '#vendor/laravel/tinker/#',
+        '#vendor/react/socket/#',
     ],
 
     // Files that should never be modified by AutoFix
