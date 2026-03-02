@@ -931,6 +931,16 @@
 - **Wat:** 25+ bestanden verwijderd uit git tracking: test data (xlsx/csv/pdf), server uploads (coach-fotos, pagina-afbeeldingen), autofix backups, public/storage symlink, testdata CSVs. `.gitignore` bijgewerkt met 6 nieuwe regels.
 - **Bestanden:** `.gitignore`, diverse verwijderde bestanden
 
+---
+
+## Sessie: 2 maart 2026
+
+### Fix: AutoFix false positives voor Reverb EADDRINUSE
+- **Type:** Config fix
+- **Wat:** `vendor/react/socket/` toegevoegd aan `excluded_file_patterns` in autofix.php
+- **Bestanden:** config/autofix.php
+- **Reden:** Reverb draait al via Supervisor (poort 8081 staging, 8080 production). Iets triggerde een tweede start poging → EADDRINUSE error → AutoFix pikte het op als bug maar kon niks fixen. Nu genegeerd.
+
 <!--
 TEMPLATE:
 
