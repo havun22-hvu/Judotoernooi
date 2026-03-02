@@ -93,8 +93,18 @@ class AutoFixController extends Controller
         $targetFile = trim($fileMatch[1]);
         $fullPath = base_path($targetFile);
 
+        // Only allow changes to project files (not vendor, node_modules, etc.)
+        if (!$this->isProjectFile($fullPath)) {
+            throw new \RuntimeException("Target file is not a project file: {$targetFile}");
+        }
+
         if (!file_exists($fullPath)) {
             throw new \RuntimeException("Target file not found: {$targetFile}");
+        }
+
+        // Check if file is protected
+        if (in_array($targetFile, config('autofix.protected_files', []))) {
+            throw new \RuntimeException("Target file is protected: {$targetFile}");
         }
 
         // Parse OLD and NEW code blocks
@@ -118,16 +128,20 @@ class AutoFixController extends Controller
         // Apply the replacement
         $newContent = str_replace($oldCode, $newCode, $fileContent);
 
-        // Backup original file
-        $backupPath = $fullPath . '.autofix-backup.' . date('YmdHis');
-        copy($fullPath, $backupPath);
+        // Backup original file to storage/ (www-data has write access there)
+        $backupDir = storage_path('app/autofix-backups');
+        if (!is_dir($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+        $backupName = str_replace(['/', '\\'], '_', $targetFile) . '.' . date('YmdHis');
+        copy($fullPath, $backupDir . '/' . $backupName);
 
         // Write the fix
         file_put_contents($fullPath, $newContent);
 
         // Clear Laravel caches
-        if (function_exists('opcache_reset')) {
-            opcache_reset();
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($fullPath, true);
         }
 
         try {
@@ -135,5 +149,21 @@ class AutoFixController extends Controller
         } catch (\Throwable $e) {
             // Non-critical
         }
+    }
+
+    /**
+     * Check if a file belongs to the project (not vendor/framework).
+     */
+    protected function isProjectFile(string $path): bool
+    {
+        $basePath = base_path();
+        if (!str_starts_with($path, $basePath)) {
+            return false;
+        }
+
+        $relative = str_replace([$basePath . '/', $basePath . '\\'], '', $path);
+        return !str_starts_with($relative, 'vendor/')
+            && !str_starts_with($relative, 'node_modules/')
+            && !str_starts_with($relative, 'storage/');
     }
 }
