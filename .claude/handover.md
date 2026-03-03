@@ -58,6 +58,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **3 mrt 2026** | **AutoFix message pattern filtering:** `excluded_message_patterns` toegevoegd aan `config/autofix.php` + `shouldProcess()`. Filtert EADDRINUSE, ECONNREFUSED, disk full, sock permission errors. Probleem: vendor errors met `artisan` in stack trace passeerden file pattern filter. Deployed production. | MEMORY.md |
 | **2 mrt 2026** | **AutoFix EADDRINUSE fix:** React Socket errors excluded van AutoFix (`config/autofix.php`). Reverb draait al via Supervisor, dubbele start pogingen zijn false positives. Deployed staging + production. | smallwork.md |
 | **23 feb 2026** | **Git credentials + repo cleanup:** SSH deploy key (`deploy_judotoernooi`) aangemaakt voor production+staging servers (was HTTPS zonder credentials). Repo opgeschoond: 25+ junk files verwijderd (test data, uploads, autofix backups). `.gitignore` bijgewerkt. Beide servers clean en in sync. | smallwork.md |
 | **22 feb 2026** | **Wimpel handmatig uitreiken + Security hardening:** Handmatige milestone uitreiking op judoka detail pagina (dropdown + datum, historische registratie zonder punten aanpassing). `getBereikteWimpelMilestones()` toont nu ook handmatig uitgereikt. **Security audit:** CSP `unsafe-eval` verwijderd, `APP_DEBUG=false` + `SESSION_ENCRYPT=true` + `SESSION_SECURE_COOKIE=true` op production+staging, rate limiting op PIN verify (throttle:5,1), `escapeshellarg()` in BackupService. | smallwork.md |
