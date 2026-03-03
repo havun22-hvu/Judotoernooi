@@ -44,6 +44,16 @@ return [
         '#vendor/react/socket/#',
     ],
 
+    // Error message patterns to exclude (server/infra issues, not code bugs)
+    'excluded_message_patterns' => [
+        '#Address already in use#i',
+        '#EADDRINUSE#',
+        '#Connection refused#i',
+        '#ECONNREFUSED#',
+        '#No space left on device#i',
+        '#Permission denied.*\.sock#i',
+    ],
+
     // Files that should never be modified by AutoFix
     'protected_files' => [
         'artisan',

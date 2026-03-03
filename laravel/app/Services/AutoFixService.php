@@ -134,6 +134,15 @@ class AutoFixService
             }
         }
 
+        // Check excluded error message patterns (server/infra issues)
+        $errorMessage = $e->getMessage();
+        foreach (config('autofix.excluded_message_patterns', []) as $pattern) {
+            if (preg_match($pattern, $errorMessage)) {
+                Log::info('AutoFix: Skipping excluded message pattern', ['message' => Str::limit($errorMessage, 100), 'pattern' => $pattern]);
+                return false;
+            }
+        }
+
         // Check excluded file path patterns
         $errorFile = $e->getFile();
         foreach (config('autofix.excluded_file_patterns', []) as $pattern) {
