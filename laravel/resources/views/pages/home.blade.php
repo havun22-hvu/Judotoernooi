@@ -457,7 +457,7 @@
     </section>
 
     <!-- DO NOT REMOVE: Footer with legal links (Voorwaarden, Privacy, Cookies, Contact) and KvK info -->
-    <footer class="bg-gray-900 py-8 sticky bottom-0 z-20">
+    <footer class="bg-gray-900 py-8">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-400 mb-2">
                 <a href="{{ route('legal.terms') }}" class="hover:text-white">{{ __('Voorwaarden') }}</a>
