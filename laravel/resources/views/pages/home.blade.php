@@ -150,7 +150,7 @@
                     {{ __('Uw judotoernooi in minuten, niet in weken') }}
                 </h1>
                 <p class="text-lg text-blue-100 mb-12 leading-relaxed max-w-2xl mx-auto">
-                    {{ __('Waar u vroeger dagen bezig was met Excel-lijsten, papieren weegformulieren en handgeschreven poules, regelt JudoToernooi alles digitaal. Van inschrijving tot medaille-uitreiking.') }}
+                    {{ __("Waar u vroeger dagen bezig was met Excel-lijsten, papieren weegformulieren en handgeschreven poules en wedstrijdschema's, regelt JudoToernooi alles digitaal. Van inschrijving tot medaille-uitreiking.") }}
                 </p>
 
                 <!-- DO NOT REMOVE: CTA buttons for registration and login - primary conversion point -->
@@ -241,7 +241,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __("Live Wedstrijdschema's") }}</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        {{ __('Overzichtelijke mat-interface met kleurcodes. Juryleden zien direct wie er aan de beurt is. Ouders kunnen live meekijken.') }}
+                        {{ __("Overzichtelijke mat-interface met kleurcodes. Judoka's en coaches zien direct wie er aan de beurt zijn.") }}
                     </p>
                 </div>
 
@@ -252,7 +252,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Wimpelcompetitie') }}</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        {{ __('Organiseer teamtoernooien en wimpelcompetities. Clubscores worden automatisch berekend. Perfect voor regionale competities.') }}
+                        {{ __('Organiseer puntencompetities. Judokascores worden automatisch bijgehouden. Perfect voor interne oefenwedstrijden.') }}
                     </p>
                 </div>
 
@@ -286,32 +286,46 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    {{ __('In 3 stappen klaar') }}
+                    {{ __('In 5 stappen klaar') }}
                 </h2>
                 <p class="text-lg text-gray-600">
                     {{ __('Geen technische kennis nodig. Als u kunt klikken, kunt u een toernooi organiseren.') }}
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-12">
+            <div class="grid md:grid-cols-5 gap-8">
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Maak een toernooi aan') }}</h3>
-                    <p class="text-gray-600">
+                    <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Maak een toernooi aan') }}</h3>
+                    <p class="text-gray-600 text-sm">
                         {{ __('Kies uw instellingen: gewichtsklassen, wedstrijdsysteem, aantal matten. Gebruik een template of begin vanaf nul.') }}
                     </p>
                 </div>
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Importeer deelnemers') }}</h3>
-                    <p class="text-gray-600">
-                        {{ __("Upload een Excel-bestand of laat coaches zelf inschrijven via het Coach Portaal. Judoka's worden automatisch ingedeeld.") }}
+                    <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Importeer deelnemers') }}</h3>
+                    <p class="text-gray-600 text-sm">
+                        {{ __("Upload een Excel-bestand of laat coaches zelf inschrijven via het Coach Portaal. Judoka's worden automatisch ingedeeld in de juiste gewichtsklasse.") }}
                     </p>
                 </div>
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ __('Start de wedstrijddag') }}</h3>
-                    <p class="text-gray-600">
+                    <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Poule-indeling') }}</h3>
+                    <p class="text-gray-600 text-sm">
+                        {{ __("Automatische verdeling van judoka's over de poules, handmatig aan te passen.") }}
+                    </p>
+                </div>
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">4</div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Blokken & Matten') }}</h3>
+                    <p class="text-gray-600 text-sm">
+                        {{ __("Verdeel de categorieën en poules over de blokken en de matten.") }}
+                    </p>
+                </div>
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">5</div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Start de wedstrijddag') }}</h3>
+                    <p class="text-gray-600 text-sm">
                         {{ __("Weeg de judoka's, activeer de matten en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.") }}
                     </p>
                 </div>
@@ -395,14 +409,14 @@
                     __('Multi-mat ondersteuning'),
                     __('Installeerbaar als app (PWA)'),
                     __('Meertalig (NL/EN)'),
-                    __('Coach Kaarten & QR'),
+                    __('Coach Kaarten & QR Code'),
                     __('Zaaloverzicht'),
                     __('Blokplanning'),
                     __('Excel import/export'),
                     __('Automatische herclassificatie'),
                     __('Spreker-interface'),
                     __('Noodpakket (offline)'),
-                    __('Poules printen'),
+                    __("Poules & wedstrijdschema's printen"),
                     __('Medailles & prijzen'),
                 ] as $feature)
                     <span class="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-medium border border-blue-100">
