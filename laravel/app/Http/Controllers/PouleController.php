@@ -1200,6 +1200,7 @@ class PouleController extends Controller
 
         // Check if this is a variable category
         $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+        $maxKgVerschil = (int) ($categorieConfig['max_kg_verschil'] ?? 0);
 
         // Build new title based on config
         $parts = [];
@@ -1224,10 +1225,12 @@ class PouleController extends Controller
             }
         }
 
-        // 4. Weight range - always show actual range from judokas
-        $gewichtRange = $ranges['gewicht_range'] ?? '';
-        if ($gewichtRange) {
-            $parts[] = $gewichtRange;
+        // 4. Weight range - only for variable weight categories (max_kg_verschil > 0)
+        if ($maxKgVerschil > 0) {
+            $gewichtRange = $ranges['gewicht_range'] ?? '';
+            if ($gewichtRange) {
+                $parts[] = $gewichtRange;
+            }
         }
 
         $nieuweTitel = implode(' ', $parts) ?: $titel;
