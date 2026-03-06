@@ -319,14 +319,14 @@
                     <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">4</div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Blokken & Matten') }}</h3>
                     <p class="text-gray-600 text-sm">
-                        {{ __("Verdeel de categorieën en poules over de blokken en de matten.") }}
+                        {{ __("Verdeel de categorieën en poules over de blokken en de matten, handmatig aan te passen.") }}
                     </p>
                 </div>
                 <div class="text-center">
                     <div class="w-14 h-14 bg-blue-800 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">5</div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('Start de wedstrijddag') }}</h3>
                     <p class="text-gray-600 text-sm">
-                        {{ __("Weeg de judoka's, activeer de matten en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.") }}
+                        {{ __("Weeg de judoka's, overpoulen indien nodig, activeer de wedstrijdschema's en laat het systeem de rest doen. Live uitslagen voor ouders en coaches.") }}
                     </p>
                 </div>
             </div>
