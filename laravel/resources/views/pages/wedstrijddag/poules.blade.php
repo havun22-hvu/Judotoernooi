@@ -1389,20 +1389,21 @@ document.addEventListener('DOMContentLoaded', function() {
             judokaEl.classList.remove('bg-orange-50', 'border-l-4', 'border-orange-400');
         }
 
-        // Update status icon
+        // Update status icon based on problem state
         const iconContainer = judokaEl.querySelector('.flex.items-center.gap-1');
         if (iconContainer) {
-            const existingIcon = iconContainer.querySelector('span:first-child');
-            if (existingIcon) {
-                if (heeftProbleem) {
-                    existingIcon.className = 'text-orange-500 text-xs flex-shrink-0';
-                    existingIcon.textContent = '⚠';
-                    existingIcon.title = __verkeerdeGewichtsklasse;
-                } else {
-                    existingIcon.className = 'text-green-500 text-xs flex-shrink-0';
-                    existingIcon.textContent = '●';
-                    existingIcon.title = '';
+            let icon = iconContainer.querySelector('.flex-shrink-0');
+            if (heeftProbleem) {
+                if (!icon) {
+                    icon = document.createElement('span');
+                    iconContainer.insertBefore(icon, iconContainer.querySelector('.min-w-0'));
                 }
+                icon.className = 'text-orange-500 text-xs flex-shrink-0';
+                icon.textContent = '⚠';
+                icon.title = __verkeerdeGewichtsklasse;
+            } else if (icon && icon.textContent === '⚠') {
+                // Only revert icons we changed (⚠), leave original icons (●, 🚨) alone
+                icon.remove();
             }
         }
 
