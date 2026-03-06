@@ -476,4 +476,4 @@ STRIPE_CLIENT_ID=     # ca_...
 - [Mollie Connect](https://docs.mollie.com/connect/overview)
 - [Stripe Checkout Docs](https://stripe.com/docs/payments/checkout)
 - [Stripe Connect](https://stripe.com/docs/connect)
-- [HavunCore Mollie Pattern](../../HavunCore/docs/kb/patterns/mollie-payments.md)
+- HavunCore Mollie Pattern: `HavunCore/docs/kb/patterns/mollie-payments.md`
