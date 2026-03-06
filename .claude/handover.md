@@ -58,6 +58,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **7 mrt 2026** | **Doc Intelligence cleanup:** 257 issues naar 0. 230 duplicate false positives (casing Judotoernooi vs JudoToernooi), 1 inconsistent false positive, 26 broken links resolved. 2 echte broken links gefixt (ONTWIKKELAAR.md link naar INSTALLATIE.md, BETALINGEN.md cross-project link). Mat-interface.png screenshot updated. | MEMORY.md |
 | **3 mrt 2026** | **AutoFix message pattern filtering:** `excluded_message_patterns` toegevoegd aan `config/autofix.php` + `shouldProcess()`. Filtert EADDRINUSE, ECONNREFUSED, disk full, sock permission errors. Probleem: vendor errors met `artisan` in stack trace passeerden file pattern filter. Deployed production. | MEMORY.md |
 | **2 mrt 2026** | **AutoFix EADDRINUSE fix:** React Socket errors excluded van AutoFix (`config/autofix.php`). Reverb draait al via Supervisor, dubbele start pogingen zijn false positives. Deployed staging + production. | smallwork.md |
 | **23 feb 2026** | **Git credentials + repo cleanup:** SSH deploy key (`deploy_judotoernooi`) aangemaakt voor production+staging servers (was HTTPS zonder credentials). Repo opgeschoond: 25+ junk files verwijderd (test data, uploads, autofix backups). `.gitignore` bijgewerkt. Beide servers clean en in sync. | smallwork.md |
