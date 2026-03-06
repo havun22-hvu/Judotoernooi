@@ -178,10 +178,8 @@ class WedstrijddagController extends Controller
             }
         }
 
-        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-
         // Wrap entire operation in transaction to prevent partial state
-        $result = DB::transaction(function () use ($validated, $judoka, $nieuwePoule, $toernooi, $tolerantie) {
+        $result = DB::transaction(function () use ($validated, $judoka, $nieuwePoule, $toernooi) {
             $oudePouleData = null;
 
             // Remove from old poule(s)
@@ -231,28 +229,25 @@ class WedstrijddagController extends Controller
 
             $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
-            $maxKgVerschil = $toernooi->max_kg_verschil ?? 0;
-
-            $nieuweGewichtsRange = $nieuwePoule->getGewichtsRange();
-            $nieuweRangeVerschil = ($nieuweGewichtsRange['max_kg'] ?? 0) - ($nieuweGewichtsRange['min_kg'] ?? 0);
-            $nieuweIsProblematisch = $maxKgVerschil > 0 && $nieuweRangeVerschil > $maxKgVerschil;
+            // Use per-category isDynamisch() check instead of global toernooi setting
+            $nieuweIsDynamisch = $nieuwePoule->isDynamisch();
+            $nieuweIsProblematisch = $nieuweIsDynamisch ? ($nieuwePoule->isProblematischNaWeging() !== null) : false;
 
             if ($oudePouleData && isset($oudePoule)) {
-                $oudeGewichtsRange = $oudePoule->getGewichtsRange();
-                $oudeRangeVerschil = ($oudeGewichtsRange['max_kg'] ?? 0) - ($oudeGewichtsRange['min_kg'] ?? 0);
-                $oudeIsProblematisch = $maxKgVerschil > 0 && $oudeRangeVerschil > $maxKgVerschil;
-                $oudePouleData['gewichts_range'] = $oudeGewichtsRange;
-                $oudePouleData['is_gewicht_problematisch'] = $oudeIsProblematisch;
-                $oudePouleData['titel'] = $oudePoule->titel;
+                $oudeIsDynamisch = $oudePoule->isDynamisch();
+                $oudePouleData['is_dynamisch'] = $oudeIsDynamisch;
+                $oudePouleData['is_gewicht_problematisch'] = $oudeIsDynamisch ? ($oudePoule->isProblematischNaWeging() !== null) : false;
+                $oudePouleData['titel'] = $oudePoule->getDisplayTitel();
             }
 
-            $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
+            $judokaPastInPoule = $nieuweIsDynamisch
+                ? ($nieuwePoule->isProblematischNaWeging() === null)
+                : true;
 
             return [
                 'oudePouleData' => $oudePouleData,
                 'nieuwePoule' => $nieuwePoule,
                 'actieveJudokasNieuw' => $actieveJudokasNieuw,
-                'nieuweGewichtsRange' => $nieuweGewichtsRange,
                 'nieuweIsProblematisch' => $nieuweIsProblematisch,
                 'judokaPastInPoule' => $judokaPastInPoule,
             ];
@@ -275,7 +270,7 @@ class WedstrijddagController extends Controller
                 'titel' => $result['nieuwePoule']->getDisplayTitel(),
                 'aantal_judokas' => $result['actieveJudokasNieuw'],
                 'aantal_wedstrijden' => $result['nieuwePoule']->berekenAantalWedstrijden($result['actieveJudokasNieuw']),
-                'gewichts_range' => $result['nieuweGewichtsRange'],
+                'is_dynamisch' => $result['nieuwePoule']->isDynamisch(),
                 'is_gewicht_problematisch' => $result['nieuweIsProblematisch'],
             ],
             'judoka_id' => $judoka->id,
