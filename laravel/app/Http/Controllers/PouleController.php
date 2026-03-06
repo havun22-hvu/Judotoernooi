@@ -375,14 +375,16 @@ class PouleController extends Controller
                 }
             }
 
-            // Check and fix match count
-            $huidigWedstrijden = $poule->wedstrijden()->count();
-            if ($huidigWedstrijden !== $verwachtWedstrijden) {
-                // Regenerate matches
-                $poule->wedstrijden()->delete();
-                $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
-                $poule->updateStatistieken();
-                $herberekend++;
+            // Check and fix match count (only for poules already sent to mat)
+            if ($poule->doorgestuurd_op) {
+                $huidigWedstrijden = $poule->wedstrijden()->count();
+                if ($huidigWedstrijden !== $verwachtWedstrijden) {
+                    // Regenerate matches
+                    $poule->wedstrijden()->delete();
+                    $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+                    $poule->updateStatistieken();
+                    $herberekend++;
+                }
             }
 
             $totaalWedstrijden += $verwachtWedstrijden;
