@@ -304,6 +304,7 @@ class PouleController extends Controller
                 // Eliminatie needs at least 8 judokas
                 if ($aantalJudokas > 0 && $aantalJudokas < 8) {
                     $problemen[] = [
+                        'poule_id' => $poule->id,
                         'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_weinig',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 8 voor eliminatie)",
@@ -313,12 +314,14 @@ class PouleController extends Controller
                 // Regular poules: 3-6 judokas
                 if ($aantalJudokas > 0 && $aantalJudokas < 3) {
                     $problemen[] = [
+                        'poule_id' => $poule->id,
                         'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_weinig',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 3)",
                     ];
                 } elseif ($aantalJudokas > 6) {
                     $problemen[] = [
+                        'poule_id' => $poule->id,
                         'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_veel',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (max. 6)",
@@ -339,6 +342,7 @@ class PouleController extends Controller
                     if (!$isDynamisch && $judoka->gewicht) {
                         if (!$judoka->isGewichtBinnenKlasse($judoka->gewicht, $tolerantie, $poule->gewichtsklasse)) {
                             $problemen[] = [
+                                'poule_id' => $poule->id,
                                 'poule' => $poule->getDisplayTitel(),
                                 'type' => 'gewicht',
                                 'message' => "{$judoka->naam} ({$judoka->gewicht}kg) past niet in {$pouleTitel} ({$poule->gewichtsklasse}kg)",
@@ -349,6 +353,7 @@ class PouleController extends Controller
                     // Category check: judoka's categorie_key must match poule's
                     if ($pouleCategorieKey && $judoka->categorie_key && $judoka->categorie_key !== $pouleCategorieKey) {
                         $problemen[] = [
+                            'poule_id' => $poule->id,
                             'poule' => $poule->getDisplayTitel(),
                             'type' => 'categorie',
                             'message' => "{$judoka->naam} ({$judoka->leeftijdsklasse}) zit in verkeerde categorie {$pouleTitel}",
@@ -361,6 +366,7 @@ class PouleController extends Controller
                     $probleem = $poule->isProblematischNaWeging();
                     if ($probleem) {
                         $problemen[] = [
+                            'poule_id' => $poule->id,
                             'poule' => $poule->getDisplayTitel(),
                             'type' => 'gewicht_range',
                             'message' => "#{$poule->nummer} " . $poule->getDisplayTitel() . ": gewichtsverschil {$probleem['range']}kg (max {$probleem['max_toegestaan']}kg)",

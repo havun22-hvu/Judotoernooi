@@ -956,7 +956,7 @@ async function verifieerPoules() {
                 html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
                     <h3 class="font-bold text-yellow-800 mb-2">⚠️ ${__verificatieProblemenGevonden.replace(':aantal', data.problemen.length)}</h3>
                     <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
-                        ${data.problemen.map(p => `<li>${p.message}</li>`).join('')}
+                        ${data.problemen.map(p => `<li><a href="#poule-${p.poule_id}" class="underline hover:no-underline" onclick="document.getElementById('poule-${p.poule_id}')?.classList.add('ring-2','ring-yellow-400');setTimeout(()=>document.getElementById('poule-${p.poule_id}')?.classList.remove('ring-2','ring-yellow-400'),3000)">${p.message}</a></li>`).join('')}
                     </ul>
                     ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button onclick="location.reload()" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
                 </div>`;
