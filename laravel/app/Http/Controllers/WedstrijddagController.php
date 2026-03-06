@@ -240,9 +240,11 @@ class WedstrijddagController extends Controller
                 $oudePouleData['titel'] = $oudePoule->getDisplayTitel();
             }
 
+            // Check if judoka fits: dynamic = check pool range, fixed = check weight class limits
+            $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
             $judokaPastInPoule = $nieuweIsDynamisch
                 ? ($nieuwePoule->isProblematischNaWeging() === null)
-                : true;
+                : $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
 
             return [
                 'oudePouleData' => $oudePouleData,
