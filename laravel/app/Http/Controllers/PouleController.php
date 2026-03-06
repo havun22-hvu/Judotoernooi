@@ -706,9 +706,18 @@ class PouleController extends Controller
             'properties' => ['van_poule_id' => $vanPoule->id, 'naar_poule_id' => $naarPoule->id, 'van_nummer' => $vanPoule->nummer, 'naar_nummer' => $naarPoule->nummer],
         ]);
 
+        // Check if judoka fits in new poule (only relevant for dynamic categories)
+        $judokaPastInPoule = true;
+        if ($naarPoule->isDynamisch()) {
+            $probleem = $naarPoule->isProblematischNaWeging();
+            $judokaPastInPoule = $probleem === null;
+        }
+
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} verplaatst naar {$naarTitel}",
+            'judoka_id' => $judoka->id,
+            'judoka_past_in_poule' => $judokaPastInPoule,
             'van_poule' => [
                 'id' => $vanPoule->id,
                 'nummer' => $vanPoule->nummer,
@@ -717,7 +726,8 @@ class PouleController extends Controller
                 'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
                 'titel' => $vanPoule->getDisplayTitel(),
                 'gewichtsklasse' => $vanPoule->gewichtsklasse,
-                'is_gewicht_problematisch' => $vanPoule->isProblematischNaWeging() !== null,
+                'is_dynamisch' => $vanPoule->isDynamisch(),
+                'is_gewicht_problematisch' => $vanPoule->isDynamisch() ? ($vanPoule->isProblematischNaWeging() !== null) : false,
                 ...$vanRanges,
             ],
             'naar_poule' => [
@@ -728,7 +738,8 @@ class PouleController extends Controller
                 'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
                 'titel' => $naarPoule->getDisplayTitel(),
                 'gewichtsklasse' => $naarPoule->gewichtsklasse,
-                'is_gewicht_problematisch' => $naarPoule->isProblematischNaWeging() !== null,
+                'is_dynamisch' => $naarPoule->isDynamisch(),
+                'is_gewicht_problematisch' => $naarPoule->isDynamisch() ? ($naarPoule->isProblematischNaWeging() !== null) : false,
                 ...$naarRanges,
             ],
         ]);
