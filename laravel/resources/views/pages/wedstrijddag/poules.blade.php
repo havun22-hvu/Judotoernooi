@@ -1269,9 +1269,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const statsDiv = pouleCard.querySelector('.poule-stats');
 
         if (!isEliminatie) {
-            pouleCard.classList.remove('border-2', 'border-red-300', 'opacity-50');
-            if (header) header.classList.remove('bg-blue-700', 'bg-red-600', 'bg-gray-500');
-            if (statsDiv) statsDiv.classList.remove('text-blue-200', 'text-red-200', 'text-gray-300');
+            pouleCard.classList.remove('border-2', 'border-red-300', 'border-orange-400', 'opacity-50');
+            if (header) header.classList.remove('bg-blue-700', 'bg-red-600', 'bg-orange-600', 'bg-gray-500');
+            if (statsDiv) statsDiv.classList.remove('text-blue-200', 'text-red-200', 'text-orange-200', 'text-gray-300');
 
             if (isLeeg) {
                 pouleCard.classList.add('opacity-50');
