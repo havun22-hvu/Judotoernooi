@@ -1457,22 +1457,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update poule titel met nieuwe gewichtsrange (variabele categorieën)
+    // Update poule titel vanuit server response (getDisplayTitel())
     function updatePouleTitel(pouleCard, pouleData) {
         const titelEl = pouleCard.querySelector('.poule-header .font-bold');
         if (!titelEl) return;
 
-        // Haal leeftijdsdeel uit titel (verwijder oude kg range)
-        const titel = pouleData.titel || '';
-        const titelZonderKg = titel.replace(/\s*\([\d.]+-[\d.]+kg\)\s*$/, '').replace(/\s*[\d.]+-[\d.]+kg\s*$/, '');
-
-        // Bouw nieuwe titel - met kg range als aanwezig, zonder als geen judoka's meer
-        let nieuweTitel = `#${pouleCard.dataset.pouleNummer} ${titelZonderKg}`;
-        if (pouleData.gewichts_range && pouleData.gewichts_range.min_kg !== null && pouleData.gewichts_range.max_kg !== null) {
-            nieuweTitel += ` (${parseFloat(pouleData.gewichts_range.min_kg).toFixed(1)}-${parseFloat(pouleData.gewichts_range.max_kg).toFixed(1)}kg)`;
-        }
-
-        titelEl.textContent = nieuweTitel;
+        // Server stuurt correcte titel via getDisplayTitel():
+        // - Variabele categorie: "Label / 25.5-30.2kg" (range uit judoka's)
+        // - Vaste categorie: "Label / -30kg" (gewichtsklasse naam)
+        titelEl.textContent = `#${pouleCard.dataset.pouleNummer} ${pouleData.titel || ''}`;
     }
 
     // Update gewichtsrange box (oranje warning bovenaan)
