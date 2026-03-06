@@ -418,14 +418,19 @@ class PubliekController extends Controller
                 $gereedmakenWedstrijd = null;
 
                 // Groen/Geel/Blauw komen van MAT niveau (niet poule)
+                // Wedstrijden kunnen van andere poules op dezelfde mat zijn,
+                // dus zoek eerst in eigen poule, dan in DB als niet gevonden
                 if ($mat && $mat->actieve_wedstrijd_id) {
-                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && $w->isNogTeSpelen());
+                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id)
+                        ?? \App\Models\Wedstrijd::find($mat->actieve_wedstrijd_id);
                 }
                 if ($mat && $mat->volgende_wedstrijd_id) {
-                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && $w->isNogTeSpelen());
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id)
+                        ?? \App\Models\Wedstrijd::find($mat->volgende_wedstrijd_id);
                 }
                 if ($mat && $mat->gereedmaken_wedstrijd_id) {
-                    $gereedmakenWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && $w->isNogTeSpelen());
+                    $gereedmakenWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id)
+                        ?? \App\Models\Wedstrijd::find($mat->gereedmaken_wedstrijd_id);
                 }
 
                 // IDs of judokas in current/next/preparing match
