@@ -694,54 +694,29 @@ class PouleController extends Controller
         $vanPoule->refresh();
         $naarPoule->refresh();
 
-        // Calculate ranges and update titels
+        // Update dynamic titles in DB (ranges for variable categories)
         $huidigJaar = now()->year;
-        $vanRanges = $this->berekenPouleRanges($vanPoule, $huidigJaar);
-        $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
-        $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
-        $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
+        $this->updateDynamischeTitel($vanPoule, $this->berekenPouleRanges($vanPoule, $huidigJaar));
+        $this->updateDynamischeTitel($naarPoule, $this->berekenPouleRanges($naarPoule, $huidigJaar));
 
         ActivityLogger::log($toernooi, 'verplaats_judoka', "{$judoka->naam} verplaatst van poule #{$vanPoule->nummer} naar poule #{$naarPoule->nummer}", [
             'model' => $judoka,
             'properties' => ['van_poule_id' => $vanPoule->id, 'naar_poule_id' => $naarPoule->id, 'van_nummer' => $vanPoule->nummer, 'naar_nummer' => $naarPoule->nummer],
         ]);
 
-        // Check if judoka fits in new poule (only relevant for dynamic categories)
-        $judokaPastInPoule = true;
-        if ($naarPoule->isDynamisch()) {
-            $probleem = $naarPoule->isProblematischNaWeging();
-            $judokaPastInPoule = $probleem === null;
-        }
+        // Check if judoka fits in new poule
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+        $judokaPastInPoule = $naarPoule->isDynamisch()
+            ? ($naarPoule->isProblematischNaWeging() === null)
+            : $judoka->isGewichtBinnenKlasse(null, $tolerantie, $naarPoule->gewichtsklasse);
 
         return response()->json([
             'success' => true,
-            'message' => "{$judoka->naam} verplaatst naar {$naarTitel}",
+            'message' => "{$judoka->naam} verplaatst naar {$naarPoule->getDisplayTitel()}",
             'judoka_id' => $judoka->id,
             'judoka_past_in_poule' => $judokaPastInPoule,
-            'van_poule' => [
-                'id' => $vanPoule->id,
-                'nummer' => $vanPoule->nummer,
-                'judokas_count' => $vanPoule->aantal_judokas,
-                'aantal_judokas' => $vanPoule->aantal_judokas,
-                'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
-                'titel' => $vanPoule->getDisplayTitel(),
-                'gewichtsklasse' => $vanPoule->gewichtsklasse,
-                'is_dynamisch' => $vanPoule->isDynamisch(),
-                'is_gewicht_problematisch' => $vanPoule->isDynamisch() ? ($vanPoule->isProblematischNaWeging() !== null) : false,
-                ...$vanRanges,
-            ],
-            'naar_poule' => [
-                'id' => $naarPoule->id,
-                'nummer' => $naarPoule->nummer,
-                'judokas_count' => $naarPoule->aantal_judokas,
-                'aantal_judokas' => $naarPoule->aantal_judokas,
-                'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
-                'titel' => $naarPoule->getDisplayTitel(),
-                'gewichtsklasse' => $naarPoule->gewichtsklasse,
-                'is_dynamisch' => $naarPoule->isDynamisch(),
-                'is_gewicht_problematisch' => $naarPoule->isDynamisch() ? ($naarPoule->isProblematischNaWeging() !== null) : false,
-                ...$naarRanges,
-            ],
+            'van_poule' => $this->buildPouleResponse($vanPoule),
+            'naar_poule' => $this->buildPouleResponse($naarPoule),
         ]);
     }
 
@@ -1132,6 +1107,26 @@ class PouleController extends Controller
             'rondes' => array_keys($perRonde),
             'koppelingen' => $perRonde,
         ]);
+    }
+
+    /**
+     * Build standard poule response data for drag-and-drop endpoints
+     */
+    private function buildPouleResponse(Poule $poule): array
+    {
+        $isDynamisch = $poule->isDynamisch();
+
+        return [
+            'id' => $poule->id,
+            'nummer' => $poule->nummer,
+            'judokas_count' => $poule->aantal_judokas,
+            'aantal_judokas' => $poule->aantal_judokas,
+            'aantal_wedstrijden' => $poule->aantal_wedstrijden,
+            'titel' => $poule->getDisplayTitel(),
+            'gewichtsklasse' => $poule->gewichtsklasse,
+            'is_dynamisch' => $isDynamisch,
+            'is_gewicht_problematisch' => $isDynamisch ? ($poule->isProblematischNaWeging() !== null) : false,
+        ];
     }
 
     /**
