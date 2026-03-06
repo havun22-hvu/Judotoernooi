@@ -342,7 +342,7 @@ php artisan tinker
 
 ## Deployment
 
-Zie [INSTALLATIE.md](./INSTALLATIE.md) voor volledige instructies.
+Zie [INSTALLATIE.md](../1-GETTING-STARTED/INSTALLATIE.md) voor volledige instructies.
 
 Checklist:
 1. `composer install --no-dev`
