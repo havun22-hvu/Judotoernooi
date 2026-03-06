@@ -285,10 +285,11 @@ class PouleController extends Controller
      */
     public function verifieer(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
-        $poules = $toernooi->poules()->withCount('judokas')->get();
+        $poules = $toernooi->poules()->with('judokas')->withCount('judokas')->get();
         $problemen = [];
         $totaalWedstrijden = 0;
         $herberekend = 0;
+        $tolerantie = $toernooi->weging_tolerantie ?? 0.5;
 
         foreach ($poules as $poule) {
             $aantalJudokas = $poule->judokas_count;
@@ -325,6 +326,48 @@ class PouleController extends Controller
                 }
             }
             // Kruisfinale: no size restrictions
+
+            // Check judoka weight and category fit
+            if ($aantalJudokas > 0) {
+                $isDynamisch = $poule->isDynamisch();
+                $pouleCategorieKey = $poule->categorie_key;
+
+                foreach ($poule->judokas as $judoka) {
+                    $pouleTitel = "#{$poule->nummer} " . $poule->getDisplayTitel();
+
+                    // Weight check: fixed classes only (variable uses range check via isProblematischNaWeging)
+                    if (!$isDynamisch && $judoka->gewicht) {
+                        if (!$judoka->isGewichtBinnenKlasse($judoka->gewicht, $tolerantie, $poule->gewichtsklasse)) {
+                            $problemen[] = [
+                                'poule' => $poule->getDisplayTitel(),
+                                'type' => 'gewicht',
+                                'message' => "{$judoka->naam} ({$judoka->gewicht}kg) past niet in {$pouleTitel} ({$poule->gewichtsklasse}kg)",
+                            ];
+                        }
+                    }
+
+                    // Category check: judoka's categorie_key must match poule's
+                    if ($pouleCategorieKey && $judoka->categorie_key && $judoka->categorie_key !== $pouleCategorieKey) {
+                        $problemen[] = [
+                            'poule' => $poule->getDisplayTitel(),
+                            'type' => 'categorie',
+                            'message' => "{$judoka->naam} ({$judoka->leeftijdsklasse}) zit in verkeerde categorie {$pouleTitel}",
+                        ];
+                    }
+                }
+
+                // Dynamic weight range check
+                if ($isDynamisch) {
+                    $probleem = $poule->isProblematischNaWeging();
+                    if ($probleem) {
+                        $problemen[] = [
+                            'poule' => $poule->getDisplayTitel(),
+                            'type' => 'gewicht_range',
+                            'message' => "#{$poule->nummer} " . $poule->getDisplayTitel() . ": gewichtsverschil {$probleem['range']}kg (max {$probleem['max_toegestaan']}kg)",
+                        ];
+                    }
+                }
+            }
 
             // Check and fix match count
             $huidigWedstrijden = $poule->wedstrijden()->count();
