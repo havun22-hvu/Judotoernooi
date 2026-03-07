@@ -271,6 +271,9 @@ Route::middleware('auth:organisator')->group(function () {
     Route::post('admin/impersonate/stop', [AdminController::class, 'impersonateStop'])->name('admin.impersonate.stop');
     Route::post('admin/impersonate/{klant}', [AdminController::class, 'impersonate'])->name('admin.impersonate');
 
+    // Facturen overzicht (sitebeheerder only)
+    Route::get('admin/facturen', [AdminController::class, 'facturen'])->name('admin.facturen');
+
     // AutoFix overzicht (sitebeheerder only)
     Route::get('admin/autofix', [AdminController::class, 'autofix'])->name('admin.autofix');
 });

@@ -488,6 +488,12 @@
         </div>
     </div>
 
+    <div class="flex justify-end">
+        <a href="{{ route('admin.facturen') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+            {{ __('Factuuroverzicht openen') }} &rarr;
+        </a>
+    </div>
+
 </div>
 
 {{-- ============================================================ --}}
