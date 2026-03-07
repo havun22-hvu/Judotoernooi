@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AutofixProposal;
 use App\Models\Organisator;
+use App\Models\ToernooiBetaling;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -105,6 +106,26 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.klanten')
             ->with('success', 'Klantgegevens bijgewerkt');
+    }
+
+    /**
+     * All invoices/payments overview
+     */
+    public function facturen(): View
+    {
+        $this->checkSitebeheerder();
+
+        $betalingen = ToernooiBetaling::with(['organisator', 'toernooi'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $stats = [
+            'totaal_betaald' => $betalingen->where('status', 'paid')->sum('bedrag'),
+            'aantal_betaald' => $betalingen->where('status', 'paid')->count(),
+            'aantal_open' => $betalingen->where('status', 'open')->count(),
+        ];
+
+        return view('pages.admin.facturen', compact('betalingen', 'stats'));
     }
 
     /**
