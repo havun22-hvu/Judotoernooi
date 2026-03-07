@@ -14,6 +14,55 @@
 
 ---
 
+## Sessie: 6 maart 2026
+
+### Fix: Root cause drag bugs wedstrijddag - vaste vs variabele gewichtsklassen
+- **Type:** Bug fix (root cause)
+- **Wat:** Gewichtsrange verscheen in poule titels en oranje header bij vaste gewichtsklassen na slepen
+- **Root cause:** `WedstrijddagController::verplaatsJudoka()` gebruikte globale `$toernooi->max_kg_verschil` i.p.v. per-category `Poule::isDynamisch()`. Stuurde ook raw DB `titel` i.p.v. `getDisplayTitel()`
+- **Fix:** `isDynamisch()` + `isProblematischNaWeging()` per poule, `getDisplayTitel()` voor titels
+- **Bestanden:** WedstrijddagController.php, poules.blade.php (wedstrijddag JS)
+
+### Fix: Waarschuwingsdriehoek ontbrak bij vaste gewichtsklassen
+- **Type:** Bug fix
+- **Wat:** `judoka_past_in_poule` was altijd `true` voor vaste gewichtsklassen, te zware judoka kreeg geen waarschuwing
+- **Fix:** `isGewichtBinnenKlasse()` check toegevoegd voor vaste klassen
+- **Bestanden:** WedstrijddagController.php, PouleController.php
+
+### Fix: Groene stip verscheen na drag
+- **Type:** Bug fix
+- **Wat:** `updateJudokaStyling()` overschreef originele iconen (gewogen-stip, afwezig-marker) met waarschuwingsicoon
+- **Fix:** Alleen eigen iconen toevoegen/verwijderen, originele iconen ongemoeid laten
+- **Bestanden:** poules.blade.php (wedstrijddag JS)
+
+### Refactor: PouleController buildPouleResponse helper
+- **Type:** Refactoring
+- **Wat:** Herhalende poule response code in `verplaatsJudokaApi` vereenvoudigd naar `buildPouleResponse()` helper
+- **Bestanden:** PouleController.php
+
+### Fix: Homepage footer grote lege ruimte
+- **Type:** UI fix
+- **Wat:** `sticky bottom-0 z-20` verwijderd van footer
+- **Bestanden:** home.blade.php
+
+### Fix: Verwarrende 'KLAAR' badge in publieke PWA
+- **Type:** UI fix
+- **Wat:** "NU" en "KLAAR" tekst badges verwijderd van judoka rijen (achtergrondkleuren + banners zijn voldoende)
+- **Bestanden:** publiek/index.blade.php
+
+### Feat: Blauwe 'Op dek' status in publieke PWA
+- **Type:** Feature
+- **Wat:** Blauw gereedmaken status toegevoegd: banner, achtergrondkleur, tab indicator, sortering (groen > geel > blauw > rest)
+- **Bestanden:** publiek/index.blade.php, en.json
+
+### Fix: Cross-poule gereedmaken match niet zichtbaar in favorieten
+- **Type:** Bug fix
+- **Wat:** `gereedmaken_wedstrijd_id` op mat kan wedstrijd van andere poule refereren, code zocht alleen in huidige poule
+- **Fix:** DB fallback: `?? Wedstrijd::find(...)` als wedstrijd niet in huidige poule zit
+- **Bestanden:** PubliekController.php
+
+---
+
 ## Sessie: 4 februari 2026
 
 ### Refactor: Band enum als enige bron van waarheid
