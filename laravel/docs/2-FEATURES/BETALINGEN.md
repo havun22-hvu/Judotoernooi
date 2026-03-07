@@ -378,6 +378,46 @@ MOLLIE_PLATFORM_FEE=0.50
 
 ### TODO
 - [ ] Testen met echt Mollie account (Connect mode)
+- [ ] Stripe Connect (stroom 2: coach → organisator) `STRIPE_CLIENT_ID` nodig
+
+---
+
+## Admin Factuuroverzicht
+
+### Route
+`GET /admin/facturen` → `AdminController@facturen` (sitebeheerder only)
+
+### Wat toont het?
+Alle `toernooi_betalingen` in één tabel:
+
+| Kolom | Bron |
+|-------|------|
+| Factuurnummer | `factuurnummer` (format: `JT-YYYYMMDD-{slug}-NNN`) |
+| Datum | `created_at` |
+| Klant | `organisator.naam` (link naar klant-edit) |
+| Toernooi | `toernooi.naam` (link naar toernooi) |
+| Tier | `tier` + `max_judokas` |
+| Provider | `payment_provider` (Mollie/Stripe badge) |
+| Bedrag | `bedrag` |
+| Status | `status` (paid/open/expired/failed) |
+| Betaald op | `betaald_op` |
+
+### Stats (bovenaan)
+- Totaal ontvangen (som betaalde facturen)
+- Aantal betaalde facturen
+- Aantal open betalingen
+
+### Toegang
+- Via admin dashboard → Betalingen tab → "Factuuroverzicht openen"
+- Direct: `/{org}/admin/facturen`
+
+### Factuurnummer formaat
+Zie `HavunCore/docs/kb/patterns/invoice-numbering.md`
+
+```
+JT-YYYYMMDD-{toernooi-slug}-NNN
+Voorbeeld: JT-20260308-noordzee-cup-001
+```
 
 ---
 
@@ -393,10 +433,12 @@ php artisan serve --port=8007
 ### Staging (Test Mode)
 ```env
 MOLLIE_PLATFORM_TEST_KEY=test_xxx
+STRIPE_KEY=pk_test_xxx
+STRIPE_SECRET=sk_test_xxx
 ```
-- Gebruik Mollie test keys
-- Echte API, geen echt geld
-- Test iDEAL: kies "Betaald" in testomgeving
+- Mollie: test keys, echte API, geen echt geld
+- Stripe: sandbox mode, testkaartnummer `4242 4242 4242 4242`
+- Stripe upgrade betaling getest op 8 maart 2026: werkend
 
 ### Production
 ```env
