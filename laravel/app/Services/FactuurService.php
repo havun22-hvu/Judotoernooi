@@ -41,14 +41,14 @@ class FactuurService
      */
     public function genereerFactuur(ToernooiBetaling $betaling): string
     {
-        if (! $betaling->factuurnummer) {
-            $betaling->update([
-                'factuurnummer' => $this->volgendFactuurnummer($betaling->betaald_op ?? now()),
-            ]);
-        }
-
         $organisator = $betaling->organisator;
         $toernooi = $betaling->toernooi;
+
+        if (! $betaling->factuurnummer) {
+            $betaling->update([
+                'factuurnummer' => $this->volgendFactuurnummer($betaling->betaald_op ?? now(), $toernooi?->slug),
+            ]);
+        }
 
         $tierInfo = FreemiumService::STAFFELS[$betaling->tier] ?? null;
         $omschrijving = $tierInfo
@@ -75,12 +75,18 @@ class FactuurService
     }
 
     /**
-     * Generate next sequential invoice number for a given date.
-     * Format: JT-YYYYMMDD-NNN
+     * Generate invoice number with toernooi slug + sequence.
+     * Format: JT-YYYYMMDD-{toernooi-slug}-NNN
      */
-    private function volgendFactuurnummer(Carbon $datum): string
+    private function volgendFactuurnummer(Carbon $datum, ?string $toernooiSlug = null): string
     {
-        $prefix = 'JT-' . $datum->format('Ymd') . '-';
+        $dateStr = $datum->format('Ymd');
+
+        if ($toernooiSlug) {
+            $prefix = "JT-{$dateStr}-{$toernooiSlug}-";
+        } else {
+            $prefix = "JT-{$dateStr}-";
+        }
 
         $laatsteNummer = ToernooiBetaling::where('factuurnummer', 'like', $prefix . '%')
             ->orderByDesc('factuurnummer')
