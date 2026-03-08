@@ -378,7 +378,9 @@ MOLLIE_PLATFORM_FEE=0.50
 
 ### TODO
 - [ ] Testen met echt Mollie account (Connect mode)
-- [ ] Stripe Connect testen (stroom 2: coach → organisator via Account Links)
+- [x] Stripe Connect code (coach → organisator) via Account Links
+- [ ] Stripe Connect testen op staging (organisator onboarding flow)
+- [ ] `account.updated` webhook voor automatische onboarding status updates
 
 ---
 
@@ -463,11 +465,31 @@ Zelfde redirect-flow als Mollie:
 
 ### Stripe Connect (voor coach betalingen — inschrijfgeld)
 
-- Account Links onboarding (geen legacy OAuth/`ca_...` nodig)
-- `stripe_account_id` opslaan na onboarding
-- Coach betalingen: `transfer_data.destination` = organisator's Stripe account
-- **Geen application fee** — JudoToernooi verdient niets aan inschrijfgeld
-- Organisator ontvangt het volledige bedrag (minus Stripe transactiekosten)
+Gebruikt **Account Links** (Stripe-hosted onboarding), NIET de legacy OAuth flow.
+Geen `STRIPE_CLIENT_ID` (`ca_...`) nodig — alleen de platform secret key.
+
+**Onboarding flow:**
+```
+1. Organisator klikt "Koppel Stripe" in toernooi instellingen
+2. Backend: POST /v1/accounts → maakt Express connected account (acct_...)
+3. Backend: POST /v1/account_links → maakt onboarding URL
+4. Redirect organisator → Stripe-hosted onboarding pagina
+5. Organisator vult gegevens in (KYC, bankrekening, etc.)
+6. Stripe redirect terug → backend checkt charges_enabled
+7. Als volledig: mollie_mode = 'connect', klaar voor betalingen
+```
+
+**Betalingen in Connect mode:**
+- `transfer_data.destination` = organisator's Stripe account
+- **Geen application fee** — organisator ontvangt het volledige bedrag
+- Stripe transactiekosten zijn voor rekening van de organisator
+
+**Onboarding statussen:**
+| Status | UI | Actie |
+|--------|-----|-------|
+| Geen account | Grijs | "Koppel Stripe" knop |
+| Account aangemaakt, niet onboarded | Geel | "Onboarding afronden" knop |
+| Volledig onboarded | Groen | "Ontkoppelen" knop |
 
 ### Stripe Direct (voor upgrade betalingen)
 
@@ -478,10 +500,10 @@ Zelfde redirect-flow als Mollie:
 ```sql
 -- toernooien tabel (naast bestaande Mollie velden)
 payment_provider              VARCHAR(20) DEFAULT 'mollie'  -- 'mollie' | 'stripe'
-stripe_account_id             VARCHAR(255) NULL
-stripe_access_token           TEXT NULL                      -- encrypted!
-stripe_refresh_token          TEXT NULL                      -- encrypted!
-stripe_publishable_key        VARCHAR(255) NULL
+stripe_account_id             VARCHAR(255) NULL              -- acct_... van Account Links
+
+-- Legacy velden (niet meer gebruikt door Account Links, bewaard voor compatibiliteit):
+-- stripe_access_token, stripe_refresh_token, stripe_publishable_key
 
 -- betalingen tabel
 payment_provider              VARCHAR(20) DEFAULT 'mollie'
@@ -495,10 +517,10 @@ stripe_payment_id             VARCHAR(255) NULL
 ### Stripe Routes
 
 ```php
-GET  /stripe/callback                              → OAuth callback
+GET  /stripe/callback                              → Return URL na Stripe onboarding
 POST /stripe/webhook                               → Coach payment webhook
 POST /stripe/webhook/toernooi                      → Upgrade payment webhook
-GET  /{org}/toernooi/{toernooi}/stripe/authorize   → Start OAuth
+GET  /{org}/toernooi/{toernooi}/stripe/authorize   → Start onboarding (maakt account + redirect)
 POST /{org}/toernooi/{toernooi}/stripe/disconnect  → Disconnect
 ```
 
@@ -508,6 +530,7 @@ POST /{org}/toernooi/{toernooi}/stripe/disconnect  → Disconnect
 STRIPE_KEY=           # pk_test_... of pk_live_...
 STRIPE_SECRET=        # sk_test_... of sk_live_...
 STRIPE_WEBHOOK_SECRET= # whsec_...
+# Geen STRIPE_CLIENT_ID nodig — Account Links gebruikt alleen de secret key
 ```
 
 ---

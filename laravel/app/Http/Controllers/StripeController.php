@@ -19,12 +19,12 @@ class StripeController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | OAuth Flow (Stripe Connect)
+    | Stripe Connect Onboarding (Account Links)
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Create connected account and redirect to Stripe onboarding.
+     * Create connected account and redirect to Stripe-hosted onboarding.
      */
     public function authorize(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
@@ -45,6 +45,7 @@ class StripeController extends Controller
 
     /**
      * Handle return from Stripe Account Link onboarding.
+     * User is redirected here after completing (or abandoning) onboarding.
      */
     public function callback(Request $request): RedirectResponse
     {
@@ -59,10 +60,30 @@ class StripeController extends Controller
         $toernooi = Toernooi::findOrFail($toernooiId);
 
         try {
-            $this->stripeProvider->handleOAuthCallback($toernooi, '');
+            $account = $this->stripeProvider->getAccount($toernooi->stripe_account_id);
+
+            if ($account->charges_enabled && $account->payouts_enabled) {
+                // Fully onboarded — activate Connect mode
+                $toernooi->update(['mollie_mode' => 'connect']);
+
+                Log::info('Stripe account fully onboarded', [
+                    'toernooi_id' => $toernooi->id,
+                    'stripe_account_id' => $account->id,
+                ]);
+
+                return redirect()->route('toernooi.edit', $toernooi->routeParams())
+                    ->with('success', 'Stripe account succesvol gekoppeld! Betalingen gaan nu direct naar jouw rekening.');
+            }
+
+            // Not fully onboarded yet — user abandoned or Stripe needs more info
+            Log::warning('Stripe account not fully onboarded', [
+                'toernooi_id' => $toernooi->id,
+                'stripe_account_id' => $account->id,
+                'charges_enabled' => $account->charges_enabled,
+            ]);
 
             return redirect()->route('toernooi.edit', $toernooi->routeParams())
-                ->with('success', 'Stripe account succesvol gekoppeld!');
+                ->with('warning', 'Stripe onboarding is nog niet afgerond. Klik opnieuw op "Koppel Stripe" om verder te gaan.');
         } catch (\Exception $e) {
             Log::error('Stripe onboarding callback error', [
                 'toernooi_id' => $toernooi->id,
