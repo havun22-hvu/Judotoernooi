@@ -13,7 +13,6 @@ use App\Models\ToernooiBetaling;
 use App\Models\ToernooiTemplate;
 use App\Services\ActivityLogger;
 use App\Services\CategorieClassifier;
-use App\Services\FreemiumService;
 use App\Services\PouleIndelingService;
 use App\Services\ToernooiService;
 use Illuminate\Http\JsonResponse;
@@ -26,8 +25,7 @@ class ToernooiController extends Controller
 {
     public function __construct(
         private ToernooiService $toernooiService,
-        private PouleIndelingService $pouleIndelingService,
-        private FreemiumService $freemiumService
+        private PouleIndelingService $pouleIndelingService
     ) {}
 
     public function index(): View
@@ -144,11 +142,6 @@ class ToernooiController extends Controller
                     ->mapWithKeys(fn($v, $k) => [$k => 'punten_competitie'])
                     ->all(),
             ]);
-        }
-
-        // Seed demo judokas for free tier toernooien
-        if ($toernooi->plan_type === 'free') {
-            $this->freemiumService->seedDemoJudokas($toernooi);
         }
 
         return redirect()

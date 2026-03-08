@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Club;
-use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Models\Organisator;
 
@@ -14,7 +12,9 @@ class FreemiumService
     public const FREE_MAX_CLUBS = 2;
     public const FREE_MAX_PRESETS = 1;
     public const FREE_MAX_SCHEMAS = 2;
-    public const DEMO_JUDOKAS_COUNT = 30;
+    public const FREE_MAX_EIGEN_IMPORT = 20;
+    public const FREE_MAX_HANDMATIG = 20;
+    public const DEMO_CSV_VARIANTS = [30, 40, 50];
 
     // Pricing tiers
     public const STAFFELS = [
@@ -187,102 +187,16 @@ class FreemiumService
     }
 
     /**
-     * Seed demo judokas for a free tier toernooi.
-     * Creates a demo club and 30 judokas, ages 6-12, weights 30-45kg.
+     * Get the path to a demo CSV file.
+     * Available variants: 30, 40, 50
      */
-    public function seedDemoJudokas(Toernooi $toernooi): int
+    public function getDemoCsvPath(int $variant): ?string
     {
-        if (!$this->isFreeTier($toernooi)) {
-            return 0;
+        if (!in_array($variant, [30, 40, 50])) {
+            return null;
         }
 
-        // Don't seed if demo judokas already exist
-        if ($toernooi->judokas()->where('is_demo', true)->exists()) {
-            return 0;
-        }
-
-        // Create demo club for this organisator
-        $organisatorId = $toernooi->organisator_id;
-        $demoClub = Club::firstOrCreate(
-            ['organisator_id' => $organisatorId, 'naam' => 'Demo Judoschool'],
-            ['plaats' => 'Amsterdam', 'afkorting' => 'DEMO']
-        );
-
-        // Link club to toernooi
-        $demoClub->toernooien()->syncWithoutDetaching([$toernooi->id]);
-        $clubId = $demoClub->id;
-
-        $voornamenJongens = [
-            'Takeshi', 'Yuki', 'Haruto', 'Kenji', 'Riku', 'Sota', 'Hayato', 'Ren',
-            'Daan', 'Liam', 'Noah', 'Sem', 'Finn', 'Lucas', 'Jesse', 'Milan',
-        ];
-        $voornamenMeisjes = [
-            'Sakura', 'Yui', 'Hana', 'Aoi', 'Mei', 'Rin', 'Mio', 'Saki',
-            'Emma', 'Tessa', 'Sophie', 'Julia', 'Sara', 'Noor', 'Lotte', 'Eva',
-        ];
-        $achternamen = [
-            'Tanaka', 'Yamamoto', 'Suzuki', 'Watanabe', 'Sato', 'Takahashi',
-            'Nakamura', 'Kobayashi', 'Kato', 'Yoshida', 'Yamada', 'Sasaki',
-            'Matsumoto', 'Inoue', 'Kimura', 'Shimizu', 'Hayashi', 'Saito',
-            'De Vries', 'Jansen', 'De Jong', 'Van den Berg', 'Bakker', 'Visser',
-            'Smit', 'Meijer', 'Mulder', 'Bos',
-        ];
-
-        $banden = ['wit', 'geel', 'oranje'];
-        $judokas = [];
-        $now = now();
-
-        for ($i = 0; $i < self::DEMO_JUDOKAS_COUNT; $i++) {
-            $geslacht = $i % 2 === 0 ? 'M' : 'V';
-            $leeftijd = rand(6, 12);
-            $geboortejaar = (int) date('Y') - $leeftijd;
-
-            // Weight 30-45kg with realistic spread based on age
-            $baseWeight = 28 + ($leeftijd - 6) * 1.5;
-            $gewicht = round($baseWeight + (rand(0, 60) / 10), 1);
-            $gewicht = max(30.0, min(45.0, $gewicht));
-
-            if ($geslacht === 'M') {
-                $voornaam = $voornamenJongens[array_rand($voornamenJongens)];
-            } else {
-                $voornaam = $voornamenMeisjes[array_rand($voornamenMeisjes)];
-            }
-            $achternaam = $achternamen[array_rand($achternamen)];
-
-            // Band passend bij leeftijd
-            $bandIndex = min(count($banden) - 1, intdiv($leeftijd - 6, 2));
-            $band = $banden[rand(0, $bandIndex)];
-
-            $judokas[] = [
-                'toernooi_id' => $toernooi->id,
-                'club_id' => $clubId,
-                'naam' => $achternaam . ', ' . $voornaam,
-                'voornaam' => $voornaam,
-                'achternaam' => $achternaam,
-                'geboortejaar' => $geboortejaar,
-                'geslacht' => $geslacht,
-                'band' => $band,
-                'gewicht' => $gewicht,
-                'aanwezigheid' => 'onbekend',
-                'is_onvolledig' => false,
-                'is_demo' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        Judoka::insert($judokas);
-
-        return self::DEMO_JUDOKAS_COUNT;
-    }
-
-    /**
-     * Remove all demo judokas from a toernooi.
-     * Called during upgrade to paid plan.
-     */
-    public function removeDemoJudokas(Toernooi $toernooi): int
-    {
-        return $toernooi->judokas()->where('is_demo', true)->delete();
+        return storage_path("app/demo/demo-{$variant}.csv");
     }
 
     /**
