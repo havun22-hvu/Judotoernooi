@@ -1,45 +1,53 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 2 maart 2026
+> **Laatste update:** 9 maart 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## ⚡ EERSTVOLGENDE OPDRACHT: Sprint 1 Code Hardening
+## ⚡ EERSTVOLGENDE OPDRACHT: Free Tier Implementatie
 
-**HavunCore heeft een volledige code audit gedaan op 14 feb 2026.**
+**Freemium model is geherdefinieerd (9 mrt 2026). Docs: `laravel/docs/2-FEATURES/FREEMIUM.md`**
 
-Het verbeterrapport met concrete fixes, code voorbeelden en regelnummers staat hier:
-```
-D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
-```
+### Wat klaar is:
+- `FREEMIUM.md` bijgewerkt met nieuwe free tier flow
+- Demo CSV's gegenereerd (`storage/app/demo/demo-30/40/50.csv`)
+- `FreemiumService` constanten: `FREE_MAX_EIGEN_IMPORT=20`, `FREE_MAX_HANDMATIG=20`
+- `is_demo` veld + migratie op judokas tabel
+- `getDemoCsvPath()` methode
 
-**Wat al gefixt is (14 feb 2026 door HavunCore):**
-- `app/Http/Middleware/LocalSyncAuth.php` - Auth op alle `/local-server/*` routes
-- `routes/web.php` regel 492 - `throttle:login` op coach PIN login
+### Nog te bouwen (4 taken):
 
-**Sprint 1 - nu uitvoeren (5 taken):**
+1. **Download route voor demo CSV's**
+   - `GET /{org}/toernooi/{toernooi}/demo-csv/{variant}` (30/40/50)
+   - Alleen voor free tier toernooien
+   - Retourneert CSV als download
 
-1. **Health endpoint auth** - `D:\GitHub\JudoToernooi\laravel\routes\web.php` regel 53
-   → Voeg `->middleware('auth:organisator')` toe aan `/health/detailed` route
+2. **Import pagina UI aanpassen**
+   - Free tier: toon demo CSV download knoppen (30, 40, 50)
+   - Free tier: eigen CSV upload beperkt tot max 20 judoka's
+   - Free tier: melding "Upgrade voor onbeperkte import"
+   - Betaald: normale import (geen limiet)
 
-2. **Hardcoded wachtwoord defaults** - `D:\GitHub\JudoToernooi\laravel\config\toernooi.php` regel 52-53
-   → Vervang publieke defaults door `null` voor non-local environments
+3. **Import limiet enforcement**
+   - `JudokaController::import()` — check free tier max 20 eigen import
+   - `JudokaController::store()` / `CoachPortalController` — check max 20 handmatig
+   - Bestaande `canAddMoreJudokas()` check (totaal max 50) blijft
 
-3. **Dode api.php verwijderen** - `D:\GitHub\JudoToernooi\laravel\routes\api.php`
-   → Dit bestand wordt NIET geladen (geen `api:` in `bootstrap/app.php`). Verwijder het.
+4. **Testen**
+   - Free tier: demo CSV import werkt
+   - Free tier: eigen CSV >20 rijen wordt geblokkeerd
+   - Free tier: handmatig >20 wordt geblokkeerd
+   - Upgrade: alle limieten opgeheven
 
-4. **DB transactions in WedstrijddagController** - `D:\GitHub\JudoToernooi\laravel\app\Http\Controllers\WedstrijddagController.php`
-   → Wrap deze methods in `DB::transaction()`:
-   - `verwijderUitPoule()` (regel 514) - detach + stats
-   - `zetOmNaarPoules()` (regel 602) - create poules + attach + delete oude poule
-   - `afmeldenJudoka()` (regel ~890) - update + detach
-   - `nieuweJudoka()` (regel 930) - create + attach
+### Daarna: Sprint 1 Code Hardening
 
-5. **Admin klanten route** - GEEN ACTIE NODIG
-   → `AdminController` heeft al `checkSitebeheerder()` op elke method
+Code audit rapport: `.claude/code-review-2026-02-14.md`
 
-**Na Sprint 1:** Lees het volledige rapport voor Sprint 2-5.
+1. Health endpoint auth (`/health/detailed`)
+2. Hardcoded wachtwoord defaults (`config/toernooi.php`)
+3. Dode `api.php` verwijderen
+4. DB transactions in WedstrijddagController
 
 ---
 
@@ -58,6 +66,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **9 mrt 2026** | **Stripe Connect: OAuth → Account Links.** StripePaymentProvider omgeschreven van legacy OAuth (ca_... client_id) naar Stripe Account Links onboarding. Controller callback checkt charges_enabled/payouts_enabled. Toernooi edit view: 3 onboarding statussen (geen/pending/gekoppeld). Afrekenen view: dynamische knoptekst per provider. STRIPE_CLIENT_ID verwijderd. BETALINGEN.md bijgewerkt. | BETALINGEN.md |
 | **9 mrt 2026** | **Judoka database import:** "Uit database" knop toegevoegd aan toernooi deelnemersbeheer. Organisator kan stam judoka's importeren in een toernooi met automatische classificatie. `StambestandService` gefixt (`eigenaar()` → `organisator`, classificatie toegevoegd). Feature doc `JUDOKA-DATABASE.md`. Deployed staging, stambestand nog leeg — moet getest met testdata. | JUDOKA-DATABASE.md |
 | **9 mrt 2026** | **Freemium model herdefiniëring:** Free tier nu met demo CSV downloads (30/40/50 judoka's). Geen auto-seed meer, klant importeert zelf. Eigen CSV max 20, handmatig max 20, totaal max 50. Geen print in free tier. `is_demo` veld + migratie toegevoegd. Doc issue #3466 (inconsistent prices) resolved. | FREEMIUM.md |
 | **8 mrt 2026** | **Stripe betaling + admin facturen:** Stripe upgrade betaling getest op staging (werkend). Factuurnummer aangepast naar `JT-YYYYMMDD-{slug}-NNN` (was `JT-YYYYMMDD-NNN`). Stripe description bevat nu herkenbare referentie. Nieuwe admin pagina `/admin/facturen` met alle betalingen (klant, toernooi, provider, factuurnummer, status). Deployed staging. | BETALINGEN.md |
