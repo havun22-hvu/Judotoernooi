@@ -185,6 +185,14 @@ class StripePaymentProvider implements PaymentProviderInterface
         }
     }
 
+    /**
+     * Get connected account details from Stripe.
+     */
+    public function getAccount(string $accountId): \Stripe\Account
+    {
+        return $this->getStripeClient()->accounts->retrieve($accountId);
+    }
+
     public function disconnect(Toernooi $toernooi): void
     {
         if ($toernooi->stripe_account_id) {

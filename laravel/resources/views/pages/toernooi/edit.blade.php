@@ -2384,27 +2384,36 @@
                     </div>
                 </div>
                 @else
-                {{-- Stripe Account --}}
-                <div class="p-4 border rounded-lg {{ $toernooi->stripe_account_id ? 'bg-green-50 border-green-200' : 'bg-gray-50' }}">
+                {{-- Stripe Account (Account Links onboarding) --}}
+                @php
+                    $stripeConnected = $toernooi->stripe_account_id && $toernooi->mollie_mode === 'connect';
+                    $stripePending = $toernooi->stripe_account_id && $toernooi->mollie_mode !== 'connect';
+                @endphp
+                <div class="p-4 border rounded-lg {{ $stripeConnected ? 'bg-green-50 border-green-200' : ($stripePending ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50') }}">
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="font-bold flex items-center gap-2">
-                                @if($toernooi->stripe_account_id)
+                                @if($stripeConnected)
                                 <span class="text-green-600">✓</span>
+                                @elseif($stripePending)
+                                <span class="text-yellow-600">⏳</span>
                                 @endif
                                 Stripe Account
                             </h3>
-                            @if($toernooi->stripe_account_id)
+                            @if($stripeConnected)
                             <p class="text-sm text-green-700">
-                                {{ __('Gekoppeld') }}
-                                <span class="text-gray-500">({{ $toernooi->stripe_account_id }})</span>
+                                {{ __('Gekoppeld — betalingen gaan direct naar jouw rekening') }}
+                            </p>
+                            @elseif($stripePending)
+                            <p class="text-sm text-yellow-700">
+                                {{ __('Onboarding nog niet afgerond — klik opnieuw om verder te gaan') }}
                             </p>
                             @else
-                            <p class="text-sm text-gray-500">{{ __('Koppel je Stripe account om betalingen te ontvangen') }}</p>
+                            <p class="text-sm text-gray-500">{{ __('Koppel je Stripe account om betalingen direct te ontvangen') }}</p>
                             @endif
                         </div>
                         <div>
-                            @if($toernooi->stripe_account_id)
+                            @if($stripeConnected)
                             <form action="{{ route('toernooi.stripe.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
                                   onsubmit="return confirm('{{ __('Weet je zeker dat je de Stripe koppeling wilt verbreken?') }}')">
                                 @csrf
@@ -2413,9 +2422,9 @@
                                 </button>
                             </form>
                             @else
-                            <a href="{{ route('toernooi.stripe.authorize', $toernooi->routeParams()) }}" target="_blank"
+                            <a href="{{ route('toernooi.stripe.authorize', $toernooi->routeParams()) }}"
                                class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
-                                <span>{{ __('Koppel Stripe') }}</span>
+                                <span>{{ $stripePending ? __('Onboarding afronden') : __('Koppel Stripe') }}</span>
                             </a>
                             @endif
                         </div>

@@ -83,12 +83,20 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                 </svg>
-                {{ __('Betaal met iDEAL') }}
+                @if(($toernooi->payment_provider ?? 'mollie') === 'stripe')
+                    {{ __('Betalen') }}
+                @else
+                    {{ __('Betaal met iDEAL') }}
+                @endif
             </button>
         </form>
 
         <p class="text-center text-sm text-gray-500 mt-4">
-            {{ __('Je wordt doorgestuurd naar iDEAL om de betaling te voltooien.') }}
+            @if(($toernooi->payment_provider ?? 'mollie') === 'stripe')
+                {{ __('Je wordt doorgestuurd naar Stripe om de betaling te voltooien.') }}
+            @else
+                {{ __('Je wordt doorgestuurd naar iDEAL om de betaling te voltooien.') }}
+            @endif
         </p>
         @else
         <div class="bg-white rounded-lg shadow p-8 text-center">
