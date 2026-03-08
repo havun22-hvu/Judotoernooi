@@ -47,3 +47,6 @@ laravel/public/testdata/
 *.xlsx
 *.csv
 *.pdf
+
+# Exception: demo CSV's for free tier
+!laravel/storage/app/demo/demo-*.csv
