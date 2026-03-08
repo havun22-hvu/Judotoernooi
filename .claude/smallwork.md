@@ -14,6 +14,31 @@
 
 ---
 
+## Sessie: 9 maart 2026
+
+### Feat: "Uit database" knop op toernooi deelnemersbeheer
+- **Type:** Feature
+- **Wat:** Organisator kan stam judoka's importeren in een toernooi via paarse "Uit database" knop
+- **Bestanden:** JudokaController.php (2 methods), index.blade.php (knop + modal), web.php (2 routes)
+- **Backend:** `StambestandService::importNaarToernooi()` met classificatie
+
+### Fix: StambestandService eigenaar() → organisator
+- **Type:** Bug fix
+- **Wat:** `$toernooi->eigenaar()` bestaat niet, moet `$toernooi->organisator` zijn
+- **Bestanden:** StambestandService.php
+
+### Fix: StambestandService classificatie ontbrak
+- **Type:** Bug fix
+- **Wat:** Bij import uit stambestand werd geen leeftijdsklasse/gewichtsklasse berekend
+- **Bestanden:** StambestandService.php
+
+### Docs: JUDOKA-DATABASE.md feature doc
+- **Type:** Documentatie
+- **Wat:** Feature doc voor judoka database (stambestand) integratie
+- **Bestanden:** laravel/docs/2-FEATURES/JUDOKA-DATABASE.md
+
+---
+
 ## Sessie: 6 maart 2026
 
 ### Fix: Root cause drag bugs wedstrijddag - vaste vs variabele gewichtsklassen
