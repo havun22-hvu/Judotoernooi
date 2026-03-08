@@ -14,6 +14,7 @@ use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Services\CategorieClassifier;
 use App\Services\ImportService;
+use App\Services\StambestandService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -206,6 +207,39 @@ class JudokaController extends Controller
         return redirect()
             ->route('toernooi.judoka.index', $toernooi->routeParams())
             ->with('success', 'Judoka toegevoegd');
+    }
+
+    public function importUitDatabase(Request $request, Organisator $organisator, Toernooi $toernooi, StambestandService $stambestandService): RedirectResponse
+    {
+        $request->validate([
+            'stam_judoka_ids' => 'required|array|min:1',
+            'stam_judoka_ids.*' => 'integer|exists:stam_judokas,id',
+        ]);
+
+        $count = $stambestandService->importNaarToernooi($request->input('stam_judoka_ids'), $toernooi);
+
+        return redirect()
+            ->route('toernooi.judoka.index', $toernooi->routeParams())
+            ->with('success', "{$count} judoka('s) geïmporteerd uit database");
+    }
+
+    public function stambestandJson(Organisator $organisator, Toernooi $toernooi): JsonResponse
+    {
+        $stamJudokas = $organisator->stamJudokas()
+            ->actief()
+            ->orderBy('naam')
+            ->get(['id', 'naam', 'geboortejaar', 'geslacht', 'band', 'gewicht']);
+
+        $alAangemeld = Judoka::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('stam_judoka_id')
+            ->pluck('stam_judoka_id')
+            ->toArray();
+
+        $stamJudokas->each(function ($sj) use ($alAangemeld) {
+            $sj->al_aangemeld = in_array($sj->id, $alAangemeld);
+        });
+
+        return response()->json($stamJudokas);
     }
 
     public function destroy(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): RedirectResponse

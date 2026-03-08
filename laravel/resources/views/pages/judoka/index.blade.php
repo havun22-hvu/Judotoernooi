@@ -174,6 +174,12 @@
         <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->count() }})</h1>
     </div>
     <div class="flex space-x-2">
+        @if($toernooi->organisator->stamJudokas()->actief()->exists())
+        <button onclick="document.getElementById('stambestandModal').classList.remove('hidden'); loadStambestand()"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+            {{ __('Uit database') }}
+        </button>
+        @endif
         <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             {{ __('Importeren') }}
         </a>
@@ -660,4 +666,134 @@ function judokaTable() {
         </form>
     </div>
 </div>
+{{-- Stambestand Import Modal --}}
+@if($toernooi->organisator->stamJudokas()->actief()->exists())
+<div id="stambestandModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col mx-4">
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">{{ __('Importeer uit database') }}</h2>
+                <button onclick="document.getElementById('stambestandModal').classList.add('hidden')"
+                        class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div class="mt-3">
+                <input type="text" id="stamZoek" placeholder="{{ __('Zoek op naam...') }}"
+                       class="w-full border rounded-lg px-4 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                       oninput="filterStambestand()">
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6" id="stambestandLijst">
+            <p class="text-gray-500 text-center">{{ __('Laden...') }}</p>
+        </div>
+
+        <div class="p-4 border-t bg-gray-50 flex justify-between items-center">
+            <span class="text-sm text-gray-600">
+                <span id="stamGeselecteerd">0</span> {{ __('geselecteerd') }}
+            </span>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('stambestandModal').classList.add('hidden')"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    {{ __('Annuleren') }}
+                </button>
+                <button onclick="importUitDatabase()" id="stamImportBtn" disabled
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ __('Importeer geselecteerde') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let _stamData = [];
+const _stamUrl = @json(route('toernooi.judoka.stambestand', $toernooi->routeParams()));
+const _importUrl = @json(route('toernooi.judoka.import-database', $toernooi->routeParams()));
+const _csrfToken = '{{ csrf_token() }}';
+
+async function loadStambestand() {
+    const lijst = document.getElementById('stambestandLijst');
+    lijst.innerHTML = '<p class="text-gray-500 text-center">{{ __("Laden...") }}</p>';
+
+    try {
+        const res = await fetch(_stamUrl, { headers: { 'Accept': 'application/json' } });
+        _stamData = await res.json();
+        renderStambestand(_stamData);
+    } catch (e) {
+        lijst.innerHTML = '<p class="text-red-500 text-center">{{ __("Fout bij laden") }}</p>';
+    }
+}
+
+function filterStambestand() {
+    const zoek = document.getElementById('stamZoek').value.toLowerCase().trim();
+    if (!zoek) return renderStambestand(_stamData);
+    renderStambestand(_stamData.filter(j => j.naam.toLowerCase().includes(zoek)));
+}
+
+function renderStambestand(data) {
+    const lijst = document.getElementById('stambestandLijst');
+
+    if (data.length === 0) {
+        lijst.innerHTML = '<p class="text-gray-500 text-center">{{ __("Geen judoka\'s gevonden") }}</p>';
+        return;
+    }
+
+    lijst.innerHTML = '<table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr>' +
+        '<th class="px-3 py-2 text-left w-10"></th>' +
+        '<th class="px-3 py-2 text-left">{{ __("Naam") }}</th>' +
+        '<th class="px-3 py-2 text-center">{{ __("Geb.jaar") }}</th>' +
+        '<th class="px-3 py-2 text-center">{{ __("M/V") }}</th>' +
+        '<th class="px-3 py-2 text-center">{{ __("Band") }}</th>' +
+        '<th class="px-3 py-2 text-center">{{ __("Gewicht") }}</th>' +
+        '</tr></thead><tbody class="divide-y">' +
+        data.map(j => {
+            const disabled = j.al_aangemeld;
+            const bandLabel = j.band ? j.band.charAt(0).toUpperCase() + j.band.slice(1) : '-';
+            return '<tr class="' + (disabled ? 'opacity-40' : 'hover:bg-purple-50 cursor-pointer') + '"' +
+                (disabled ? '' : ' onclick="toggleStamCheckbox(' + j.id + ')"') + '>' +
+                '<td class="px-3 py-2">' +
+                    (disabled
+                        ? '<span class="text-xs text-gray-400">&#10003;</span>'
+                        : '<input type="checkbox" id="stam_' + j.id + '" value="' + j.id + '" class="stam-cb rounded" onchange="updateStamCount()" onclick="event.stopPropagation()">') +
+                '</td>' +
+                '<td class="px-3 py-2 font-medium">' + j.naam + (disabled ? ' <span class="text-xs text-gray-400">({{ __("al aangemeld") }})</span>' : '') + '</td>' +
+                '<td class="px-3 py-2 text-center text-gray-600">' + (j.geboortejaar || '-') + '</td>' +
+                '<td class="px-3 py-2 text-center text-gray-600">' + (j.geslacht || '-') + '</td>' +
+                '<td class="px-3 py-2 text-center text-gray-600">' + bandLabel + '</td>' +
+                '<td class="px-3 py-2 text-center text-gray-600">' + (j.gewicht ? j.gewicht + ' kg' : '-') + '</td>' +
+                '</tr>';
+        }).join('') +
+        '</tbody></table>';
+}
+
+function toggleStamCheckbox(id) {
+    const cb = document.getElementById('stam_' + id);
+    if (cb) { cb.checked = !cb.checked; updateStamCount(); }
+}
+
+function updateStamCount() {
+    const checked = document.querySelectorAll('.stam-cb:checked').length;
+    document.getElementById('stamGeselecteerd').textContent = checked;
+    document.getElementById('stamImportBtn').disabled = checked === 0;
+}
+
+async function importUitDatabase() {
+    const ids = [...document.querySelectorAll('.stam-cb:checked')].map(cb => parseInt(cb.value));
+    if (ids.length === 0) return;
+
+    document.getElementById('stamImportBtn').disabled = true;
+    document.getElementById('stamImportBtn').textContent = '{{ __("Importeren...") }}';
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = _importUrl;
+    form.innerHTML = '<input type="hidden" name="_token" value="' + _csrfToken + '">';
+    ids.forEach(id => {
+        form.innerHTML += '<input type="hidden" name="stam_judoka_ids[]" value="' + id + '">';
+    });
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+@endif
 @endsection

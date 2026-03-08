@@ -435,6 +435,8 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('judoka/import/confirm', [JudokaController::class, 'importConfirm'])->name('judoka.import.confirm');
         Route::get('judoka/import/progress', [JudokaController::class, 'importProgress'])->name('judoka.import.progress');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
+        Route::get('judoka/stambestand', [JudokaController::class, 'stambestandJson'])->name('judoka.stambestand');
+        Route::post('judoka/import-database', [JudokaController::class, 'importUitDatabase'])->name('judoka.import-database');
         Route::post('judoka', [JudokaController::class, 'store'])->name('judoka.store');
         Route::patch('judoka/{judoka}/update-api', [JudokaController::class, 'updateApi'])->name('judoka.update-api');
         Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
