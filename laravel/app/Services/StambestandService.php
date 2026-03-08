@@ -14,7 +14,7 @@ class StambestandService
      */
     public function importNaarToernooi(array $stamJudokaIds, Toernooi $toernooi): int
     {
-        $organisator = $toernooi->eigenaar();
+        $organisator = $toernooi->organisator;
         $club = $organisator?->clubs()->first();
 
         $stamJudokas = StamJudoka::whereIn('id', $stamJudokaIds)
@@ -34,6 +34,20 @@ class StambestandService
                 continue;
             }
 
+            // Calculate classification
+            $leeftijdsklasse = null;
+            $gewichtsklasse = null;
+
+            if ($stam->geboortejaar && $stam->geslacht) {
+                $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
+                $leeftijd = $toernooiJaar - $stam->geboortejaar;
+                $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $stam->geslacht, $stam->band);
+
+                if ($stam->gewicht) {
+                    $gewichtsklasse = $toernooi->bepaalGewichtsklasse($stam->gewicht, $leeftijd, $stam->geslacht, $stam->band);
+                }
+            }
+
             Judoka::create([
                 'toernooi_id' => $toernooi->id,
                 'club_id' => $club?->id,
@@ -43,6 +57,8 @@ class StambestandService
                 'geslacht' => $stam->geslacht,
                 'band' => $stam->band,
                 'gewicht' => $stam->gewicht,
+                'leeftijdsklasse' => $leeftijdsklasse,
+                'gewichtsklasse' => $gewichtsklasse,
             ]);
 
             $count++;
