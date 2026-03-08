@@ -24,44 +24,47 @@ class StripeController extends Controller
     */
 
     /**
-     * Redirect to Stripe OAuth authorization.
+     * Create connected account and redirect to Stripe onboarding.
      */
     public function authorize(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
-        $url = $this->stripeProvider->getOAuthAuthorizeUrl($toernooi);
+        try {
+            $url = $this->stripeProvider->getOAuthAuthorizeUrl($toernooi);
 
-        return redirect($url);
+            return redirect($url);
+        } catch (\Exception $e) {
+            Log::error('Stripe Connect authorize failed', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
+                ->with('error', 'Er ging iets mis bij het starten van Stripe onboarding. Probeer het opnieuw.');
+        }
     }
 
     /**
-     * Handle OAuth callback from Stripe.
+     * Handle return from Stripe Account Link onboarding.
      */
     public function callback(Request $request): RedirectResponse
     {
-        $state = $request->get('state');
-        $code = $request->get('code');
-        $error = $request->get('error');
+        $toernooiId = (int) $request->get('toernooi_id');
+        $hash = $request->get('hash');
 
-        $toernooiId = $this->stripeProvider->validateOAuthState($state);
-        if (!$toernooiId) {
+        if (!$this->stripeProvider->validateCallbackHash($toernooiId, $hash)) {
             return redirect()->route('organisator.login')
-                ->with('error', 'Ongeldige OAuth state - sessie mogelijk verlopen');
+                ->with('error', 'Ongeldige callback - sessie mogelijk verlopen');
         }
 
         $toernooi = Toernooi::findOrFail($toernooiId);
 
-        if ($error) {
-            return redirect()->route('toernooi.edit', $toernooi->routeParams())
-                ->with('error', 'Stripe koppeling geannuleerd: ' . $request->get('error_description', $error));
-        }
-
         try {
-            $this->stripeProvider->handleOAuthCallback($toernooi, $code);
+            $this->stripeProvider->handleOAuthCallback($toernooi, '');
 
             return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('success', 'Stripe account succesvol gekoppeld!');
         } catch (\Exception $e) {
-            Log::error('Stripe OAuth error', [
+            Log::error('Stripe onboarding callback error', [
                 'toernooi_id' => $toernooi->id,
                 'error' => $e->getMessage(),
             ]);
