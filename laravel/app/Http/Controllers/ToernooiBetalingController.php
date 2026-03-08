@@ -126,6 +126,9 @@ class ToernooiBetalingController extends Controller
                 'betaald_op' => now(),
             ]);
 
+            // Remove demo judokas before upgrade
+            $this->freemiumService->removeDemoJudokas($toernooi);
+
             // Direct upgrade toernooi
             $toernooi->update([
                 'plan_type' => 'paid',

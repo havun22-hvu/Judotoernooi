@@ -10,10 +10,11 @@ JudoToernooi hanteert een freemium model:
 
 | Aspect | Gratis | Betaald |
 |--------|--------|---------|
-| Judoka's | Max 50 | 51-500+ |
+| Judoka's | Max 50 (30 demo + max 20 import) | 51-500+ (alleen echte) |
 | Clubs | Max 2 actief | Onbeperkt |
 | Presets | Max 1 | Onbeperkt |
 | Print/Noodplan | Beperkt | Volledig |
+| Demo judoka's | 30 voorgeladen | Geen (verwijderd bij upgrade) |
 | Prijs | Gratis | Vanaf €20 |
 
 ---
@@ -29,10 +30,61 @@ JudoToernooi hanteert een freemium model:
 
 ### Waarom deze limieten?
 
-- **50 judoka's** = Klein clubtoernooi, genoeg om te testen
+- **50 judoka's** = 30 demo + max 20 import, genoeg om alles te testen
 - **2 clubs** = Eigen club + 1 gastclub
 - **1 preset** = Basis gewichtsklassen
 - **Print beperkt** = Stimuleert upgrade voor wedstrijddag
+
+---
+
+## Demo Judoka's (Free Tier)
+
+Bij een nieuw gratis toernooi worden **30 demo judoka's** automatisch voorgeladen.
+
+### Doel
+- Organisator ziet direct een gevuld toernooi zonder zelf data in te voeren
+- Poule-indeling en wedstrijdschema's werken meteen realistisch
+- Import testen met max 20 echte judoka's (30 demo + 20 import = 50 limiet)
+
+### Kenmerken demo judoka's
+| Aspect | Waarde |
+|--------|--------|
+| **Aantal** | 30 |
+| **Gewicht** | 30-45 kg (realistische spreiding) |
+| **Leeftijd** | 6-12 jaar (geboortejaren passend) |
+| **Namen** | Realistische namen (niet herkenbaar als demo) |
+| **Geslacht** | Mix jongens/meisjes |
+| **Band** | Mix wit t/m oranje (passend bij leeftijd) |
+| **Club** | Verdeeld over demo club(s) |
+
+### Gedrag
+- Demo judoka's zijn **niet te onderscheiden** van echte judoka's
+- Organisator kan poules maken, schema's genereren, alles uitproberen
+- Import (max 20) wordt gewoon toegevoegd aan de bestaande 30
+
+### Bij upgrade
+- Demo judoka's worden **automatisch verwijderd**
+- Organisator start met schone lei voor het echte toernooi
+- Alternatief: organisator kan zelf een volledige reset doen via toernooi-overzicht
+
+### Technisch
+
+```php
+// FreemiumService::seedDemoJudokas($toernooi)
+// Aanroepen bij aanmaken nieuw free tier toernooi
+// 30 judoka's, gewicht 30-45kg, leeftijd 6-12 jaar
+// is_demo = true (voor cleanup bij upgrade)
+
+// FreemiumService::removeDemoJudokas($toernooi)
+// Aanroepen bij upgrade naar betaald plan
+// Verwijdert alle judoka's waar is_demo = true
+```
+
+### Database
+```sql
+-- judokas tabel: nieuw veld
+is_demo    BOOLEAN DEFAULT FALSE
+```
 
 ---
 
@@ -94,6 +146,7 @@ return $basis + (($staffels - 1) * $perExtra50);
 │ 4. ACTIVATIE                                                 │
 ├──────────────────────────────────────────────────────────────┤
 │ Toernooi wordt geüpgraded:                                  │
+│ - Demo judoka's verwijderd (is_demo = true)                 │
 │ - plan_type = 'paid'                                        │
 │ - paid_tier = 'medium'                                      │
 │ - paid_max_judokas = 150                                    │

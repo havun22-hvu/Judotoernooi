@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\FactuurService;
+use App\Services\FreemiumService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -57,6 +58,9 @@ class ToernooiBetaling extends Model
             'status' => self::STATUS_PAID,
             'betaald_op' => now(),
         ]);
+
+        // Remove demo judokas before activating paid plan
+        app(FreemiumService::class)->removeDemoJudokas($this->toernooi);
 
         // Activate paid plan on the tournament
         $this->toernooi->update([
