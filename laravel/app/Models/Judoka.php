@@ -43,6 +43,7 @@ class Judoka extends Model
         'betaling_id',
         'betaald_op',
         'is_onvolledig',
+        'is_demo',
         'import_warnings',
         'import_status',
         'telefoon',
@@ -56,6 +57,7 @@ class Judoka extends Model
         'synced_at' => 'datetime',
         'betaald_op' => 'datetime',
         'is_onvolledig' => 'boolean',
+        'is_demo' => 'boolean',
     ];
 
     protected static function booted(): void
