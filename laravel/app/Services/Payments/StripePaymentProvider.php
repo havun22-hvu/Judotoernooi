@@ -5,7 +5,6 @@ namespace App\Services\Payments;
 use App\Contracts\PaymentProviderInterface;
 use App\DTOs\PaymentResult;
 use App\Models\Toernooi;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 
@@ -23,15 +22,11 @@ class StripePaymentProvider implements PaymentProviderInterface
     }
 
     /**
-     * Get Stripe client for a connected account's operations.
+     * Check if tournament has a connected Stripe account.
      */
-    private function getApiKeyForToernooi(Toernooi $toernooi): ?string
+    private function hasConnectedAccount(Toernooi $toernooi): bool
     {
-        if ($toernooi->mollie_mode === 'connect' && $toernooi->stripe_access_token) {
-            return Crypt::decryptString($toernooi->stripe_access_token);
-        }
-
-        return null;
+        return $toernooi->payment_provider === 'stripe' && !empty($toernooi->stripe_account_id);
     }
 
     public function createPayment(Toernooi $toernooi, array $data): PaymentResult
@@ -58,15 +53,15 @@ class StripePaymentProvider implements PaymentProviderInterface
         ];
 
         // Connect mode: payment goes to organizer's Stripe account
-        if ($toernooi->mollie_mode === 'connect' && $toernooi->stripe_account_id) {
-            $platformFee = $this->getPlatformFeeAmount($toernooi, $amountInCents);
-
+        if ($this->hasConnectedAccount($toernooi)) {
             $sessionParams['payment_intent_data'] = [
-                'application_fee_amount' => $platformFee,
                 'transfer_data' => [
                     'destination' => $toernooi->stripe_account_id,
                 ],
             ];
+
+            // No application fee — organizer receives full amount
+            // JudoToernooi earns nothing on registration fees
         }
 
         $session = $stripe->checkout->sessions->create($sessionParams);
@@ -127,59 +122,77 @@ class StripePaymentProvider implements PaymentProviderInterface
         return PaymentResult::fromStripe($session);
     }
 
+    /**
+     * Create a connected account and return the Account Link onboarding URL.
+     * Replaces legacy OAuth flow — no ca_... Client ID needed.
+     */
     public function getOAuthAuthorizeUrl(Toernooi $toernooi): string
-    {
-        $state = $this->generateOAuthState($toernooi);
-
-        $params = [
-            'client_id' => config('services.stripe.client_id'),
-            'response_type' => 'code',
-            'scope' => 'read_write',
-            'redirect_uri' => route('stripe.callback'),
-            'state' => $state,
-            'stripe_user[email]' => $toernooi->organisator->email ?? '',
-        ];
-
-        return 'https://connect.stripe.com/oauth/authorize?' . http_build_query($params);
-    }
-
-    public function handleOAuthCallback(Toernooi $toernooi, string $code): void
     {
         $stripe = $this->getStripeClient();
 
-        $response = $stripe->oauth->token([
-            'grant_type' => 'authorization_code',
-            'code' => $code,
+        // Create connected account if not exists
+        if (!$toernooi->stripe_account_id) {
+            $account = $stripe->accounts->create([
+                'type' => 'standard',
+                'email' => $toernooi->organisator->email ?? null,
+                'metadata' => [
+                    'toernooi_id' => $toernooi->id,
+                ],
+            ]);
+
+            $toernooi->update([
+                'stripe_account_id' => $account->id,
+                'payment_provider' => 'stripe',
+            ]);
+
+            Log::info('Stripe connected account created', [
+                'toernooi_id' => $toernooi->id,
+                'account_id' => $account->id,
+            ]);
+        }
+
+        // Create Account Link for onboarding
+        $accountLink = $stripe->accountLinks->create([
+            'account' => $toernooi->stripe_account_id,
+            'refresh_url' => route('stripe.authorize', $toernooi->routeParams()),
+            'return_url' => route('stripe.callback') . '?toernooi_id=' . $toernooi->id . '&hash=' . $this->generateCallbackHash($toernooi),
+            'type' => 'account_onboarding',
         ]);
 
-        $toernooi->update([
-            'mollie_mode' => 'connect',
-            'stripe_account_id' => $response->stripe_user_id,
-            'stripe_access_token' => Crypt::encryptString($response->access_token),
-            'stripe_refresh_token' => $response->refresh_token
-                ? Crypt::encryptString($response->refresh_token)
-                : null,
-            'stripe_publishable_key' => $response->stripe_publishable_key ?? null,
-        ]);
+        return $accountLink->url;
+    }
 
-        Log::info('Stripe account connected', [
-            'toernooi_id' => $toernooi->id,
-            'stripe_account_id' => $response->stripe_user_id,
-        ]);
+    /**
+     * Verify connected account is fully onboarded after return from Stripe.
+     */
+    public function handleOAuthCallback(Toernooi $toernooi, string $code): void
+    {
+        $stripe = $this->getStripeClient();
+        $account = $stripe->accounts->retrieve($toernooi->stripe_account_id);
+
+        if ($account->charges_enabled && $account->payouts_enabled) {
+            Log::info('Stripe account fully onboarded', [
+                'toernooi_id' => $toernooi->id,
+                'stripe_account_id' => $account->id,
+            ]);
+        } else {
+            Log::warning('Stripe account not fully onboarded yet', [
+                'toernooi_id' => $toernooi->id,
+                'stripe_account_id' => $account->id,
+                'charges_enabled' => $account->charges_enabled,
+                'payouts_enabled' => $account->payouts_enabled,
+            ]);
+        }
     }
 
     public function disconnect(Toernooi $toernooi): void
     {
-        // Deauthorize the connected account
         if ($toernooi->stripe_account_id) {
             try {
                 $stripe = $this->getStripeClient();
-                $stripe->oauth->deauthorize([
-                    'client_id' => config('services.stripe.client_id'),
-                    'stripe_user_id' => $toernooi->stripe_account_id,
-                ]);
+                $stripe->accounts->delete($toernooi->stripe_account_id);
             } catch (\Exception $e) {
-                Log::warning('Failed to deauthorize Stripe account', [
+                Log::warning('Failed to delete Stripe connected account', [
                     'toernooi_id' => $toernooi->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -187,7 +200,6 @@ class StripePaymentProvider implements PaymentProviderInterface
         }
 
         $toernooi->update([
-            'mollie_mode' => 'platform',
             'stripe_account_id' => null,
             'stripe_access_token' => null,
             'stripe_refresh_token' => null,
@@ -222,10 +234,12 @@ class StripePaymentProvider implements PaymentProviderInterface
 
     public function calculateTotalAmount(Toernooi $toernooi, float $baseAmount): float
     {
-        if ($toernooi->mollie_mode !== 'platform') {
+        // Connect mode: no platform fee, organizer gets everything
+        if ($this->hasConnectedAccount($toernooi)) {
             return $baseAmount;
         }
 
+        // Platform mode: add toeslag
         $toeslag = $toernooi->platform_toeslag ?? 0.50;
 
         if ($toernooi->platform_toeslag_percentage) {
@@ -241,59 +255,25 @@ class StripePaymentProvider implements PaymentProviderInterface
     }
 
     /**
-     * Calculate platform fee in cents for Connect payments.
+     * Generate HMAC hash for callback URL verification.
      */
-    private function getPlatformFeeAmount(Toernooi $toernooi, int $amountInCents): int
+    public function generateCallbackHash(Toernooi $toernooi): string
     {
-        $toeslag = $toernooi->platform_toeslag ?? 0.50;
-
-        if ($toernooi->platform_toeslag_percentage) {
-            return (int) round($amountInCents * ($toeslag / 100));
-        }
-
-        return (int) round($toeslag * 100);
-    }
-
-    private function generateOAuthState(Toernooi $toernooi): string
-    {
-        return base64_encode(json_encode([
-            'toernooi_id' => $toernooi->id,
-            'provider' => 'stripe',
-            'timestamp' => time(),
-            'hash' => hash_hmac('sha256', $toernooi->id . ':stripe', config('app.key')),
-        ]));
+        return hash_hmac('sha256', $toernooi->id . ':stripe:' . date('Y-m-d'), config('app.key'));
     }
 
     /**
-     * Validate OAuth state and return toernooi ID.
+     * Validate callback hash and return toernooi ID.
      */
-    public function validateOAuthState(?string $state): ?int
+    public function validateCallbackHash(?int $toernooiId, ?string $hash): bool
     {
-        if ($state === null) {
-            return null;
+        if (!$toernooiId || !$hash) {
+            return false;
         }
 
-        try {
-            $data = json_decode(base64_decode($state), true);
+        $expected = hash_hmac('sha256', $toernooiId . ':stripe:' . date('Y-m-d'), config('app.key'));
 
-            if (!$data || !isset($data['toernooi_id'], $data['hash'])) {
-                return null;
-            }
-
-            $expectedHash = hash_hmac('sha256', $data['toernooi_id'] . ':stripe', config('app.key'));
-
-            if (!hash_equals($expectedHash, $data['hash'])) {
-                return null;
-            }
-
-            if (time() - ($data['timestamp'] ?? 0) > 3600) {
-                return null;
-            }
-
-            return (int) $data['toernooi_id'];
-        } catch (\Exception $e) {
-            return null;
-        }
+        return hash_equals($expected, $hash);
     }
 
     /**

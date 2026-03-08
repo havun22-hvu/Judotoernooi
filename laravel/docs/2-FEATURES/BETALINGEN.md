@@ -378,7 +378,7 @@ MOLLIE_PLATFORM_FEE=0.50
 
 ### TODO
 - [ ] Testen met echt Mollie account (Connect mode)
-- [ ] Stripe Connect (stroom 2: coach → organisator) `STRIPE_CLIENT_ID` nodig
+- [ ] Stripe Connect testen (stroom 2: coach → organisator via Account Links)
 
 ---
 
@@ -461,12 +461,13 @@ Zelfde redirect-flow als Mollie:
 3. Na betaling: webhook ontvangt `checkout.session.completed`
 4. Update betaling status
 
-### Stripe Connect (voor coach betalingen)
+### Stripe Connect (voor coach betalingen — inschrijfgeld)
 
-- OAuth flow vergelijkbaar met Mollie Connect
+- Account Links onboarding (geen legacy OAuth/`ca_...` nodig)
 - `stripe_account_id` opslaan na onboarding
 - Coach betalingen: `transfer_data.destination` = organisator's Stripe account
-- Application fee = platform toeslag
+- **Geen application fee** — JudoToernooi verdient niets aan inschrijfgeld
+- Organisator ontvangt het volledige bedrag (minus Stripe transactiekosten)
 
 ### Stripe Direct (voor upgrade betalingen)
 
@@ -507,7 +508,6 @@ POST /{org}/toernooi/{toernooi}/stripe/disconnect  → Disconnect
 STRIPE_KEY=           # pk_test_... of pk_live_...
 STRIPE_SECRET=        # sk_test_... of sk_live_...
 STRIPE_WEBHOOK_SECRET= # whsec_...
-STRIPE_CLIENT_ID=     # ca_...
 ```
 
 ---
