@@ -88,25 +88,17 @@ php artisan config:clear && php artisan cache:clear
 git branch --merged | grep -v master | xargs git branch -d
 ```
 
-## 7. Bevestig aan Gebruiker
+## 7. Urenregistratie + Bevestiging
+
+Geef een beknopt overzicht voor de urenregistratie. Dit is voor de belastingdienst: alleen aannemelijk maken dat er gewerkt is.
+**GEEN commit details of technische beschrijvingen.** Alleen projectnaam + globaal onderwerp (max 3 woorden).
 
 ```
-📋 Sessie Samenvatting:
-  - [Wat gedaan]
+[DD-MM-YYYY]:
+- [Project]: [globaal onderwerp, max 3 woorden]
 
-📝 Gedocumenteerd:
-  - [Welke MD files bijgewerkt]
-
-🔧 Smallwork:
-  - [X items afgehandeld, Y naar permanente docs]
-
-⏳ Openstaand:
-  - [Nog te doen]
-
-✅ Handover gemaakt voor volgende sessie
-✅ Git gepusht
-
-Sessie afgerond. Typ 'exit' of Ctrl+D om te sluiten.
+Handover gemaakt, git gepusht.
+Openstaand: [korte lijst of "geen"]
 ```
 
 ## NIET DOEN BIJ AFSLUITEN
