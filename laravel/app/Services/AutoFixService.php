@@ -722,7 +722,33 @@ class AutoFixService
         try {
             $file = $proposal->file;
             $basePath = base_path();
-            $message = 'autofix: ' . class_basename($proposal->exception_class) . ' in ' . $file;
+
+            // Extract ANALYSIS line from Claude's response for readable commit message
+            $analysis = '';
+            if (preg_match('/ANALYSIS:\s*(.+?)(?:\n|$)/s', $proposal->claude_analysis, $match)) {
+                $analysis = trim($match[1]);
+            }
+
+            // Extract RISK level
+            $risk = '';
+            if (preg_match('/RISK:\s*(low|medium|high)/i', $proposal->claude_analysis, $riskMatch)) {
+                $risk = strtolower($riskMatch[1]);
+            }
+
+            // Build structured commit message:
+            // Line 1: autofix(file): short description
+            // Line 3: Exception: class
+            // Line 4: Risk: level
+            // Line 5: Proposal: #id
+            $shortFile = basename($file, '.php');
+            $title = 'autofix(' . $shortFile . '): ' . ($analysis ? Str::limit($analysis, 72 - strlen('autofix(' . $shortFile . '): '), '...') : class_basename($proposal->exception_class));
+
+            $body = "File: {$file}\n"
+                . "Exception: {$proposal->exception_class}\n"
+                . ($risk ? "Risk: {$risk}\n" : '')
+                . "Proposal: #{$proposal->id}";
+
+            $message = $title . "\n\n" . $body;
 
             $commands = sprintf(
                 'cd %s && git add %s && git commit -m %s && git push 2>&1',
