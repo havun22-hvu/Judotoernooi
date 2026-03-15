@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AutofixProposal;
+use App\Services\AutoFixService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -42,6 +43,9 @@ class AutoFixController extends Controller
                 'status' => 'applied',
                 'applied_at' => now(),
             ]);
+
+            // Commit and push so local environments stay in sync
+            app(AutoFixService::class)->gitCommitAndPush($proposal);
 
             return back()->with('success', 'Fix is goedgekeurd en toegepast! Server cache is geleegd.');
 
@@ -125,19 +129,46 @@ class AutoFixController extends Controller
             throw new \RuntimeException("OLD code block not found in {$targetFile}. The code may have already been changed.");
         }
 
+        // Check if file was already modified by AutoFix in the past 24 hours
+        $backupDir = storage_path('app/autofix-backups');
+        $backupPrefix = str_replace(['/', '\\'], '_', $targetFile) . '.';
+        if (is_dir($backupDir)) {
+            $cutoff = now()->subHours(24)->format('YmdHis');
+            foreach (scandir($backupDir) as $backupFile) {
+                if (str_starts_with($backupFile, $backupPrefix)) {
+                    $timestamp = substr($backupFile, strlen($backupPrefix));
+                    if ($timestamp >= $cutoff) {
+                        throw new \RuntimeException("File {$targetFile} was already modified by AutoFix in the past 24 hours.");
+                    }
+                }
+            }
+        }
+
         // Apply the replacement
         $newContent = str_replace($oldCode, $newCode, $fileContent);
 
-        // Backup original file to storage/ (www-data has write access there)
-        $backupDir = storage_path('app/autofix-backups');
+        // Backup original file to storage/
         if (!is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
         }
         $backupName = str_replace(['/', '\\'], '_', $targetFile) . '.' . date('YmdHis');
-        copy($fullPath, $backupDir . '/' . $backupName);
+        $backupPath = $backupDir . '/' . $backupName;
+        copy($fullPath, $backupPath);
 
         // Write the fix
         file_put_contents($fullPath, $newContent);
+
+        // Syntax check for PHP files - rollback if invalid
+        if (str_ends_with($fullPath, '.php')) {
+            exec('php -l ' . escapeshellarg($fullPath) . ' 2>&1', $syntaxOutput, $syntaxReturn);
+            if ($syntaxReturn !== 0) {
+                copy($backupPath, $fullPath);
+                if (function_exists('opcache_invalidate')) {
+                    opcache_invalidate($fullPath, true);
+                }
+                throw new \RuntimeException("Syntax error after fix, rolled back: " . implode(' ', $syntaxOutput));
+            }
+        }
 
         // Clear Laravel caches
         if (function_exists('opcache_invalidate')) {

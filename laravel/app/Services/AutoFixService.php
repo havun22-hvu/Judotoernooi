@@ -77,6 +77,7 @@ class AutoFixService
                     ]);
 
                     $this->sendSuccessNotification($e, $file, $line, $proposal, $attempt);
+                    $this->gitCommitAndPush($proposal);
 
                     return;
                 }
@@ -531,6 +532,18 @@ class AutoFixService
             return "Could not write to {$targetFile}: " . $writeError->getMessage();
         }
 
+        // Syntax check for PHP files - rollback if invalid
+        if (str_ends_with($fullPath, '.php')) {
+            exec('php -l ' . escapeshellarg($fullPath) . ' 2>&1', $syntaxOutput, $syntaxReturn);
+            if ($syntaxReturn !== 0) {
+                copy($backupPath, $fullPath);
+                if (function_exists('opcache_invalidate')) {
+                    opcache_invalidate($fullPath, true);
+                }
+                return "Syntax error after fix, rolled back: " . implode(' ', $syntaxOutput);
+            }
+        }
+
         // Clear caches
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($fullPath, true);
@@ -698,6 +711,35 @@ class AutoFixService
             return null;
         } catch (Throwable $e) {
             return null;
+        }
+    }
+
+    /**
+     * Commit and push the fix to git so local environments stay in sync.
+     */
+    public function gitCommitAndPush(AutofixProposal $proposal): void
+    {
+        try {
+            $file = $proposal->file;
+            $basePath = base_path();
+            $message = 'autofix: ' . class_basename($proposal->exception_class) . ' in ' . $file;
+
+            $commands = sprintf(
+                'cd %s && git add %s && git commit -m %s && git push 2>&1',
+                escapeshellarg($basePath),
+                escapeshellarg($file),
+                escapeshellarg($message)
+            );
+
+            exec($commands, $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                Log::warning('AutoFix: git push failed', ['output' => implode("\n", $output)]);
+            } else {
+                Log::info('AutoFix: Changes committed and pushed', ['file' => $file]);
+            }
+        } catch (Throwable $gitError) {
+            Log::warning('AutoFix: git operations failed', ['error' => $gitError->getMessage()]);
         }
     }
 
