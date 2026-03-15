@@ -740,8 +740,10 @@ class AutoFixService
             // Line 3: Exception: class
             // Line 4: Risk: level
             // Line 5: Proposal: #id
-            $shortFile = basename($file, '.php');
-            $title = 'autofix(' . $shortFile . '): ' . ($analysis ? Str::limit($analysis, 72 - strlen('autofix(' . $shortFile . '): '), '...') : class_basename($proposal->exception_class));
+            $shortFile = str_replace('.blade', '', basename($file, '.php'));
+            $prefix = "autofix({$shortFile}): ";
+            $maxAnalysis = max(20, 72 - strlen($prefix));
+            $title = $prefix . ($analysis ? Str::limit($analysis, $maxAnalysis, '...') : class_basename($proposal->exception_class));
 
             $body = "File: {$file}\n"
                 . "Exception: {$proposal->exception_class}\n"
@@ -751,8 +753,9 @@ class AutoFixService
             $message = $title . "\n\n" . $body;
 
             $commands = sprintf(
-                'cd %s && git add %s && git commit -m %s && git push 2>&1',
+                'cd %s && git add %s && git commit %s -m %s && git push 2>&1',
                 escapeshellarg($basePath),
+                escapeshellarg($file),
                 escapeshellarg($file),
                 escapeshellarg($message)
             );
