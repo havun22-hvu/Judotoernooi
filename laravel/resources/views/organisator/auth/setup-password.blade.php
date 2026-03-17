@@ -1,31 +1,34 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Wachtwoord resetten') }} - {{ __('JudoToernooi') }}</title>
+    <title>{{ __('Wachtwoord instellen') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ __('JudoToernooi') }}</h1>
-            <p class="text-gray-600">{{ __('Nieuw wachtwoord instellen') }}</p>
+            <p class="text-gray-600">{{ __('Wachtwoord instellen') }}</p>
         </div>
 
-        <form action="{{ route('password.update') }}" method="POST">
+        @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        <p class="text-gray-600 mb-6 text-sm">
+            {{ __('Stel een wachtwoord in zodat je voortaan kunt inloggen met je e-mailadres en wachtwoord.') }}
+        </p>
+
+        <form action="{{ route('password.setup.store') }}" method="POST">
             @csrf
-
-            <input type="hidden" name="token" value="{{ $token }}">
-
-            <div class="mb-4">
-                <p class="text-sm text-gray-600">{{ __('Nieuw wachtwoord instellen voor:') }}</p>
-                <p class="font-semibold text-blue-600">{{ $email }}</p>
-            </div>
 
             <div class="mb-4">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ __('Nieuw wachtwoord') }} <span class="text-gray-400">({{ __('min. 8 tekens') }})</span>
+                    {{ __('Wachtwoord') }} <span class="text-gray-400">({{ __('min. 8 tekens') }})</span>
                 </label>
                 <div class="relative">
                     <input type="password"
@@ -33,8 +36,9 @@
                            name="password"
                            required
                            minlength="8"
+                           autofocus
                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pr-10 focus:border-blue-500 focus:ring-blue-500 @error('password') border-red-500 @enderror">
-                    <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                    <button type="button" onclick="togglePw('password')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
                         <svg id="eye-open-password" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -59,7 +63,7 @@
                            name="password_confirmation"
                            required
                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pr-10 focus:border-blue-500 focus:ring-blue-500">
-                    <button type="button" onclick="togglePassword('password_confirmation')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                    <button type="button" onclick="togglePw('password_confirmation')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
                         <svg id="eye-open-password_confirmation" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -73,26 +77,22 @@
 
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                {{ __('Wachtwoord resetten') }}
+                {{ __('Wachtwoord opslaan') }}
             </button>
         </form>
     </div>
 
     <script>
-        function togglePassword(fieldId) {
-            const input = document.getElementById(fieldId);
-            const eyeOpen = document.getElementById('eye-open-' + fieldId);
-            const eyeClosed = document.getElementById('eye-closed-' + fieldId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            } else {
-                input.type = 'password';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            }
+    function togglePw(fieldId) {
+        const input = document.getElementById(fieldId);
+        const eyeOpen = document.getElementById('eye-open-' + fieldId);
+        const eyeClosed = document.getElementById('eye-closed-' + fieldId);
+        if (input.type === 'password') {
+            input.type = 'text'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden');
+        } else {
+            input.type = 'password'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden');
         }
+    }
     </script>
 </body>
 </html>

@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\MagicLinkMail;
 use App\Models\AuthDevice;
+use App\Models\MagicLinkToken;
 use App\Models\Organisator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -58,15 +62,6 @@ class OrganisatorAuthController extends Controller
                 $request->session()->put('locale', $organisator->locale);
             }
 
-            // Check if device needs PIN setup (fingerprint from login form)
-            $fingerprint = $request->input('fingerprint');
-            if ($fingerprint && strlen($fingerprint) === 64) {
-                $device = AuthDevice::findByFingerprint($organisator->id, $fingerprint);
-                if (!$device || !$device->hasPin()) {
-                    return redirect()->route('auth.setup-pin');
-                }
-            }
-
             // Sitebeheerder goes to admin dashboard, regular organisator to their dashboard
             if ($organisator->isSitebeheerder()) {
                 return redirect()->intended(route('admin.index'));
@@ -76,12 +71,12 @@ class OrganisatorAuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Deze gegevens komen niet overeen met onze records.',
+            'email' => __('Deze gegevens komen niet overeen met onze records.'),
         ])->onlyInput('email');
     }
 
     /**
-     * Show registration form
+     * Show registration form (magic link)
      */
     public function showRegister(): View|RedirectResponse
     {
@@ -94,32 +89,241 @@ class OrganisatorAuthController extends Controller
     }
 
     /**
-     * Handle registration
+     * Send magic link for registration
      */
-    public function register(Request $request): RedirectResponse
+    public function sendRegisterLink(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'organisatie_naam' => 'required|string|max:255',
             'naam' => 'required|string|max:255',
-            'email' => 'required|email|unique:organisators,email',
+            'email' => 'required|email',
             'telefoon' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
-            'password' => 'required|string|min:8|confirmed',
         ], [
-            'telefoon.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
+            'telefoon.regex' => __('Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)'),
         ]);
 
+        // Rate limit: max 3 per 10 minutes
+        $key = 'magic-link:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            return back()->withErrors([
+                'email' => __('Te veel verzoeken. Probeer het over :seconds seconden opnieuw.', [
+                    'seconds' => RateLimiter::availableIn($key),
+                ]),
+            ])->withInput();
+        }
+        RateLimiter::hit($key, 600);
+
+        $token = MagicLinkToken::generate($request->email, 'register', [
+            'organisatie_naam' => $request->organisatie_naam,
+            'naam' => $request->naam,
+            'telefoon' => $request->telefoon,
+        ]);
+
+        Mail::to($request->email)->send(new MagicLinkMail($token));
+
+        return redirect()->route('register.sent')->with([
+            'email' => $request->email,
+            'type' => 'register',
+        ]);
+    }
+
+    /**
+     * Show magic link sent confirmation
+     */
+    public function magicLinkSent(): View
+    {
+        return view('organisator.auth.magic-link-sent', [
+            'email' => session('email', ''),
+            'type' => session('type', 'register'),
+        ]);
+    }
+
+    /**
+     * Verify registration magic link
+     */
+    public function verifyRegister(string $token): RedirectResponse
+    {
+        $magicToken = MagicLinkToken::findValid($token, 'register');
+
+        if (!$magicToken) {
+            return redirect()->route('register')
+                ->withErrors(['token' => __('Link is verlopen of al gebruikt. Vraag een nieuwe aan.')]);
+        }
+
+        $magicToken->markUsed();
+        $metadata = $magicToken->metadata ?? [];
+
+        // Check if organisator already exists
+        $organisator = Organisator::where('email', $magicToken->email)->first();
+
+        if ($organisator) {
+            // Existing user - just log in
+            Auth::guard('organisator')->login($organisator, true);
+            session()->save();
+
+            if ($organisator->isSitebeheerder()) {
+                return redirect()->intended(route('admin.index'));
+            }
+            return redirect()->intended(route('organisator.dashboard', ['organisator' => $organisator->slug]));
+        }
+
+        // Create new organisator (no password yet)
         $organisator = Organisator::create([
-            'organisatie_naam' => $validated['organisatie_naam'],
-            'naam' => $validated['naam'],
-            'email' => $validated['email'],
-            'telefoon' => $validated['telefoon'] ?? null,
-            'password' => $validated['password'],
+            'organisatie_naam' => $metadata['organisatie_naam'] ?? 'Organisatie',
+            'naam' => $metadata['naam'] ?? 'Organisator',
+            'email' => $magicToken->email,
+            'telefoon' => $metadata['telefoon'] ?? null,
+            'password' => null,
+            'email_verified_at' => now(),
         ]);
 
-        Auth::guard('organisator')->login($organisator);
+        Auth::guard('organisator')->login($organisator, true);
+        session()->save();
+
+        // Redirect to password setup
+        return redirect()->route('password.setup')
+            ->with('success', __('Account aangemaakt! Stel nu een wachtwoord in.'));
+    }
+
+    /**
+     * Show password setup form (after magic link registration)
+     */
+    public function showSetupPassword(): View|RedirectResponse
+    {
+        $organisator = Auth::guard('organisator')->user();
+
+        // If already has password, redirect to dashboard
+        if ($organisator && $organisator->password) {
+            return redirect()->route('organisator.dashboard', ['organisator' => $organisator->slug]);
+        }
+
+        return view('organisator.auth.setup-password');
+    }
+
+    /**
+     * Handle password setup
+     */
+    public function setupPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $organisator = Auth::guard('organisator')->user();
+        $organisator->update(['password' => Hash::make($request->password)]);
 
         return redirect()->route('organisator.dashboard', ['organisator' => $organisator->slug])
-            ->with('success', 'Account aangemaakt! Welkom bij JudoToernooi.');
+            ->with('success', __('Wachtwoord ingesteld!'));
+    }
+
+    /**
+     * Show forgot password form (magic link)
+     */
+    public function showForgotPassword(): View
+    {
+        return view('organisator.auth.forgot-password');
+    }
+
+    /**
+     * Send magic link for password reset
+     */
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Rate limit
+        $key = 'password-reset:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            return back()->withErrors([
+                'email' => __('Te veel verzoeken. Probeer het over :seconds seconden opnieuw.', [
+                    'seconds' => RateLimiter::availableIn($key),
+                ]),
+            ]);
+        }
+        RateLimiter::hit($key, 600);
+
+        // Always show success (email enumeration prevention)
+        $organisator = Organisator::where('email', strtolower($request->email))->first();
+
+        if ($organisator) {
+            $token = MagicLinkToken::generate($request->email, 'password_reset');
+            Mail::to($request->email)->send(new MagicLinkMail($token));
+        }
+
+        return redirect()->route('password.sent')->with([
+            'email' => $request->email,
+            'type' => 'password_reset',
+        ]);
+    }
+
+    /**
+     * Show password reset sent confirmation
+     */
+    public function resetSent(): View
+    {
+        return view('organisator.auth.magic-link-sent', [
+            'email' => session('email', ''),
+            'type' => session('type', 'password_reset'),
+        ]);
+    }
+
+    /**
+     * Show password reset form (via magic link)
+     */
+    public function showResetPassword(Request $request, string $token): View|RedirectResponse
+    {
+        $magicToken = MagicLinkToken::findValid($token, 'password_reset');
+
+        if (!$magicToken) {
+            return redirect()->route('password.request')
+                ->withErrors(['token' => __('Link is verlopen of al gebruikt. Vraag een nieuwe aan.')]);
+        }
+
+        return view('organisator.auth.reset-password', [
+            'token' => $token,
+            'email' => $magicToken->email,
+        ]);
+    }
+
+    /**
+     * Handle password reset (via magic link)
+     */
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $magicToken = MagicLinkToken::findValid($request->token, 'password_reset');
+
+        if (!$magicToken) {
+            return redirect()->route('password.request')
+                ->withErrors(['token' => __('Link is verlopen of al gebruikt.')]);
+        }
+
+        $organisator = Organisator::where('email', $magicToken->email)->first();
+
+        if (!$organisator) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => __('Gebruiker niet gevonden.')]);
+        }
+
+        $organisator->update(['password' => Hash::make($request->password)]);
+        $magicToken->markUsed();
+
+        Auth::guard('organisator')->login($organisator, true);
+        session()->save();
+
+        if ($organisator->isSitebeheerder()) {
+            return redirect()->intended(route('admin.index'))
+                ->with('success', __('Wachtwoord gewijzigd!'));
+        }
+
+        return redirect()->intended(route('organisator.dashboard', ['organisator' => $organisator->slug]))
+            ->with('success', __('Wachtwoord gewijzigd!'));
     }
 
     /**
@@ -132,70 +336,7 @@ class OrganisatorAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('organisator.login')
-            ->with('success', 'U bent uitgelogd.');
-    }
-
-    /**
-     * Show forgot password form
-     */
-    public function showForgotPassword(): View
-    {
-        return view('organisator.auth.forgot-password');
-    }
-
-    /**
-     * Send password reset link
-     */
-    public function sendResetLink(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
-
-        $status = Password::broker('organisators')->sendResetLink(
-            $request->only('email')
-        );
-
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
-    }
-
-    /**
-     * Show password reset form
-     */
-    public function showResetPassword(Request $request, string $token): View
-    {
-        return view('organisator.auth.reset-password', [
-            'token' => $token,
-            'email' => $request->email,
-        ]);
-    }
-
-    /**
-     * Handle password reset
-     */
-    public function resetPassword(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $status = Password::broker('organisators')->reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (Organisator $organisator, string $password) {
-                $organisator->forceFill([
-                    'password' => Hash::make($password),
-                    'remember_token' => Str::random(60),
-                ])->save();
-            }
-        );
-
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('organisator.login')->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        return redirect()->route('login')
+            ->with('success', __('U bent uitgelogd.'));
     }
 }

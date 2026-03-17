@@ -194,16 +194,22 @@ Route::middleware('throttle:login')->group(function () {
 // Guest routes (only for users not logged in)
 Route::middleware('guest:organisator')->group(function () {
     Route::get('registreren', [OrganisatorAuthController::class, 'showRegister'])->name('register');
-    Route::post('registreren', [OrganisatorAuthController::class, 'register'])->name('register.submit');
+    Route::post('registreren', [OrganisatorAuthController::class, 'sendRegisterLink'])->name('register.submit');
+    Route::get('registreren/verstuurd', [OrganisatorAuthController::class, 'magicLinkSent'])->name('register.sent');
+    Route::get('registreren/bevestig/{token}', [OrganisatorAuthController::class, 'verifyRegister'])->name('register.verify');
     Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('wachtwoord-vergeten', [OrganisatorAuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('wachtwoord-vergeten/verstuurd', [OrganisatorAuthController::class, 'resetSent'])->name('password.sent');
     Route::get('wachtwoord-reset/{token}', [OrganisatorAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::get('wachtwoord-magic-reset/{token}', [OrganisatorAuthController::class, 'showResetPassword'])->name('password.magic-reset');
     Route::post('wachtwoord-reset', [OrganisatorAuthController::class, 'resetPassword'])->name('password.update');
 });
 
 // Authenticated routes
 Route::middleware('auth:organisator')->group(function () {
     Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
+    Route::get('wachtwoord-instellen', [OrganisatorAuthController::class, 'showSetupPassword'])->name('password.setup');
+    Route::post('wachtwoord-instellen', [OrganisatorAuthController::class, 'setupPassword'])->name('password.setup.store');
 });
 
 // Unified Login System - PIN, Passkey, QR routes (public, no auth)

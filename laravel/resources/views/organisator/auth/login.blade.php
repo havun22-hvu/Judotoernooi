@@ -6,30 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('Inloggen') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
-        .pin-dot { transition: background-color 0.15s ease; }
-        .pin-dot.filled { background-color: #2563eb; }
-        .numpad-btn {
-            display: flex; align-items: center; justify-content: center;
-            width: 100%; aspect-ratio: 1; border-radius: 9999px;
-            font-size: 1.5rem; font-weight: 600; color: #1f2937;
-            background-color: #f3f4f6; border: 1px solid #e5e7eb;
-            cursor: pointer; transition: background-color 0.15s ease;
-            user-select: none; -webkit-user-select: none;
-        }
-        .numpad-btn:hover { background-color: #e5e7eb; }
-        .numpad-btn:active { background-color: #d1d5db; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-        .animate-shake { animation: shake 0.3s ease-in-out; }
-    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        {{-- Taalkiezer --}}
+        {{-- Language switcher --}}
         <div class="flex justify-end mb-2" x-data="{ open: false }">
             <div class="relative">
                 <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
@@ -57,9 +37,9 @@
 
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ __('JudoToernooi') }}</h1>
-            <p class="text-gray-600">{{ __('Organisator Login') }}</p>
         </div>
 
+        {{-- Flash messages --}}
         @if(session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             {{ session('success') }}
@@ -84,111 +64,26 @@
         </div>
         @endif
 
-        <!-- Loading state -->
-        <div id="loading-state" class="text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-            <p class="mt-2 text-sm text-gray-400">{{ __('Laden...') }}</p>
+        @if($errors->has('token'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {{ $errors->first('token') }}
+        </div>
+        @endif
+
+        {{-- Pill Tabs --}}
+        <div class="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button type="button" id="tab-login" onclick="switchTab('login')"
+                class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all bg-white text-gray-800 shadow">
+                {{ __('Inloggen') }}
+            </button>
+            <button type="button" id="tab-register" onclick="switchTab('register')"
+                class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all text-gray-500">
+                {{ __('Registreren') }}
+            </button>
         </div>
 
-        <!-- PIN Login Section (known devices) -->
-        <div id="pin-login-section" class="hidden">
-            <div class="text-center mb-6">
-                <p id="welcome-user" class="text-lg font-medium text-gray-800"></p>
-                <p class="text-sm text-gray-500">{{ __('Voer je PIN in') }}</p>
-            </div>
-
-            <!-- PIN Dots -->
-            <div class="flex justify-center gap-3 mb-6">
-                <div class="pin-dot w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
-                <div class="pin-dot w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
-                <div class="pin-dot w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
-                <div class="pin-dot w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
-                <div class="pin-dot w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
-            </div>
-
-            <p id="pin-error" class="text-center text-red-500 text-sm mb-4 hidden"></p>
-
-            <!-- Biometric fallback message -->
-            <div id="biometric-fallback" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-center">
-                <p class="text-sm text-gray-700 mb-2">{{ __('Biometrie niet gelukt? Gebruik een andere methode:') }}</p>
-                <div class="flex gap-2 justify-center">
-                    <button type="button" onclick="document.getElementById('biometric-fallback').classList.add('hidden')" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                        {{ __('PIN invoeren') }}
-                    </button>
-                    <button type="button" onclick="showPasswordLogin()" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">
-                        {{ __('Wachtwoord') }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- Numpad -->
-            <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
-                <button type="button" onclick="addPin('1')" class="numpad-btn">1</button>
-                <button type="button" onclick="addPin('2')" class="numpad-btn">2</button>
-                <button type="button" onclick="addPin('3')" class="numpad-btn">3</button>
-                <button type="button" onclick="addPin('4')" class="numpad-btn">4</button>
-                <button type="button" onclick="addPin('5')" class="numpad-btn">5</button>
-                <button type="button" onclick="addPin('6')" class="numpad-btn">6</button>
-                <button type="button" onclick="addPin('7')" class="numpad-btn">7</button>
-                <button type="button" onclick="addPin('8')" class="numpad-btn">8</button>
-                <button type="button" onclick="addPin('9')" class="numpad-btn">9</button>
-                <!-- Left: Biometric (mobile) or QR (desktop) -->
-                <button type="button" id="biometric-btn" onclick="startBiometric()" class="numpad-btn hidden" style="background-color: #eff6ff;">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
-                    </svg>
-                </button>
-                <button type="button" id="qr-btn" onclick="toggleQrModal()" class="numpad-btn hidden" style="background-color: #eff6ff;">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                    </svg>
-                </button>
-                <button type="button" onclick="addPin('0')" class="numpad-btn">0</button>
-                <button type="button" onclick="removePin()" class="numpad-btn">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Password hint after failed PIN attempts -->
-            <div id="password-hint" class="hidden mt-4">
-                <button type="button" onclick="showPasswordLogin()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
-                    {{ __('Inloggen met wachtwoord') }}
-                </button>
-            </div>
-
-            <div class="text-center mt-4">
-                <button type="button" onclick="showPasswordLogin()" class="text-sm text-blue-600 hover:underline">
-                    {{ __('Ander account? Login met wachtwoord') }}
-                </button>
-            </div>
-        </div>
-
-        <!-- QR Login Modal -->
-        <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick="if(event.target === this) toggleQrModal()">
-            <div class="bg-white rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-gray-800">{{ __('Inloggen met telefoon') }}</h3>
-                    <button onclick="toggleQrModal()" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="text-center">
-                    <div id="qr-container" class="w-48 h-48 mx-auto bg-gray-50 rounded-lg flex items-center justify-center mb-4 border">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">{{ __('Scan met je telefoon waarop je al bent ingelogd') }}</p>
-                    <p id="qr-status" class="text-xs text-gray-400">{{ __('QR code laden...') }}</p>
-                    <p id="qr-timer" class="text-xs text-blue-500 hidden mt-1">{{ __('Verloopt over') }} <span id="timer">5:00</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Password Login Form -->
-        <div id="password-login-section" class="hidden">
+        {{-- ============ LOGIN TAB ============ --}}
+        <div id="login-tab">
             <form action="{{ route('login.submit') }}" method="POST" id="loginForm">
                 @csrf
                 <input type="hidden" name="fingerprint" id="fingerprint-input">
@@ -203,7 +98,7 @@
                            value="{{ old('email') }}"
                            required
                            autofocus
-                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('email') border-red-500 @enderror">
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 @error('email') border-red-500 @enderror">
                     @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -218,7 +113,7 @@
                                id="password"
                                name="password"
                                required
-                               class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pr-10 focus:border-blue-500 focus:ring-blue-500">
+                               class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 pr-10 focus:border-blue-500 focus:ring-blue-500">
                         <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
                             <svg id="eye-open" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -245,171 +140,246 @@
                 </div>
 
                 {{-- DO NOT REMOVE: Login submit button --}}
-                <button type="submit"
+                <button type="submit" id="login-btn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                     {{ __('Inloggen') }}
                 </button>
             </form>
 
-            {{-- DO NOT REMOVE: Registration link for new users --}}
-            <div class="mt-6 text-center">
-                <p class="text-gray-600">
-                    {{ __('Nog geen account?') }}
-                    <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                        {{ __('Registreer hier') }}
-                    </a>
-                </p>
+            {{-- Divider --}}
+            <div class="flex items-center my-6">
+                <div class="flex-1 border-t border-gray-300"></div>
+                <span class="px-4 text-sm text-gray-500">{{ __('of') }}</span>
+                <div class="flex-1 border-t border-gray-300"></div>
             </div>
+
+            {{-- Alternative login methods --}}
+            <div id="alt-login-methods">
+                {{-- QR button (desktop only) --}}
+                <button type="button" id="qr-login-btn" onclick="toggleQrModal()"
+                    class="hidden w-full py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                    </svg>
+                    {{ __('Inloggen met QR code') }}
+                </button>
+
+                {{-- Biometric button (smartphone only) --}}
+                <button type="button" id="biometric-login-btn" onclick="startBiometric()"
+                    class="hidden w-full py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                    </svg>
+                    {{ __('Inloggen met biometrie') }}
+                </button>
+            </div>
+
+            {{-- Error message for alt methods --}}
+            <p id="login-error" class="text-red-600 text-sm text-center hidden mt-3"></p>
         </div>
 
+        {{-- ============ REGISTER TAB ============ --}}
+        <div id="register-tab" class="hidden">
+            <form action="{{ route('register.submit') }}" method="POST" id="registerForm">
+                @csrf
+
+                <div class="mb-4">
+                    <label for="reg-organisatie" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('Naam judoschool / organisatie') }}
+                    </label>
+                    <input type="text"
+                           id="reg-organisatie"
+                           name="organisatie_naam"
+                           value="{{ old('organisatie_naam') }}"
+                           required
+                           placeholder="{{ __('Naam van uw judoschool') }}"
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 @error('organisatie_naam') border-red-500 @enderror">
+                    @error('organisatie_naam')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="reg-naam" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('Uw naam') }} <span class="text-gray-400">({{ __('contactpersoon') }})</span>
+                    </label>
+                    <input type="text"
+                           id="reg-naam"
+                           name="naam"
+                           value="{{ old('naam') }}"
+                           required
+                           placeholder="{{ __('bijv. Jan Jansen') }}"
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 @error('naam') border-red-500 @enderror">
+                    @error('naam')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="reg-email" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('E-mailadres') }}
+                    </label>
+                    <input type="email"
+                           id="reg-email"
+                           name="email"
+                           value="{{ old('email') }}"
+                           required
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 @error('email') border-red-500 @enderror">
+                    @error('email')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-6">
+                    <label for="reg-telefoon" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('Telefoonnummer') }} <span class="text-gray-400">({{ __('optioneel') }})</span>
+                    </label>
+                    <input type="tel"
+                           id="reg-telefoon"
+                           name="telefoon"
+                           value="{{ old('telefoon') }}"
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                {{-- DO NOT REMOVE: Registration submit button --}}
+                <button type="submit" id="register-btn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    {{ __('Registratielink versturen') }}
+                </button>
+
+                <p class="text-xs text-gray-500 text-center mt-3">
+                    {{ __('We sturen een activatielink naar je e-mailadres.') }}
+                </p>
+            </form>
+        </div>
+    </div>
+
+    {{-- QR Login Modal --}}
+    <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick="if(event.target === this) toggleQrModal()">
+        <div class="bg-white rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-gray-800">{{ __('Scan met je telefoon') }}</h3>
+                <button onclick="toggleQrModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="text-center">
+                <div id="qr-container" class="w-48 h-48 mx-auto bg-gray-50 rounded-lg flex items-center justify-center mb-4 border">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+                <p class="text-sm text-gray-500 mb-2">{{ __('Scan met je telefoon waarop je al bent ingelogd') }}</p>
+                <p id="qr-status" class="text-xs text-gray-400">{{ __('QR code laden...') }}</p>
+                <p id="qr-timer" class="text-xs text-blue-500 hidden mt-1">{{ __('Verloopt over') }} <span id="timer">5:00</span></p>
+            </div>
+        </div>
     </div>
 
 <script>
 const __t = {
-    welcomeBack: @json(__('Welkom terug')),
-    pinWrong3x: @json(__('PIN 3x fout. Probeer wachtwoord.')),
-    incorrectPin: @json(__('Onjuiste PIN')),
     somethingWrong: @json(__('Er ging iets mis')),
-    biometricNotSupported: @json(__('Biometrie niet ondersteund')),
-    noPasskeyFound: @json(__('Geen passkey gevonden')),
-    biometricFailed: @json(__('Biometrie mislukt')),
+    biometricNotSupported: @json(__('Biometrie niet ondersteund op dit apparaat')),
+    noPasskeyFound: @json(__('Geen passkey gevonden. Log eerst in met wachtwoord.')),
+    biometricFailed: @json(__('Biometrie mislukt. Gebruik je wachtwoord.')),
     qrLoading: @json(__('QR code laden...')),
     scanWithPhone: @json(__('Scan met je telefoon')),
     qrLoadFailed: @json(__('QR laden mislukt')),
     approved: @json(__('Goedgekeurd! Doorsturen...')),
     refreshQr: @json(__('Vernieuw QR')),
     qrExpired: @json(__('QR code verlopen')),
+    registering: @json(__('Bezig met versturen...')),
 };
 
-let deviceFingerprint = null;
-let currentPin = '';
-let pinAttempts = 0;
+// Tab switching
+function switchTab(tab) {
+    const loginTab = document.getElementById('login-tab');
+    const registerTab = document.getElementById('register-tab');
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
 
-function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]').content;
+    if (tab === 'login') {
+        loginTab.classList.remove('hidden');
+        registerTab.classList.add('hidden');
+        tabLogin.classList.add('bg-white', 'text-gray-800', 'shadow');
+        tabLogin.classList.remove('text-gray-500');
+        tabRegister.classList.remove('bg-white', 'text-gray-800', 'shadow');
+        tabRegister.classList.add('text-gray-500');
+    } else {
+        loginTab.classList.add('hidden');
+        registerTab.classList.remove('hidden');
+        tabRegister.classList.add('bg-white', 'text-gray-800', 'shadow');
+        tabRegister.classList.remove('text-gray-500');
+        tabLogin.classList.remove('bg-white', 'text-gray-800', 'shadow');
+        tabLogin.classList.add('text-gray-500');
+    }
 }
+
+// Password toggle
+function togglePassword() {
+    const input = document.getElementById('password');
+    const eyeOpen = document.getElementById('eye-open');
+    const eyeClosed = document.getElementById('eye-closed');
+    if (input.type === 'password') {
+        input.type = 'text'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden');
+    } else {
+        input.type = 'password'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden');
+    }
+}
+
+// CSRF fetch helper
+function getCsrfToken() { return document.querySelector('meta[name="csrf-token"]').content; }
 
 async function csrfFetch(url, options = {}) {
     options.headers = options.headers || {};
     options.headers['X-CSRF-TOKEN'] = getCsrfToken();
     options.headers['Accept'] = options.headers['Accept'] || 'application/json';
     const response = await fetch(url, options);
-    if (response.status === 419) {
-        window.location.reload();
-        return null;
-    }
+    if (response.status === 419) { window.location.reload(); return null; }
     return response;
 }
 
+// Device fingerprint
 async function generateFingerprint() {
     const data = [
-        navigator.userAgent,
-        navigator.language,
-        screen.width + 'x' + screen.height,
-        screen.colorDepth,
+        navigator.userAgent, navigator.language,
+        screen.width + 'x' + screen.height, screen.colorDepth,
         new Date().getTimezoneOffset(),
-        navigator.hardwareConcurrency || 'unknown',
-        navigator.platform
+        navigator.hardwareConcurrency || 'unknown', navigator.platform
     ].join('|');
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
     return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function togglePassword() {
-    const input = document.getElementById('password');
-    const eyeOpen = document.getElementById('eye-open');
-    const eyeClosed = document.getElementById('eye-closed');
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeOpen.classList.remove('hidden');
-        eyeClosed.classList.add('hidden');
-    } else {
-        input.type = 'password';
-        eyeOpen.classList.add('hidden');
-        eyeClosed.classList.remove('hidden');
-    }
+// Base64url helpers
+function base64urlToBuffer(b64) {
+    const padding = '='.repeat((4 - b64.length % 4) % 4);
+    const base64 = b64.replace(/-/g, '+').replace(/_/g, '/') + padding;
+    return Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
+}
+function bufferToBase64url(buf) {
+    const bytes = new Uint8Array(buf);
+    let str = ''; for (const b of bytes) str += String.fromCharCode(b);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-function showPasswordLogin() {
-    document.getElementById('pin-login-section').classList.add('hidden');
-    document.getElementById('password-login-section').classList.remove('hidden');
-    document.getElementById('email')?.focus();
-}
-
-function addPin(digit) {
-    if (currentPin.length >= 5) return;
-    currentPin += digit;
-    updatePinDots();
-    if (currentPin.length === 5) submitPin();
-}
-
-function removePin() {
-    currentPin = currentPin.slice(0, -1);
-    updatePinDots();
-    hidePinError();
-}
-
-function updatePinDots() {
-    document.querySelectorAll('.pin-dot').forEach((dot, i) => {
-        dot.classList.toggle('filled', i < currentPin.length);
-    });
-}
-
-function showPinError(msg) {
-    const el = document.getElementById('pin-error');
+// Show login error
+function showLoginError(msg) {
+    const el = document.getElementById('login-error');
     el.textContent = msg;
     el.classList.remove('hidden');
-    document.querySelectorAll('.pin-dot').forEach(dot => {
-        dot.classList.add('animate-shake');
-        setTimeout(() => dot.classList.remove('animate-shake'), 300);
-    });
-    currentPin = '';
-    updatePinDots();
 }
 
-function hidePinError() {
-    document.getElementById('pin-error').classList.add('hidden');
-}
-
-async function submitPin() {
-    try {
-        const res = await csrfFetch('/auth/pin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fingerprint: deviceFingerprint, pin: currentPin }),
-        });
-        if (!res) return;
-        const data = await res.json();
-        if (data.success) {
-            window.location.href = data.redirect || '/';
-        } else {
-            pinAttempts++;
-            if (pinAttempts >= 3) {
-                showPinError(__t.pinWrong3x);
-                showPasswordHint();
-            } else {
-                showPinError(data.message || __t.incorrectPin);
-            }
-        }
-    } catch (err) {
-        showPinError(__t.somethingWrong);
-    }
-}
-
+// Biometric login (smartphone)
 async function startBiometric() {
-    if (!window.PublicKeyCredential) {
-        showPinError(__t.biometricNotSupported);
-        return;
-    }
+    if (!window.PublicKeyCredential) { showLoginError(__t.biometricNotSupported); return; }
     try {
         const optRes = await csrfFetch('/auth/passkey/login/options', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
         });
-        if (!optRes || !optRes.ok) { showPinError(__t.noPasskeyFound); return; }
+        if (!optRes || !optRes.ok) { showLoginError(__t.noPasskeyFound); return; }
         const options = await optRes.json();
-        if (!options.challenge) { showPinError(__t.noPasskeyFound); return; }
+        if (!options.challenge) { showLoginError(__t.noPasskeyFound); return; }
 
         const publicKeyOptions = {
             challenge: base64urlToBuffer(options.challenge),
@@ -424,12 +394,9 @@ async function startBiometric() {
         }
         const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
         const loginRes = await csrfFetch('/auth/passkey/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: credential.id,
-                rawId: bufferToBase64url(credential.rawId),
-                type: credential.type,
+                id: credential.id, rawId: bufferToBase64url(credential.rawId), type: credential.type,
                 response: {
                     authenticatorData: bufferToBase64url(credential.response.authenticatorData),
                     clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
@@ -439,28 +406,18 @@ async function startBiometric() {
             }),
         });
         if (!loginRes) return;
-        const loginData = await loginRes.json();
-        if (loginData.success && loginData.device_token) {
-            window.location.href = '/auth/token-login/' + loginData.device_token;
+        const data = await loginRes.json();
+        if (data.success && data.device_token) {
+            window.location.href = '/auth/token-login/' + data.device_token;
         } else {
-            showPinError(__t.biometricFailed);
+            showLoginError(__t.biometricFailed);
         }
     } catch (err) {
-        // Any biometric failure → show fallback options
-        showBiometricFallback();
+        showLoginError(__t.biometricFailed);
     }
 }
 
-function showBiometricFallback() {
-    document.getElementById('pin-error').classList.add('hidden');
-    document.getElementById('biometric-fallback').classList.remove('hidden');
-}
-
-function showPasswordHint() {
-    document.getElementById('password-hint').classList.remove('hidden');
-}
-
-// QR Code functions
+// QR Code login (desktop)
 let qrToken = null, pollInterval = null, timerInterval = null, expiresIn = 300, qrModalOpen = false;
 
 function toggleQrModal() {
@@ -482,8 +439,7 @@ async function generateQr() {
 
     try {
         const res = await csrfFetch('/auth/qr/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 browser: navigator.userAgent.match(/(Firefox|Edg|Chrome|Safari)/)?.[0] || 'Unknown',
                 os: navigator.platform,
@@ -494,7 +450,6 @@ async function generateQr() {
         if (data.success) {
             qrToken = data.token;
             expiresIn = 300;
-            const approveUrl = data.approve_url;
             container.innerHTML = data.qr_svg;
             document.getElementById('qr-status').textContent = __t.scanWithPhone;
             document.getElementById('qr-timer').classList.remove('hidden');
@@ -513,13 +468,11 @@ function startPolling() {
             const res = await fetch(`/auth/qr/${qrToken}/status`);
             const data = await res.json();
             if (data.status === 'approved') {
-                clearInterval(pollInterval);
-                clearInterval(timerInterval);
+                clearInterval(pollInterval); clearInterval(timerInterval);
                 document.getElementById('qr-status').textContent = __t.approved;
                 window.location.href = `/auth/qr/complete/${qrToken}`;
             } else if (data.status === 'expired') {
-                clearInterval(pollInterval);
-                clearInterval(timerInterval);
+                clearInterval(pollInterval); clearInterval(timerInterval);
                 showQrExpired();
             }
         } catch (err) {}
@@ -533,11 +486,7 @@ function startTimer() {
         const mins = Math.floor(expiresIn / 60);
         const secs = expiresIn % 60;
         document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-        if (expiresIn <= 0) {
-            clearInterval(timerInterval);
-            clearInterval(pollInterval);
-            showQrExpired();
-        }
+        if (expiresIn <= 0) { clearInterval(timerInterval); clearInterval(pollInterval); showQrExpired(); }
     }, 1000);
 }
 
@@ -548,71 +497,41 @@ function showQrExpired() {
     qrToken = null;
 }
 
-// Base64url helpers
-function base64urlToBuffer(b64) {
-    const padding = '='.repeat((4 - b64.length % 4) % 4);
-    const base64 = b64.replace(/-/g, '+').replace(/_/g, '/') + padding;
-    return Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
-}
-function bufferToBase64url(buf) {
-    const bytes = new Uint8Array(buf);
-    let str = '';
-    for (const b of bytes) str += String.fromCharCode(b);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-// Keyboard support for PIN numpad
-document.addEventListener('keydown', e => {
-    if (document.getElementById('pin-login-section').classList.contains('hidden')) return;
-    if (e.key >= '0' && e.key <= '9') { e.preventDefault(); addPin(e.key); }
-    else if (e.key === 'Backspace') { e.preventDefault(); removePin(); }
-    else if (e.key === 'Enter' && currentPin.length === 5) { e.preventDefault(); submitPin(); }
+// Register form loading state
+document.getElementById('registerForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true; btn.textContent = __t.registering;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
 });
 
-// Init: check device fingerprint
+// Init: detect platform and show appropriate buttons
 (async function() {
-    deviceFingerprint = await generateFingerprint();
-
-    // Set fingerprint in hidden field for password login form
+    const fingerprint = await generateFingerprint();
     const fpInput = document.getElementById('fingerprint-input');
-    if (fpInput) fpInput.value = deviceFingerprint;
+    if (fpInput) fpInput.value = fingerprint;
 
-    try {
-        const res = await csrfFetch('/auth/pin/check-device', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fingerprint: deviceFingerprint }),
-        });
-        if (!res) return;
-        const data = await res.json();
-        document.getElementById('loading-state').classList.add('hidden');
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isSmartphone = isTouchDevice && Math.min(screen.width, screen.height) < 550;
 
-        // Biometric only on smartphones (fingerprint), QR only on desktop
-        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        const isSmartphone = isTouchDevice && Math.min(screen.width, screen.height) < 550;
-        let canBiometric = false;
-        if (isSmartphone && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-            try { canBiometric = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch(e) {}
+    if (isSmartphone) {
+        // Smartphone: show biometric button if available
+        if (window.PublicKeyCredential) {
+            try {
+                const canBiometric = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (canBiometric) {
+                    document.getElementById('biometric-login-btn').classList.remove('hidden');
+                }
+            } catch(e) {}
         }
-
-        if (data.has_device && data.has_pin) {
-            document.getElementById('pin-login-section').classList.remove('hidden');
-            document.getElementById('welcome-user').textContent = __t.welcomeBack + (data.user_name ? ', ' + data.user_name : '') + '!';
-            if (canBiometric && data.has_biometric && window.PublicKeyCredential) {
-                // Smartphone with fingerprint + passkey registered → biometric button + auto-start
-                document.getElementById('biometric-btn').classList.remove('hidden');
-                setTimeout(() => startBiometric(), 500);
-            } else if (!isTouchDevice) {
-                // Desktop → QR button
-                document.getElementById('qr-btn').classList.remove('hidden');
-            }
-        } else {
-            document.getElementById('password-login-section').classList.remove('hidden');
-        }
-    } catch (err) {
-        document.getElementById('loading-state').classList.add('hidden');
-        document.getElementById('password-login-section').classList.remove('hidden');
+    } else {
+        // Desktop: show QR button
+        document.getElementById('qr-login-btn').classList.remove('hidden');
     }
+
+    // If there are validation errors on register tab, switch to it
+    @if($errors->has('organisatie_naam') || $errors->has('naam') || $errors->has('telefoon'))
+    switchTab('register');
+    @endif
 })();
 </script>
 </body>
