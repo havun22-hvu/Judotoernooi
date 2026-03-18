@@ -72,7 +72,7 @@ AutoFix kan code wijzigen op production en staging. Bij sessie start ALTIJD eers
 ssh root@188.245.159.115 "cd /var/www/judotoernooi/laravel && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
 
 # 2. Server: commit & push AutoFix wijzigingen (staging)
-ssh root@188.245.159.115 "cd /var/www/staging.judotoernooi/laravel && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/staging && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
 
 # 3. Lokaal: pull server wijzigingen
 cd D:\GitHub\JudoToernooi && git pull
@@ -197,7 +197,7 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 | Omgeving | Pad |
 |----------|-----|
 | Local | D:\GitHub\judotoernooi\laravel |
-| Staging | /var/www/staging.judotoernooi/laravel |
+| Staging | /var/www/judotoernooi/staging |
 | Production | /var/www/judotoernooi/laravel |
 
 **Server:** 188.245.159.115 (root, SSH key)
