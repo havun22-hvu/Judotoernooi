@@ -17,7 +17,7 @@
 | Omgeving | URL | Pad | Database |
 |----------|-----|-----|----------|
 | **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite |
-| **Staging** | (geen domein) | `/var/www/staging.judotoernooi/laravel` | MySQL |
+| **Staging** | (geen domein) | `/var/www/judotoernooi/staging` | MySQL |
 | **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
 
 ```bash

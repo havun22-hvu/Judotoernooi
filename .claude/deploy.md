@@ -15,7 +15,7 @@ php artisan serve --port=8007
 
 ```bash
 ssh root@188.245.159.115
-cd /var/www/staging.judotoernooi/laravel
+cd /var/www/judotoernooi/staging
 
 git pull origin main
 composer install --no-dev
@@ -41,7 +41,7 @@ php artisan optimize:clear && php artisan optimize
 
 **Staging:**
 ```bash
-cd /var/www/staging.judotoernooi/laravel && git pull origin main && composer install --no-dev && npm run build && php artisan migrate --force && php artisan optimize:clear && php artisan optimize
+cd /var/www/judotoernooi/staging && git pull origin main && composer install --no-dev && npm run build && php artisan migrate --force && php artisan optimize:clear && php artisan optimize
 ```
 
 **Production:**
