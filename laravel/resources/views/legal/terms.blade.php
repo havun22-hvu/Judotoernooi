@@ -80,7 +80,25 @@
                     </div>
                 </section>
 
-                <!-- 5. Verantwoordelijkheid organisator -->
+                <!-- 5. Herroepingsrecht -->
+                <section>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('5. Herroepingsrecht') }}</h2>
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        <p class="mb-3">
+                            <strong>{{ __('Inschrijfgeld (coaches/clubs):') }}</strong><br>
+                            {{ __('De inschrijving van judoka\'s voor een toernooi is een directe dienst die op het moment van betaling definitief wordt verwerkt. Door bij het afrekenen akkoord te gaan, doet u uitdrukkelijk afstand van uw herroepingsrecht (14 dagen bedenktijd) zoals bedoeld in artikel 6:230p BW.') }}
+                        </p>
+                        <p class="mb-3">
+                            <strong>{{ __('Platform abonnement (organisatoren):') }}</strong><br>
+                            {{ __('Voor platform abonnementen geldt een herroepingstermijn van 14 dagen na aankoop. Na gebruik van de dienst vervalt het herroepingsrecht.') }}
+                        </p>
+                        <p>
+                            {!! __('Meer informatie: <a href=":url" class="text-blue-600 hover:underline">Herroepingsformulier</a>.', ['url' => route('legal.herroeping')]) !!}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 6. Verantwoordelijkheid organisator -->
                 <section>
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('5. Verantwoordelijkheid Organisator') }}</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">

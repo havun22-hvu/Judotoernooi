@@ -261,6 +261,8 @@
                 <span class="text-gray-500">•</span>
                 <a href="{{ route('legal.cookies') }}" class="hover:text-white">{{ __('Cookies') }}</a>
                 <span class="text-gray-500">•</span>
+                <a href="{{ route('legal.herroeping') }}" class="hover:text-white">{{ __('Herroeping') }}</a>
+                <span class="text-gray-500">•</span>
                 <a href="mailto:havun22@gmail.com" class="hover:text-white">{{ __('Contact') }}</a>
             </div>
             <div class="text-center text-xs text-gray-400">

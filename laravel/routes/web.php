@@ -179,6 +179,7 @@ Route::get('/algemene-voorwaarden', [LegalController::class, 'terms'])->name('le
 Route::get('/privacyverklaring', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/cookiebeleid', [LegalController::class, 'cookies'])->name('legal.cookies');
 Route::get('/disclaimer', [LegalController::class, 'disclaimer'])->name('legal.disclaimer');
+Route::get('/herroeping', fn() => view('legal.herroeping'))->name('legal.herroeping');
 
 /*
 |--------------------------------------------------------------------------
