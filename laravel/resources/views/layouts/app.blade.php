@@ -266,9 +266,11 @@
             <div class="text-center text-xs text-gray-400">
                 &copy; {{ date('Y') }} Havun
                 <span class="mx-1">•</span>
-                {{ __('KvK') }} 98516000
+                {{ __('KvK') }} {{ config('company.kvk', '98516000') }}
                 <span class="mx-1">•</span>
                 {{ __('BTW-vrij (KOR)') }}
+                <span class="mx-1">•</span>
+                {{ config('company.address', 'Jacques Bloemhof 57') }}, {{ config('company.postal_code', '1628 VN') }} {{ config('company.city', 'Hoorn') }}
             </div>
         </div>
     </footer>
