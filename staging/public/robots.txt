@@ -1,0 +1,47 @@
+User-agent: *
+
+# Public pages
+Allow: /
+Allow: /help
+Allow: /algemene-voorwaarden
+Allow: /privacyverklaring
+Allow: /cookiebeleid
+Allow: /disclaimer
+Allow: /sitemap.xml
+
+# Auth & admin routes
+Disallow: /login
+Disallow: /registreren
+Disallow: /wachtwoord-vergeten
+Disallow: /wachtwoord-reset
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /logout
+
+# Internal API & system routes
+Disallow: /api/
+Disallow: /error-report
+Disallow: /health
+Disallow: /ping
+Disallow: /autofix/
+Disallow: /local-server/
+Disallow: /mollie/
+Disallow: /betaling/
+
+# Device & role access
+Disallow: /team/
+Disallow: /toegang/
+Disallow: /weging
+Disallow: /mat
+Disallow: /jury
+Disallow: /spreker
+Disallow: /dojo
+
+# Coach portal
+Disallow: /school/
+
+# Weegkaart & coach kaart (public but not indexable)
+Disallow: /weegkaart/
+Disallow: /coach-kaart/
+
+Sitemap: https://judotournament.org/sitemap.xml

@@ -1,0 +1,815 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Poule;
+use App\Models\Toernooi;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Service for distributing variable categories over blocks
+ *
+ * Unlike BlokMatVerdelingService which works with fixed category labels,
+ * this service handles dynamic categories (max_leeftijd_verschil > 0 or max_kg_verschil > 0)
+ * where pools are sorted by age → weight and split at optimal boundaries.
+ */
+class VariabeleBlokVerdelingService
+{
+    /**
+     * Check if toernooi has variable categories (max_leeftijd_verschil > 0 or max_kg_verschil > 0)
+     */
+    public function heeftVariabeleCategorieen(Toernooi $toernooi): bool
+    {
+        // Check category config for variable settings
+        $config = $toernooi->getAlleGewichtsklassen();
+        if (empty($config)) {
+            return false;
+        }
+
+        foreach ($config as $categorie) {
+            $maxKgVerschil = (float) ($categorie['max_kg_verschil'] ?? 0);
+            // Alleen max_kg_verschil bepaalt variabel (niet max_leeftijd_verschil)
+            if ($maxKgVerschil > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate distribution variants for variable categories
+     *
+     * Algorithm:
+     * 1. Sort all pools by MIN age → MIN weight
+     * 2. Calculate target matches per block
+     * 3. Trial & error to find optimal split points
+     * 4. At age boundaries, try different weight splits
+     *
+     * @param int $userVerdelingGewicht 0-100 (weight for equal distribution)
+     * @return array ['varianten' => [...], 'stats' => [...]]
+     */
+    public function genereerVarianten(Toernooi $toernooi, int $userVerdelingGewicht = 50): array
+    {
+        $blokken = $toernooi->blokken->sortBy('nummer')->values();
+
+        if ($blokken->isEmpty()) {
+            throw new \RuntimeException('Geen blokken gevonden');
+        }
+
+        $numBlokken = $blokken->count();
+
+        // Get all variable pools with their ranges
+        $poules = $this->getVariabelePoules($toernooi);
+
+        if ($poules->isEmpty()) {
+            return ['varianten' => [], 'message' => 'Geen variabele poules gevonden'];
+        }
+
+        // Calculate target matches per block
+        $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
+        $doelPerBlok = (int) ceil($totaalWedstrijden / $numBlokken);
+
+        Log::info('VariabeleBlokVerdeling start', [
+            'blokken' => $numBlokken,
+            'poules' => $poules->count(),
+            'totaal_wedstrijden' => $totaalWedstrijden,
+            'doel_per_blok' => $doelPerBlok,
+        ]);
+
+        // Sort pools by age, then weight
+        $gesorteerdePoules = $this->sorteerPoules($poules);
+
+        // Generate variants with different split strategies
+        $startTime = microtime(true);
+        $varianten = [];
+        $gezien = [];
+
+        // Try multiple split strategies
+        for ($strategie = 0; $strategie < 20; $strategie++) {
+            $variant = $this->berekenVerdeling(
+                $gesorteerdePoules,
+                $blokken,
+                $doelPerBlok,
+                $strategie,
+                $userVerdelingGewicht
+            );
+
+            // Hash to detect duplicates
+            $hash = md5(json_encode($variant['toewijzingen']));
+            if (!isset($gezien[$hash])) {
+                $gezien[$hash] = true;
+                $varianten[] = $variant;
+            }
+
+            // Stop after 3 seconds
+            if (microtime(true) - $startTime > 3.0) {
+                break;
+            }
+        }
+
+        // Sort by score (lower = better)
+        usort($varianten, fn($a, $b) => $a['totaal_score'] <=> $b['totaal_score']);
+
+        // Take top 5
+        $varianten = array_slice($varianten, 0, 5);
+
+        // Add category groupings to each variant
+        foreach ($varianten as &$variant) {
+            $variant['categorie_groepen'] = $this->berekenCategorieGroepen(
+                $gesorteerdePoules,
+                $variant['toewijzingen'],
+                $blokken
+            );
+        }
+
+        $elapsed = round(microtime(true) - $startTime, 2);
+
+        Log::info('VariabeleBlokVerdeling klaar', [
+            'varianten' => count($varianten),
+            'tijd_sec' => $elapsed,
+            'beste_score' => $varianten[0]['totaal_score'] ?? 'N/A',
+        ]);
+
+        return [
+            'varianten' => $varianten,
+            'stats' => [
+                'poules' => $poules->count(),
+                'totaal_wedstrijden' => $totaalWedstrijden,
+                'doel_per_blok' => $doelPerBlok,
+                'tijd_sec' => $elapsed,
+            ],
+        ];
+    }
+
+    /**
+     * Get all variable pools with calculated age/weight ranges
+     * Public so BlokMatVerdelingService can use it for mixed tournaments
+     */
+    public function getVariabelePoules(Toernooi $toernooi): Collection
+    {
+        $huidigJaar = now()->year;
+
+        return $toernooi->poules()
+            ->with('judokas')
+            ->where('type', '!=', 'kruisfinale')
+            ->where('blok_vast', false)
+            ->get()
+            ->map(function ($poule) use ($huidigJaar) {
+                $judokas = $poule->judokas;
+
+                // Calculate age range
+                $leeftijden = $judokas->pluck('geboortejaar')
+                    ->filter()
+                    ->map(fn($gj) => $huidigJaar - $gj);
+
+                $minLeeftijd = $leeftijden->min() ?? 0;
+                $maxLeeftijd = $leeftijden->max() ?? 0;
+
+                // Calculate weight range
+                $gewichten = $judokas->map(fn($j) => $this->getEffectiefGewicht($j))->filter();
+                $minGewicht = $gewichten->min() ?? 0;
+                $maxGewicht = $gewichten->max() ?? 0;
+
+                // Key format: poule_{id} for unique identification
+                $key = 'poule_' . $poule->id;
+
+                return [
+                    'id' => $poule->id,
+                    'key' => $key,
+                    'nummer' => $poule->nummer,
+                    'titel' => $poule->getDisplayTitel(),
+                    'leeftijdsklasse' => $poule->leeftijdsklasse,
+                    'gewichtsklasse' => $poule->gewichtsklasse,
+                    'categorie_key' => $poule->categorie_key, // For grouping (e.g., "m_variabel", "beginners")
+                    'aantal_wedstrijden' => $poule->aantal_wedstrijden,
+                    'blok_vast' => $poule->blok_vast,
+                    'min_leeftijd' => $minLeeftijd,
+                    'max_leeftijd' => $maxLeeftijd,
+                    'min_gewicht' => $minGewicht,
+                    'max_gewicht' => $maxGewicht,
+                    // Sort keys
+                    'sort_leeftijd' => $minLeeftijd * 1000 + $maxLeeftijd,
+                    'sort_gewicht' => $minGewicht * 1000 + $maxGewicht,
+                ];
+            });
+    }
+
+    /**
+     * Get effective weight: weighed > registered > weight class
+     */
+    private function getEffectiefGewicht($judoka): float
+    {
+        if ($judoka->gewicht_gewogen > 0) {
+            return (float) $judoka->gewicht_gewogen;
+        }
+        if ($judoka->gewicht !== null) {
+            return (float) $judoka->gewicht;
+        }
+        if ($judoka->gewichtsklasse && preg_match('/(\d+)/', $judoka->gewichtsklasse, $m)) {
+            return (float) $m[1];
+        }
+        return 0.0;
+    }
+
+    /**
+     * Sort pools by age (primary) and weight (secondary)
+     */
+    private function sorteerPoules(Collection $poules): Collection
+    {
+        return $poules->sortBy([
+            ['sort_leeftijd', 'asc'],
+            ['sort_gewicht', 'asc'],
+        ])->values();
+    }
+
+    /**
+     * Calculate distribution for a specific strategy
+     */
+    private function berekenVerdeling(
+        Collection $poules,
+        $blokken,
+        int $doelPerBlok,
+        int $strategie,
+        int $userVerdelingGewicht
+    ): array {
+        $numBlokken = $blokken->count();
+        $blokkenArray = $blokken->values()->all();
+        $toewijzingen = []; // key (leeftijdsklasse|gewichtsklasse) => blok_nummer
+
+        // Initialize block capacities
+        $capaciteit = [];
+        foreach ($blokkenArray as $blok) {
+            $capaciteit[$blok->id] = [
+                'gewenst' => $doelPerBlok,
+                'actueel' => 0,
+            ];
+        }
+
+        // Strategy variations for finding different split points
+        $spreadFactor = 1.0 + ($strategie % 5) * 0.05; // 1.0 - 1.20
+        $startOffset = ($strategie % 3) * 0.1; // 0.0, 0.1, 0.2
+
+        // Adjusted target per block for this strategy
+        $adjustedDoel = (int) ($doelPerBlok * $spreadFactor);
+
+        $huidigBlokIndex = 0;
+        $wedstrijdenInBlok = 0;
+
+        // Group pools by age boundary for smarter splitting
+        $leeftijdGroepen = $this->groepeerOpLeeftijd($poules);
+
+        foreach ($leeftijdGroepen as $leeftijd => $groep) {
+            $groepWedstrijden = collect($groep)->sum('aantal_wedstrijden');
+
+            // Check if this group fits in current block
+            $nieuweActueel = $wedstrijdenInBlok + $groepWedstrijden;
+
+            // Should we split this age group?
+            if ($wedstrijdenInBlok > 0 && $nieuweActueel > $adjustedDoel * 1.15 && $huidigBlokIndex < $numBlokken - 1) {
+                // Try to find optimal weight split within this age group
+                $splitResult = $this->vindOptimaleWeightSplit(
+                    $groep,
+                    $adjustedDoel - $wedstrijdenInBlok,
+                    $strategie
+                );
+
+                if ($splitResult['split_index'] > 0) {
+                    // Put first part in current block
+                    for ($i = 0; $i < $splitResult['split_index']; $i++) {
+                        $poule = $groep[$i];
+                        $blok = $blokkenArray[$huidigBlokIndex];
+                        $toewijzingen[$poule['key']] = $blok->nummer;
+                        $capaciteit[$blok->id]['actueel'] += $poule['aantal_wedstrijden'];
+                        $wedstrijdenInBlok += $poule['aantal_wedstrijden'];
+                    }
+
+                    // Move to next block for remainder
+                    $huidigBlokIndex = min($huidigBlokIndex + 1, $numBlokken - 1);
+                    $wedstrijdenInBlok = 0;
+
+                    // Put rest in new block
+                    for ($i = $splitResult['split_index']; $i < count($groep); $i++) {
+                        $poule = $groep[$i];
+                        $blok = $blokkenArray[$huidigBlokIndex];
+                        $toewijzingen[$poule['key']] = $blok->nummer;
+                        $capaciteit[$blok->id]['actueel'] += $poule['aantal_wedstrijden'];
+                        $wedstrijdenInBlok += $poule['aantal_wedstrijden'];
+                    }
+                    continue;
+                }
+            }
+
+            // Check if we should move to next block before this group
+            if ($wedstrijdenInBlok > 0 && $wedstrijdenInBlok >= $adjustedDoel * (0.9 + $startOffset) && $huidigBlokIndex < $numBlokken - 1) {
+                $huidigBlokIndex++;
+                $wedstrijdenInBlok = 0;
+            }
+
+            // Assign all pools in this age group to current block
+            foreach ($groep as $poule) {
+                $blok = $blokkenArray[$huidigBlokIndex];
+                $toewijzingen[$poule['key']] = $blok->nummer;
+                $capaciteit[$blok->id]['actueel'] += $poule['aantal_wedstrijden'];
+                $wedstrijdenInBlok += $poule['aantal_wedstrijden'];
+            }
+
+            // After a complete age group, check if we should move to next block
+            if ($wedstrijdenInBlok >= $adjustedDoel && $huidigBlokIndex < $numBlokken - 1) {
+                $huidigBlokIndex++;
+                $wedstrijdenInBlok = 0;
+            }
+        }
+
+        // Calculate scores
+        $scores = $this->berekenScores($capaciteit, $blokkenArray, $doelPerBlok, $userVerdelingGewicht);
+
+        return [
+            'toewijzingen' => $toewijzingen,
+            'capaciteit' => $capaciteit,
+            'scores' => $scores,
+            'totaal_score' => $scores['totaal_score'],
+            'strategie' => $strategie,
+        ];
+    }
+
+    /**
+     * Group pools by age (using min_leeftijd)
+     */
+    private function groepeerOpLeeftijd(Collection $poules): array
+    {
+        $groepen = [];
+
+        foreach ($poules as $poule) {
+            $key = $poule['min_leeftijd'] . '-' . $poule['max_leeftijd'];
+            if (!isset($groepen[$key])) {
+                $groepen[$key] = [];
+            }
+            $groepen[$key][] = $poule;
+        }
+
+        // Sort within each group by weight
+        foreach ($groepen as &$groep) {
+            usort($groep, fn($a, $b) => $a['sort_gewicht'] <=> $b['sort_gewicht']);
+        }
+
+        // Sort groups by age
+        uksort($groepen, function ($a, $b) {
+            $aMin = (int) explode('-', $a)[0];
+            $bMin = (int) explode('-', $b)[0];
+            return $aMin <=> $bMin;
+        });
+
+        return $groepen;
+    }
+
+    /**
+     * Find optimal weight split point within an age group
+     * Returns index where to split (0 = no split)
+     */
+    private function vindOptimaleWeightSplit(array $groep, int $beschikbareRuimte, int $strategie): array
+    {
+        if (count($groep) < 2) {
+            return ['split_index' => 0, 'verschil' => PHP_INT_MAX];
+        }
+
+        $besteSplit = 0;
+        $besteVerschil = PHP_INT_MAX;
+
+        // Variation based on strategy
+        $preferEarlySplit = ($strategie % 2 === 0);
+
+        $cumulatief = 0;
+        for ($i = 0; $i < count($groep) - 1; $i++) {
+            $cumulatief += $groep[$i]['aantal_wedstrijden'];
+
+            $verschil = abs($cumulatief - $beschikbareRuimte);
+
+            // Prefer splits that get closer to target
+            if ($verschil < $besteVerschil) {
+                $besteVerschil = $verschil;
+                $besteSplit = $i + 1;
+            }
+
+            // Early split preference for some strategies
+            if ($preferEarlySplit && $cumulatief >= $beschikbareRuimte * 0.8) {
+                break;
+            }
+        }
+
+        // Only split if it improves distribution
+        if ($besteVerschil > $beschikbareRuimte * 0.5) {
+            return ['split_index' => 0, 'verschil' => PHP_INT_MAX];
+        }
+
+        return ['split_index' => $besteSplit, 'verschil' => $besteVerschil];
+    }
+
+    /**
+     * Calculate quality scores for a distribution
+     */
+    private function berekenScores(array $capaciteit, array $blokken, int $doelPerBlok, int $userVerdelingGewicht): array
+    {
+        $verdelingScore = 0;
+        $maxAfwijking = 0;
+        $blokStats = [];
+
+        foreach ($blokken as $blok) {
+            $cap = $capaciteit[$blok->id];
+            $gewenst = max(1, $doelPerBlok);
+            $afwijkingPct = abs(($cap['actueel'] - $gewenst) / $gewenst * 100);
+
+            $verdelingScore += $afwijkingPct;
+            $maxAfwijking = max($maxAfwijking, $afwijkingPct);
+
+            $blokStats[$blok->nummer] = [
+                'actueel' => $cap['actueel'],
+                'gewenst' => $gewenst,
+                'afwijking_pct' => round($afwijkingPct, 1),
+            ];
+        }
+
+        // Weight the distribution score
+        $gewicht = $userVerdelingGewicht / 100.0;
+        $totaalScore = $verdelingScore * $gewicht;
+
+        return [
+            'verdeling_score' => round($verdelingScore, 1),
+            'totaal_score' => round($totaalScore, 1),
+            'max_afwijking_pct' => round($maxAfwijking, 1),
+            'blok_stats' => $blokStats,
+            'is_valid' => $maxAfwijking <= 30, // Max 30% deviation allowed
+        ];
+    }
+
+    /**
+     * Calculate category groupings for display
+     * Groups pools by categorie_key first, then by age/weight within each category
+     * This allows mixed scenarios like M/V separate or belt-based grouping
+     */
+    private function berekenCategorieGroepen(Collection $poules, array $toewijzingen, $blokken): array
+    {
+        $groepen = [];
+
+        foreach ($blokken as $blok) {
+            $blokPoules = $poules->filter(fn($p) => ($toewijzingen[$p['key']] ?? null) === $blok->nummer);
+
+            if ($blokPoules->isEmpty()) {
+                continue;
+            }
+
+            // First group by categorie_key (e.g., "m_variabel", "v_variabel", "beginners")
+            $categorieGroups = [];
+            foreach ($blokPoules as $poule) {
+                $catKey = $poule['categorie_key'] ?? 'default';
+                if (!isset($categorieGroups[$catKey])) {
+                    $categorieGroups[$catKey] = [
+                        'poules' => [],
+                        'label_prefix' => $this->extractLabelPrefix($poule['leeftijdsklasse']),
+                    ];
+                }
+                $categorieGroups[$catKey]['poules'][] = $poule;
+            }
+
+            // Within each category, group by age range
+            foreach ($categorieGroups as $catKey => $catGroup) {
+                $ageGroups = [];
+                foreach ($catGroup['poules'] as $poule) {
+                    $ageKey = $poule['min_leeftijd'] . '-' . $poule['max_leeftijd'];
+                    if (!isset($ageGroups[$ageKey])) {
+                        $ageGroups[$ageKey] = [
+                            'poules' => [],
+                            'min_leeftijd' => $poule['min_leeftijd'],
+                            'max_leeftijd' => $poule['max_leeftijd'],
+                            'min_gewicht' => PHP_INT_MAX,
+                            'max_gewicht' => 0,
+                            'wedstrijden' => 0,
+                        ];
+                    }
+                    $ageGroups[$ageKey]['poules'][] = $poule;
+                    $ageGroups[$ageKey]['min_gewicht'] = min($ageGroups[$ageKey]['min_gewicht'], $poule['min_gewicht']);
+                    $ageGroups[$ageKey]['max_gewicht'] = max($ageGroups[$ageKey]['max_gewicht'], $poule['max_gewicht']);
+                    $ageGroups[$ageKey]['wedstrijden'] += $poule['aantal_wedstrijden'];
+                }
+
+                // Merge adjacent age groups if they overlap
+                $mergedGroups = $this->mergeAdjacentAgeGroups(array_values($ageGroups));
+
+                // Generate dynamic headers with label prefix
+                $labelPrefix = $catGroup['label_prefix'];
+                foreach ($mergedGroups as $group) {
+                    $minL = $group['min_leeftijd'];
+                    $maxL = $group['max_leeftijd'];
+                    $minG = round($group['min_gewicht'], 1);
+                    $maxG = round($group['max_gewicht'], 1);
+
+                    $leeftijdStr = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
+                    $gewichtStr = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+
+                    // Build header: "M 8-10j · 30-40kg" or "8-10j · 30-40kg"
+                    $header = $labelPrefix
+                        ? "{$labelPrefix} {$leeftijdStr} · {$gewichtStr}"
+                        : "{$leeftijdStr} · {$gewichtStr}";
+
+                    $groepen[] = [
+                        'blok_nummer' => $blok->nummer,
+                        'categorie_key' => $catKey,
+                        'header' => $header,
+                        'wedstrijden' => $group['wedstrijden'],
+                        'poule_count' => count($group['poules']),
+                        'leeftijd_range' => [$minL, $maxL],
+                        'gewicht_range' => [$minG, $maxG],
+                    ];
+                }
+            }
+        }
+
+        return $groepen;
+    }
+
+    /**
+     * Extract label prefix from leeftijdsklasse (e.g., "M" from "M 9-10j", "Beginners" from "Beginners 9-10j 28-32kg")
+     * Returns null if no prefix (leeftijdsklasse starts with number)
+     */
+    private function extractLabelPrefix(string $leeftijdsklasse): ?string
+    {
+        // If starts with number, no prefix
+        if (preg_match('/^[\d]/', $leeftijdsklasse)) {
+            return null;
+        }
+
+        // Extract text before first digit (age/weight range)
+        if (preg_match('/^([A-Za-z]+(?:\s+[A-Za-z]+)*)\s+\d/', $leeftijdsklasse, $matches)) {
+            return trim($matches[1]);
+        }
+
+        // If no digit found, return the whole string as prefix
+        if (preg_match('/^[A-Za-z]+/', $leeftijdsklasse)) {
+            return trim($leeftijdsklasse);
+        }
+
+        return null;
+    }
+
+    /**
+     * Merge adjacent age groups that overlap
+     */
+    private function mergeAdjacentAgeGroups(array $groups): array
+    {
+        if (empty($groups)) {
+            return [];
+        }
+
+        // Sort by min age
+        usort($groups, fn($a, $b) => $a['min_leeftijd'] <=> $b['min_leeftijd']);
+
+        $merged = [$groups[0]];
+
+        for ($i = 1; $i < count($groups); $i++) {
+            $last = &$merged[count($merged) - 1];
+            $current = $groups[$i];
+
+            // Merge if ages overlap (max of last >= min of current)
+            if ($last['max_leeftijd'] >= $current['min_leeftijd'] - 1) {
+                $last['max_leeftijd'] = max($last['max_leeftijd'], $current['max_leeftijd']);
+                $last['min_gewicht'] = min($last['min_gewicht'], $current['min_gewicht']);
+                $last['max_gewicht'] = max($last['max_gewicht'], $current['max_gewicht']);
+                $last['wedstrijden'] += $current['wedstrijden'];
+                $last['poules'] = array_merge($last['poules'], $current['poules']);
+            } else {
+                $merged[] = $current;
+            }
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Apply a variant to the database
+     * Keys can be: poule_{id} (individual) or leeftijdsklasse|gewichtsklasse (category)
+     */
+    public function pasVariantToe(Toernooi $toernooi, array $toewijzingen): void
+    {
+        DB::transaction(function () use ($toernooi, $toewijzingen) {
+            foreach ($toewijzingen as $key => $blokNummer) {
+                $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+                if (!$blok) continue;
+
+                // Check key format: poule_{id} or leeftijdsklasse|gewichtsklasse
+                if (str_starts_with($key, 'poule_')) {
+                    // Individual poule by ID
+                    $pouleId = (int) substr($key, 6);
+                    Poule::where('id', $pouleId)
+                        ->where('toernooi_id', $toernooi->id)
+                        ->where('blok_vast', false)
+                        ->update(['blok_id' => $blok->id]);
+                } else {
+                    // Category format: leeftijdsklasse|gewichtsklasse
+                    $parts = explode('|', $key);
+                    if (count($parts) !== 2) continue;
+
+                    [$leeftijd, $gewicht] = $parts;
+                    Poule::where('toernooi_id', $toernooi->id)
+                        ->where('leeftijdsklasse', $leeftijd)
+                        ->where('gewichtsklasse', $gewicht)
+                        ->where('blok_vast', false)
+                        ->update(['blok_id' => $blok->id]);
+                }
+            }
+
+            // Kruisfinale/eliminatie poules volgen hun voorronde blok
+            $this->fixKruisfinaleBlokken($toernooi);
+
+            $toernooi->update(['blokken_verdeeld_op' => now()]);
+        });
+    }
+
+    /**
+     * Wijs kruisfinale/eliminatie poules toe aan hetzelfde blok als hun voorronde
+     */
+    private function fixKruisfinaleBlokken(Toernooi $toernooi): void
+    {
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->where('type', '!=', 'voorronde')
+            ->whereNull('blok_id')
+            ->get();
+
+        foreach ($poules as $poule) {
+            $voorrondeBlokId = Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('gewichtsklasse', $poule->gewichtsklasse)
+                ->where('type', 'voorronde')
+                ->whereNotNull('blok_id')
+                ->value('blok_id');
+
+            if ($voorrondeBlokId) {
+                $poule->update(['blok_id' => $voorrondeBlokId]);
+            }
+        }
+    }
+
+    /**
+     * Verdeel variabele poules over blokken op basis van max wedstrijden per blok.
+     * Simpel algoritme: vul blok tot max bereikt, knip (evt. midden in leeftijdsgroep), door naar volgende.
+     *
+     * @param Toernooi $toernooi
+     * @param int $maxPerBlok Maximum wedstrijden per blok
+     * @return array ['toewijzingen' => [...], 'blok_labels' => [...], 'stats' => [...]]
+     */
+    public function verdeelOpMaxWedstrijden(Toernooi $toernooi, int $maxPerBlok): array
+    {
+        $blokken = $toernooi->blokken->sortBy('nummer')->values();
+
+        if ($blokken->isEmpty()) {
+            throw new \RuntimeException('Geen blokken gevonden');
+        }
+
+        $poules = $this->getVariabelePoules($toernooi);
+
+        if ($poules->isEmpty()) {
+            return ['toewijzingen' => [], 'blok_labels' => [], 'message' => 'Geen variabele poules gevonden'];
+        }
+
+        // Tel vastgezette wedstrijden per blok (deze tellen mee in capaciteit!)
+        $vastPerBlok = [];
+        foreach ($blokken as $blok) {
+            $vastPerBlok[$blok->id] = $toernooi->poules()
+                ->where('blok_id', $blok->id)
+                ->where('blok_vast', true)
+                ->sum('aantal_wedstrijden');
+        }
+
+        // Sorteer op min_leeftijd, dan min_gewicht
+        $gesorteerdePoules = $this->sorteerPoules($poules);
+
+        $toewijzingen = [];
+        $blokPoules = []; // blok_nummer => [poules]
+        $huidigBlokIndex = 0;
+        $wedstrijdenInBlok = $vastPerBlok[$blokken[0]->id] ?? 0; // Start met vastgezette
+
+        foreach ($gesorteerdePoules as $poule) {
+            $blok = $blokken[$huidigBlokIndex];
+
+            // Check of we moeten knippen (max bereikt EN er is een volgend blok)
+            if ($wedstrijdenInBlok > 0 &&
+                ($wedstrijdenInBlok + $poule['aantal_wedstrijden']) > $maxPerBlok &&
+                $huidigBlokIndex < $blokken->count() - 1) {
+
+                // Start nieuw blok
+                $huidigBlokIndex++;
+                $blok = $blokken[$huidigBlokIndex];
+                // Nieuw blok begint met eventuele vastgezette wedstrijden
+                $wedstrijdenInBlok = $vastPerBlok[$blok->id] ?? 0;
+            }
+
+            // Wijs poule toe aan huidig blok
+            $toewijzingen[$poule['key']] = $blok->nummer;
+            $wedstrijdenInBlok += $poule['aantal_wedstrijden'];
+
+            // Houd bij welke poules in welk blok
+            if (!isset($blokPoules[$blok->nummer])) {
+                $blokPoules[$blok->nummer] = [];
+            }
+            $blokPoules[$blok->nummer][] = $poule;
+        }
+
+        // Genereer labels per blok
+        $blokLabels = $this->genereerBlokLabels($blokPoules, $blokken);
+
+        // Stats
+        $stats = [
+            'totaal_poules' => $gesorteerdePoules->count(),
+            'totaal_wedstrijden' => $gesorteerdePoules->sum('aantal_wedstrijden'),
+            'max_per_blok' => $maxPerBlok,
+            'gebruikte_blokken' => count($blokPoules),
+        ];
+
+        Log::info('VariabeleBlokVerdeling verdeelOpMaxWedstrijden', $stats);
+
+        return [
+            'toewijzingen' => $toewijzingen,
+            'blok_labels' => $blokLabels,
+            'blok_poules' => $blokPoules,
+            'stats' => $stats,
+        ];
+    }
+
+    /**
+     * Genereer leesbare labels per blok op basis van de poules.
+     * Bijv. "9-12j t/m 28kg" of "11-14j vanaf 28kg"
+     *
+     * @param array $blokPoules blok_nummer => [poules]
+     * @param Collection $blokken
+     * @return array blok_nummer => label
+     */
+    public function genereerBlokLabels(array $blokPoules, $blokken): array
+    {
+        $labels = [];
+        $vorigeMaxGewicht = [];  // Per leeftijdsrange bijhouden wat vorige blok max was
+
+        foreach ($blokken as $blok) {
+            if (!isset($blokPoules[$blok->nummer]) || empty($blokPoules[$blok->nummer])) {
+                continue;
+            }
+
+            $poules = $blokPoules[$blok->nummer];
+
+            // Bepaal ranges
+            $minLeeftijd = min(array_column($poules, 'min_leeftijd'));
+            $maxLeeftijd = max(array_column($poules, 'max_leeftijd'));
+            $minGewicht = min(array_column($poules, 'min_gewicht'));
+            $maxGewicht = max(array_column($poules, 'max_gewicht'));
+
+            $leeftijdRange = "{$minLeeftijd}-{$maxLeeftijd}";
+
+            // Bepaal of dit de eerste of vervolg is voor deze leeftijdsrange
+            $leeftijdStr = "{$minLeeftijd}-{$maxLeeftijd}j";
+            $gewichtStr = '';
+
+            if (isset($vorigeMaxGewicht[$leeftijdRange])) {
+                // Vervolg blok: "vanaf Xkg"
+                $gewichtStr = "vanaf " . round($minGewicht) . "kg";
+            } else {
+                // Eerste blok met deze leeftijd: "t/m Xkg" (tenzij het ook het laatste is)
+                $gewichtStr = "t/m " . round($maxGewicht) . "kg";
+            }
+
+            $labels[$blok->nummer] = "{$leeftijdStr} {$gewichtStr}";
+
+            // Onthoud max gewicht voor deze leeftijdsrange
+            $vorigeMaxGewicht[$leeftijdRange] = $maxGewicht;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Pas de verdeling toe EN sla de blok labels op in de database.
+     *
+     * @param Toernooi $toernooi
+     * @param array $toewijzingen key => blok_nummer
+     * @param array $blokLabels blok_nummer => label
+     */
+    public function pasVerdelingMetLabelsToe(Toernooi $toernooi, array $toewijzingen, array $blokLabels): void
+    {
+        DB::transaction(function () use ($toernooi, $toewijzingen, $blokLabels) {
+            // Pas toewijzingen toe
+            $this->pasVariantToe($toernooi, $toewijzingen);
+
+            // Sla labels op per blok
+            foreach ($blokLabels as $blokNummer => $label) {
+                $toernooi->blokken()
+                    ->where('nummer', $blokNummer)
+                    ->update(['blok_label' => $label]);
+            }
+
+            // Clear labels voor blokken zonder poules
+            $gebruikteNummers = array_keys($blokLabels);
+            $toernooi->blokken()
+                ->whereNotIn('nummer', $gebruikteNummers)
+                ->update(['blok_label' => null]);
+        });
+    }
+}

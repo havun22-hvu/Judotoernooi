@@ -1,0 +1,1458 @@
+# Classificatie & Poule Indeling
+
+> **Status:** Grotendeels voltooid, Python solver geïmplementeerd
+> **Laatst bijgewerkt:** 24 jan 2026
+
+## Kernbegrippen
+
+### De 4 Stappen (BELANGRIJK!)
+
+| Stap | Wat | Resultaat |
+|------|-----|-----------|
+| **1. Categoriseren** | Judoka → categorie (harde criteria) | Elke judoka heeft een categorie |
+| **2. Sorteren** | Binnen categorie op prioriteiten | Gesorteerde lijst per categorie |
+| **3. Groeperen** | Per categorie groeperen | Gesorteerde lijst PER categorie |
+| **4. Poules maken** | Verdelen in poules (bv. 5) | Poules binnen kg/lft limieten |
+
+**Stap 1: Categoriseren** = Welke groep?
+- Judoka moet voldoen aan ALLE harde criteria
+- Eerste leeftijdsmatch = zijn categorie (NOOIT doorvallen!)
+- Harde criteria: max_leeftijd, geslacht, band_filter
+
+**Stap 2-3: Sorteren & Groeperen** = Welke volgorde?
+- Sorteer op prioriteiten (leeftijd/gewicht/band)
+- Groepeer per categorie → gesorteerde lijst per categorie
+
+**Stap 4: Poules maken** = Verdelen
+- Binnen limieten: max_kg_verschil, max_leeftijd_verschil
+- Poulegrootte voorkeur instelbaar (bv. [5, 4, 6, 3])
+
+---
+
+## Algoritme Overzicht
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ POULE INDELING ALGORITME (4 stappen)                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ STAP 1: CATEGORISEREN                                           │
+│   Per judoka → check welke categorie past                       │
+│                                                                 │
+│   A. Vind eerste categorie waar leeftijd ≤ max_leeftijd         │
+│      (categorieën gesorteerd van jong → oud)                    │
+│                                                                 │
+│   B. Check ALLEEN categorieën met DIE max_leeftijd:             │
+│      • geslacht = M/V/Gemengd                                   │
+│      • band voldoet aan band_filter (als gezet)                 │
+│                                                                 │
+│   ⚠️ KRITIEK: Als geslacht/band niet past → NIET GECATEGORISEERD│
+│      NOOIT doorvallen naar categorie met hogere max_leeftijd!   │
+│      Een 6-jarige in U7 komt NOOIT in U9, ook niet als          │
+│      band_filter niet matcht!                                   │
+│                                                                 │
+│   LET OP: max_kg_verschil is NIET voor categoriseren!           │
+│   Dat is voor stap 4 (poules maken binnen de categorie).        │
+│                                                                 │
+│ STAP 2: SORTEREN                                                │
+│   Sorteer ALLE judoka's volgens verdeling_prioriteiten:         │
+│   • Leeftijd: jong → oud                                        │
+│   • Gewicht: licht → zwaar                                      │
+│   • Band: laag → hoog (wit → zwart)                             │
+│                                                                 │
+│ STAP 3: GROEPEREN                                               │
+│   Groepeer per categorie (sortering blijft behouden)            │
+│   → Gesorteerde lijst per categorie, klaar voor poule-indeling  │
+│                                                                 │
+│ STAP 4: POULES MAKEN (greedy, direct optimaal)                  │
+│   Gesorteerde groep verdelen in poules van 5 (of 4/6/3):        │
+│                                                                 │
+│   Voor elke judoka (gesorteerd):                                │
+│   1. Probeer toe te voegen aan huidige poule                    │
+│   2. Check: gewicht_verschil ≤ max_kg_verschil (uit config)     │
+│   3. Check: leeftijd_verschil ≤ max_leeftijd_verschil (config)  │
+│   4. Check: poule_grootte < 5 (of voorkeur)                     │
+│   5. Alle checks OK → toevoegen, anders → nieuwe poule          │
+│                                                                 │
+│   Aan einde: merge kleine poules (< 4) als binnen limieten      │
+│                                                                 │
+│   ⚠️ UITZONDERING: Eliminatie & Kruisfinale                      │
+│   Bij eliminatie/kruisfinale: GEEN splitsen in poules van 5!    │
+│   Hele gewichtsklasse = 1 poule (alle judoka's samen).          │
+│   Vereist: Δkg=0, Δlft=0, gewichtsklassen ingevuld.            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Harde vs Zachte Criteria
+
+### Harde Criteria voor CATEGORISEREN (Stap 1)
+
+Deze criteria bepalen in WELKE CATEGORIE een judoka komt.
+**Een judoka die qua leeftijd past maar niet qua geslacht/band = NIET GECATEGORISEERD!**
+
+| Criterium | Voorbeeld | Toelichting |
+|-----------|-----------|-------------|
+| `max_leeftijd` | U7 = max 6 jaar | **HARDE GRENS** - 6-jarige in U7 komt NOOIT in U9 |
+| `geslacht` | M / V / Gemengd | Moet matchen binnen de leeftijdscategorie |
+| `band_filter` | t/m oranje, vanaf groen | Moet matchen binnen de leeftijdscategorie |
+
+**U-terminologie (JBN standaard):**
+```
+U = Under (jonger dan)
+
+U7  = max_leeftijd 6  (t/m 6 jaar)
+U9  = max_leeftijd 8  (t/m 8 jaar)
+U11 = max_leeftijd 10 (t/m 10 jaar)
+U13 = max_leeftijd 12 (t/m 12 jaar)
+U15 = max_leeftijd 14 (t/m 14 jaar)
+U18 = max_leeftijd 17 (t/m 17 jaar)
+U21 = max_leeftijd 20 (t/m 20 jaar)
+
+Formule: max_leeftijd = U-nummer - 1
+```
+
+**Leeftijd in titel:**
+- `max_leeftijd_verschil > 0` → Titel toont dynamische range (bijv. "7-9j")
+- `max_leeftijd_verschil = 0` → Organisator zet leeftijd in label (bijv. "Dames U15")
+
+```
+⚠️ KRITIEK: Doorvallen naar andere leeftijdscategorie is VERBODEN!
+
+   Voorbeeld:
+   - Categorieën: U7 (max 6j, band_filter: vanaf_geel), U9 (max 8j)
+   - 6-jarige met witte band
+   - Past in U7 qua leeftijd ✓
+   - Past NIET in U7 qua band ✗
+   - Resultaat: NIET GECATEGORISEERD (melding!)
+   - NOOIT naar U9 doorvallen!
+```
+
+### Harde Criteria voor POULE-INDELING (Stap 4)
+
+Deze criteria bepalen hoe judoka's BINNEN een categorie in poules worden verdeeld.
+
+| Criterium | Voorbeeld | Waar ingesteld |
+|-----------|-----------|----------------|
+| `gewichtsklassen` | -24kg, -27kg | Per categorie (bij vast) |
+| `max_kg_verschil` | Max 3 kg in poule | Per categorie (bij variabel) |
+| `max_leeftijd_verschil` | Max 2 jaar in poule | Per categorie (bij variabel) |
+| `max_band_verschil` | Max 2 band niveaus in poule | Per categorie (0 = geen limiet) |
+| `band_streng_beginners` | Wit/geel max 1 niveau verschil | Checkbox per categorie |
+
+#### Band Streng Beginners
+
+Wanneer deze optie aangevinkt is:
+- Poules met **beginners** (wit of geel band) krijgen max **1** niveau bandverschil
+- Poules met alleen **gevorderden** (oranje+) krijgen de normale `max_band_verschil`
+
+**Voorbeeld met max_band_verschil=2 en streng_beginners=true:**
+- Poule met wit(0) + geel(1) = OK (verschil 1)
+- Poule met wit(0) + oranje(2) = **NIET OK** (verschil 2, maar beginner erin dus max 1)
+- Poule met oranje(2) + groen(4) = OK (verschil 2, geen beginners)
+
+### Zachte Criteria (sorteer niveau)
+
+| Criterium | Volgorde | Effect |
+|-----------|----------|--------|
+| Leeftijd prioriteit | jong → oud | Jongste eerst in poule |
+| Gewicht prioriteit | licht → zwaar | Lichtste eerst in poule |
+| Band prioriteit | laag → hoog | Beginners eerst in poule |
+
+### Apart Ingesteld
+
+| Instelling | Waarde | Betekenis |
+|------------|--------|-----------|
+| `poule_grootte_voorkeur` | [5, 4, 6, 3] | Poule groottes (zie onder) |
+
+#### poule_grootte_voorkeur - Twee functies
+
+De lijst heeft **twee functies**:
+
+1. **Prioriteit**: volgorde bepaalt voorkeur bij maken van poules
+2. **Toegestaan**: groottes IN de lijst zijn acceptabel, NIET in lijst = problematisch
+
+| Grootte | In lijst [5,4,6,3] | Status |
+|---------|---------------------|--------|
+| 5 | Positie 1 | ✅ Ideaal (0 punten) |
+| 4 | Positie 2 | ✅ Goed (5 punten) |
+| 6 | Positie 3 | ✅ Acceptabel (40 punten) |
+| 3 | Positie 4 | ✅ Ongewenst maar OK (40 punten) |
+| 7+ | Niet in lijst | ❌ **Kan niet** (solver maakt dit nooit) |
+| 1-2 | Niet in lijst | 🔴 Orphan (100 punten) |
+
+**Harde bovengrens:** `max(poule_grootte_voorkeur)` is de absolute maximum poulegrootte.
+- Bij [5, 4, 6, 3] → max = 6, poule van 7 kan NIET
+- Bij [5, 4, 3] → max = 5, poule van 6 kan NIET
+
+**Voorbeeld prioriteit verschil:**
+- [5, 4, **3**, 6]: 6 judoka's → 2×3 (want 3 staat vóór 6)
+- [5, 4, **6**, 3]: 6 judoka's → 1×6 (want 6 staat vóór 3)
+
+---
+
+## UI: Categorieën Instelling
+
+### Preset Keuze
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Categorieën Instelling                                          │
+│                                                                 │
+│ [○ Geen standaard] [○ JBN 2025] [● JBN 2026] [Preset ▼] [Save] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Sorteer Prioriteit (altijd zichtbaar)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Sorteer prioriteit: (sleep om te wisselen)                      │
+│ [1. Leeftijd] [2. Gewicht] [3. Band]                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Categorie Velden
+
+| Veld | Type | Beschrijving |
+|------|------|--------------|
+| Naam | text | Label (bijv. "Mini's", "Jeugd") |
+| In titel | checkbox | Toon label in poule titel |
+| Max leeftijd | number | Leeftijdsgrens (exclusief) |
+| Geslacht | select | Gemengd / M / V |
+| Systeem | select | Poules / Kruisfinale / Eliminatie |
+| Max kg verschil | number | 0 = vaste klassen, >0 = variabel |
+| Max lft verschil | number | Max jaren verschil in poule |
+| Band filter | select | Optioneel: t/m X of vanaf X |
+| Gewichtsklassen | text | Alleen bij max_kg = 0 |
+
+### Band Filter Opties
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Band filter: [Alle banden ▼]                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ • Alle banden        ← geen filter                              │
+│ ─────────────────────                                           │
+│ • t/m wit            ← alleen witte band                        │
+│ • t/m geel           ← wit + geel                               │
+│ • t/m oranje         ← wit + geel + oranje (= beginners)        │
+│ • t/m groen          ← wit t/m groen                            │
+│ ─────────────────────                                           │
+│ • vanaf geel         ← geel en hoger                            │
+│ • vanaf oranje       ← oranje en hoger                          │
+│ • vanaf groen        ← groen en hoger (= gevorderden)           │
+│ • vanaf blauw        ← blauw en hoger                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Belangrijk:** Band filter is een HARD criterium voor categoriseren, niet voor sorteren!
+
+---
+
+## Presets
+
+### Opslag
+
+| Preset | Locatie |
+|--------|---------|
+| JBN 2025 | Hardcoded: `Toernooi::getJbn2025Gewichtsklassen()` |
+| JBN 2026 | Hardcoded: `Toernooi::getJbn2026Gewichtsklassen()` |
+| Eigen presets | Database: `gewichtsklassen_presets` tabel |
+
+### Preset opslaan gedrag
+
+Na het opslaan van een preset:
+1. **Preset geselecteerd**: De opgeslagen preset wordt automatisch geselecteerd in dropdown EN radio button
+2. **Scroll positie behouden**: Pagina blijft op dezelfde scroll positie (niet naar top springen)
+3. **Delete knop zichtbaar**: De verwijder knop verschijnt naast de dropdown
+
+### JBN Leeftijdsklassen (referentie)
+
+| Klasse | U-nummer | max_leeftijd | Leeftijden |
+|--------|----------|--------------|------------|
+| Mini's | U7/U8 | 6/7 | 5-6 / 6-7 jaar |
+| Pupillen A | U9/U10 | 8/9 | 7-8 / 8-9 jaar |
+| Pupillen B | U11/U12 | 10/11 | 9-10 / 10-11 jaar |
+| Aspiranten | U13/U14 | 12/13 | 11-12 / 12-13 jaar |
+| Cadetten | U15 | 14 | 13-14 jaar |
+| Junioren | U18 | 17 | 15-17 jaar |
+| Senioren | Sen | 99 | 18+ |
+
+**Let op:**
+- U7 = **max 6 jaar** (want: Under 7)
+- `max_leeftijd` in config = hoogste leeftijd die in deze categorie past
+- JBN gebruikt 2-jaar ranges binnen elke categorie
+
+---
+
+## Poulegrootte Verdeling
+
+### Voorkeur Algoritme
+
+Gegeven `poule_grootte_voorkeur = [5, 4, 6, 3]`:
+
+| Aantal | Verdeling | Uitleg |
+|--------|-----------|--------|
+| 8 | [4, 4] | Twee gelijke (niet 5+3) |
+| 9 | [5, 4] | Ideaal + goed |
+| 10 | [5, 5] | Twee ideale |
+| 11 | [6, 5] of [4, 4, 3] | Afhankelijk van 6 vs 3 voorkeur |
+| 12 | [4, 4, 4] | Drie gelijke |
+| 15 | [5, 5, 5] | Drie ideale |
+| 20 | [5, 5, 5, 5] | Vier ideale |
+
+### Harde Constraints
+
+| Constraint | Breekbaar? |
+|------------|------------|
+| max_kg_verschil | Nee, nooit |
+| max_leeftijd_verschil | Nee, nooit |
+| Poulegrootte 3-6 | **Ja, poule van 1-2 toegestaan** |
+| Geslacht (indien apart) | Nee, nooit |
+
+### Verificatie Poule Grootte (per type)
+
+De "Verifieer poules" knop controleert grootte per poule type:
+
+| Poule Type | Min | Max | Foutmelding |
+|------------|-----|-----|-------------|
+| **Normaal** | 3 | 6 | "X judoka's (min. 3)" of "X judoka's (max. 6)" |
+| **Eliminatie** | 8 | ∞ | "X judoka's (min. 8 voor eliminatie)" |
+| **Kruisfinale** | - | - | Geen grootte validatie |
+
+**Code:** `PouleController::verifieer()` - regels 254-284
+
+### Orphan Judoka's (poule van 1)
+
+**Belangrijk:** Een judoka die geen gewichtsmatch heeft met anderen wordt
+WEL ingedeeld in de juiste categorie, maar dan in een poule van 1.
+
+Voorbeeld:
+- Fleur (11j, 24.7kg) past in categorie "Jeugd" (t/m 14 jaar)
+- Geen andere judoka binnen 3kg verschil
+- → Fleur komt in poule van 1 binnen categorie "Jeugd"
+- → Organisator kan haar handmatig verplaatsen of constraint aanpassen
+
+Dit voorkomt "niet ingedeeld" meldingen voor judoka's die WEL in een
+categorie passen maar geen gewichtsmatch hebben.
+
+### Niet-Gecategoriseerde Judoka's (configuratie probleem)
+
+**Belangrijk:** Dit is iets ANDERS dan orphan judoka's!
+
+| Type | Oorzaak | Oplossing |
+|------|---------|-----------|
+| **Niet gecategoriseerd** | Geen categorie past (leeftijd/geslacht/band) | Config aanpassen |
+| **Orphan (poule van 1)** | Wel categorie, geen gewichtsmatch | Handmatig of max_kg aanpassen |
+
+**Melding "Niet gecategoriseerd":**
+- Locatie: **Bovenaan Instellingen pagina** (niet bij Poules!)
+- Stijl: Knipperende rode melding (10 sec)
+- Triggers:
+  1. Na opslaan instellingen (categorie config gewijzigd)
+  2. Na import/validatie judoka's
+  3. Bij laden instellingen pagina (als er niet-gecategoriseerde zijn)
+- Inhoud: Aantal + link naar lijst
+
+---
+
+## Poule Titels
+
+### Opbouw (algemene regel)
+
+```
+#nummer Label / Leeftijd / Gewicht
+```
+
+| # | Component | Tonen wanneer | Voorbeeld |
+|---|-----------|---------------|-----------|
+| 1 | **Poule #** | Altijd (in UI prefix) | `#1`, `#5` |
+| 2 | **Label** | `toon_label_in_titel = true` | `Mini's`, `Jeugd` |
+| 3 | **Leeftijd** | `max_leeftijd_verschil > 0` | `4j`, `9-10j` |
+| 4a | **Gewichtsklasse** | `max_kg_verschil = 0` (vaste klassen) | `-26kg` |
+| 4b | **Gewichtsrange** | `max_kg_verschil > 0` (variabel) | `25-27kg` |
+
+### Voorbeelden
+
+```
+#1 Mini's / 4j / -26kg     ← label aan, lft_verschil>0, vaste kg klasse
+#2 Mini's / -26kg          ← label aan, lft_verschil=0 (geen lft), vaste kg
+#3 Jeugd / 9-10j / 28-32kg ← label aan, beide variabel (ranges)
+#4 9-10j / 28-32kg         ← label uit, beide variabel
+#5 Mini's                  ← label aan, lft_verschil=0, geen gewichtsklassen
+```
+
+### Waar wordt de titel gebruikt?
+
+| Locatie | Format | Voorbeeld |
+|---------|--------|-----------|
+| **Poule pagina** | `#nummer Titel` | `#1 Mini's / 4j / -26kg` |
+| **Wedstrijddag poules** | `#nummer Titel` | `#1 Mini's / 4j / -26kg` |
+| **Blokverdeling chips** | `#nummer Afkorting` | `#1 M` (1e letter van label) |
+| **Zaaloverzicht** | `#nummer Afkorting` | `#1 M` (1e letter van label) |
+| **Wedstrijdschema's** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Publieke app** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Spreker interface** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Mat interface** | Volledige titel | `Mini's / 4j / -26kg` |
+
+### Regels
+
+- Als `max_leeftijd_verschil = 0`: leeftijd niet tonen (organisator zet het in label)
+- Als `max_kg_verschil = 0` MET vaste gewichtsklassen: toon de klasse (bijv. `-26kg`)
+- Als `max_kg_verschil = 0` ZONDER gewichtsklassen: geen gewicht tonen
+- Als `max_kg_verschil > 0`: toon live berekende range uit judoka's
+
+### Code locatie
+
+- `Poule::getDisplayTitel()` - centrale methode voor titel generatie
+- Gebruik altijd deze methode, niet zelf titel samenstellen
+
+---
+
+## Database Velden
+
+### judokas tabel
+
+| Veld | Inhoud | Voorbeeld |
+|------|--------|-----------|
+| `leeftijdsklasse` | Label uit config (weergave) | "Mini's", "U11 Heren" |
+| `categorie_key` | Config array key (lookup) | "minis", "u11_h" |
+| `sort_categorie` | Volgorde (0, 1, 2...) | 0, 1, 2 |
+| `sort_gewicht` | Gewicht in grammen | 30500 (= 30.5kg) |
+| `sort_band` | Band niveau (1-7) | 3 (= oranje) |
+
+### poules tabel
+
+| Veld | Inhoud | Voorbeeld |
+|------|--------|-----------|
+| `leeftijdsklasse` | Label (weergave) | "U7", "U11 Jongens" |
+| `gewichtsklasse` | Klasse of range | "-24" of "24-27kg" |
+| `categorie_key` | Config array key (lookup) | "u7", "u11_h" |
+
+### categorie_key uitleg
+
+De `categorie_key` is de directe link naar de gewichtsklassen config:
+
+```php
+// Config in toernooien.gewichtsklassen
+'u7' => ['label' => 'U7', 'max_leeftijd' => 6, ...],
+'u11_h' => ['label' => 'U11 Jongens', 'max_leeftijd' => 10, ...],
+
+// Lookup via CategorieClassifier
+$config = $classifier->getConfigVoorPoule($poule);
+// Gebruikt $poule->categorie_key om juiste config te vinden
+```
+
+**Belangrijk:**
+- `leeftijdsklasse` = label, alleen voor weergave
+- `categorie_key` = array key, voor config lookup
+- Nooit zoeken op label! Labels kunnen wijzigen.
+
+### Band Niveaus
+
+**Python solver (0-indexed, voor constraints):**
+
+| Band | Niveau |
+|------|--------|
+| wit | 0 |
+| geel | 1 |
+| oranje | 2 |
+| groen | 3 |
+| blauw | 4 |
+| bruin | 5 |
+| zwart | 6 |
+
+**PHP BandHelper (1-indexed, voor sortering):**
+
+| Band | Niveau |
+|------|--------|
+| wit | 1 |
+| geel | 2 |
+| oranje | 3 |
+| groen | 4 |
+| blauw | 5 |
+| bruin | 6 |
+| zwart | 7 |
+
+> **Let op:** Python solver gebruikt 0-indexed (wit=0) voor constraint checking.
+> PHP BandHelper gebruikt 1-indexed (wit=1) voor sort_band database veld.
+
+---
+
+## Services
+
+### CategorieClassifier
+
+Dedicated class voor categorie-herkenning op basis van harde criteria.
+
+**Waarom een aparte class?**
+- Classificatielogica op één plek (niet verspreid over services)
+- Makkelijk te testen (unit tests)
+- Duidelijke verantwoordelijkheid
+
+**Harde criteria voor categorie-identificatie:**
+
+| Criterium | Niveau | Voorbeeld |
+|-----------|--------|-----------|
+| `max_leeftijd` | Categorie | U7 = max 6 jaar |
+| `geslacht` | Categorie | M / V / gemengd |
+| `band_filter` | Categorie | tm_oranje, vanaf_groen |
+| `gewichtsklassen` | Categorie (bij vast) | [-21, -24, -27, ...] |
+
+**NIET voor categorie-identificatie (poule-niveau):**
+
+| Criterium | Niveau | Gebruik |
+|-----------|--------|---------|
+| `max_kg_verschil` | Poule | Verdeling binnen categorie |
+| `max_leeftijd_verschil` | Poule | Verdeling binnen categorie |
+
+**Interface:**
+
+```php
+class CategorieClassifier
+{
+    public function __construct(array $gewichtsklassenConfig);
+
+    // Classificeer judoka naar categorie
+    public function classificeer(Judoka $judoka): ?CategorieResultaat;
+
+    // Haal config op voor een poule (op basis van opgeslagen categorie_key)
+    public function getConfigVoorPoule(Poule $poule): ?array;
+
+    // Check of categorie dynamisch is (max_kg_verschil > 0)
+    public function isDynamisch(string $categorieKey): bool;
+}
+```
+
+**CategorieResultaat:**
+
+```php
+[
+    'key' => 'u7',                    // Config array key
+    'label' => 'U7',                  // Weergavenaam
+    'sortCategorie' => 0,             // Sorteervolgorde
+    'gewichtsklasse' => '-24',        // Bij vast, anders null
+    'isDynamisch' => true,            // max_kg_verschil > 0
+]
+```
+
+**Locatie:** `app/Services/CategorieClassifier.php`
+
+### PouleIndelingService
+
+Hoofdservice voor poule-indeling:
+- `herberkenKlassen()` - Categoriseert judoka's opnieuw (gebruikt CategorieClassifier)
+- `genereerPouleIndeling()` - Maakt poules aan, roept Python solver aan per categorie
+- `maakPouleTitel()` - Genereert titel
+- `verplaatsJudoka()` - Verplaatst judoka naar andere poule
+
+**BELANGRIJK: Altijd verse config lezen!**
+Alle services lezen bij elke operatie de actuele config uit de database:
+- `genereerPouleIndeling()` → roept `initializeFromToernooi()` + `herberkenKlassen()` aan
+- `BlokMatVerdelingService` → leest direct uit `$toernooi->blokken`, `$toernooi->poules()`
+- Er wordt NOOIT gecachte config hergebruikt van een vorige run
+
+**Herclassificatie triggers:**
+- Bij opslaan categorie-instellingen → `voerValidatieUit()` (JudokaController)
+- Bij poule-indeling genereren → `herberkenKlassen()` (PouleIndelingService)
+- Beide gebruiken `CategorieClassifier` en updaten: leeftijdsklasse, categorie_key, sort_categorie
+
+**Flow:**
+1. `CategorieClassifier` → classificeert judoka's naar categorieën
+2. `PouleIndelingService` → roept Python solver aan per categorie
+3. `poule_solver.py` → maakt poules binnen die categorie
+
+### Python Poule Solver (scripts/poule_solver.py)
+
+**De solver doet ALLEEN poule-verdeling binnen een categorie:**
+
+- **Classificatie**: Gebeurt via `CategorieClassifier` (niet in Python!)
+- **Input**: Judoka's van één categorie + constraints (max_kg, max_leeftijd)
+- **Output**: Optimale poule-indeling
+
+**Input JSON (per categorie):**
+
+```json
+{
+  "max_kg_verschil": 3,
+  "max_leeftijd_verschil": 2,
+  "poule_grootte_voorkeur": [5, 4, 6, 3],
+  "judokas": [
+    {"id": 1, "leeftijd": 6, "gewicht": 22.5, "band": 2, "club_id": 1},
+    {"id": 2, "leeftijd": 6, "gewicht": 23.1, "band": 1, "club_id": 2}
+  ]
+}
+```
+
+**Output JSON:**
+
+```json
+{
+  "success": true,
+  "poules": [
+    {
+      "categorie_key": "u7",
+      "label": "U7",
+      "gewichtsklasse": "22-25kg",
+      "judoka_ids": [1, 2, 5, 8, 12],
+      "gewicht_range": 2.8,
+      "leeftijd_range": 1
+    }
+  ],
+  "statistieken": {
+    "totaal_judokas": 50,
+    "totaal_poules": 12,
+    "orphans": 0
+  }
+}
+```
+
+**Voordelen van gecombineerde aanpak:**
+- Eén optimalisatie-run over alle judoka's
+- Classifier en verdeling in sync
+- Python kan globaal optimaliseren (minder orphans)
+
+**Locatie:** `scripts/poule_solver.py`
+
+### DynamischeIndelingService
+
+Roept Python solver aan voor dynamische categorieën:
+- `berekenIndeling()` - Wrapper rond Python solver
+- `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
+- Filtert onvolledige judoka's (zonder gewicht/leeftijd) en rapporteert deze apart
+
+#### Algoritme Python Solver (Greedy + Slimme Herverdeling)
+
+```
+INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, max_band, poule_grootte_voorkeur)
+OUTPUT: Poules binnen constraints
+
+============================================================================
+KERNPRINCIPE: SIMPEL GREEDY + ACHTERAF FIXEN
+============================================================================
+
+Simpele aanpak die goed werkt:
+1. Sorteer alle judoka's op prioriteit
+2. Maak poules greedy (beste match zoeken)
+3. Fix kleine poules achteraf als mogelijk
+4. Accepteer orphans die nergens passen
+
+============================================================================
+STAP 1: SORTEER OP PRIORITEITEN
+============================================================================
+
+Sorteer alle judoka's op config prioriteiten (default: band → gewicht → leeftijd)
+
+Resultaat:
+  wit/22kg, wit/23kg, wit/25kg, geel/23kg, geel/26kg, oranje/27kg, oranje/30kg...
+
+Lage banden en lage gewichten komen eerst = bij elkaar in poules.
+
+============================================================================
+STAP 2: SLIMME GREEDY VERDELING
+============================================================================
+
+Voor elke poule:
+1. Start met eerste ongeplaatste judoka (anchor)
+2. Zoek in ALLE overgebleven judoka's wie het beste past:
+   - Moet voldoen aan: max_kg, max_lft, max_band t.o.v. IEDEREEN in poule
+   - Score: zelfde band + dicht gewicht = beste match
+3. Voeg beste match toe, herhaal tot poule vol (ideale grootte)
+4. Geen match meer? Sluit poule, start nieuwe
+
+Dit is NIET lineair door de lijst lopen, maar actief zoeken naar beste match!
+
+============================================================================
+STAP 3: HERVERDEEL KLEINE POULES
+============================================================================
+
+Na greedy verdeling kunnen er kleine poules (1-2 judoka's) overblijven.
+
+STRATEGIE 1: Merge kleine poules
+  - Als twee kleine poules samen passen (alle constraints OK)
+  - Voeg ze samen tot één grotere poule
+
+STRATEGIE 2: Steel van te grote poules
+  - Als er poules zijn groter dan ideaal (bijv. 6 bij voorkeur 5)
+  - Zoek judoka die past bij kleine poule
+  - Verplaats alleen als die judoka nog niet eerder verplaatst is
+
+============================================================================
+STAP 4: ACCEPTEER ORPHANS
+============================================================================
+
+Judoka's die nergens passen blijven als orphan (poule van 1-2):
+  - Te groot gewichtsverschil met anderen
+  - Te groot bandverschil
+  - Te groot leeftijdsverschil
+
+Dit is CORRECT gedrag! Organisator kan handmatig oplossen of constraints aanpassen.
+
+============================================================================
+SAMENVATTING
+============================================================================
+
+1. SORTEER: Alle judoka's op prioriteit (laag → hoog)
+2. GREEDY: Maak poules door beste match te zoeken
+3. HERVERDEEL: Merge kleine poules, steel van grote
+4. ACCEPTEER: Orphans die niet passen
+
+Voordelen:
+- Simpel en begrijpelijk
+- Geen ingewikkelde cascading logica
+- Resultaat is voorspelbaar
+- Orphans zijn echt orphans (geen false positives)
+
+```
+
+### VariabeleBlokVerdelingService
+
+Voor blokverdeling bij variabele categorieën:
+- `genereerVarianten()` - Trial & error splits
+- `groepeerInCategorieen()` - Dynamische headers
+
+### Gemengde Blokverdeling (NIEUW)
+
+Bij toernooien met ZOWEL vaste ALS variabele categorieën werkt `BlokMatVerdelingService` in twee fasen.
+
+**Detectie:**
+```php
+// In BlokMatVerdelingService
+private function isGemengdToernooi(Toernooi $toernooi): bool
+{
+    $config = $toernooi->getAlleGewichtsklassen();
+    $heeftVast = false;
+    $heeftVariabel = false;
+
+    foreach ($config as $cat) {
+        if (($cat['max_kg_verschil'] ?? 0) == 0) {
+            $heeftVast = true;
+        } else {
+            $heeftVariabel = true;
+        }
+    }
+
+    return $heeftVast && $heeftVariabel;
+}
+```
+
+**Twee-Fasen Algoritme:**
+
+```
+genereerGemengdeVerdeling():
+
+FASE 1: VASTE CATEGORIEËN
+─────────────────────────
+1. Filter categorieën waar max_kg_verschil = 0
+2. Groepeer per leeftijdsklasse
+3. Sorteer: jong → oud, dan licht → zwaar
+4. Verdeel met bestaande aansluiting-logica (+1, -1, +2)
+5. Update capaciteit per blok
+
+FASE 2: VARIABELE POULES
+─────────────────────────
+1. Filter poules waar max_kg_verschil > 0
+2. Sorteer op min_leeftijd → min_gewicht
+3. Voor elk blok: vul resterende ruimte
+4. Variabele poules passen flexibel in gaten
+```
+
+**Key methods:**
+
+```php
+// BlokMatVerdelingService
+public function genereerGemengdeVerdeling(Toernooi $toernooi): array
+{
+    // Splits categorieën
+    [$vaste, $variabele] = $this->splitsCategorieenOpType($toernooi);
+
+    // Fase 1: Vaste eerst (ruggengraat)
+    $capaciteit = $this->verdeelVasteCategorieen($vaste, $blokken);
+
+    // Fase 2: Variabele als opvulling
+    $this->vulMetVariabelePoules($variabele, $blokken, $capaciteit);
+
+    return $this->berekenScores(...);
+}
+```
+
+**Voordelen:**
+- Grote groepen (vaste cat.) krijgen gegarandeerd plek
+- Aansluiting gewichtsklassen blijft behouden
+- Variabele poules vullen gaten flexibel
+- Dag loopt logisch: jong → oud, licht → zwaar
+
+---
+
+## Implementatie Status
+
+### Voltooid
+
+- [x] Database & UI (Fase 1)
+- [x] Indeling algoritme (Fase 2)
+- [x] Eigen presets
+- [x] Drag & drop categorieën
+- [x] Variabele blokverdeling
+- [x] Live titel update bij drag & drop
+- [x] Hardcoded categorieën opgeruimd
+- [x] **Python Poule Solver (Fase 3)** - Greedy++ met sliding window
+- [x] **Finetuning** - orphan rescue, rebalance, band/club swap
+
+### Gepland
+
+- [ ] **Gemengde Blokverdeling** - Vast + variabel in één toernooi (twee-fasen algoritme)
+- [ ] UI varianten weergave (Fase 4)
+- [ ] Unit tests (Fase 5)
+
+---
+
+## Fase 3: Python Poule Solver
+
+### Waarom een solver?
+
+**Probleem met huidige greedy aanpak:**
+
+```
+Sortering: leeftijd → gewicht
+
+Poule 1: 6j, 25-28kg (grootte=3, orphan!)
+...veel judoka's verder in lijst...
+Judoka X: 7j, 26kg  ← past qua gewicht, maar staat ver weg
+```
+
+- Greedy kijkt alleen "vooruit" in gesorteerde lijst
+- Mist goede matches die verder weg staan (andere leeftijd, zelfde gewicht)
+- Resulteert in veel orphans en ongelijke poules
+
+**Solver voordelen:**
+- Bekijkt ALLE judoka's in categorie
+- Zoekt optimale combinaties (niet alleen buren)
+- Minimaliseert orphans, maximaliseert poules van 5
+
+### Architectuur
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ FLOW                                                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  PHP: PouleIndelingService                                      │
+│    │                                                            │
+│    ├─► Stap 1: Categoriseren (harde grenzen)                    │
+│    │                                                            │
+│    ├─► Stap 2-3: Sorteren & Groeperen                           │
+│    │                                                            │
+│    └─► Stap 4: Poules maken                                     │
+│          │                                                      │
+│          ▼                                                      │
+│        ┌─────────────────────────────────────────┐              │
+│        │ Python: poule_solver.py                 │              │
+│        │                                         │              │
+│        │ Input:  JSON met judoka's per categorie │              │
+│        │ Output: JSON met optimale poules        │              │
+│        │                                         │              │
+│        │ Algoritme:                              │              │
+│        │ 1. Score functie (orphans, grootte)     │              │
+│        │ 2. Zoek beste combinaties               │              │
+│        │ 3. Return poule-toewijzingen            │              │
+│        └─────────────────────────────────────────┘              │
+│          │                                                      │
+│          ▼                                                      │
+│  PHP: Sla poules op in database                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Input/Output Format
+
+**Input (PHP → Python):**
+```json
+{
+  "categorie": "U7",
+  "max_kg_verschil": 3.0,
+  "max_leeftijd_verschil": 2,
+  "poule_grootte_voorkeur": [5, 4, 6, 3],
+  "judokas": [
+    {"id": 1, "leeftijd": 6, "gewicht": 25.5, "band": 2, "club_id": 10},
+    {"id": 2, "leeftijd": 6, "gewicht": 26.0, "band": 1, "club_id": 11},
+    ...
+  ]
+}
+```
+
+**Output (Python → PHP):**
+```json
+{
+  "success": true,
+  "poules": [
+    {"judoka_ids": [1, 2, 5, 8, 12], "gewicht_range": 2.8, "leeftijd_range": 1},
+    {"judoka_ids": [3, 4, 6, 9, 10], "gewicht_range": 2.5, "leeftijd_range": 2},
+    ...
+  ],
+  "orphans": [15],
+  "stats": {
+    "totaal_judokas": 50,
+    "totaal_poules": 10,
+    "poules_van_5": 8,
+    "poules_van_4": 1,
+    "poules_van_3": 1,
+    "orphans": 1
+  }
+}
+```
+
+### Score Functie
+
+**BELANGRIJK:** Scores zijn NIET hardcoded! Ze komen uit de config.
+
+```python
+def bereken_grootte_penalty(grootte, poule_grootte_voorkeur):
+    """
+    Score op basis van poule_grootte_voorkeur uit config.
+
+    Voorbeeld: poule_grootte_voorkeur = [5, 4, 6, 3]
+    - Index 0 (5) = beste   → penalty 0
+    - Index 1 (4) = goed    → penalty 5
+    - Index 2 (6) = minder  → penalty 40
+    - Index 3 (3) = slecht  → penalty 40
+    - Niet in lijst (1,2)   → orphan penalty 70
+    - Orphan (0 of alleen)  → penalty 100
+    """
+    if grootte <= 1:
+        return 100  # Orphan
+
+    if grootte in poule_grootte_voorkeur:
+        index = poule_grootte_voorkeur.index(grootte)
+        # Eerste voorkeur = 0, tweede = 5, rest = 40
+        if index == 0:
+            return 0
+        elif index == 1:
+            return 5
+        else:
+            return 40
+    else:
+        return 70  # Niet in voorkeurlijst (poule van 2, 7, 8, etc.)
+
+
+def score_indeling(poules, config):
+    """
+    Lagere score = betere indeling
+    Config bevat: poule_grootte_voorkeur = [5, 4, 6, 3]
+    """
+    score = 0
+    voorkeur = config.get('poule_grootte_voorkeur', [5, 4, 6, 3])
+
+    for poule in poules:
+        grootte = len(poule)
+        score += bereken_grootte_penalty(grootte, voorkeur)
+
+    return score
+```
+
+**Standaard penalties (bij voorkeur [5, 4, 6, 3]):**
+
+| Grootte | Penalty | Reden |
+|---------|---------|-------|
+| 5 | 0 | Eerste voorkeur |
+| 4 | 5 | Tweede voorkeur |
+| 6 | 40 | Derde voorkeur |
+| 3 | 40 | Vierde voorkeur |
+| 2 | 70 | Niet in voorkeur |
+| 1 | 100 | Orphan |
+
+### Algoritme Opties
+
+| Optie | Beschrijving | Snelheid | Kwaliteit |
+|-------|--------------|----------|-----------|
+| **Greedy++** | Greedy + backtrack voor orphans | Snel | Goed |
+| **Simulated Annealing** | Random swaps, accepteer soms slechter | Medium | Zeer goed |
+| **OR-Tools CP** | Constraint Programming solver | Langzaam | Optimaal |
+
+**Aanbeveling:** Start met Greedy++ (PHP vervanging), upgrade naar SA als nodig.
+
+### Greedy++ Algoritme
+
+```python
+def greedy_plus_plus(judokas, max_kg, max_lft):
+    """
+    1. Sorteer op leeftijd → gewicht
+    2. Maak poules greedy (zoals nu)
+    3. NIEUW: Voor elke orphan/kleine poule:
+       - Zoek in ALLE poules of orphan erbij past
+       - Zoek in ALLE judoka's of er een swap mogelijk is
+    """
+
+    # Stap 1-2: Greedy basis
+    poules = maak_poules_greedy(judokas, max_kg, max_lft)
+
+    # Stap 3: Fix orphans
+    for _ in range(MAX_ITERATIES):
+        verbeterd = False
+
+        # Probeer orphans toe te voegen aan bestaande poules
+        for orphan in get_orphans(poules):
+            for poule in poules:
+                if kan_toevoegen(orphan, poule, max_kg, max_lft):
+                    poule.append(orphan)
+                    verbeterd = True
+                    break
+
+        # Probeer kleine poules samen te voegen
+        for p1, p2 in combinaties(kleine_poules(poules)):
+            if kan_samenvoegen(p1, p2, max_kg, max_lft):
+                merge(p1, p2)
+                verbeterd = True
+
+        # Probeer swaps tussen poules
+        for p1, p2 in combinaties(poules):
+            if swap_verbetert(p1, p2, max_kg, max_lft):
+                doe_swap(p1, p2)
+                verbeterd = True
+
+        if not verbeterd:
+            break
+
+    return poules
+```
+
+### Implementatie Stappen
+
+1. **Python solver script** (`laravel/scripts/poule_solver.py`)
+   - Input: JSON van stdin
+   - Output: JSON naar stdout
+   - Greedy++ algoritme
+
+2. **PHP integratie** (`DynamischeIndelingService.php`)
+   - `callPythonSolver($judokas, $config): array`
+   - Fallback naar PHP greedy als Python faalt
+
+3. **Tests**
+   - Unit tests Python solver
+   - Integratie test PHP ↔ Python
+
+### Bestaand Experiment
+
+Er is al een experiment: `Scripts/python/poule_solver_experiment.py`
+- Test 3 algoritmes: GEWICHT>BAND, BAND>GEWICHT, LEEFTIJD>GEWICHT>BAND
+- Kan als basis dienen voor productie solver
+
+---
+
+## Technische Details
+
+### Automatische Geslacht Detectie
+
+Als `geslacht` niet is ingevuld maar label bevat indicatie:
+
+| Label bevat | Wordt |
+|-------------|-------|
+| "Dames", "Meisjes", "_d" | V |
+| "Heren", "Jongens", "_h" | M |
+
+**Let op:** Als `geslacht = 'gemengd'` expliciet, dan GEEN auto-detect.
+
+### Gewicht Fallback
+
+Prioriteit voor effectief gewicht:
+1. `gewicht_gewogen` (na weging)
+2. `gewicht` (ingeschreven)
+3. `gewichtsklasse` (extract: "-38" → 38.0)
+
+### Rode Poule Markering
+
+Een poule is rood als grootte NIET in `poule_grootte_voorkeur`:
+- Default [5, 4, 6, 3] → 1, 2, 7, 8+ zijn rood
+- Lege poules (0) zijn blauw (verwijderbaar)
+
+### Overpoulen op Wedstrijddag
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ KERNREGEL: Vast = JUDOKA afwijkend, Variabel = POULE afwijkend      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│ 📦 VASTE GEWICHTSCATEGORIEËN (max_kg_verschil = 0)                 │
+│    Wat:     JUDOKA weegt buiten eigen gewichtsklasse               │
+│    Markering: Judoka gemarkeerd in poule (rode stip/badge)         │
+│    Actie:   Org sleept of gebruikt 🔍 Zoek Match                   │
+│    Judoka BLIJFT in poule tot org verplaatst                       │
+│                                                                     │
+│ 📊 DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0)                    │
+│    Wat:     POULE range te groot (lichtste vs zwaarste)            │
+│    Markering: Poule gemarkeerd als problematisch                   │
+│    Actie:   Org sleept of gebruikt 🔍 Zoek Match                   │
+│    Lichtste/zwaarste judoka gemarkeerd                             │
+│                                                                     │
+│ BEIDE:                                                              │
+│    - Tools: Drag & drop + 🔍 Zoek Match                            │
+│    - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info       │
+│    - Geen wachtruimte (OBSOLEET sinds feb 2026)                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Zoek Match - Handmatig Judoka Verplaatsen
+
+Verplaatst judoka naar andere poule **binnen dezelfde categorie**.
+Gebruik voor: orphans, poule optimalisatie, handmatige correcties.
+
+**Beschikbaar op:**
+- **Poules pagina** (voorbereiding) - voor handmatige optimalisatie
+- **Wedstrijddag Poules** - voor overpoelen na weging
+
+**Activeren:** Klik op 🔍 vergrootglas icoon achter de judoka
+
+**Popup toont alle poules gesorteerd op compatibiliteit:**
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Match voor: Jan de Vries (60kg, 8j)                         [X] │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│ ✅ Poule #65 Jeugd                                              │
+│    Nu:  4 judoka's | 7-8j | 57-60kg                             │
+│    Na:  5 judoka's | 7-8j | 57-60kg                             │
+│                                                                  │
+│ ⚠️ Poule #68 Jeugd                                  +2kg over  │
+│    Nu:  3 judoka's | 8-9j | 55-58kg                             │
+│    Na:  4 judoka's | 8-9j | 55-60kg  ← gewicht verandert        │
+│                                                                  │
+│ ❌ Poule #75 Jeugd                                  +7kg over  │
+│    Nu:  4 judoka's | 9-10j | 50-53kg                            │
+│    Na:  5 judoka's | 8-10j | 50-60kg ← leeftijd én gewicht      │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Per poule tonen:**
+- Poule nummer + categorie
+- **Nu:** huidige statistieken (aantal judoka's | leeftijd range | gewicht range)
+- **Na:** statistieken na verplaatsing (wat verandert is zichtbaar)
+- Status indicator:
+  - ✅ Past binnen limieten
+  - ⚠️ Kleine overschrijding (acceptabel)
+  - ❌ Grote overschrijding (problematisch)
+
+**Actie:** Klik op poule → judoka wordt direct verplaatst, popup sluit
+
+**Sortering poules:**
+1. Eerst: past binnen limiet (✅)
+2. Dan: minste kg overschrijding (⚠️)
+3. Laatst: grote overschrijding (❌)
+
+**Backend endpoint:** `POST /poule/{toernooi}/zoek-match/{judoka}`
+
+Response:
+```json
+{
+  "judoka": { "id": 123, "naam": "Jan", "gewicht": 60, "leeftijd": 8 },
+  "matches": [
+    {
+      "poule_id": 65,
+      "poule_titel": "Poule #65 Jeugd",
+      "huidige_judokas": 4,
+      "huidige_leeftijd": "7-8j",
+      "huidige_gewicht": "57-60kg",
+      "nieuwe_judokas": 5,
+      "nieuwe_leeftijd": "7-8j",
+      "nieuwe_gewicht": "57-60kg",
+      "kg_overschrijding": 0,
+      "lft_overschrijding": 0,
+      "status": "ok"
+    },
+    ...
+  ]
+}
+```
+
+---
+
+## Wedstrijddag: Overpoulen per Categorie Type
+
+### TL;DR
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ KERNREGEL: Vast = JUDOKA afwijkend, Variabel = POULE afwijkend      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│ 📦 VASTE GEWICHTSCATEGORIEËN (max_kg_verschil = 0)                 │
+│ ───────────────────────────────────────────────────────────────────│
+│ Probleem:  JUDOKA weegt buiten eigen gewichtsklasse                │
+│ Detectie:  gewogen_gewicht past niet in ingeschreven klasse        │
+│ Markering: Judoka gemarkeerd in poule (rode stip/badge)            │
+│ Judoka BLIJFT in poule — wordt NIET automatisch verwijderd         │
+│ Actie:     Org sleept of gebruikt 🔍 Zoek Match                    │
+│                                                                     │
+│ 📊 DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0)                    │
+│ ───────────────────────────────────────────────────────────────────│
+│ Probleem:  POULE gewichtsrange > max_kg_verschil                   │
+│ Detectie:  range = max(gewogen) - min(gewogen)                     │
+│ Markering: Poule gemarkeerd als problematisch                      │
+│            Lichtste + zwaarste judoka gemarkeerd                   │
+│ Actie:     Org sleept of gebruikt 🔍 Zoek Match                    │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ BEIDE:                                                              │
+│   - Tools: Drag & drop + 🔍 Zoek Match                             │
+│   - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info        │
+│   - Weegkaart + publieke pagina's updaten automatisch              │
+│   - ⛔ GEEN wachtruimte (OBSOLEET sinds feb 2026)                  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Detectie: Wanneer is overpoulen nodig?
+
+**Na sluiten weging** per blok:
+
+#### Vaste gewichtscategorieën
+- Per judoka: `gewogen_gewicht` past niet in de gewichtsklasse van de poule
+- Judoka wordt **gemarkeerd** in de poule (rode stip + badge)
+- Judoka **blijft in de poule** tot org actie onderneemt
+
+#### Dynamische categorieën
+1. **Herbereken min-max kg** per poule op basis van **gewogen gewichten**
+2. **Check:** `(max_kg - min_kg) > max_kg_verschil` uit categorie config?
+3. **Indien ja:** poule is problematisch → lichtste + zwaarste gemarkeerd
+
+**Voorbeeld (dynamisch):**
+```
+Poule #42 vóór weging:  28, 29, 30, 31 kg → range 3kg ✅ (max=3)
+Poule #42 na weging:    27, 29, 30, 32 kg → range 5kg ❌ (max=3)
+→ Probleem: 27kg of 32kg moet verplaatst worden
+```
+
+**Belangrijk:** Bij dynamisch gaat het om de POULE range, niet om individuele judoka's!
+
+### Afwijkend Gewicht bij Vaste Categorieën
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ FLOW: AFWIJKEND GEWICHT BIJ VASTE GEWICHTSCATEGORIEËN            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ SITUATIE: Judoka ingeschreven -36kg, weegt 37.2kg                │
+│                                                                   │
+│ STAP 1: WEGING                                                    │
+│   - Weegstation registreert 37.2kg                               │
+│   - Systeem markeert judoka als "afwijkend gewicht"              │
+│                                                                   │
+│ STAP 2: MARKERING (geen automatische verplaatsing!)              │
+│   - Judoka BLIJFT in -36kg poule                                 │
+│   - Rode stip/badge toont "afwijkend gewicht"                    │
+│   - Judoka is zichtbaar voor org om actie te ondernemen          │
+│                                                                   │
+│ STAP 3: ORGANISATOR HANDELT                                      │
+│   - Sleept judoka naar passende -40kg poule                      │
+│   - OF gebruikt 🔍 Zoek Match voor suggesties                    │
+│   - Org bepaalt zelf prioriteit en timing                        │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Afwezigen (BEIDE categorie types)
+
+- Afwezigen gaan **automatisch** uit de poule
+- Zichtbaar bij ℹ️ info tooltip van de poule
+- NIET zichtbaar in de poule zelf
+
+### Lege Poules op Wedstrijddag
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ LEGE POULES                                                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ VASTE CATEGORIEËN: Lege poules WEL tonen                         │
+│   → Voorbeeld: -36kg poule leeg → judoka uit -32kg kan erheen   │
+│                                                                   │
+│ DYNAMISCHE CATEGORIEËN: Lege poules NIET tonen                   │
+│                                                                   │
+│ ⚠️ LEGE POULES NOOIT OP MAT ZETTEN!                              │
+│   • Lege poule = geen wedstrijden = niet op mat                  │
+│   • Mat interface toont alleen poules met judoka's               │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Zoek Match (Wedstrijddag variant)
+
+Hergebruik Zoek Match met blok-beperkingen:
+
+| Blok situatie | Actie |
+|---------------|-------|
+| **Zelfde blok** | Direct in poule |
+| **Ander blok (weging gesloten)** | Direct in poule |
+| **Ander blok (weging open)** | Zoek Match toont waarschuwing |
+
+### UI: Problematische Poules na Weging
+
+Op **Wedstrijddag Poules** pagina:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ ⚠️ Poule #42 Jeugd 9-10j                         Range: 5kg ❌  │
+│    Huidige judoka's: 27-32kg (max toegestaan: 3kg)              │
+│                                                                  │
+│    [Toon details ▼]                                             │
+│                                                                  │
+│    27kg - Piet Jansen      [🔍 Zoek match] ← lichtste           │
+│    29kg - Jan de Vries                                          │
+│    30kg - Kees Bakker                                           │
+│    32kg - Tom Smit         [🔍 Zoek match] ← zwaarste           │
+│                                                                  │
+│    💡 Verplaats de lichtste of zwaarste om range te verkleinen  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Weergave:**
+- Markeer poules waar range > max_kg_verschil
+- Toon huidige range en max toegestaan
+- Highlight lichtste EN zwaarste judoka (organisator kiest)
+- Zoek Match knop alleen bij lichtste en zwaarste
+
+### Zoek Match Popup (Wedstrijddag variant)
+
+Extra informatie t.o.v. voorbereiding:
+- Blok van doelpoule tonen
+- Beschikbaarheid indicator (blok status)
+- Sortering: zelfde blok eerst, dan volgend, dan vorig
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Match voor: Piet Jansen (27kg, 9j)                          [X] │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│ 🟢 BLOK 2 (huidig blok)                                         │
+│ ─────────────────────────────────────────────────────────────── │
+│ ✅ Poule #38 Jeugd                                              │
+│    Nu:  4 judoka's | 9-10j | 26-28kg                            │
+│    Na:  5 judoka's | 9-10j | 26-28kg                            │
+│                                                                  │
+│ 🔵 BLOK 3 (volgend blok)                                        │
+│ ─────────────────────────────────────────────────────────────── │
+│ ⚠️ Poule #55 Jeugd                                   +1kg over  │
+│    Nu:  3 judoka's | 8-9j | 24-26kg                             │
+│    Na:  4 judoka's | 8-9j | 24-27kg                             │
+│                                                                  │
+│ 🟡 BLOK 1 (vorig blok - weging nog open)                        │
+│ ─────────────────────────────────────────────────────────────── │
+│ ✅ Poule #12 Jeugd                                              │
+│    Nu:  4 judoka's | 9j | 26-29kg                               │
+│    Na:  5 judoka's | 9j | 26-29kg                               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Nieuwe Poule Maken
+
+Als geen geschikte match:
+- Organisator kan nieuwe poule aanmaken
+- Nieuwe poule komt in zelfde blok (of kies blok)
+- **Let op:** Lege poules niet op mat zetten!
+
+---
+
+## Handmatig Poule Aanmaken
+
+### Per Categorie Knoppen
+
+Op de Poules pagina staat een **"+ Nieuwe poule"** knop per categorie header:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔵 Mini's (U7)                              [+ Nieuwe poule]    │
+├─────────────────────────────────────────────────────────────────┤
+│ Poule #1 Mini's -24kg (5)                                       │
+│ Poule #2 Mini's -27kg (4)                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔵 Jeugd (U11)                              [+ Nieuwe poule]    │
+├─────────────────────────────────────────────────────────────────┤
+│ Poule #3 Jeugd 8-9j 28-32kg (5)                                 │
+│ Poule #4 Jeugd 9-10j 32-35kg (4)                                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Gedrag Gebaseerd op Categorie Type
+
+| Categorie Type | Gewichtsklasse Veld | Uitleg |
+|----------------|---------------------|--------|
+| **Vaste gewichtsklassen** | Zichtbaar + verplicht | Dropdown met geconfigureerde klassen |
+| **Variabele gewichten** | Verborgen | Gewichtsklasse niet nodig (range wordt berekend) |
+
+**Detectie:** `max_kg_verschil = 0` → vaste klassen, `max_kg_verschil > 0` → variabel
+
+### Modal Flow
+
+1. Klik op "+ Nieuwe poule" bij categorie header
+2. Modal opent met:
+   - **Leeftijdsklasse**: voorgeselecteerd op aangeklikte categorie
+   - **Gewichtsklasse**: alleen zichtbaar als categorie vaste gewichten heeft
+3. Bij vaste gewichten: kies gewichtsklasse uit dropdown
+4. Opslaan → nieuwe poule wordt aangemaakt
+
+### Code Locaties
+
+| Bestand | Functie |
+|---------|---------|
+| `resources/views/pages/poule/index.blade.php` | Per-categorie knop + modal JS |
+| `app/Http/Controllers/PouleController.php` | `store()` - gewichtsklasse nullable |
+| `app/Models/Toernooi.php` | `getCategorieKeyByLabel()` - lookup categorie config |
+
+### Validatie
+
+```php
+// PouleController::store()
+$validated = $request->validate([
+    'leeftijdsklasse' => 'required|string',
+    'gewichtsklasse' => 'nullable|string',  // Nullable voor variabele categorieën
+]);
+```
+
+**Titel generatie:**
+- Met gewichtsklasse: `"Mini's -24kg"`
+- Zonder gewichtsklasse: `"Mini's"` (range wordt later berekend op basis van judoka's)
+
+### Implementatie Stappen
+
+1. **Detectie problematische poules (dynamisch)** ✅
+   - Na `sluitWeging()`: check alle poules in blok
+   - Bereken range op basis van gewogen gewichten
+   - Markeer poules waar range > max_kg_verschil
+
+2. **Markering afwijkende judoka's (vast)** 🚧 TODO
+   - Na weging: check of judoka binnen gewichtsklasse van poule past
+   - Markeer judoka in poule (rode stip/badge)
+   - Judoka blijft in poule (NIET automatisch verwijderen)
+   - Wachtruimte VERWIJDERD (obsoleet)
+
+3. **UI aanpassing Wedstrijddag Poules** 🚧 TODO
+   - Vaste gewichtsklassen: elke gewichtsklasse op aparte rij
+   - Wachtruimte UI verwijderen
+   - Afwijkende judoka's visueel gemarkeerd in poule
+
+4. **Zoek Match** ✅
+   - 🔍 knop op alle judoka's (vast + dynamisch)
+   - Blok-filtering bij wedstrijddag variant
+   - Groepeer resultaten per blok
+
+5. **Data updates na verplaatsen** ✅
+   - **Weegkaarten:** Dynamisch, blok/mat info update automatisch
+   - **Publieke pagina's:** Deelnemer zoeken, poule overzichten, etc. tonen actuele data
+   - **QR-code:** Blijft zelfde (gebaseerd op judoka ID, niet poule)
+   - Alle views lezen live uit database → geen cache invalidatie nodig
+
+---
+
+## Legacy
+
+De `App\Enums\Leeftijdsklasse` enum is **deprecated**:
+- Bevat hardcoded JBN2025 categorieën
+- Wordt niet meer gebruikt
+- Nieuwe code moet preset config gebruiken
