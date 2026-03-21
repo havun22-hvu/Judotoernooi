@@ -45,6 +45,7 @@ docs/
 - [Danpunten](./2-FEATURES/DANPUNTEN.md) - JBN danpunten registratie voor bruine banden
 
 ### 3a. Technical
+- [Codebase-structuur](./3-TECHNICAL/CODEBASE-STRUCTUUR.md) - Volledig overzicht mappen en key files
 - [URL Structuur](./URL-STRUCTUUR.md) - Routes en authenticatie schema
 - [API Documentatie](./3-TECHNICAL/API.md) - REST endpoints
 - [Database Schema](./3-TECHNICAL/DATABASE.md) - Tabelstructuur
@@ -100,21 +101,7 @@ Zie [CHANGELOG.md](../CHANGELOG.md) voor wijzigingsgeschiedenis.
 
 ## Architectuur
 
-```
-laravel/
-├── app/
-│   ├── Enums/           # Band, Geslacht (Leeftijdsklasse is deprecated)
-│   ├── Http/Controllers/
-│   ├── Models/          # Toernooi, Judoka, Betaling, etc.
-│   └── Services/        # PouleIndelingService, MollieService, etc.
-├── config/
-│   ├── toernooi.php     # Toernooi configuratie
-│   └── services.php     # Mollie API config
-├── database/migrations/
-├── docs/                # Deze documentatie
-├── resources/views/     # Blade templates
-└── routes/web.php
-```
+Zie [Codebase-structuur](./3-TECHNICAL/CODEBASE-STRUCTUUR.md) voor het volledige overzicht (app/, config/, routes/, resources/, tests/, root-structuur, docs, entry points, frontend, HavunCore).
 
 ## Contact
 
