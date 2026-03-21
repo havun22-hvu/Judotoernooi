@@ -134,6 +134,9 @@ Route::post('/error-report', function (\Illuminate\Http\Request $request) {
 // Standalone scoreboard (development/testing)
 Route::get('/scoreboard', fn () => view('pages.mat.scoreboard', ['toernooi' => null, 'wedstrijd' => null]))->name('scoreboard.standalone');
 
+// Scoreboard app download page
+Route::get('/scoreboard/download', fn () => view('pages.scoreboard-download'))->name('scoreboard.download');
+
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->middleware('auth:organisator')->name('health.detailed');
