@@ -14,6 +14,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Public: app version check (no auth needed)
+Route::get('/scoreboard/version', function () {
+    return response()->json([
+        'version' => config('scoreboard.version', '1.0.0'),
+        'versionCode' => (int) config('scoreboard.version_code', 100),
+        'downloadUrl' => config('scoreboard.download_url', ''),
+        'forceUpdate' => (bool) config('scoreboard.force_update', false),
+        'releaseNotes' => config('scoreboard.release_notes', ''),
+    ]);
+})->name('api.scoreboard.version');
+
 // Public: authenticate with code + pincode to receive Bearer token
 Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
     ->middleware('throttle:login')
