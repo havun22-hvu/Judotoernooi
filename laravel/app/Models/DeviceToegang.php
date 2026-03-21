@@ -20,6 +20,7 @@ class DeviceToegang extends Model
         'code',
         'pincode',
         'device_token',
+        'api_token',
         'device_info',
         'gebonden_op',
         'laatst_actief',

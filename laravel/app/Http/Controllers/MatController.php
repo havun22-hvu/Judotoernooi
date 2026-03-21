@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\MatUpdate;
+use App\Events\ScoreboardAssignment;
 use App\Http\Requests\WedstrijdUitslagRequest;
 use App\Models\Judoka;
 use App\Models\Organisator;
@@ -528,6 +529,33 @@ class MatController extends Controller
             'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
             'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
         ]);
+
+        // Notify scoreboard app when active match is set (green)
+        if ($mat->actieve_wedstrijd_id) {
+            $actieveWedstrijd = Wedstrijd::with(['judokaWit.club', 'judokaBlauw.club', 'poule'])
+                ->find($mat->actieve_wedstrijd_id);
+
+            if ($actieveWedstrijd) {
+                ScoreboardAssignment::dispatch($toernooiId, $mat->id, [
+                    'id' => $actieveWedstrijd->id,
+                    'judoka_wit' => [
+                        'id' => $actieveWedstrijd->judokaWit?->id,
+                        'naam' => $actieveWedstrijd->judokaWit?->naam ?? 'WIT',
+                        'club' => $actieveWedstrijd->judokaWit?->club?->naam ?? '',
+                    ],
+                    'judoka_blauw' => [
+                        'id' => $actieveWedstrijd->judokaBlauw?->id,
+                        'naam' => $actieveWedstrijd->judokaBlauw?->naam ?? 'BLAUW',
+                        'club' => $actieveWedstrijd->judokaBlauw?->club?->naam ?? '',
+                    ],
+                    'poule_naam' => $actieveWedstrijd->poule?->titel ?? "Poule {$actieveWedstrijd->poule?->nummer}",
+                    'ronde' => $actieveWedstrijd->ronde,
+                    'groep' => $actieveWedstrijd->groep,
+                    'match_duration' => 240,
+                    'updated_at' => $actieveWedstrijd->updated_at?->toISOString(),
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,

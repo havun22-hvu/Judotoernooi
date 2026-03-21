@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        apiPrefix: 'api',
     )
     ->withSchedule(function (Schedule $schedule) {
         // Wedstrijddag backup: elke minuut (command checkt zelf of wedstrijddag actief is)
@@ -35,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
             'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
             'local-sync.auth' => \App\Http\Middleware\LocalSyncAuth::class,
+            'scoreboard.token' => \App\Http\Middleware\CheckScoreboardToken::class,
         ]);
 
         // Redirect guests to organisator login

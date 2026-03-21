@@ -43,3 +43,13 @@ Broadcast::channel('dojo.{toernooiId}', function ($user, $toernooiId) {
 Broadcast::channel('toernooi.{toernooiId}', function ($user, $toernooiId) {
     return true;
 });
+
+// Scoreboard kanaal - match assignments naar scoreboard app
+Broadcast::channel('scoreboard.{toernooiId}.{matId}', function ($user, $toernooiId, $matId) {
+    return true;
+});
+
+// Scoreboard display kanaal - live state relay (control → display)
+Broadcast::channel('scoreboard-display.{toernooiId}.{matId}', function ($user, $toernooiId, $matId) {
+    return true;
+});
