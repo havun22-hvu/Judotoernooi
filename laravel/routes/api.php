@@ -23,6 +23,6 @@ Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
 Route::middleware('scoreboard.token')->prefix('scoreboard')->name('api.scoreboard.')->group(function () {
     Route::get('/current-match', [ScoreboardController::class, 'currentMatch'])->name('current-match');
     Route::post('/result', [ScoreboardController::class, 'result'])->name('result');
-    Route::post('/state', [ScoreboardController::class, 'state'])->name('state');
+    Route::post('/event', [ScoreboardController::class, 'event'])->name('event');
     Route::post('/heartbeat', [ScoreboardController::class, 'heartbeat'])->name('heartbeat');
 });

@@ -22,7 +22,7 @@ return new class extends Migration
         // Expand rol enum to include scoreboard roles
         // SQLite doesn't enforce enum, MySQL does
         if (DB::getDriverName() === 'mysql') {
-            DB::statement("ALTER TABLE device_toegangen MODIFY COLUMN rol ENUM('hoofdjury', 'mat', 'weging', 'spreker', 'dojo', 'scoreboard', 'scoreboard-display')");
+            DB::statement("ALTER TABLE device_toegangen MODIFY COLUMN rol ENUM('hoofdjury', 'mat', 'weging', 'spreker', 'dojo', 'scoreboard')");
         }
     }
 

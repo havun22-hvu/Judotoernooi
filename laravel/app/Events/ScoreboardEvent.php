@@ -9,17 +9,18 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Broadcast live scoreboard state (timer, scores, shido, osaekomi)
- * from the Control view to the Display view via server relay.
+ * Event-based sync from scoreboard bediening to web display.
+ * Only fires on state changes (timer.start, score.update, etc.),
+ * not continuously. Display runs its own timer locally.
  */
-class ScoreboardState implements ShouldBroadcastNow
+class ScoreboardEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public int $toernooiId,
         public int $matId,
-        public array $state,
+        public array $eventData,
     ) {}
 
     public function broadcastOn(): array
@@ -34,13 +35,14 @@ class ScoreboardState implements ShouldBroadcastNow
         return [
             'toernooi_id' => $this->toernooiId,
             'mat_id' => $this->matId,
-            'state' => $this->state,
+            'event' => $this->eventData['event'],
+            'data' => $this->eventData,
             'timestamp' => now()->toIso8601String(),
         ];
     }
 
     public function broadcastAs(): string
     {
-        return 'scoreboard.state';
+        return 'scoreboard.event';
     }
 }

@@ -1,31 +1,40 @@
-# Scorebord App — Standalone Android App
+# Scorebord App — Android Bediening + Web Display
 
 > **Status:** In ontwikkeling (maart 2026)
-> **Type:** Expo React Native (TypeScript) — apart project
-> **Locatie:** `D:\GitHub\JudoScoreboard\`
-> **Doel:** Judo scorebord op scheidsrechter-tablet, gekoppeld aan JudoToernooi wedstrijdsysteem
+> **Bediening:** Expo React Native (TypeScript) — apart project `D:\GitHub\JudoScoreBoard\`
+> **Display:** Blade + Alpine.js + Reverb — in dit project (JudoToernooi)
+> **Doel:** Judo scorebord op scheidsrechter-tablet/smartphone, gekoppeld aan wedstrijdsysteem
 
 ## Overzicht
 
-Standalone Android app voor het bijhouden van judo wedstrijden (timer, scores, shido's, osaekomi).
+Standalone Android app voor het bedienen van een judo scorebord (timer, scores, shido's, osaekomi).
 Verbonden met JudoToernooi via API — ontvangt wedstrijden en stuurt uitslagen automatisch terug.
 
-### Twee views
+### Twee interfaces
 
-| View | Wie | Functie |
-|------|-----|---------|
-| **Bediening** | Tafelofficial (tablet) | Alle knoppen: timer, score, shido, osaekomi |
-| **Display** | Scheidsrechter/publiek (TV/scherm) | Zelfde visueel, geen knoppen, **gespiegeld** |
+| Interface | Device | Type | Functie |
+|-----------|--------|------|---------|
+| **Bediening** | Tablet, smartphone | Android APK | Alle knoppen: timer, score, shido, osaekomi |
+| **Display** | TV, LCD, projector | Web (Blade + Reverb) | Alleen weergave, geen knoppen, **gespiegeld** |
 
 ### Spiegeling (IJF standaard)
 
 De bediening en display zijn **gespiegeld** — de tafelofficial kijkt naar de mat,
 de scheidsrechter kijkt naar de tafel. Wat links is voor de een, is rechts voor de ander.
 
-| View | Links | Rechts |
-|------|-------|--------|
+| Interface | Links | Rechts |
+|-----------|-------|--------|
 | **Bediening** (tafelofficial) | Blauw | Wit |
-| **Display** (scheidsrechter) | Wit | Blauw |
+| **Display** (scheidsrechter/publiek) | Wit | Blauw |
+
+### Bediening: responsive (tablet + smartphone)
+
+| Device | Layout |
+|--------|--------|
+| **Tablet** (10"+) | Volledig, ruim, alle info zichtbaar |
+| **Smartphone** (5-7") | Compact, alles op 1 scherm, geen scrollen |
+
+Beide landscape, zelfde functionaliteit, andere layout.
 
 ### Flow MET scorebord
 
@@ -45,6 +54,46 @@ Mat interface → Handmatig winnaar selecteren (wit/blauw)
 
 ---
 
+## Scoring Regels
+
+### Handmatig scoren (Y / W / I)
+
+| Score | Teller | Beschrijving |
+|-------|--------|--------------|
+| **Yuko (Y)** | 0, 1, 2, ... | Aparte teller, optellend |
+| **Waza-ari (W)** | 0, 1, 2 | 2 waza-ari = ippon (awasete ippon) |
+| **Ippon (I)** | ja/nee | Direct ippon = wedstrijd voorbij |
+
+### Osaekomi scoring
+
+| Tijd | Score |
+|------|-------|
+| 5-9 sec | Yuko |
+| 10-19 sec | Waza-ari |
+| 20 sec | Ippon |
+
+### Shido
+
+- 3 gele kaartjes per judoka (vullen op bij elke shido)
+- 3e shido = hansoku-make = ippon voor tegenstander
+
+### Golden Score
+
+- Bij gelijkspel na reguliere tijd
+- Timer telt omhoog (geen limiet)
+- Eerste score wint
+
+### Geluiden
+
+| Event | Geluid |
+|-------|--------|
+| Match einde | Triple beep (880Hz) |
+| Osaekomi milestone (5s, 10s) | Single low beep (440Hz) |
+| Ippon | Victory fanfare (C-E-G-C) |
+| 30 seconden warning | Timer kleurt rood |
+
+---
+
 ## Technische Architectuur
 
 ### Communicatie
@@ -53,8 +102,26 @@ Mat interface → Handmatig winnaar selecteren (wit/blauw)
 |----------|---------|-----------------|
 | Mat → Scorebord | Reverb WebSocket | `scoreboard.{toernooiId}.{matId}` |
 | Scorebord → Mat | REST API POST | `POST /api/scoreboard/result` |
-| Control → Display | Reverb WebSocket (via server) | `scoreboard-display.{toernooiId}.{matId}` |
+| Bediening → Display | Event-based sync via Reverb | `scoreboard-display.{toernooiId}.{matId}` |
 | Polling fallback | REST API GET | `GET /api/scoreboard/current-match` |
+
+### Sync strategie: event-based (niet continu)
+
+De bediening stuurt **alleen events bij state changes**, niet continu state.
+Het display draait zijn eigen timer lokaal. ~20-30 requests per wedstrijd totaal.
+
+| Event | Wanneer | Frequentie |
+|-------|---------|------------|
+| `match.start` | Nieuwe wedstrijd geladen | 1x |
+| `timer.start` | Timer start, met starttijd | 1x |
+| `timer.stop` | Timer stopt, met resterende tijd | 1x |
+| `timer.reset` | Timer reset | 1x |
+| `score.update` | Score wijzigt (Y/W/I/shido) | Bij actie |
+| `osaekomi.start` | Osaekomi start, met starttijd | 1x |
+| `osaekomi.stop` | Osaekomi stopt | 1x |
+| `match.end` | Winnaar bepaald | 1x |
+
+**Vertraging:** ~200ms bij score wijziging — onmerkbaar voor publiek.
 
 ### Authenticatie
 
@@ -69,7 +136,7 @@ Mat interface → Handmatig winnaar selecteren (wit/blauw)
 POST /api/scoreboard/auth            → Login: code + pincode → token + config
 GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (polling)
 POST /api/scoreboard/result          → Uitslag terugsturen
-POST /api/scoreboard/state           → Live state broadcasten naar display
+POST /api/scoreboard/event           → Sync event naar display (event-based, niet continu)
 POST /api/scoreboard/heartbeat       → Verbinding alive houden
 ```
 
@@ -119,8 +186,8 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 {
   "wedstrijd_id": 101,
   "winnaar_id": 42,
-  "score_wit": { "wazaari": 1, "ippon": false, "shido": 0 },
-  "score_blauw": { "wazaari": 0, "ippon": false, "shido": 2 },
+  "score_wit": { "yuko": 2, "wazaari": 1, "ippon": false, "shido": 0 },
+  "score_blauw": { "yuko": 0, "wazaari": 0, "ippon": false, "shido": 2 },
   "uitslag_type": "wazaari",
   "match_duration_actual": 187,
   "golden_score": false,
@@ -130,43 +197,22 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 
 ---
 
-## Scoring Regels (IJF 2024)
+## Display View (Web — in JudoToernooi)
 
-| Actie | Regel |
-|-------|-------|
-| **Waza-ari** | Score cycling: 0 → W → IPPON (2 waza-ari = ippon) |
-| **Shido** | 3 kaartjes per judoka, 3e = hansoku-make = ippon tegenstander |
-| **Osaekomi** | 10 seconden = waza-ari, 20 seconden = ippon |
-| **Golden Score** | Bij gelijkspel na tijd, timer telt omhoog |
-| **Timer** | Instelbaar 2-5 minuten, rood bij laatste 30 seconden |
+### Route
+`/{slug}/{toernooi}/mat/scoreboard-live/{matId}`
 
-## Geluiden
+### Hoe het werkt
+1. Bediening (Android app) POST live state naar `/api/scoreboard/state`
+2. Server broadcast via Reverb op channel `scoreboard-display.{toernooiId}.{matId}`
+3. Blade view luistert via Reverb → update display in real-time
+4. Geen knoppen, alleen weergave
+5. Gespiegeld t.o.v. bediening (Wit links, Blauw rechts)
 
-| Event | Geluid |
-|-------|--------|
-| Match einde | Triple beep (880Hz) |
-| Osaekomi milestone (10s) | Single low beep (440Hz) |
-| Ippon | Victory fanfare (C-E-G-C) |
-| 30 seconden warning | Timer kleurt rood |
-
----
-
-## App Vereisten
-
-### Background service
-- Timer MOET doorlopen als app geminimaliseerd wordt (foreground service)
-- Sticky notification toont lopende tijd
-- Android permissions: `WAKE_LOCK`, `FOREGROUND_SERVICE`, `VIBRATE`
-
-### Offline resilience
-- Timer draait ALTIJD door (geen netwerk nodig)
-- Uitslag ge-queued als offline → automatisch verstuurd bij reconnect
-- Keep-awake tijdens actieve wedstrijd
-
-### Distributie
-- APK via eigen server (sideloading, geen Play Store)
-- OTA updates voor kleine fixes
-- Version check endpoint: `GET /api/scoreboard/version`
+### Voordelen web display
+- TV/LCD hoeft alleen browser te openen (geen APK installeren)
+- Werkt op elk device met browser
+- Kan ook via Chromecast/HDMI laptop → TV
 
 ---
 
@@ -187,20 +233,62 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 }
 ```
 
-### ScoreboardState (Server → Display View)
+### ScoreboardEvent (Bediening → Display via Server)
 **Channel:** `scoreboard-display.{toernooiId}.{matId}`
-**Trigger:** Control view POST naar `/api/scoreboard/state`
-**Payload:**
+**Trigger:** Bediening POST naar `/api/scoreboard/event`
+**Payload:** Verschilt per event type:
+
+**timer.start:**
+```json
+{ "event": "timer.start", "timestamp": 1711025400.123, "remaining": 240, "golden_score": false }
+```
+
+**timer.stop:**
+```json
+{ "event": "timer.stop", "remaining": 134.5 }
+```
+
+**timer.reset:**
+```json
+{ "event": "timer.reset", "duration": 240 }
+```
+
+**score.update:**
 ```json
 {
-  "timer": { "remaining": 134.5, "running": true, "golden_score": false },
+  "event": "score.update",
   "scores": {
-    "wit": { "wazaari": 1, "ippon": false, "shido": 0 },
-    "blauw": { "wazaari": 0, "ippon": false, "shido": 1 }
-  },
-  "osaekomi": { "active": false, "judoka": null, "time": 0 },
-  "winner": null
+    "wit": { "yuko": 1, "wazaari": 1, "ippon": false, "shido": 0 },
+    "blauw": { "yuko": 0, "wazaari": 0, "ippon": false, "shido": 1 }
+  }
 }
+```
+
+**osaekomi.start:**
+```json
+{ "event": "osaekomi.start", "judoka": "blauw", "timestamp": 1711025400.123 }
+```
+
+**osaekomi.stop:**
+```json
+{ "event": "osaekomi.stop" }
+```
+
+**match.start:**
+```json
+{
+  "event": "match.start",
+  "wedstrijd_id": 101,
+  "judoka_wit": { "id": 42, "naam": "Jan de Vries", "club": "Judo Club Noord" },
+  "judoka_blauw": { "id": 43, "naam": "Piet Jansen", "club": "Sportclub Oost" },
+  "poule_naam": "B-pupillen -34 kg",
+  "match_duration": 240
+}
+```
+
+**match.end:**
+```json
+{ "event": "match.end", "winner": "wit", "uitslag_type": "wazaari" }
 ```
 
 ---
@@ -214,8 +302,9 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 | `app/Http/Controllers/Api/ScoreboardController.php` | 5 endpoints |
 | `app/Http/Middleware/CheckScoreboardToken.php` | Bearer token auth |
 | `app/Events/ScoreboardAssignment.php` | Wedstrijd toewijzing event |
-| `app/Events/ScoreboardState.php` | Live state broadcast event |
+| `app/Events/ScoreboardEvent.php` | Event-based sync naar display |
 | `database/migrations/xxxx_add_scoreboard_to_device_toegangen.php` | api_token kolom |
+| `resources/views/pages/mat/scoreboard-live.blade.php` | Web display (Blade + Reverb) |
 
 ### Gewijzigd
 | Bestand | Wijziging |
@@ -223,20 +312,27 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 | `MatController.php` | Dispatch ScoreboardAssignment bij groen zetten |
 | `DeviceToegang.php` | api_token field, scoreboard rol |
 | `routes/channels.php` | Nieuwe WebSocket channels |
+| `routes/web.php` | Route voor scoreboard-live display |
 | `bootstrap/app.php` | API middleware registreren |
 
 ---
 
-## Spiegeling in de App (Belangrijk!)
+## App Vereisten
 
-De Display view toont het scorebord **gespiegeld** ten opzichte van de Bediening.
-Dit is IJF standaard: de tafelofficial kijkt naar de mat, de scheidsrechter kijkt
-naar de tafel — wat links is voor de een, is rechts voor de ander.
+### Background service
+- Timer MOET doorlopen als app geminimaliseerd wordt (foreground service)
+- Sticky notification toont lopende tijd
+- Android permissions: `WAKE_LOCK`, `FOREGROUND_SERVICE`, `VIBRATE`
 
-**Implementatie in de app:**
-- `ControlScreen.tsx`: Blauw links, Wit rechts
-- `DisplayScreen.tsx`: Wit links, Blauw rechts (mirrored)
-- De data is identiek, alleen de visuele positie wisselt
+### Offline resilience
+- Timer draait ALTIJD door (geen netwerk nodig)
+- Uitslag ge-queued als offline → automatisch verstuurd bij reconnect
+- Keep-awake tijdens actieve wedstrijd
+
+### Distributie
+- APK via eigen server (sideloading, geen Play Store)
+- OTA updates voor kleine fixes
+- Version check endpoint: `GET /api/scoreboard/version`
 
 ---
 

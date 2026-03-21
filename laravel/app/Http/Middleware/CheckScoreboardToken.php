@@ -22,7 +22,7 @@ class CheckScoreboardToken
         }
 
         $toegang = DeviceToegang::where('api_token', $token)
-            ->whereIn('rol', ['scoreboard', 'scoreboard-display'])
+            ->where('rol', 'scoreboard')
             ->first();
 
         if (!$toegang) {

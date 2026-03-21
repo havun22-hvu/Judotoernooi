@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\ScoreboardAssignment;
-use App\Events\ScoreboardState;
+use App\Events\ScoreboardEvent;
 use App\Events\MatUpdate;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToegang;
@@ -35,7 +35,7 @@ class ScoreboardController extends Controller
         ]);
 
         $toegang = DeviceToegang::where('code', $validated['code'])
-            ->whereIn('rol', ['scoreboard', 'scoreboard-display'])
+            ->where('rol', 'scoreboard')
             ->first();
 
         if (!$toegang || $toegang->pincode !== $validated['pincode']) {
@@ -106,10 +106,12 @@ class ScoreboardController extends Controller
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'winnaar_id' => 'required|exists:judokas,id',
             'score_wit' => 'nullable|array',
+            'score_wit.yuko' => 'nullable|integer|min:0',
             'score_wit.wazaari' => 'nullable|integer|min:0|max:2',
             'score_wit.ippon' => 'nullable|boolean',
             'score_wit.shido' => 'nullable|integer|min:0|max:3',
             'score_blauw' => 'nullable|array',
+            'score_blauw.yuko' => 'nullable|integer|min:0',
             'score_blauw.wazaari' => 'nullable|integer|min:0|max:2',
             'score_blauw.ippon' => 'nullable|boolean',
             'score_blauw.shido' => 'nullable|integer|min:0|max:3',
@@ -244,24 +246,18 @@ class ScoreboardController extends Controller
     }
 
     /**
-     * Relay live scoreboard state to display devices via Reverb.
+     * Relay scoreboard event to web display via Reverb.
+     * Event-based: only fires on state changes (timer.start, score.update, etc.)
+     * Display runs its own timer locally — ~20-30 requests per match total.
      */
-    public function state(Request $request): JsonResponse
+    public function event(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'timer' => 'required|array',
-            'timer.remaining' => 'required|numeric',
-            'timer.running' => 'required|boolean',
-            'timer.golden_score' => 'required|boolean',
-            'scores' => 'required|array',
-            'scores.wit' => 'required|array',
-            'scores.blauw' => 'required|array',
-            'osaekomi' => 'required|array',
-            'osaekomi.active' => 'required|boolean',
-            'osaekomi.judoka' => 'nullable|string|in:wit,blauw',
-            'osaekomi.time' => 'required|integer',
-            'winner' => 'nullable|string|in:wit,blauw',
+            'event' => 'required|string|in:match.start,timer.start,timer.stop,timer.reset,score.update,osaekomi.start,osaekomi.stop,match.end',
         ]);
+
+        // Allow any additional data alongside the event type
+        $eventData = $request->all();
 
         $toegang = $request->get('device_toegang');
 
@@ -273,7 +269,7 @@ class ScoreboardController extends Controller
             return response()->json(['message' => 'Mat niet gevonden.'], 404);
         }
 
-        ScoreboardState::dispatch($toegang->toernooi_id, $mat->id, $validated);
+        ScoreboardEvent::dispatch($toegang->toernooi_id, $mat->id, $eventData);
 
         return response()->json(['success' => true]);
     }
@@ -289,6 +285,7 @@ class ScoreboardController extends Controller
 
     /**
      * Convert structured score array to flat integer for database storage.
+     * Format: ippon=10, wazaari count + yuko count combined
      */
     private function flattenScore(array $score): int
     {
@@ -296,6 +293,7 @@ class ScoreboardController extends Controller
             return 10; // Ippon
         }
 
+        // Combine: wazaari * 1 + yuko (stored as single value for compatibility)
         return ($score['wazaari'] ?? 0);
     }
 
