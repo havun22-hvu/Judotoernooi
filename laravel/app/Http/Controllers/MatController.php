@@ -1129,6 +1129,18 @@ class MatController extends Controller
     }
 
     /**
+     * Scoreboard live display — web-based display for TV/LCD
+     * Listens to Reverb events from the Android bediening app
+     */
+    public function scoreboardLive(Organisator $organisator, Toernooi $toernooi, $mat): View
+    {
+        return view('pages.mat.scoreboard-live', [
+            'toernooi' => $toernooi,
+            'matId' => $mat,
+        ]);
+    }
+
+    /**
      * Genereer wedstrijden voor een poule
      */
     public function genereerWedstrijden(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse

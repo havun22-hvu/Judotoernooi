@@ -135,7 +135,7 @@ Het display draait zijn eigen timer lokaal. ~20-30 requests per wedstrijd totaal
 
 ```
 POST /api/scoreboard/auth            → Login: code + pincode → token + config
-GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (polling)
+GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (alleen bij (re)connect)
 POST /api/scoreboard/result          → Uitslag terugsturen
 POST /api/scoreboard/event           → Sync event naar display (event-based, niet continu)
 POST /api/scoreboard/heartbeat       → Verbinding alive houden
