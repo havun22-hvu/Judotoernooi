@@ -103,7 +103,8 @@ Mat interface → Handmatig winnaar selecteren (wit/blauw)
 | Mat → Scorebord | Reverb WebSocket | `scoreboard.{toernooiId}.{matId}` |
 | Scorebord → Mat | REST API POST | `POST /api/scoreboard/result` |
 | Bediening → Display | Event-based sync via Reverb | `scoreboard-display.{toernooiId}.{matId}` |
-| Polling fallback | REST API GET | `GET /api/scoreboard/current-match` |
+**GEEN POLLING.** Altijd WebSocket (Reverb) voor real-time data.
+`GET /current-match` is alleen voor initieel ophalen bij (re)connect.
 
 ### Sync strategie: event-based (niet continu)
 
@@ -203,9 +204,9 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 `/{slug}/{toernooi}/mat/scoreboard-live/{matId}`
 
 ### Hoe het werkt
-1. Bediening (Android app) POST live state naar `/api/scoreboard/state`
+1. Bediening (Android app) POST events naar `/api/scoreboard/event` (alleen bij state changes)
 2. Server broadcast via Reverb op channel `scoreboard-display.{toernooiId}.{matId}`
-3. Blade view luistert via Reverb → update display in real-time
+3. Blade view luistert via Reverb → draait eigen timer lokaal, update scores bij events
 4. Geen knoppen, alleen weergave
 5. Gespiegeld t.o.v. bediening (Wit links, Blauw rechts)
 
