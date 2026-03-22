@@ -14,6 +14,29 @@
 
 ---
 
+## Sessie: 22 maart 2026
+
+### Fix: Spreker tabs verspringen bij tabwisseling
+- **Type:** UI fix
+- **Wat:** Root container `max-w-4xl` + `min-height` op content tabs
+- **Bestanden:** spreker/partials/_content.blade.php
+
+### Fix: Mat selectie blokkeerde na scorebord uitslag
+- **Type:** Bug fix
+- **Wat:** `isEchtGespeeld` check blokkeerde hele request als actieve wedstrijd al winnaar had. Skip check voor wedstrijden in huidige selectie.
+- **Bestanden:** MatController.php
+
+### Fix: Mat interface race condition bij Reverb beurt update
+- **Type:** Bug fix
+- **Wat:** matSelectie direct uit Reverb event data bijwerken i.p.v. wachten op API roundtrip
+- **Bestanden:** mat/partials/_content.blade.php
+
+### Deploy: Scoreboard backend naar staging
+- **Type:** Deploy
+- **Wat:** ScoreboardController, events, migratie, web display, download page
+
+---
+
 ## Sessie: 9 maart 2026
 
 ### Feat: "Uit database" knop op toernooi deelnemersbeheer
