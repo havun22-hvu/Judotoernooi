@@ -1015,6 +1015,44 @@
 - **Bestanden:** config/autofix.php
 - **Reden:** Reverb draait al via Supervisor (poort 8081 staging, 8080 production). Iets triggerde een tweede start poging → EADDRINUSE error → AutoFix pikte het op als bug maar kon niks fixen. Nu genegeerd.
 
+### Fix: Scoreboard API ontbrak op staging (2026-03-22)
+- **Type:** Deploy fix
+- **Wat:** Scoreboard API werkte niet op staging. Drie problemen gevonden en gefixt:
+  1. `bootstrap/app.php` op staging miste `api: __DIR__.'/../routes/api.php'` in `withRouting()` — API routes werden niet geladen
+  2. `app/Http/Controllers/Api/ScoreboardController.php` ontbrak op staging
+  3. `app/Http/Middleware/CheckScoreboardToken.php` ontbrak op staging
+  4. `app/Events/ScoreboardAssignment.php` en `ScoreboardEvent.php` ontbraken op staging
+- **Oorzaak:** Staging is een aparte Laravel root (niet `laravel/` subfolder), `git pull` update alleen `laravel/`. Rsync nodig.
+- **Fix:** Volledige rsync van laravel/ → staging/ (app, routes, bootstrap, config, database, resources). Caches gecleared, permissions gefixt.
+- **Bestanden:** bootstrap/app.php, app/Http/Controllers/Api/ScoreboardController.php, app/Http/Middleware/CheckScoreboardToken.php, app/Events/Scoreboard*.php
+
+---
+
+## Sessie: 22 maart 2026
+
+### Fix: Poule sortering gewichtsklasse ranges (wedstrijddag)
+- **Type:** Bug fix
+- **Wat:** Gewichtsklasse ranges zoals `20-21.8kg` werden gesorteerd als `2021.8` i.p.v. `20`. De regex `preg_replace('/[^0-9.]/', '', ...)` verwijderde het streepje en plakte cijfers aaneen.
+- **Fix:** Eerst splitsen op `-`, dan alleen eerste getal pakken voor sortering.
+- **Bestanden:** WedstrijddagController.php, PouleController.php, PubliekController.php
+
+### Feat: Scoreboard app authenticatie via mat credentials
+- **Type:** Feature
+- **Wat:** Scoreboard Android app kan nu inloggen met mat URL+pincode. Geen apart scoreboard DeviceToegang meer nodig — 1 URL per tafel voor browser én app.
+- **Fix:** `whereIn('rol', ['scoreboard', 'mat'])` in ScoreboardController::auth() en CheckScoreboardToken middleware.
+- **Bestanden:** ScoreboardController.php, CheckScoreboardToken.php
+
+### Fix: Reverb mat listener wrong channel (mat nummer vs database ID)
+- **Type:** Bug fix
+- **Wat:** Mat updates listener subscribede op `mat.{toernooiId}.{matNummer}` (bijv. `.1`) maar events broadcasten naar `mat.{toernooiId}.{matId}` (bijv. `.57`). WebSocket updates kwamen nooit aan.
+- **Fix:** Listener subscribet nu op toernooi-breed channel `toernooi.{toernooiId}` dat alle mat updates ontvangt.
+- **Bestanden:** interface.blade.php, interface-admin.blade.php
+
+### Fix: Staging volledige sync
+- **Type:** Infrastructure
+- **Wat:** Staging had ontbrekende bestanden omdat `git pull` alleen `laravel/` subfolder update, niet de staging root. Volledige rsync uitgevoerd (app, routes, bootstrap, config, database, resources). Permissions gefixt.
+- **Actie:** Bij elke deploy naar staging: `git pull` + `rsync laravel/ → staging/`
+
 <!--
 TEMPLATE:
 
