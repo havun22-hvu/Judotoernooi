@@ -22,7 +22,7 @@
         $wimpelUitgereiktUrl = route('toernooi.spreker.wimpel-uitgereikt', $toernooi->routeParams());
     }
 @endphp
-<div x-data="sprekerInterface()" x-cloak>
+<div x-data="sprekerInterface()" x-cloak class="w-full max-w-4xl mx-auto">
     <!-- Feedback bar (groene balk) -->
     <div
         x-show="showFeedbackBar"
@@ -39,8 +39,8 @@
     </div>
 
     <!-- Tab Navigation - Sticky, vaste breedte -->
-    <div class="sticky top-[60px] z-40 bg-gray-100 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-4">
-        <div class="flex bg-white rounded-lg shadow-sm border border-gray-200 max-w-lg mx-auto">
+    <div class="sticky top-[60px] z-40 bg-gray-100 pb-4">
+        <div class="flex bg-white rounded-lg shadow-sm border border-gray-200">
             <button
                 @click="activeTab = 'uitslagen'"
                 :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
