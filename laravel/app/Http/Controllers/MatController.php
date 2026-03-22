@@ -480,6 +480,13 @@ class MatController extends Controller
 
         // Verify wedstrijden belong to poules on this mat (if provided)
         // Also check if wedstrijd is already played (with winner) - cannot select those
+        // Exception: wedstrijden die al in de huidige selectie staan worden niet opnieuw gecheckt
+        // (bijv. actieve wedstrijd krijgt winnaar → gebruiker wil alleen blauw wijzigen)
+        $currentSelection = [
+            'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+            'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+            'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
+        ];
         foreach (['actieve_wedstrijd_id', 'volgende_wedstrijd_id', 'gereedmaken_wedstrijd_id'] as $field) {
             if (!empty($validated[$field])) {
                 $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated[$field]);
@@ -492,8 +499,10 @@ class MatController extends Controller
                     return response()->json(['success' => false, 'error' => "{$label} wedstrijd hoort niet bij deze mat"], 403);
                 }
 
-                // Double check: wedstrijd met winnaar kan niet geselecteerd worden
-                if ($wedstrijd->isEchtGespeeld()) {
+                // Double check: wedstrijd met winnaar kan niet NIEUW geselecteerd worden
+                // Skip check als wedstrijd al in de huidige selectie stond
+                $alInSelectie = in_array($validated[$field], array_values($currentSelection));
+                if (!$alInSelectie && $wedstrijd->isEchtGespeeld()) {
                     $label = match ($field) {
                         'actieve_wedstrijd_id' => 'Actieve',
                         'volgende_wedstrijd_id' => 'Volgende',
