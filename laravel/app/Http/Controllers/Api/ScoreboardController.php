@@ -35,7 +35,7 @@ class ScoreboardController extends Controller
         ]);
 
         $toegang = DeviceToegang::where('code', $validated['code'])
-            ->where('rol', 'scoreboard')
+            ->whereIn('rol', ['scoreboard', 'mat'])
             ->first();
 
         if (!$toegang || $toegang->pincode !== $validated['pincode']) {
