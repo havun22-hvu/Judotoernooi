@@ -30,6 +30,6 @@
 
 @include('partials.mat-updates-listener', [
     'toernooi' => $toernooi,
-    'matId' => $matNummer ?? null
+    'matId' => null
 ])
 @endsection
