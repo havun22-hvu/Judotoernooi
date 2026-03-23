@@ -106,18 +106,18 @@
                 $portalUrl = $isUitgenodigd ? $club->getPortalUrl($toernooi) : null;
                 $pivotPincode = $uitgenodigdeClubs[$club->id]->pivot->pincode ?? null;
                 $heeftJudokas = $club->judokas_count > 0;
-                $kanUitschakelen = !$heeftJudokas;
-                $uitnodigingTekst = $isUitgenodigd
-                    ? __('Uitnodiging :naam', ['naam' => $toernooi->naam]) . "\n\n" . __('Inschrijflink:') . " {$portalUrl}\nPIN: {$pivotPincode}"
-                    : '';
-                $telefoon = preg_replace('/[^0-9]/', '', $club->telefoon ?? '');
-                if (str_starts_with($telefoon, '06')) {
-                    $telefoon = '31' . substr($telefoon, 1);
-                } elseif (str_starts_with($telefoon, '0')) {
-                    $telefoon = '31' . substr($telefoon, 1);
-                }
-                $heeftTelefoon = !empty($telefoon);
                 $heeftEmail = !empty($club->email) && str_contains($club->email, '@');
+                $telefoon = '';
+                $heeftTelefoon = false;
+                $uitnodigingTekst = '';
+                if ($isUitgenodigd) {
+                    $uitnodigingTekst = __('Uitnodiging :naam', ['naam' => $toernooi->naam]) . "\n\n" . __('Inschrijflink:') . " {$portalUrl}\nPIN: {$pivotPincode}";
+                    $telefoon = preg_replace('/[^0-9]/', '', $club->telefoon ?? '');
+                    if (str_starts_with($telefoon, '0')) {
+                        $telefoon = '31' . substr($telefoon, 1);
+                    }
+                    $heeftTelefoon = !empty($telefoon);
+                }
             @endphp
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
@@ -166,7 +166,6 @@
                     <span class="text-gray-400 text-sm">{{ __('Eerst selecteren') }}</span>
                     @endif
                 </td>
-                {{-- Email kolom --}}
                 <td class="px-4 py-3 text-center">
                     @if($isUitgenodigd && $heeftEmail)
                     <a href="mailto:{{ $club->email }}?subject={{ rawurlencode(__('Uitnodiging :naam', ['naam' => $toernooi->naam])) }}&body={{ rawurlencode($uitnodigingTekst) }}"
@@ -180,7 +179,6 @@
                     </span>
                     @endif
                 </td>
-                {{-- WhatsApp kolom --}}
                 <td class="px-4 py-3 text-center">
                     @if($isUitgenodigd && $heeftTelefoon)
                     <a href="https://wa.me/{{ $telefoon }}?text={{ urlencode($uitnodigingTekst) }}" target="_blank"
