@@ -14,6 +14,15 @@
 
 ---
 
+## Sessie: 24 maart 2026
+
+### UI: Clubs Uitnodigen pagina heringedeeld
+- **Type:** UI improvement
+- **Wat:** Kolommen "Plaats" en "Email" (tekst) verwijderd uit tabel. Kopieer-icoon veranderd van `~` naar clipboard SVG (dubbel blad). WhatsApp verplaatst uit Coach Portal kolom naar eigen kolom. Email ook eigen kolom met envelop-icoon. Iconen gekleurd als club email/@/telefoon heeft, anders grijs. Klik opent mailto: of wa.me met voorgevuld uitnodigingsbericht.
+- **Bestanden:** resources/views/pages/club/index.blade.php
+
+---
+
 ## Sessie: 22 maart 2026
 
 ### Fix: Spreker tabs verspringen bij tabwisseling
