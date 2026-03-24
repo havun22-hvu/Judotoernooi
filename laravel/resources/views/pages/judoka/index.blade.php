@@ -503,7 +503,16 @@ function judokaTable() {
                             gewichtFilters.push(term);
                         }
                     } else {
-                        tekstTerms.push(term);
+                        // Check for gender terms
+                        const geslachtMatch = {
+                            'jongen': 'Jongen', 'jongens': 'Jongen', 'jon': 'Jongen', 'man': 'Jongen', 'mannen': 'Jongen', 'm': 'Jongen',
+                            'meisje': 'Meisje', 'meisjes': 'Meisje', 'mei': 'Meisje', 'vrouw': 'Meisje', 'vrouwen': 'Meisje', 'vro': 'Meisje', 'v': 'Meisje',
+                        }[term];
+                        if (geslachtMatch) {
+                            result = result.filter(j => j.geslacht === geslachtMatch);
+                        } else {
+                            tekstTerms.push(term);
+                        }
                     }
                 });
 
