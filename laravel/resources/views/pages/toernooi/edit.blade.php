@@ -173,7 +173,11 @@
                     <input type="number" name="max_judokas" id="max_judokas"
                            value="{{ old('max_judokas', $toernooi->max_judokas) }}"
                            placeholder="{{ __('Leeg = onbeperkt') }}" class="w-full border rounded px-3 py-2" min="1">
-                    <p class="text-gray-500 text-sm mt-1">{{ __('Coaches krijgen waarschuwing bij 80%') }}</p>
+                    <p class="text-gray-500 text-sm mt-1">{{ __('Coaches krijgen waarschuwing bij 80%') }}
+                        @if($toernooi->isFreeTier())
+                            · <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">{{ __('Meer nodig? Upgrade bij Organisatie') }}</a>
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
