@@ -247,6 +247,8 @@
 
                 <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
                     <strong>{{ __('Voorbeeld:') }}</strong> {{ __('Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.') }}
+                    <br>
+                    <strong class="text-amber-700">{{ __('Let op:') }}</strong> {{ __('Als een poulegrootte niet in de lijst staat, wordt deze als ongewenst beschouwd en geeft een waarschuwing op de poules pagina. Voeg alle groottes toe die acceptabel zijn.') }}
                 </div>
             </div>
 
