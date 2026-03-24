@@ -791,7 +791,7 @@
         <!-- DANPUNTEN (JBN) -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Danpunten (JBN)') }}</h2>
-            @if($toernooi->isFreeTier() && !(auth()->check() && auth()->user()->is_sitebeheerder))
+            @if(($toernooi->plan_type ?? 'free') === 'free')
                 <p class="text-sm text-gray-500">
                     {{ __('Danpunten registreren is beschikbaar bij een betaald pakket.') }}
                     <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">{{ __('Bekijk upgrade opties') }}</a>
