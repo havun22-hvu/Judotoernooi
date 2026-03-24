@@ -456,6 +456,9 @@ function judokaTable() {
                 bandOrder: {{ \App\Enums\Band::getSortNiveau(\App\Enums\Band::toKleur($judoka->band)) }},
                 club: @json($judoka->club?->naam),
                 incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewicht) ? 'true' : 'false' }},
+                aanwezig: {{ $judoka->isAanwezig() ? 'true' : 'false' }},
+                afwezig: {{ in_array($judoka->aanwezigheid, ['afwezig', 'afgemeld']) ? 'true' : 'false' }},
+                gewogen: {{ $judoka->gewicht_gewogen > 0 ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", $toernooi->routeParamsWith(["judoka" => $judoka])) }}',
                 editUrl: '{{ route("toernooi.judoka.edit", $toernooi->routeParamsWith(["judoka" => $judoka])) }}',
                 deleteUrl: '{{ route("toernooi.judoka.destroy", $toernooi->routeParamsWith(["judoka" => $judoka])) }}'
@@ -504,11 +507,19 @@ function judokaTable() {
                         }
                     } else {
                         // Check for gender terms
-                        const geslachtMatch = {
-                            'mannen': 'Jongen', 'vrouwen': 'Meisje',
-                        }[term];
-                        if (geslachtMatch) {
-                            result = result.filter(j => j.geslacht === geslachtMatch);
+                        // Keyword filters for gender and status
+                        const keywordFilters = {
+                            'mannen': j => j.geslacht === 'Jongen',
+                            'vrouwen': j => j.geslacht === 'Meisje',
+                            'aanwezig': j => j.aanwezig,
+                            'afwezig': j => j.afwezig,
+                            'gewogen': j => j.gewogen,
+                            'nietgewogen': j => !j.gewogen,
+                            'onvolledig': j => j.incompleet,
+                        };
+                        const kwFilter = keywordFilters[term];
+                        if (kwFilter) {
+                            result = result.filter(kwFilter);
                         } else {
                             tekstTerms.push(term);
                         }
