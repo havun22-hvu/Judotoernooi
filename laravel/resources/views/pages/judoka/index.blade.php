@@ -497,7 +497,7 @@ function judokaTable() {
                         }
                     } else if (/^[+-]?\d+(\.\d+)?$/.test(term)) {
                         const num = parseFloat(term.replace(/^[+-]/, ''));
-                        if (isJaar(num) && !term.startsWith('+') && !term.startsWith('-')) {
+                        if (isJaar(num)) {
                             geboortejaarFilters.push(term);
                         } else {
                             gewichtFilters.push(term);
@@ -549,7 +549,15 @@ function judokaTable() {
 
                 // Apply birth year filters
                 geboortejaarFilters.forEach(filter => {
-                    if (filter.includes('-')) {
+                    if (filter.startsWith('-')) {
+                        // -2015 = geboren t/m 2015
+                        const maxJaar = parseInt(filter.substring(1));
+                        result = result.filter(j => j.geboortejaar && j.geboortejaar <= maxJaar);
+                    } else if (filter.startsWith('+')) {
+                        // +2017 = geboren vanaf 2017
+                        const minJaar = parseInt(filter.substring(1));
+                        result = result.filter(j => j.geboortejaar && j.geboortejaar >= minJaar);
+                    } else if (filter.includes('-')) {
                         // 2015-2018 = bereik
                         const parts = filter.split('-');
                         const minJaar = parseInt(parts[0]);
