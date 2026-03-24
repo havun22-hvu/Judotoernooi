@@ -1,6 +1,6 @@
 @props(['toernooi'])
 
-@if($toernooi->isFreeTier())
+@if(($toernooi->plan_type ?? 'free') === 'free')
     @php
         $huidige = $toernooi->judokas()->count();
         $max = $toernooi->getEffectiveMaxJudokas();
