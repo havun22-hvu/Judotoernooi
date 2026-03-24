@@ -21,6 +21,26 @@
 - **Wat:** Kolommen "Plaats" en "Email" (tekst) verwijderd uit tabel. Kopieer-icoon veranderd van `~` naar clipboard SVG (dubbel blad). WhatsApp verplaatst uit Coach Portal kolom naar eigen kolom. Email ook eigen kolom met envelop-icoon. Iconen gekleurd als club email/@/telefoon heeft, anders grijs. Klik opent mailto: of wa.me met voorgevuld uitnodigingsbericht.
 - **Bestanden:** resources/views/pages/club/index.blade.php
 
+### Fix: Activiteiten log details onleesbaar
+- **Type:** UI fix
+- **Wat:** "Toon" details expandeert nu als aparte rij onder de log entry i.p.v. inline in de cel
+- **Bestanden:** activiteiten.blade.php
+
+### Infra: Server herstructurering — symlink deploy
+- **Type:** Infrastructuur
+- **Wat:** Production + staging omgezet van platte git checkout naar verse git clone + symlink. `git pull` werkt nu correct. Paden: `repo-prod/laravel` en `repo-staging/laravel` gesymlinkt als `/var/www/judotoernooi/laravel` en `staging`.
+- **Bestanden:** deploy.md, CLAUDE.md, context.md
+
+### UI: Freemium messaging verzacht
+- **Type:** UI improvement
+- **Wat:** "Geblokkeerd" (rood) → "Beschikbaar bij betaald pakket" (grijs). "Status" → "Pakket". Negatieve beperkingen lijst verwijderd van noodplan upgrade pagina. Upgrade hint bij max deelnemers veld. Freemium banner toont nu ook voor admin.
+- **Bestanden:** upgrade.blade.php, upgrade-required.blade.php, edit.blade.php, freemium-banner.blade.php
+
+### Feat: Danpunten als betaalde feature
+- **Type:** Feature restriction
+- **Wat:** Danpunten checkbox verborgen voor free tier, vervangen door upgrade-link. Toegevoegd aan FREEMIUM.md, upgrade pagina en freemium banner.
+- **Bestanden:** edit.blade.php, upgrade.blade.php, freemium-banner.blade.php, FREEMIUM.md
+
 ---
 
 ## Sessie: 22 maart 2026
