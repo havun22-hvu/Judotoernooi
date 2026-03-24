@@ -29,13 +29,13 @@
             </div>
             <div>
                 <span class="text-gray-600">{{ __('Print/Noodplan') }}</span>
-                <p class="text-2xl font-bold {{ $status['can_use_print'] ? 'text-green-600' : 'text-red-600' }}">
-                    {{ $status['can_use_print'] ? __('Beschikbaar') : __('Geblokkeerd') }}
+                <p class="text-sm mt-1 {{ $status['can_use_print'] ? 'text-green-600 font-medium' : 'text-gray-500' }}">
+                    {{ $status['can_use_print'] ? __('Beschikbaar') : __('Beschikbaar bij betaald pakket') }}
                 </p>
             </div>
             <div>
                 <span class="text-gray-600">{{ __('Status') }}</span>
-                <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-600' : 'text-orange-600' }}">
+                <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-600' : 'text-gray-600' }}">
                     {{ ($isReUpgrade ?? false) ? __('Betaald') : __('Gratis') }}
                 </p>
             </div>

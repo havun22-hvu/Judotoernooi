@@ -18,17 +18,8 @@
             {{ __('De Print en Noodplan functies zijn alleen beschikbaar voor toernooien met een betaald abonnement.') }}
         </p>
 
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <h3 class="font-semibold text-yellow-800 mb-2">{{ __('Gratis tier beperkingen') }}:</h3>
-            <ul class="text-sm text-yellow-700 space-y-1">
-                <li>{{ __("Maximaal 50 judoka's") }}</li>
-                <li>{{ __('Geen toegang tot Print/Noodplan') }}</li>
-                <li>{{ __('Beperkte functies') }}</li>
-            </ul>
-        </div>
-
         <p class="text-gray-600 mb-6">
-            {{ __('Upgrade je toernooi om alle functies te ontgrendelen, waaronder:') }}
+            {{ __('Met een betaald pakket krijg je toegang tot:') }}
         </p>
 
         <ul class="text-left bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-sm text-green-700 space-y-2">
