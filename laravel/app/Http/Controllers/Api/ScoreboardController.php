@@ -63,9 +63,9 @@ class ScoreboardController extends Controller
             'mat_id' => $mat?->id,
             'mat_naam' => $mat ? "Mat {$mat->nummer}" : null,
             'reverb_config' => [
-                'host' => config('broadcasting.connections.reverb.options.host', parse_url(config('app.url'), PHP_URL_HOST)),
-                'port' => (int) config('broadcasting.connections.reverb.options.port', 443),
-                'scheme' => config('broadcasting.connections.reverb.options.scheme', 'https'),
+                'host' => env('VITE_REVERB_HOST', parse_url(config('app.url'), PHP_URL_HOST)),
+                'port' => (int) env('VITE_REVERB_PORT', 443),
+                'scheme' => env('VITE_REVERB_SCHEME', 'https'),
                 'app_key' => config('broadcasting.connections.reverb.key'),
             ],
         ]);
