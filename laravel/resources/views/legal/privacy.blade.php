@@ -91,7 +91,7 @@
 
                         <p class="mb-2"><strong>{{ __('Betaalverwerkers:') }}</strong></p>
                         <ul class="list-disc pl-6 space-y-1 mb-4">
-                            <li><strong>Mollie:</strong> {{ __('Voor verwerking van iDEAL, creditcard en Bancontact betalingen') }}</li>
+                            <li><strong>Mollie:</strong> {{ __('Voor verwerking van iDEAL | Wero, creditcard en Bancontact betalingen') }}</li>
                         </ul>
 
                         <p class="mb-2"><strong>{{ __('Hosting:') }}</strong></p>

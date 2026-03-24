@@ -2306,7 +2306,7 @@
         </div>
 
         <p class="text-gray-600 mb-4">
-            {{ __('Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka\'s definitief ingeschreven zijn.') }}
+            {{ __('Activeer online betalingen via iDEAL | Wero. Coaches moeten dan eerst betalen voordat judoka\'s definitief ingeschreven zijn.') }}
         </p>
 
         <form action="{{ route('toernooi.betalingen.instellingen', $toernooi->routeParams()) }}" method="POST">
@@ -2349,7 +2349,7 @@
                                    class="mt-1">
                             <div>
                                 <span class="font-medium">Mollie</span>
-                                <span class="text-gray-500 text-sm ml-1">— iDEAL, Bancontact, creditcard</span>
+                                <span class="text-gray-500 text-sm ml-1">— iDEAL | Wero, Bancontact, creditcard</span>
                                 <p class="text-xs text-gray-400">{{ __('Europa') }} | €0,29 + 0% {{ __('per transactie') }}</p>
                             </div>
                         </label>

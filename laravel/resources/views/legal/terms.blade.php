@@ -71,7 +71,7 @@
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
                             <strong>{{ __('Platform betalingen:') }}</strong><br>
-                            {{ __('Organisatoren kunnen een betaald abonnement afsluiten voor uitgebreide functies. Betalingen worden verwerkt via Mollie (iDEAL, creditcard, Bancontact).') }}
+                            {{ __('Organisatoren kunnen een betaald abonnement afsluiten voor uitgebreide functies. Betalingen worden verwerkt via Mollie (iDEAL | Wero, creditcard, Bancontact).') }}
                         </p>
                         <p class="mb-3">
                             <strong>{{ __('Inschrijfgeld:') }}</strong><br>

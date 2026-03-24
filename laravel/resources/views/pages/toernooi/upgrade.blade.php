@@ -277,7 +277,7 @@
                             {{ __('Betalen via Stripe') }}
                         </button>
                     </div>
-                    <p class="text-xs text-gray-400 mt-2">{{ __('Mollie: iDEAL, Bancontact, creditcard (Europa) — Stripe: Creditcard, Google Pay, Apple Pay (wereldwijd)') }}</p>
+                    <p class="text-xs text-gray-400 mt-2">{{ __('Mollie: iDEAL | Wero, Bancontact, creditcard (Europa) — Stripe: Creditcard, Google Pay, Apple Pay (wereldwijd)') }}</p>
                 </form>
             </div>
         </div>

@@ -96,7 +96,7 @@
                 @if(($toernooi->payment_provider ?? 'mollie') === 'stripe')
                     {{ __('Betalen') }}
                 @else
-                    {{ __('Betaal met iDEAL') }}
+                    {{ __('Betaal met iDEAL | Wero') }}
                 @endif
             </button>
         </form>
@@ -105,7 +105,7 @@
             @if(($toernooi->payment_provider ?? 'mollie') === 'stripe')
                 {{ __('Je wordt doorgestuurd naar Stripe om de betaling te voltooien.') }}
             @else
-                {{ __('Je wordt doorgestuurd naar iDEAL om de betaling te voltooien.') }}
+                {{ __('Je wordt doorgestuurd naar iDEAL | Wero om de betaling te voltooien.') }}
             @endif
         </p>
         @else
