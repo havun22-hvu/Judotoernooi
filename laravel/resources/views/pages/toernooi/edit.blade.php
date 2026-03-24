@@ -999,7 +999,7 @@
                 naamVoorPreset: @json(__('Naam voor preset:')),
                 opslaan: @json(__('Opslaan')),
                 kommaVergeten: @json(__("Komma vergeten? Gebruik komma's: -20, -23 (niet: -20 -23)")),
-                eliminatieVereisen: @json(__('Eliminatie en kruisfinale vereisen:')),
+                eliminatieVereisen: window.canUseEliminatie ? @json(__('Eliminatie en kruisfinale vereisen:')) : @json(__('Kruisfinale vereist:')),
                 gewichtsklassenIngevuld: @json(__('gewichtsklassen ingevuld')),
             };
 
