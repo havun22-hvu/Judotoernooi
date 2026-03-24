@@ -14,11 +14,11 @@
 
 ## Omgevingen
 
-| Omgeving | URL | Pad | Database |
-|----------|-----|-----|----------|
-| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite |
-| **Staging** | (geen domein) | `/var/www/judotoernooi/staging` | MySQL |
-| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+| Omgeving | URL | App pad | Git repo | Database |
+|----------|-----|---------|----------|----------|
+| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | `D:\GitHub\JudoToernooi` | SQLite |
+| **Staging** | staging.judotournament.org | `/var/www/judotoernooi/staging` (symlink) | `/var/www/judotoernooi/repo-staging` | MySQL |
+| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` (symlink) | `/var/www/judotoernooi/repo-prod` | MySQL |
 
 ```bash
 php artisan serve --port=8007

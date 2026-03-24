@@ -69,16 +69,20 @@ AutoFix kan code wijzigen op production en staging. Bij sessie start ALTIJD eers
 
 ```bash
 # 1. Server: commit & push AutoFix wijzigingen (production)
-ssh root@188.245.159.115 "cd /var/www/judotoernooi/laravel && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-prod && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
 
 # 2. Server: commit & push AutoFix wijzigingen (staging)
-ssh root@188.245.159.115 "cd /var/www/judotoernooi/staging && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-staging && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
 
 # 3. Lokaal: pull server wijzigingen
 cd D:\GitHub\JudoToernooi && git pull
 ```
 
 **Waarom?** AutoFix draait op production+staging en kan bestanden aanpassen. Zonder sync werk je op verouderde code.
+
+**Serverstructuur:** Symlinks naar git repo clones. Zie `.claude/deploy.md` voor details.
+- Deploy: `cd /var/www/judotoernooi/repo-prod && git pull` (of `repo-staging`)
+- Laravel app: `/var/www/judotoernooi/repo-prod/laravel/` (symlinked als `/var/www/judotoernooi/laravel`)
 
 ## Rules (ALWAYS follow)
 
@@ -194,12 +198,13 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 
 ## Quick Reference
 
-| Omgeving | Pad |
-|----------|-----|
-| Local | D:\GitHub\judotoernooi\laravel |
-| Staging | /var/www/judotoernooi/staging |
-| Production | /var/www/judotoernooi/laravel |
+| Omgeving | App pad | Git repo pad |
+|----------|---------|-------------|
+| Local | `D:\GitHub\JudoToernooi\laravel` | `D:\GitHub\JudoToernooi` |
+| Staging | `/var/www/judotoernooi/staging` (symlink) | `/var/www/judotoernooi/repo-staging` |
+| Production | `/var/www/judotoernooi/laravel` (symlink) | `/var/www/judotoernooi/repo-prod` |
 
+**Deploy:** `git pull` in de **git repo pad**, niet in de symlink.
 **Server:** 188.245.159.115 (root, SSH key)
 **GitHub:** https://github.com/havun22-hvu/judotoernooi
 
