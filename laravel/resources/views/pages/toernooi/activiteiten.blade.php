@@ -121,7 +121,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm">
                             @if($log->properties)
-                                <button @click="$refs['detail_{{ $log->id }}'].classList.toggle('hidden')"
+                                <button onclick="document.getElementById('detail-{{ $log->id }}').classList.toggle('hidden')"
                                         class="text-blue-600 hover:underline text-xs">
                                     {{ __('Toon') }}
                                 </button>
@@ -132,7 +132,7 @@
                     </tr>
                     @if($log->properties)
                         @php $props = $log->properties; @endphp
-                        <tr x-ref="detail_{{ $log->id }}" class="hidden bg-gray-50">
+                        <tr id="detail-{{ $log->id }}" class="hidden bg-gray-50">
                             <td colspan="6" class="px-4 py-3">
                                 <div class="flex flex-wrap gap-1.5 mb-2">
                                     @if(!empty($props['blok']))
