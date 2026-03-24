@@ -504,9 +504,10 @@ function judokaTable() {
                         }
                     } else {
                         // Check for gender terms
+                        // Only exact full words to avoid matching names (e.g. "Jon" in "Jonas")
                         const geslachtMatch = {
-                            'jongen': 'Jongen', 'jongens': 'Jongen', 'jon': 'Jongen', 'man': 'Jongen', 'mannen': 'Jongen', 'm': 'Jongen',
-                            'meisje': 'Meisje', 'meisjes': 'Meisje', 'mei': 'Meisje', 'vrouw': 'Meisje', 'vrouwen': 'Meisje', 'vro': 'Meisje', 'v': 'Meisje',
+                            'jongen': 'Jongen', 'jongens': 'Jongen',
+                            'meisje': 'Meisje', 'meisjes': 'Meisje', 'vrouw': 'Meisje', 'vrouwen': 'Meisje',
                         }[term];
                         if (geslachtMatch) {
                             result = result.filter(j => j.geslacht === geslachtMatch);
