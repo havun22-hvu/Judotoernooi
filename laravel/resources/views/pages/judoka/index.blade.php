@@ -476,14 +476,32 @@ function judokaTable() {
                 const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
                 const maxDist = this.fuzzyLevel;
 
-                // Check for weight filter patterns and separate them
+                // Check for numeric filter patterns and separate them
                 const gewichtFilters = [];
+                const geboortejaarFilters = [];
                 const tekstTerms = [];
 
+                // Detect if a number is a birth year (4 digits, 1990-2030 range)
+                const isJaar = (n) => Number.isInteger(n) && n >= 1990 && n <= 2030;
+
                 terms.forEach(term => {
-                    // Pattern: -45, +55, 20-30
-                    if (/^[+-]?\d+(\.\d+)?$/.test(term) || /^\d+(\.\d+)?-\d+(\.\d+)?$/.test(term)) {
-                        gewichtFilters.push(term);
+                    // Range pattern: 2015-2018 or 20-30
+                    if (/^\d+(\.\d+)?-\d+(\.\d+)?$/.test(term)) {
+                        const parts = term.split('-');
+                        const a = parseFloat(parts[0]);
+                        const b = parseFloat(parts[1]);
+                        if (isJaar(a) && isJaar(b)) {
+                            geboortejaarFilters.push(term);
+                        } else {
+                            gewichtFilters.push(term);
+                        }
+                    } else if (/^[+-]?\d+(\.\d+)?$/.test(term)) {
+                        const num = parseFloat(term.replace(/^[+-]/, ''));
+                        if (isJaar(num) && !term.startsWith('+') && !term.startsWith('-')) {
+                            geboortejaarFilters.push(term);
+                        } else {
+                            gewichtFilters.push(term);
+                        }
                     } else {
                         tekstTerms.push(term);
                     }
@@ -506,7 +524,7 @@ function judokaTable() {
                         minGewicht = parseFloat(parts[0]);
                         maxGewicht = parseFloat(parts[1]);
                     } else {
-                        // 20 = exact 20 kg (eigenlijk 20-20)
+                        // 20 = exact 20 kg
                         minGewicht = parseFloat(filter);
                         maxGewicht = parseFloat(filter);
                     }
@@ -518,6 +536,24 @@ function judokaTable() {
                             if (maxGewicht !== null && j.gewicht > maxGewicht) return false;
                             return true;
                         });
+                    }
+                });
+
+                // Apply birth year filters
+                geboortejaarFilters.forEach(filter => {
+                    if (filter.includes('-')) {
+                        // 2015-2018 = bereik
+                        const parts = filter.split('-');
+                        const minJaar = parseInt(parts[0]);
+                        const maxJaar = parseInt(parts[1]);
+                        result = result.filter(j => {
+                            if (!j.geboortejaar) return false;
+                            return j.geboortejaar >= minJaar && j.geboortejaar <= maxJaar;
+                        });
+                    } else {
+                        // 2015 = exact jaar
+                        const jaar = parseInt(filter);
+                        result = result.filter(j => j.geboortejaar === jaar);
                     }
                 });
 
