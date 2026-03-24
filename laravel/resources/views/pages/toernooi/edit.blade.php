@@ -791,16 +791,23 @@
         <!-- DANPUNTEN (JBN) -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Danpunten (JBN)') }}</h2>
-            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <input type="hidden" name="danpunten_actief" value="0">
-                <input type="checkbox" name="danpunten_actief" id="danpunten_actief"
-                       value="1" {{ old('danpunten_actief', $toernooi->danpunten_actief) ? 'checked' : '' }}
-                       class="w-5 h-5 text-blue-600 rounded">
-                <div>
-                    <label for="danpunten_actief" class="text-gray-700 font-medium">{{ __('Danpunten registreren') }}</label>
-                    <p class="text-sm text-gray-500">{{ __('Gewonnen wedstrijden bijhouden voor bruine banden. JBN lidnummer wordt verplicht. Na afloop exporteren als CSV voor de JBN.') }}</p>
+            @if($toernooi->isFreeTier() && !(auth()->check() && auth()->user()->is_sitebeheerder))
+                <p class="text-sm text-gray-500">
+                    {{ __('Danpunten registreren is beschikbaar bij een betaald pakket.') }}
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">{{ __('Bekijk upgrade opties') }}</a>
+                </p>
+            @else
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <input type="hidden" name="danpunten_actief" value="0">
+                    <input type="checkbox" name="danpunten_actief" id="danpunten_actief"
+                           value="1" {{ old('danpunten_actief', $toernooi->danpunten_actief) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="danpunten_actief" class="text-gray-700 font-medium">{{ __('Danpunten registreren') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Gewonnen wedstrijden bijhouden voor bruine banden. JBN lidnummer wordt verplicht. Na afloop exporteren als CSV voor de JBN.') }}</p>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- CATEGORIEËN INSTELLING -->

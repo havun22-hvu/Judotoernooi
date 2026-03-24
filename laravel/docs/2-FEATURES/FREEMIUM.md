@@ -17,6 +17,7 @@ JudoToernooi hanteert een freemium model:
 | Clubs | Max 2 actief | Onbeperkt |
 | Presets | Max 1 | Onbeperkt |
 | Eliminatie systeem | Nee (alleen poules/kruisfinale) | Volledig (dubbel eliminatie, IJF repechage) |
+| Danpunten (JBN) | Nee | Volledig |
 | Print/Noodplan | Nee | Volledig |
 | Prijs | Gratis | Vanaf €20 |
 
