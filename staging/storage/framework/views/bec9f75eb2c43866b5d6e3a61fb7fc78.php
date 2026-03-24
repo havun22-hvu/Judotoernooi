@@ -228,6 +228,11 @@ unset($__errorArgs, $__bag); ?>
                            value="<?php echo e(old('max_judokas', $toernooi->max_judokas)); ?>"
                            placeholder="<?php echo e(__('Leeg = onbeperkt')); ?>" class="w-full border rounded px-3 py-2" min="1">
                     <p class="text-gray-500 text-sm mt-1"><?php echo e(__('Coaches krijgen waarschuwing bij 80%')); ?></p>
+                    <?php if($toernooi->isFreeTier()): ?>
+                        <p class="text-sm mt-1">
+                            💡 <a href="<?php echo e(route('toernooi.edit', $toernooi->routeParams())); ?>?tab=organisatie" class="text-blue-600 hover:underline font-medium"><?php echo e(__('Verhoog het maximum bij Organisatie → Upgraden')); ?></a>
+                        </p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -2003,7 +2008,7 @@ unset($__errorArgs, $__bag); ?>
                     </div>
                     <div>
                         <span class="text-gray-600"><?php echo e(__('Print/Noodplan')); ?></span>
-                        <p class="text-xl font-bold text-red-600"><?php echo e(__('Geblokkeerd')); ?></p>
+                        <p class="text-sm text-gray-500"><?php echo e(__('Beschikbaar bij betaald pakket')); ?></p>
                     </div>
                 </div>
             </div>

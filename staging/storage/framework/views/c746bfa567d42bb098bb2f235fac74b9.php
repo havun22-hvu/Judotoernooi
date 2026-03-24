@@ -263,14 +263,20 @@
                 <span class="text-gray-500">•</span>
                 <a href="<?php echo e(route('legal.cookies')); ?>" class="hover:text-white"><?php echo e(__('Cookies')); ?></a>
                 <span class="text-gray-500">•</span>
+                <a href="<?php echo e(route('legal.herroeping')); ?>" class="hover:text-white"><?php echo e(__('Herroeping')); ?></a>
+                <span class="text-gray-500">•</span>
                 <a href="mailto:havun22@gmail.com" class="hover:text-white"><?php echo e(__('Contact')); ?></a>
             </div>
             <div class="text-center text-xs text-gray-400">
                 &copy; <?php echo e(date('Y')); ?> Havun
                 <span class="mx-1">•</span>
-                <?php echo e(__('KvK')); ?> 98516000
+                <?php echo e(__('KvK')); ?> <?php echo e(config('company.kvk', '98516000')); ?>
+
                 <span class="mx-1">•</span>
                 <?php echo e(__('BTW-vrij (KOR)')); ?>
+
+                <span class="mx-1">•</span>
+                <?php echo e(config('company.address', 'Jacques Bloemhof 57')); ?>, <?php echo e(config('company.postal_code', '1628 VN')); ?> <?php echo e(config('company.city', 'Hoorn')); ?>
 
             </div>
         </div>

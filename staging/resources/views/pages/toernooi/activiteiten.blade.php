@@ -121,44 +121,46 @@
                         </td>
                         <td class="px-4 py-3 text-sm">
                             @if($log->properties)
-                                @php $props = $log->properties; @endphp
-                                <button @click="$el.nextElementSibling.classList.toggle('hidden')"
+                                <button onclick="document.getElementById('detail-{{ $log->id }}').classList.toggle('hidden')"
                                         class="text-blue-600 hover:underline text-xs">
                                     {{ __('Toon') }}
                                 </button>
-                                <div class="hidden mt-2 bg-gray-50 border border-gray-200 rounded-lg p-3 max-w-sm text-xs">
-                                    {{-- Badges bovenaan --}}
-                                    <div class="flex flex-wrap gap-1.5 mb-2">
-                                        @if(!empty($props['blok']))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">Blok {{ $props['blok'] }}</span>
-                                        @endif
-                                        @if(!empty($props['mat']))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium">Mat {{ $props['mat'] }}</span>
-                                        @endif
-                                        @if(!empty($props['groep']))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-orange-100 text-orange-700">Groep {{ $props['groep'] }}</span>
-                                        @endif
-                                        @if(!empty($props['is_correctie']))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">Correctie</span>
-                                        @endif
-                                    </div>
-                                    {{-- Details tabel --}}
-                                    <table class="w-full">
-                                        @foreach($props as $key => $value)
-                                            @if(!in_array($key, ['blok', 'mat', 'is_correctie']))
-                                                <tr class="border-t border-gray-200">
-                                                    <td class="py-1 pr-3 text-gray-500 whitespace-nowrap">{{ str_replace('_', ' ', $key) }}</td>
-                                                    <td class="py-1 text-gray-800">{{ is_array($value) ? json_encode($value) : ($value ?? '-') }}</td>
-                                                </tr>
-                                            @endif
-                                        @endforeach
-                                    </table>
-                                </div>
                             @else
                                 <span class="text-gray-400">-</span>
                             @endif
                         </td>
                     </tr>
+                    @if($log->properties)
+                        @php $props = $log->properties; @endphp
+                        <tr id="detail-{{ $log->id }}" class="hidden bg-gray-50">
+                            <td colspan="6" class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1.5 mb-2">
+                                    @if(!empty($props['blok']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-medium text-xs">Blok {{ $props['blok'] }}</span>
+                                    @endif
+                                    @if(!empty($props['mat']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium text-xs">Mat {{ $props['mat'] }}</span>
+                                    @endif
+                                    @if(!empty($props['groep']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs">Groep {{ $props['groep'] }}</span>
+                                    @endif
+                                    @if(!empty($props['is_correctie']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium text-xs">Correctie</span>
+                                    @endif
+                                </div>
+                                <table class="text-xs">
+                                    @foreach($props as $key => $value)
+                                        @if(!in_array($key, ['blok', 'mat', 'is_correctie']))
+                                            <tr class="border-t border-gray-200">
+                                                <td class="py-1 pr-3 text-gray-500 whitespace-nowrap">{{ str_replace('_', ' ', $key) }}</td>
+                                                <td class="py-1 text-gray-800">{{ is_array($value) ? json_encode($value) : ($value ?? '-') }}</td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </table>
+                            </td>
+                        </tr>
+                    @endif
                     @endforeach
                 </tbody>
             </table>

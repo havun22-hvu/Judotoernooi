@@ -174,6 +174,11 @@
                            value="{{ old('max_judokas', $toernooi->max_judokas) }}"
                            placeholder="{{ __('Leeg = onbeperkt') }}" class="w-full border rounded px-3 py-2" min="1">
                     <p class="text-gray-500 text-sm mt-1">{{ __('Coaches krijgen waarschuwing bij 80%') }}</p>
+                    @if($toernooi->isFreeTier())
+                        <p class="text-sm mt-1">
+                            💡 <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=organisatie" class="text-blue-600 hover:underline font-medium">{{ __('Verhoog het maximum bij Organisatie → Upgraden') }}</a>
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1924,7 +1929,7 @@
                     </div>
                     <div>
                         <span class="text-gray-600">{{ __('Print/Noodplan') }}</span>
-                        <p class="text-xl font-bold text-red-600">{{ __('Geblokkeerd') }}</p>
+                        <p class="text-sm text-gray-500">{{ __('Beschikbaar bij betaald pakket') }}</p>
                     </div>
                 </div>
             </div>

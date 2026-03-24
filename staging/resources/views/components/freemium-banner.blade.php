@@ -31,7 +31,7 @@
                 @endif
 
                 <p class="mt-2 text-xs text-gray-500">
-                    {{ __('Print/Noodplan functies zijn geblokkeerd.') }}
+                    {{ __('Printen van poules en wedstrijdschema\'s beschikbaar bij betaald pakket.') }}
                     <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">{{ __('Bekijk upgrade opties') }}</a>
                 </p>
             </div>

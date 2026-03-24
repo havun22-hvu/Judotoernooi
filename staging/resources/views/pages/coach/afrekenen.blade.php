@@ -75,11 +75,21 @@
             </div>
         </div>
 
+        <!-- Herroepingsrecht checkbox (wettelijk verplicht bij directe dienst) -->
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" id="herroeping-akkoord" class="mt-0.5 w-4 h-4 text-green-600 rounded" onchange="updateBetaalKnop()">
+                <span class="text-sm text-gray-700">
+                    {{ __('Ik begrijp dat de inschrijving direct na betaling definitief is en dat ik daarmee afstand doe van mijn herroepingsrecht (14 dagen bedenktijd).') }}
+                </span>
+            </label>
+        </div>
+
         <!-- Payment button -->
         <form action="{{ route('coach.portal.betalen', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
             @csrf
-            <button type="submit"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-3 text-lg">
+            <button type="submit" id="betaal-knop" disabled
+                    class="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-3 text-lg">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                 </svg>
@@ -108,5 +118,11 @@
         </div>
         @endif
     </div>
+<script>
+function updateBetaalKnop() {
+    const checked = document.getElementById('herroeping-akkoord').checked;
+    document.getElementById('betaal-knop').disabled = !checked;
+}
+</script>
 </body>
 </html>

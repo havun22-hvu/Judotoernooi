@@ -2508,11 +2508,34 @@ updateClock();
 setInterval(updateClock, 1000);
 
 // Reverb push events → refresh bracket/poule data (vervangt 30sec polling)
-['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar'].forEach(evt => {
+['mat-score-update', 'mat-poule-klaar'].forEach(evt => {
     window.addEventListener(evt, () => {
         const el = document.getElementById('mat-interface');
         if (el) Alpine.evaluate(el, 'laadWedstrijden()');
     });
+});
+
+// Beurt update: update matSelectie direct uit event data + herlaad wedstrijden
+window.addEventListener('mat-beurt-update', (e) => {
+    const el = document.getElementById('mat-interface');
+    if (!el) return;
+    const comp = Alpine.$data(el);
+    if (!comp) return;
+
+    // Direct matSelectie bijwerken uit Reverb event data (geen extra API call nodig)
+    const data = e.detail?.data;
+    if (data) {
+        console.log('[Reverb] Beurt update - nieuwe selectie:', data);
+        comp.matSelectie = {
+            actieve_wedstrijd_id: data.actieve_wedstrijd_id || null,
+            volgende_wedstrijd_id: data.volgende_wedstrijd_id || null,
+            gereedmaken_wedstrijd_id: data.gereedmaken_wedstrijd_id || null
+        };
+        comp.poules = [...comp.poules];
+        comp.$nextTick(() => comp.applyBeurtaanduiding());
+    }
+    // Ook wedstrijden herladen voor scores
+    comp.laadWedstrijden();
 });
 
 // Bracket update via Reverb: herlaad bracket HTML (niet hele poule data)

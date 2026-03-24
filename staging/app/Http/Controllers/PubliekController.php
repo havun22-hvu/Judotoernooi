@@ -307,8 +307,8 @@ class PubliekController extends Controller
             $leeftijdB = $leeftijdVolgorde[$b->leeftijdsklasse] ?? 99;
             if ($leeftijdA !== $leeftijdB) return $leeftijdA - $leeftijdB;
 
-            $gewichtA = (float) preg_replace('/[^0-9.]/', '', $a->gewichtsklasse);
-            $gewichtB = (float) preg_replace('/[^0-9.]/', '', $b->gewichtsklasse);
+            $gewichtA = (float) preg_replace('/[^0-9.]/', '', explode('-', $a->gewichtsklasse)[0]);
+            $gewichtB = (float) preg_replace('/[^0-9.]/', '', explode('-', $b->gewichtsklasse)[0]);
             if (str_starts_with($a->gewichtsklasse, '+')) $gewichtA += 1000;
             if (str_starts_with($b->gewichtsklasse, '+')) $gewichtB += 1000;
 

@@ -529,12 +529,13 @@ class PouleController extends Controller
                     ->toArray();
 
                 usort($beschikbareKlassen, fn($a, $b) =>
-                    floatval(preg_replace('/[^0-9.]/', '', $a)) - floatval(preg_replace('/[^0-9.]/', '', $b))
+                    floatval(preg_replace('/[^0-9.]/', '', explode('-', $a)[0])) - floatval(preg_replace('/[^0-9.]/', '', explode('-', $b)[0]))
                 );
 
                 $juisteGewichtsklasse = null;
                 foreach ($beschikbareKlassen as $klasse) {
-                    $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
+                    $parts = explode('-', $klasse);
+                    $limiet = floatval(preg_replace('/[^0-9.]/', '', end($parts)));
                     if (str_starts_with($klasse, '+') || $judokaGewicht <= $limiet + $tolerantie) {
                         $juisteGewichtsklasse = $klasse;
                         break;

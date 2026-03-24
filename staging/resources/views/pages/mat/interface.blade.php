@@ -110,7 +110,7 @@
 
     @include('partials.mat-updates-listener', [
         'toernooi' => $toernooi,
-        'matId' => $matNummer ?? null
+        'matId' => null
     ])
 
     @include('partials.pwa-mobile', ['pwaApp' => 'mat'])

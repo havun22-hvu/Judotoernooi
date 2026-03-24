@@ -134,6 +134,9 @@ Route::post('/error-report', function (\Illuminate\Http\Request $request) {
 // Standalone scoreboard (development/testing)
 Route::get('/scoreboard', fn () => view('pages.mat.scoreboard', ['toernooi' => null, 'wedstrijd' => null]))->name('scoreboard.standalone');
 
+// Scoreboard app download page
+Route::get('/scoreboard/download', fn () => view('pages.scoreboard-download'))->name('scoreboard.download');
+
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->middleware('auth:organisator')->name('health.detailed');
@@ -179,6 +182,7 @@ Route::get('/algemene-voorwaarden', [LegalController::class, 'terms'])->name('le
 Route::get('/privacyverklaring', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/cookiebeleid', [LegalController::class, 'cookies'])->name('legal.cookies');
 Route::get('/disclaimer', [LegalController::class, 'disclaimer'])->name('legal.disclaimer');
+Route::get('/herroeping', fn() => view('legal.herroeping'))->name('legal.herroeping');
 
 /*
 |--------------------------------------------------------------------------
@@ -646,6 +650,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     });
 
 });
+
+// Scoreboard live display — public, no auth needed (shown on TV/LCD next to mat)
+Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController::class, 'scoreboardLive'])->name('mat.scoreboard-live');
 
 // Coach Portal with code and PIN - NEW URL structure: /{org}/{toernooi}/school/{code}
 Route::prefix('{organisator}/{toernooi}/school')->name('coach.portal.')->group(function () {

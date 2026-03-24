@@ -22,7 +22,7 @@
         $wimpelUitgereiktUrl = route('toernooi.spreker.wimpel-uitgereikt', $toernooi->routeParams());
     }
 @endphp
-<div x-data="sprekerInterface()" x-cloak>
+<div x-data="sprekerInterface()" x-cloak class="w-full max-w-4xl mx-auto">
     <!-- Feedback bar (groene balk) -->
     <div
         x-show="showFeedbackBar"
@@ -38,34 +38,36 @@
         <span x-text="feedbackMessage"></span>
     </div>
 
-    <!-- Tab Navigation - Sticky -->
-    <div class="flex border-b border-gray-200 mb-4 bg-white rounded-t-lg shadow-sm sticky top-[60px] z-40">
-        <button
-            @click="activeTab = 'uitslagen'"
-            :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-            class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
-        >
-            <span class="text-lg">🏆</span> {{ __('Uitslagen') }}
-            <span x-show="klarePouleCount > 0" class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="klarePouleCount"></span>
-        </button>
-        <button
-            @click="activeTab = 'oproepen'"
-            :class="activeTab === 'oproepen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-            class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
-        >
-            <span class="text-lg">📣</span> {{ __('Oproepen') }}
-        </button>
-        <button
-            @click="activeTab = 'notities'"
-            :class="activeTab === 'notities' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-            class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
-        >
-            <span class="text-lg">📝</span> {{ __('Notities') }}
-        </button>
+    <!-- Tab Navigation - Sticky, vaste breedte -->
+    <div class="sticky top-[60px] z-40 bg-gray-100 pb-4">
+        <div class="flex bg-white rounded-lg shadow-sm border border-gray-200">
+            <button
+                @click="activeTab = 'uitslagen'"
+                :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
+            >
+                <span class="text-lg">🏆</span> {{ __('Uitslagen') }}
+                <span x-show="klarePouleCount > 0" class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="klarePouleCount"></span>
+            </button>
+            <button
+                @click="activeTab = 'oproepen'"
+                :class="activeTab === 'oproepen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
+            >
+                <span class="text-lg">📣</span> {{ __('Oproepen') }}
+            </button>
+            <button
+                @click="activeTab = 'notities'"
+                :class="activeTab === 'notities' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
+            >
+                <span class="text-lg">📝</span> {{ __('Notities') }}
+            </button>
+        </div>
     </div>
 
     <!-- TAB 1: UITSLAGEN -->
-    <div x-show="activeTab === 'uitslagen'">
+    <div x-show="activeTab === 'uitslagen'" style="min-height: calc(100vh - 200px);">
         <div class="flex justify-end items-center mb-4 gap-2">
             <button
                 @click="toonGeschiedenis = !toonGeschiedenis"
@@ -278,7 +280,7 @@
     </div>
 
     <!-- TAB 2: OPROEPEN (Poules per blok per mat) -->
-    <div x-show="activeTab === 'oproepen'">
+    <div x-show="activeTab === 'oproepen'" style="min-height: calc(100vh - 200px);">
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-blue-800 text-sm">
                 <span class="font-bold">📣 {{ __('Oproep hulp:') }}</span> {{ __("Gebruik deze lijst om judoka's naar de juiste mat te roepen.") }}

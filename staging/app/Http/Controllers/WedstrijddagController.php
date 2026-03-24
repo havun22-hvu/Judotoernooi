@@ -79,8 +79,9 @@ class WedstrijddagController extends Controller
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
                 })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
                     [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
-                    // Extract numeric weight for sorting
-                    $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
+                    // Extract first numeric weight for sorting (before dash in ranges like "20-21.8kg")
+                    $firstPart = explode('-', $gewichtsklasse)[0];
+                    $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $firstPart));
                     // Check if this is an elimination category
                     $isEliminatie = $categoryPoules->first()?->type === 'eliminatie';
 
