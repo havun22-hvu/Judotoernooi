@@ -561,7 +561,7 @@ function judokaTable() {
                 if (tekstTerms.length > 0) {
                     result = result.filter(j => {
                         const searchText = [
-                            j.naam, j.club, j.leeftijdsklasse, j.gewicht ? j.gewicht + 'kg' : '', j.geboortejaar, j.geslacht, j.band
+                            j.naam, j.club, j.leeftijdsklasse, j.gewicht ? j.gewicht + 'kg' : '', j.geboortejaar, j.band
                         ].filter(Boolean).join(' ').toLowerCase();
                         return tekstTerms.every(term => fuzzyMatch(term, searchText, maxDist));
                     });
