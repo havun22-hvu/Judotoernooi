@@ -34,7 +34,7 @@
                 </p>
             </div>
             <div>
-                <span class="text-gray-600">{{ __('Status') }}</span>
+                <span class="text-gray-600">{{ __('Pakket') }}</span>
                 <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-600' : 'text-gray-600' }}">
                     {{ ($isReUpgrade ?? false) ? __('Betaald') : __('Gratis') }}
                 </p>
