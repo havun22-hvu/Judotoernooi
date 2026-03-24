@@ -332,7 +332,8 @@
                 </div>
             </div>
 
-            <!-- Eliminatie Type (KO systeem) -->
+            <!-- Eliminatie Type (KO systeem) — alleen voor betaald -->
+            @if($toernooi->canUseEliminatie())
             <div class="border-t pt-4 mt-4">
                 <h3 class="font-medium text-gray-700 mb-2">{{ __('Knock-out Systeem') }}</h3>
                 <p class="text-xs text-gray-500 mb-3">
@@ -402,6 +403,19 @@
                     </div>
                 </div>
             </div>
+            @else
+            <div class="border-t pt-4 mt-4">
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h3 class="font-medium text-gray-500 mb-1">{{ __('Knock-out / Eliminatie Systeem') }}</h3>
+                    <p class="text-sm text-gray-500">
+                        {{ __('Het eliminatie systeem (dubbel eliminatie, IJF repechage) is beschikbaar in het betaalde pakket.') }}
+                    </p>
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="inline-block mt-2 text-sm text-blue-600 hover:underline font-medium">
+                        {{ __('Bekijk upgrade opties') }} &rarr;
+                    </a>
+                </div>
+            </div>
+            @endif
 
         </div>
 
@@ -929,6 +943,7 @@
                 window.initieleWedstrijdSysteem = @json(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? []);
                 window.initialePuntenCompWedstrijden = @json(old('punten_competitie_wedstrijden', $toernooi->punten_competitie_wedstrijden) ?? []);
                 window.isWimpelAbo = @json($toernooi->isWimpelAbo());
+                window.canUseEliminatie = @json($toernooi->canUseEliminatie());
             </script>
 
             <div class="mt-4 flex gap-2">
@@ -1325,7 +1340,7 @@
                                 <option value="punten_competitie" ${window.isWimpelAbo || systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 ${!window.isWimpelAbo ? `<option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
                                 <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale</option>
-                                <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>` : ''}
+                                ${window.canUseEliminatie ? `<option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>` : ''}` : ''}
                             </select>
                             ${window.isWimpelAbo ? `<input type="hidden" name="wedstrijd_systeem[${key}]" value="punten_competitie">` : ''}
                             <select name="punten_competitie_wedstrijden[${key}]"

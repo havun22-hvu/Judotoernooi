@@ -232,7 +232,7 @@
             {{-- What you get (shown once) --}}
             <div id="features-section" class="hidden mt-6 pt-6 border-t">
                 <p class="text-gray-700 font-medium mb-3">{{ __('Dit krijg je:') }}</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div class="flex items-center text-gray-600">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -243,13 +243,19 @@
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
-                        {{ __('Volledige Print/Noodplan') }}
+                        {{ __('Eliminatie systeem (dubbel eliminatie, IJF repechage)') }}
                     </div>
                     <div class="flex items-center text-gray-600">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
-                        {{ __('Judoka\'s verwijderen/wijzigen') }}
+                        {{ __('Printen van poules en wedstrijdschema\'s') }}
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ __('Noodplan (offline pakket)') }}
                     </div>
                 </div>
             </div>

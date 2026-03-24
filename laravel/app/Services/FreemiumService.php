@@ -123,6 +123,14 @@ class FreemiumService
     }
 
     /**
+     * Check if eliminatie system is available (paid or wimpel_abo only)
+     */
+    public function canUseEliminatie(Toernooi $toernooi): bool
+    {
+        return $this->isPaidTier($toernooi) || $this->isWimpelAbo($toernooi);
+    }
+
+    /**
      * Get available upgrade options for a toernooi
      * Bij re-upgrade: prijs = verschil met al betaalde staffel
      */

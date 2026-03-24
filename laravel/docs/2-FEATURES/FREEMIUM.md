@@ -16,6 +16,7 @@ JudoToernooi hanteert een freemium model:
 | Handmatig toevoegen | Max 20 (coach portal / handmatig) | Onbeperkt |
 | Clubs | Max 2 actief | Onbeperkt |
 | Presets | Max 1 | Onbeperkt |
+| Eliminatie systeem | Nee (alleen poules/kruisfinale) | Volledig (dubbel eliminatie, IJF repechage) |
 | Print/Noodplan | Nee | Volledig |
 | Prijs | Gratis | Vanaf €20 |
 
@@ -30,6 +31,7 @@ JudoToernooi hanteert een freemium model:
 | Handmatig toevoegen | Max 20 | `JudokaController` / `CoachPortalController` |
 | Actieve clubs | 2 | `ClubController` |
 | Presets | 1 | `GewichtsklassenPresetController` |
+| Eliminatie systeem | Nee | `Toernooi::canUseEliminatie()` — optie verborgen in UI |
 | Print/Noodplan | Nee | `CheckFreemiumPrint` middleware |
 
 ### Waarom deze limieten?
@@ -40,6 +42,7 @@ JudoToernooi hanteert een freemium model:
 - **Handmatig max 20** = coach portal / handmatig invoeren testen
 - **2 clubs** = Eigen club + 1 gastclub
 - **1 preset** = Basis gewichtsklassen
+- **Geen eliminatie** = geavanceerd systeem, stimuleert upgrade
 - **Geen print** = stimuleert upgrade voor echte wedstrijddag
 
 ---

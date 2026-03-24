@@ -730,6 +730,14 @@ class Toernooi extends Model
     }
 
     /**
+     * Check if eliminatie system is available (paid or wimpel_abo only)
+     */
+    public function canUseEliminatie(): bool
+    {
+        return $this->isPaidTier() || $this->isWimpelAbo();
+    }
+
+    /**
      * Check if this toernooi needs an upgrade
      */
     public function needsUpgrade(): bool
