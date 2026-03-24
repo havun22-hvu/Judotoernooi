@@ -243,6 +243,7 @@
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                             {{ __('Gratis (max 50)') }}
                         </span>
+                        <p class="text-xs text-gray-400 mt-1">{{ __('Upgrade voor printen van poules en wedstrijdschema\'s') }}</p>
                     @endif
                 </div>
 

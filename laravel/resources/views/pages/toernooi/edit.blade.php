@@ -1924,7 +1924,7 @@
                     </div>
                     <div>
                         <span class="text-gray-600">{{ __('Print/Noodplan') }}</span>
-                        <p class="text-xl font-bold text-red-600">{{ __('Geblokkeerd') }}</p>
+                        <p class="text-sm text-gray-500">{{ __('Beschikbaar bij betaald pakket') }}</p>
                     </div>
                 </div>
             </div>
