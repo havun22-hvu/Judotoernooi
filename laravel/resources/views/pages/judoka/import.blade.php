@@ -6,6 +6,20 @@
 <div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 mb-8">{{ __('Deelnemers Importeren') }}</h1>
 
+    {{-- Upgrade banner when judoka limit is reached --}}
+    @if(session('show_upgrade'))
+    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+        <div>
+            <p class="font-semibold text-blue-800">{{ __('Meer deelnemers nodig?') }}</p>
+            <p class="text-sm text-blue-600">{{ __('Verhoog je maximum bij Instellingen → Organisatie.') }}</p>
+        </div>
+        <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#organisatie"
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
+            {{ __('Upgraden') }}
+        </a>
+    </div>
+    @endif
+
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold mb-4">{{ __('Bestandsformaat') }}</h2>
         <p class="text-gray-600 mb-4">{{ __('Upload een CSV of Excel bestand met de volgende kolommen:') }}</p>

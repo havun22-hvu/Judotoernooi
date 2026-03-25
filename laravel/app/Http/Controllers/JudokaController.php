@@ -150,7 +150,8 @@ class JudokaController extends Controller
         // Check freemium judoka limit
         if (!$toernooi->canAddMoreJudokas()) {
             return redirect()->route('toernooi.judoka.index', $toernooi->routeParams())
-                ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt. Upgrade naar een betaald abonnement voor meer ruimte.');
+                ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt.')
+                ->with('show_upgrade', true);
         }
 
         $validated = $request->validated();
@@ -320,7 +321,8 @@ class JudokaController extends Controller
             $remaining = $toernooi->getRemainingJudokaSlots();
             return redirect()
                 ->route('toernooi.judoka.import', $toernooi->routeParams())
-                ->with('error', "Je probeert {$aantalTeImporteren} judoka's te importeren, maar er is alleen ruimte voor {$remaining}. Upgrade naar een betaald abonnement voor meer ruimte.");
+                ->with('error', "Je probeert {$aantalTeImporteren} judoka's te importeren, maar er is alleen ruimte voor {$remaining}.")
+                ->with('show_upgrade', true);
         }
 
         // Build column mapping: field name => header column name OR numeric indices for multi-column
