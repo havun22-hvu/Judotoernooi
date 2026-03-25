@@ -230,21 +230,23 @@ class WimpelService
      */
     public function getOnverwerkteToernooien(Organisator $organisator)
     {
+        // Scope verwerkteIds to this organisator's toernooien to keep subquery small
         $verwerkteIds = WimpelPuntenLog::where('type', 'automatisch')
             ->whereNotNull('toernooi_id')
+            ->whereIn('toernooi_id', $organisator->toernooien()->select('id'))
             ->pluck('toernooi_id')
             ->unique();
 
+        // Eager load poules + wedstrijden to avoid N+1
         return $organisator->toernooien()
             ->whereNotIn('id', $verwerkteIds)
+            ->with(['poules.wedstrijden' => fn($q) => $q->where('is_gespeeld', true)->whereNotNull('winnaar_id')])
             ->orderByDesc('datum')
             ->get()
             ->filter(function ($toernooi) {
-                // Alleen toernooien met tenminste 1 gespeelde puntencompetitie wedstrijd
-                return $toernooi->poules()
-                    ->get()
+                return $toernooi->poules
                     ->filter(fn($p) => $p->isPuntenCompetitie())
-                    ->flatMap(fn($p) => $p->wedstrijden()->where('is_gespeeld', true)->whereNotNull('winnaar_id')->get())
+                    ->flatMap(fn($p) => $p->wedstrijden)
                     ->isNotEmpty();
             });
     }

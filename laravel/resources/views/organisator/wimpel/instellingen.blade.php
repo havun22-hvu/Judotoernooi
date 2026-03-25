@@ -155,6 +155,10 @@ function milestonesPage() {
                     this.nieuwPunten = '';
                     this.nieuwOmschrijving = '';
                     this.showFeedback('Milestone toegevoegd', 'success');
+                } else if (data.errors?.punten) {
+                    this.showFeedback('Er bestaat al een milestone met dit aantal punten', 'error');
+                } else if (data.message) {
+                    this.showFeedback(data.message, 'error');
                 }
             } catch (e) {
                 this.showFeedback(__t.errorAdding, 'error');
@@ -211,6 +215,8 @@ function milestonesPage() {
                 if (data.success) {
                     this.milestones = this.milestones.filter(m => m.id !== ms.id);
                     this.showFeedback('Milestone verwijderd', 'success');
+                } else if (data.error) {
+                    this.showFeedback(data.error, 'error');
                 }
             } catch (e) {
                 this.showFeedback(__t.errorDeleting, 'error');

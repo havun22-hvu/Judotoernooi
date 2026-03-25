@@ -59,9 +59,12 @@ class WimpelController extends Controller
 
         $stamJudoka->load('wimpelPuntenLog.toernooi', 'wimpelUitreikingen.milestone');
         $milestones = $organisator->wimpelMilestones()->get();
+        $heeftActiefToernooi = $organisator->toernooien()
+            ->where('status', 'wedstrijddag')
+            ->exists();
 
         return view('organisator.wimpel.show', compact(
-            'organisator', 'stamJudoka', 'milestones'
+            'organisator', 'stamJudoka', 'milestones', 'heeftActiefToernooi'
         ));
     }
 
@@ -79,7 +82,7 @@ class WimpelController extends Controller
         $this->authorizeAccess($organisator);
 
         $validated = $request->validate([
-            'punten' => 'required|integer|min:1',
+            'punten' => ['required', 'integer', 'min:1', \Illuminate\Validation\Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)],
             'omschrijving' => 'required|string|max:255',
         ]);
 
@@ -104,7 +107,7 @@ class WimpelController extends Controller
         }
 
         $validated = $request->validate([
-            'punten' => 'required|integer|min:1',
+            'punten' => ['required', 'integer', 'min:1', \Illuminate\Validation\Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)->ignore($milestone->id)],
             'omschrijving' => 'required|string|max:255',
         ]);
 
@@ -121,6 +124,13 @@ class WimpelController extends Controller
             abort(403);
         }
 
+        $uitreikingenCount = WimpelUitreiking::where('wimpel_milestone_id', $milestone->id)->count();
+        if ($uitreikingenCount > 0) {
+            return response()->json([
+                'error' => "Deze milestone heeft {$uitreikingenCount} uitreiking(en). Verwijderen is niet mogelijk.",
+            ], 422);
+        }
+
         $milestone->delete();
 
         return response()->json(['success' => true]);
@@ -135,6 +145,14 @@ class WimpelController extends Controller
             'punten' => 'required|integer',
             'notitie' => 'nullable|string|max:255',
         ]);
+
+        // Prevent negative total
+        $nieuwTotaal = $stamJudoka->wimpel_punten_totaal + $validated['punten'];
+        if ($nieuwTotaal < 0) {
+            return response()->json([
+                'error' => 'Puntentotaal kan niet negatief worden. Huidig totaal: ' . $stamJudoka->wimpel_punten_totaal,
+            ], 422);
+        }
 
         $bereikt = $this->wimpelService->handmatigAanpassen(
             $stamJudoka,

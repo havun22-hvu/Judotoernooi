@@ -74,7 +74,7 @@
     </div>
 
     {{-- Stuur naar spreker --}}
-    @if($bereikt->isNotEmpty())
+    @if($bereikt->isNotEmpty() && $heeftActiefToernooi)
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-lg font-semibold mb-3">Naar spreker sturen</h2>
         <p class="text-sm text-gray-500 mb-3">Stuur een bereikte milestone naar de spreker voor uitreiking tijdens het toernooi.</p>
