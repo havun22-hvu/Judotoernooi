@@ -385,7 +385,7 @@
                     <span class="text-gray-500 text-sm ml-2">{{ $organisator->email }}</span>
                 </div>
                 <div class="text-sm text-gray-500">
-                    {{ __('Laatste login') }}: {{ $organisator->laatste_login?->format('d-m-Y H:i') ?? '-' }}
+                    {{ __('Klant sinds') }}: {{ $organisator->created_at?->format('d-m-Y') ?? '-' }}
                 </div>
             </div>
         </div>
