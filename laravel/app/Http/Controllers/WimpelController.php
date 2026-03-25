@@ -11,6 +11,7 @@ use App\Models\Toernooi;
 use App\Services\WimpelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -82,7 +83,7 @@ class WimpelController extends Controller
         $this->authorizeAccess($organisator);
 
         $validated = $request->validate([
-            'punten' => ['required', 'integer', 'min:1', \Illuminate\Validation\Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)],
+            'punten' => ['required', 'integer', 'min:1', Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)],
             'omschrijving' => 'required|string|max:255',
         ]);
 
@@ -107,7 +108,7 @@ class WimpelController extends Controller
         }
 
         $validated = $request->validate([
-            'punten' => ['required', 'integer', 'min:1', \Illuminate\Validation\Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)->ignore($milestone->id)],
+            'punten' => ['required', 'integer', 'min:1', Rule::unique('wimpel_milestones')->where('organisator_id', $organisator->id)->ignore($milestone->id)],
             'omschrijving' => 'required|string|max:255',
         ]);
 

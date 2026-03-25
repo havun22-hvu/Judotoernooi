@@ -230,16 +230,13 @@ class WimpelService
      */
     public function getOnverwerkteToernooien(Organisator $organisator)
     {
-        // Scope verwerkteIds to this organisator's toernooien to keep subquery small
-        $verwerkteIds = WimpelPuntenLog::where('type', 'automatisch')
-            ->whereNotNull('toernooi_id')
-            ->whereIn('toernooi_id', $organisator->toernooien()->select('id'))
-            ->pluck('toernooi_id')
-            ->unique();
-
         // Eager load poules + wedstrijden to avoid N+1
+        $verwerkteSubquery = WimpelPuntenLog::where('type', 'automatisch')
+            ->whereNotNull('toernooi_id')
+            ->select('toernooi_id');
+
         return $organisator->toernooien()
-            ->whereNotIn('id', $verwerkteIds)
+            ->whereNotIn('id', $verwerkteSubquery)
             ->with(['poules.wedstrijden' => fn($q) => $q->where('is_gespeeld', true)->whereNotNull('winnaar_id')])
             ->orderByDesc('datum')
             ->get()
