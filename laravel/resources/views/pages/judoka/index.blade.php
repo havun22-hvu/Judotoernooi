@@ -15,7 +15,7 @@
         <p class="font-semibold text-blue-800">{{ __('Meer deelnemers nodig?') }}</p>
         <p class="text-sm text-blue-600">{{ __('Verhoog je maximum bij Instellingen → Organisatie.') }}</p>
     </div>
-    <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#organisatie"
+    <a href="{{ route('toernooi.edit', array_merge($toernooi->routeParams(), ['tab' => 'organisatie'])) }}"
        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
         {{ __('Upgraden') }}
     </a>
