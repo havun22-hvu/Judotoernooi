@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 9 maart 2026
+> **Laatste update:** 26 maart 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -66,6 +66,7 @@ Code audit rapport: `.claude/code-review-2026-02-14.md`
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **26 mrt 2026** | **Wimpelcompetitie review + hardening.** Volledige code review van wimpel/competitie flow. 5 fixes: negatieve punten geblokkeerd, duplicate milestone punten unique validatie, milestone delete bescherming (uitreikingen check), N+1 performance fix (eager loading), spreker knop verborgen zonder actief toernooi. Simplify: Rule import, inline subquery. Error reports onderzocht: APK 404 (timing), upgrade 404 (timing). | WIMPELTOERNOOI.md |
 | **24 mrt 2026** | **Freemium polish + server herstructurering.** Eliminatie + danpunten verborgen voor free tier. Freemium messaging verzacht ("Geblokkeerd" rood → "Beschikbaar bij betaald pakket" grijs). Upgrade hint bij max deelnemers. Freemium banner toont nu ook voor admin (`plan_type` check i.p.v. `isFreeTier()`). Activiteiten log: details als expandable rij. **Server:** Production + staging omgezet naar git clone + symlink structuur (`repo-prod/laravel`, `repo-staging/laravel`). `git pull` werkt nu correct. Deploy docs bijgewerkt. Judoka zoekfilters (geboortejaar, geslacht, status). | FREEMIUM.md, deploy.md |
 | **24 mrt 2026** | **Clubs Uitnodigen pagina heringedeeld:** Plaats en email kolommen verwijderd. Kopieer-icoon (was `~`) vervangen door clipboard SVG. WhatsApp en Email nu aparte kolommen met iconen (gekleurd als data beschikbaar, grijs als niet). Klik opent mailto:/wa.me met voorgevuld bericht. | smallwork.md |
 | **22 mrt 2026** | **Scoreboard ↔ Mat koppeling + Reverb fix + UI fixes.** Poule sortering fix. Scoreboard auth met mat URL+pincode. Reverb mat listener bug gefixt. Staging rsync. Scoreboard API config `env()`. **Spreker tabs** vaste breedte (max-w-4xl). **Mat selectie bug:** `isEchtGespeeld` skip voor bestaande selectie-items. **Reverb race condition:** matSelectie direct uit event data bij beurt update. Scoreboard backend deployed staging. | smallwork.md |
