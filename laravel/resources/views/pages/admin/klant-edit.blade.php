@@ -210,8 +210,8 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Laatste login</span>
-                    <span class="font-medium {{ $klant->laatste_login && $klant->laatste_login->diffInDays() > 30 ? 'text-orange-600' : '' }}">
-                        {{ $klant->laatste_login?->diffForHumans() ?? 'Nooit' }}
+                    <span class="font-medium {{ $klant->laatste_login && $klant->laatste_login->diffInDays() > 30 ? 'text-orange-600' : '' }}" @if($klant->laatste_login) title="{{ $klant->laatste_login->diffForHumans() }}" @endif>
+                        {{ $klant->laatste_login?->format('d-m-Y H:i') ?? '-' }}
                     </span>
                 </div>
             </div>

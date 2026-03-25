@@ -75,11 +75,11 @@
                 </td>
                 <td class="px-6 py-4 text-sm">
                     @if($klant->laatste_login)
-                        <span class="{{ $klant->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-gray-600' }}">
-                            {{ $klant->laatste_login->diffForHumans() }}
+                        <span class="{{ $klant->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-gray-600' }}" title="{{ $klant->laatste_login->diffForHumans() }}">
+                            {{ $klant->laatste_login->format('d-m-Y H:i') }}
                         </span>
                     @else
-                        <span class="text-gray-400">{{ __('Nooit') }}</span>
+                        <span class="text-gray-400">-</span>
                     @endif
                 </td>
                 <td class="px-6 py-4">
