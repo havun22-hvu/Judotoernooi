@@ -268,15 +268,6 @@
             <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 text-sm">
                 <div class="flex gap-6 text-gray-500">
                     <span>{{ __('Klant sinds') }}: <strong>{{ $organisator->created_at?->format('d-m-Y') ?? '-' }}</strong></span>
-                    <span>{{ __('Laatste login') }}:
-                        @if($organisator->laatste_login)
-                            <strong class="{{ $organisator->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-green-600' }}" title="{{ $organisator->laatste_login->diffForHumans() }}">
-                                {{ $organisator->laatste_login->format('d-m-Y H:i') }}
-                            </strong>
-                        @else
-                            <strong class="text-gray-400">-</strong>
-                        @endif
-                    </span>
                 </div>
                 <div class="flex gap-2">
                     @php
