@@ -1,0 +1,3981 @@
+﻿
+
+<?php $__env->startSection('title', __('Instellingen')); ?>
+
+<?php $__env->startSection('content'); ?>
+<?php if($toernooi->isWimpelAbo()): ?>
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+    <div class="flex items-center">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+            <?php echo e(__('Wimpel Abonnement')); ?>
+
+        </span>
+        <span class="text-sm text-gray-600"><?php echo e(__('Alle categorieën staan vast op puntencompetitie.')); ?></span>
+    </div>
+</div>
+<?php endif; ?>
+<!-- Fixed toast voor autosave status -->
+<div id="save-status" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium hidden bg-white border"></div>
+
+<!-- Fixed waarschuwingen bovenaan scherm -->
+<?php
+    $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
+?>
+<?php if($nietGecategoriseerdAantal > 0 || (isset($overlapWarning) && $overlapWarning)): ?>
+<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
+    <?php if($nietGecategoriseerdAantal > 0): ?>
+    <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-red-800"><?php echo e(__(':aantal judoka(\'s) niet gecategoriseerd!', ['aantal' => $nietGecategoriseerdAantal])); ?></p>
+                    <p class="text-sm text-red-700"><?php echo e(__('Pas de categorie-instellingen aan.')); ?></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="<?php echo e(route('toernooi.judoka.index', $toernooi->routeParams())); ?>?filter=niet_gecategoriseerd"
+                   class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                    <?php echo e(__('Bekijk lijst')); ?>
+
+                </a>
+                <button type="button" @click="show = false" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if(isset($overlapWarning) && $overlapWarning): ?>
+    <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-orange-800"><?php echo e(__('Overlappende categorieën!')); ?></p>
+                    <p class="text-sm text-orange-700"><?php echo e($overlapWarning); ?></p>
+                </div>
+            </div>
+            <button type="button" @click="show = false" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+<!-- Spacer voor fixed warnings -->
+<div class="h-16"></div>
+<?php endif; ?>
+
+<div class="max-w-4xl mx-auto" x-data="{ activeTab: '<?php echo e(request('tab', 'toernooi')); ?>' }">
+    <!-- Sticky header met titel en tabs -->
+    <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-bold text-gray-800"><?php echo e(__('Instellingen')); ?></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="<?php echo e(route('toernooi.show', $toernooi->routeParams())); ?>" class="text-blue-600 hover:text-blue-800">
+                    &larr; <?php echo e(__('Terug naar Dashboard')); ?>
+
+                </a>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="flex border-b">
+        <button type="button"
+                @click="activeTab = 'toernooi'"
+                :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            <?php echo e(__('Toernooi')); ?>
+
+        </button>
+        <button type="button"
+                @click="activeTab = 'organisatie'"
+                :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            <?php echo e(__('Organisatie')); ?>
+
+        </button>
+        <button type="button"
+                @click="activeTab = 'noodplan'"
+                :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            <?php echo e(__('Noodplan')); ?>
+
+        </button>
+        <?php if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin'): ?>
+        <button type="button"
+                @click="activeTab = 'admin'"
+                :class="activeTab === 'admin' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            <?php echo e(__('Admin')); ?>
+
+        </button>
+        <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- TAB: TOERNOOI -->
+    <div x-show="activeTab === 'toernooi'" x-cloak>
+    <form action="<?php echo e(route('toernooi.update', $toernooi->routeParams())); ?>" method="POST" id="toernooi-form" data-loading="<?php echo e(__('Instellingen opslaan...')); ?>">
+        <?php echo csrf_field(); ?>
+        <?php echo method_field('PUT'); ?>
+
+        <!-- ALGEMEEN -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Algemeen')); ?></h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="naam" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Naam Toernooi')); ?> *</label>
+                    <input type="text" name="naam" id="naam" value="<?php echo e(old('naam', $toernooi->naam)); ?>"
+                           class="w-full border rounded px-3 py-2 <?php $__errorArgs = ['naam'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
+                    <?php $__errorArgs = ['naam'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <p class="text-red-500 text-sm mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                </div>
+
+                <div>
+                    <label for="organisatie" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Organisatie')); ?></label>
+                    <input type="text" name="organisatie" id="organisatie" value="<?php echo e(old('organisatie', $toernooi->organisatie)); ?>"
+                           placeholder="<?php echo e(__('Naam van de organiserende club')); ?>" class="w-full border rounded px-3 py-2">
+                </div>
+
+                <div>
+                    <label for="datum" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Datum Toernooi')); ?> *</label>
+                    <input type="date" name="datum" id="datum" value="<?php echo e(old('datum', $toernooi->datum->format('Y-m-d'))); ?>"
+                           class="w-full border rounded px-3 py-2 <?php $__errorArgs = ['datum'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
+                    <?php $__errorArgs = ['datum'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <p class="text-red-500 text-sm mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                </div>
+
+                <div>
+                    <label for="locatie" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Locatie')); ?></label>
+                    <?php if (isset($component)) { $__componentOriginal2078048de42c5c60ce731b945a2ed63c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2078048de42c5c60ce731b945a2ed63c = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.location-autocomplete','data' => ['name' => 'locatie','value' => old('locatie', $toernooi->locatie),'placeholder' => ''.e(__('Zoek sporthal of adres...')).'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('location-autocomplete'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['name' => 'locatie','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(old('locatie', $toernooi->locatie)),'placeholder' => ''.e(__('Zoek sporthal of adres...')).'']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2078048de42c5c60ce731b945a2ed63c)): ?>
+<?php $attributes = $__attributesOriginal2078048de42c5c60ce731b945a2ed63c; ?>
+<?php unset($__attributesOriginal2078048de42c5c60ce731b945a2ed63c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2078048de42c5c60ce731b945a2ed63c)): ?>
+<?php $component = $__componentOriginal2078048de42c5c60ce731b945a2ed63c; ?>
+<?php unset($__componentOriginal2078048de42c5c60ce731b945a2ed63c); ?>
+<?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSCHRIJVING -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Inschrijving')); ?></h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="inschrijving_deadline" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Inschrijving Deadline')); ?></label>
+                    <input type="date" name="inschrijving_deadline" id="inschrijving_deadline"
+                           value="<?php echo e(old('inschrijving_deadline', $toernooi->inschrijving_deadline?->format('Y-m-d'))); ?>"
+                           class="w-full border rounded px-3 py-2">
+                    <p class="text-gray-500 text-sm mt-1"><?php echo e(__('Tot wanneer kunnen clubs judoka\'s opgeven?')); ?></p>
+                </div>
+
+                <div>
+                    <label for="max_judokas" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Maximum Aantal Deelnemers')); ?></label>
+                    <input type="number" name="max_judokas" id="max_judokas"
+                           value="<?php echo e(old('max_judokas', $toernooi->max_judokas)); ?>"
+                           placeholder="<?php echo e(__('Leeg = onbeperkt')); ?>" class="w-full border rounded px-3 py-2" min="1">
+                    <p class="text-gray-500 text-sm mt-1"><?php echo e(__('Coaches krijgen waarschuwing bij 80%')); ?></p>
+                    <?php if($toernooi->isFreeTier()): ?>
+                        <p class="text-sm mt-1">
+                            💡 <a href="<?php echo e(route('toernooi.edit', $toernooi->routeParams())); ?>?tab=organisatie" class="text-blue-600 hover:underline font-medium"><?php echo e(__('Verhoog het maximum bij Organisatie → Upgraden')); ?></a>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- MATTEN & BLOKKEN -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Matten & Tijdsblokken')); ?></h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="aantal_matten" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Aantal Matten')); ?></label>
+                    <input type="number" name="aantal_matten" id="aantal_matten"
+                           value="<?php echo e(old('aantal_matten', $toernooi->aantal_matten)); ?>"
+                           class="w-full border rounded px-3 py-2" min="1" max="20">
+                    <p class="text-gray-500 text-sm mt-1"><?php echo e(__('Hoeveel wedstrijdmatten zijn beschikbaar?')); ?></p>
+                </div>
+
+                <div>
+                    <label for="aantal_blokken" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Aantal Tijdsblokken')); ?></label>
+                    <input type="number" name="aantal_blokken" id="aantal_blokken"
+                           value="<?php echo e(old('aantal_blokken', $toernooi->aantal_blokken)); ?>"
+                           class="w-full border rounded px-3 py-2" min="1" max="12">
+                    <p class="text-gray-500 text-sm mt-1"><?php echo e(__('In hoeveel tijdsblokken wordt het toernooi verdeeld?')); ?></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- POULE INSTELLINGEN -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Poule Instellingen')); ?></h2>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-2"><?php echo e(__('Voorkeursvolgorde Poule Grootte')); ?></label>
+                <p class="text-gray-500 text-sm mb-3"><?php echo e(__('Sleep om de volgorde aan te passen. Eerste = meest gewenst, laagste = minimum, hoogste = maximum.')); ?></p>
+
+                <?php
+                    $voorkeur = old('poule_grootte_voorkeur', $toernooi->poule_grootte_voorkeur) ?? [5, 4, 6, 3];
+                    if (is_string($voorkeur)) {
+                        $voorkeur = json_decode($voorkeur, true) ?? [5, 4, 6, 3];
+                    }
+                ?>
+
+                <div id="voorkeur-container" class="flex flex-wrap gap-2 mb-3">
+                    <?php $__currentLoopData = $voorkeur; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $grootte): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="voorkeur-item flex items-center bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-2 cursor-move" draggable="true" data-grootte="<?php echo e($grootte); ?>">
+                        <span class="font-bold text-blue-800 text-lg mr-2"><?php echo e($grootte); ?></span>
+                        <span class="text-blue-600 text-sm"><?php echo e(__('judoka\'s')); ?></span>
+                        <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="<?php echo e(__('Verwijder')); ?>">&times;</button>
+                    </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <select id="add-voorkeur-select" class="border rounded px-3 py-2 text-sm">
+                        <?php for($i = 2; $i <= 8; $i++): ?>
+                        <option value="<?php echo e($i); ?>"><?php echo e(__(':aantal judoka\'s', ['aantal' => $i])); ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <button type="button" id="add-voorkeur-btn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <?php echo e(__('+ Toevoegen')); ?>
+
+                    </button>
+                </div>
+
+                <input type="hidden" name="poule_grootte_voorkeur" id="poule_grootte_voorkeur_input" value="<?php echo e(json_encode($voorkeur)); ?>">
+
+                <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                    <strong><?php echo e(__('Voorbeeld:')); ?></strong> <?php echo e(__('Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.')); ?>
+
+                </div>
+            </div>
+
+            <!-- Wedstrijden per poulegrootte -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-3"><?php echo e(__('Wedstrijden per poulegrootte')); ?></h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 text-xs uppercase">
+                                <th class="pb-2 w-24"><?php echo e(__('Poule')); ?></th>
+                                <th class="pb-2 w-20"><?php echo e(__('Enkel')); ?></th>
+                                <th class="pb-2"><?php echo e(__('Instelling')); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <?php
+                                $modus2 = 'enkel';
+                                if (old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false)) {
+                                    $modus2 = 'best3';
+                                } elseif (old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true)) {
+                                    $modus2 = 'dubbel';
+                                }
+                            ?>
+                            <tr>
+                                <td class="py-2 font-medium"><?php echo e(__('2 judoka\'s')); ?></td>
+                                <td class="py-2 text-gray-400">1w</td>
+                                <td class="py-2">
+                                    <div class="flex items-center gap-4" x-data="{ modus: '<?php echo e($modus2); ?>' }" x-init="$watch('modus', value => { $refs.dubbel2.value = value === 'dubbel' ? '1' : '0'; $refs.best3.value = value === 'best3' ? '1' : '0'; })">
+                                        <input type="hidden" name="dubbel_bij_2_judokas" x-ref="dubbel2" value="<?php echo e($modus2 === 'dubbel' ? '1' : '0'); ?>">
+                                        <input type="hidden" name="best_of_three_bij_2" x-ref="best3" value="<?php echo e($modus2 === 'best3' ? '1' : '0'); ?>">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" x-model="modus" value="enkel"
+                                                   class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500">
+                                            <span class="ml-2 text-gray-600"><?php echo e(__('Enkel')); ?> <span class="text-gray-400">(1w)</span></span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" x-model="modus" value="dubbel"
+                                                   class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                            <span class="ml-2"><?php echo e(__('Dubbel')); ?> <span class="text-gray-400">(2w)</span></span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" x-model="modus" value="best3"
+                                                   class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                                            <span class="ml-2 text-yellow-700"><?php echo e(__('Best of 3')); ?> <span class="text-yellow-500">(3w)</span></span>
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium"><?php echo e(__('3 judoka\'s')); ?></td>
+                                <td class="py-2 text-gray-400">3w</td>
+                                <td class="py-2">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="hidden" name="dubbel_bij_3_judokas" value="0">
+                                        <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
+                                               <?php echo e(old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : ''); ?>
+
+                                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2"><?php echo e(__('Dubbel')); ?> <span class="text-gray-400">(6w)</span></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium"><?php echo e(__('4 judoka\'s')); ?></td>
+                                <td class="py-2 text-gray-400">6w</td>
+                                <td class="py-2">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="hidden" name="dubbel_bij_4_judokas" value="0">
+                                        <input type="checkbox" name="dubbel_bij_4_judokas" value="1"
+                                               <?php echo e(old('dubbel_bij_4_judokas', $toernooi->dubbel_bij_4_judokas ?? false) ? 'checked' : ''); ?>
+
+                                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2"><?php echo e(__('Dubbel')); ?> <span class="text-gray-400">(12w)</span></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium text-gray-400"><?php echo e(__('5+ judoka\'s')); ?></td>
+                                <td class="py-2 text-gray-400">10w+</td>
+                                <td class="py-2 text-gray-400 text-xs"><?php echo e(__('Altijd enkel (round-robin)')); ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Eliminatie Type (KO systeem) -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-2"><?php echo e(__('Knock-out Systeem')); ?></h3>
+                <p class="text-xs text-gray-500 mb-3">
+                    <?php echo e(__('Kies het type eliminatie bracket voor gewichtsklassen met "Direct eliminatie"')); ?>
+
+                </p>
+
+                <?php
+                    $eliminatieType = old('eliminatie_type', $toernooi->eliminatie_type) ?? 'dubbel';
+                ?>
+
+                <div class="flex gap-4">
+                    <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 <?php echo e($eliminatieType === 'dubbel' ? 'border-blue-500 bg-blue-50' : 'bg-white'); ?>">
+                        <input type="radio" name="eliminatie_type" value="dubbel"
+                               <?php echo e($eliminatieType === 'dubbel' ? 'checked' : ''); ?>
+
+                               class="mt-1 w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium text-sm"><?php echo e(__('Dubbel Eliminatie')); ?></span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                <?php echo e(__('Alle verliezers krijgen herkansing in B-groep.')); ?><br>
+                                <?php echo e(__('Meer wedstrijden, iedereen minimaal 2x judoën.')); ?><br>
+                                <span class="text-blue-600"><?php echo e(__('Aanbevolen voor jeugdtoernooien')); ?></span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 <?php echo e($eliminatieType === 'ijf' ? 'border-blue-500 bg-blue-50' : 'bg-white'); ?>">
+                        <input type="radio" name="eliminatie_type" value="ijf"
+                               <?php echo e($eliminatieType === 'ijf' ? 'checked' : ''); ?>
+
+                               class="mt-1 w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium text-sm"><?php echo e(__('IJF Repechage')); ?></span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                <?php echo e(__('Officieel systeem: alleen verliezers van 1/4 finale')); ?><br>
+                                <?php echo e(__('(die verloren van finalisten) krijgen herkansing.')); ?><br>
+                                <span class="text-orange-600"><?php echo e(__('Minder wedstrijden, strenger')); ?></span>
+                            </span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Aantal bronzen medailles -->
+                <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p class="text-sm font-medium text-amber-800 mb-2">
+                        <?php echo e(__('Aantal bronzen medailles')); ?>
+
+                    </p>
+                    <?php
+                        $aantalBrons = old('aantal_brons', $toernooi->aantal_brons) ?? 2;
+                    ?>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="aantal_brons" value="2"
+                                   <?php echo e($aantalBrons == 2 ? 'checked' : ''); ?>
+
+                                   class="w-4 h-4 text-amber-600">
+                            <span class="text-sm">
+                                <strong><?php echo e(__('2 bronzen')); ?></strong>
+                                <span class="text-gray-500"><?php echo e(__('(2 brons wedstrijden, 2 winnaars)')); ?></span>
+                            </span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="aantal_brons" value="1"
+                                   <?php echo e($aantalBrons == 1 ? 'checked' : ''); ?>
+
+                                   class="w-4 h-4 text-amber-600">
+                            <span class="text-sm">
+                                <strong><?php echo e(__('1 brons')); ?></strong>
+                                <span class="text-gray-500"><?php echo e(__('(kleine finale, 1 winnaar)')); ?></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- WEDSTRIJDSCHEMA'S -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Wedstrijdschema\'s')); ?></h2>
+            <p class="text-sm text-gray-600 mb-4">
+                <?php echo e(__('Bepaal de volgorde van wedstrijden per poulegrootte. Sleep wedstrijden om de volgorde aan te passen.')); ?>
+
+            </p>
+
+            <?php
+                // Best of Three overschrijft dubbel voor 2 judoka's
+                $bestOfThree = old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false);
+                $standaardSchemas = [
+                    2 => $bestOfThree ? [[1,2], [2,1], [1,2]] : [[1,2], [2,1]],
+                    3 => [[1,2], [1,3], [2,3], [2,1], [3,2], [3,1]],
+                    4 => [[1,2], [3,4], [2,3], [1,4], [2,4], [1,3]],
+                    5 => [[1,2], [3,4], [1,5], [2,3], [4,5], [1,3], [2,4], [3,5], [1,4], [2,5]],
+                    6 => [[1,2], [3,4], [5,6], [1,3], [2,5], [4,6], [3,5], [2,4], [1,6], [2,3], [4,5], [3,6], [1,4], [2,6], [1,5]],
+                    7 => [[1,2], [3,4], [5,6], [1,7], [2,3], [4,5], [6,7], [1,3], [2,4], [5,7], [3,6], [1,4], [2,5], [3,7], [4,6], [1,5], [2,6], [4,7], [1,6], [3,5], [2,7]],
+                ];
+                $rawSchemas = old('wedstrijd_schemas', $toernooi->wedstrijd_schemas);
+                $opgeslagenSchemas = is_array($rawSchemas) ? $rawSchemas : [];
+            ?>
+
+            <div class="space-y-4" x-data="wedstrijdSchemas()">
+                <!-- Tabs voor poulegrootte -->
+                <div class="flex border-b">
+                    <?php $__currentLoopData = [2,3,4,5,6,7]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grootte): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <button type="button"
+                            @click="activeTab = <?php echo e($grootte); ?>"
+                            :class="activeTab === <?php echo e($grootte); ?> ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="px-4 py-2 font-medium border-b-2 -mb-px transition-colors text-sm">
+                        <?php echo e(__(':aantal judoka\'s', ['aantal' => $grootte])); ?>
+
+                    </button>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+
+                <!-- Schema per grootte -->
+                <?php $__currentLoopData = [2,3,4,5,6,7]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $grootte): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php
+                    $saved = $opgeslagenSchemas[$grootte] ?? null;
+                    $schema = is_array($saved) ? $saved : $standaardSchemas[$grootte];
+                    $aantalWed = count($schema);
+                ?>
+                <div x-show="activeTab === <?php echo e($grootte); ?>" x-cloak class="pt-2">
+                    <div class="flex items-start gap-6">
+                        <!-- Visueel schema -->
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-sm font-medium text-gray-700"><?php echo e(__(':aantal wedstrijden', ['aantal' => $aantalWed])); ?></span>
+                                <span class="text-xs text-gray-400">
+                                    <?php if($grootte <= 3): ?><?php echo e(__('(dubbele round-robin)')); ?><?php else: ?><?php echo e(__('(enkelvoudige round-robin)')); ?><?php endif; ?>
+                                </span>
+                            </div>
+                            <div class="schema-container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2" data-grootte="<?php echo e($grootte); ?>">
+                                <?php $__currentLoopData = $schema; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $wed): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="wed-item flex items-center justify-center gap-1 bg-gray-100 border-2 border-gray-300 rounded-lg px-3 py-2 cursor-move hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                     draggable="true" data-wit="<?php echo e($wed[0]); ?>" data-blauw="<?php echo e($wed[1]); ?>">
+                                    <span class="text-xs text-gray-400 mr-1"><?php echo e($idx + 1); ?>.</span>
+                                    <span class="font-bold text-gray-700"><?php echo e($wed[0]); ?></span>
+                                    <span class="text-gray-400">-</span>
+                                    <span class="font-bold text-blue-600"><?php echo e($wed[1]); ?></span>
+                                </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </div>
+                        </div>
+
+                        <!-- Legenda -->
+                        <div class="w-32 flex-shrink-0">
+                            <div class="text-xs font-medium text-gray-500 mb-2"><?php echo e(__('Positie in poule:')); ?></div>
+                            <?php for($i = 1; $i <= $grootte; $i++): ?>
+                            <div class="flex items-center gap-2 text-sm py-0.5">
+                                <span class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded font-bold text-gray-700"><?php echo e($i); ?></span>
+                                <span class="text-gray-500"><?php echo e(__('Judoka')); ?> <?php echo e($i); ?></span>
+                            </div>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                <!-- Hidden inputs voor alle schemas -->
+                <input type="hidden" name="wedstrijd_schemas" id="wedstrijd_schemas_input"
+                       value='<?php echo json_encode($opgeslagenSchemas ?: $standaardSchemas, 15, 512) ?>'>
+
+                <div class="text-xs text-gray-400 mt-2">
+                    <?php echo e(__('Tip: De volgorde is geoptimaliseerd zodat judoka\'s rust krijgen tussen wedstrijden.')); ?>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // i18n for this script block
+            const __s1 = {
+                judokas: <?php echo json_encode(__("judoka's"), 15, 512) ?>,
+                verwijder: <?php echo json_encode(__('Verwijder'), 15, 512) ?>,
+            };
+
+            const container = document.getElementById('voorkeur-container');
+            const hiddenInput = document.getElementById('poule_grootte_voorkeur_input');
+            const addBtn = document.getElementById('add-voorkeur-btn');
+            const addSelect = document.getElementById('add-voorkeur-select');
+
+            function updateHiddenInput() {
+                const items = container.querySelectorAll('.voorkeur-item');
+                const voorkeur = Array.from(items).map(item => parseInt(item.dataset.grootte));
+                hiddenInput.value = JSON.stringify(voorkeur);
+            }
+
+            // Drag and drop
+            let draggedItem = null;
+
+            container.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('voorkeur-item')) {
+                    draggedItem = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+
+            container.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('voorkeur-item')) {
+                    e.target.style.opacity = '1';
+                    draggedItem = null;
+                }
+            });
+
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.voorkeur-item');
+                if (target && target !== draggedItem) {
+                    const rect = target.getBoundingClientRect();
+                    const midX = rect.left + rect.width / 2;
+                    if (e.clientX < midX) {
+                        container.insertBefore(draggedItem, target);
+                    } else {
+                        container.insertBefore(draggedItem, target.nextSibling);
+                    }
+                }
+            });
+
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                updateHiddenInput();
+                if (window.triggerAutoSave) window.triggerAutoSave();
+            });
+
+            // Remove button
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-voorkeur')) {
+                    e.target.closest('.voorkeur-item').remove();
+                    updateHiddenInput();
+                    if (window.triggerAutoSave) window.triggerAutoSave();
+                }
+            });
+
+            // Add button
+            addBtn.addEventListener('click', function() {
+                const grootte = addSelect.value;
+                // Check if already exists
+                const existing = container.querySelector(`[data-grootte="${grootte}"]`);
+                if (existing) {
+                    existing.classList.add('ring-2', 'ring-red-500');
+                    setTimeout(() => existing.classList.remove('ring-2', 'ring-red-500'), 1000);
+                    return;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'voorkeur-item flex items-center bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-2 cursor-move';
+                item.draggable = true;
+                item.dataset.grootte = grootte;
+                item.innerHTML = `
+                    <span class="font-bold text-blue-800 text-lg mr-2">${grootte}</span>
+                    <span class="text-blue-600 text-sm">${__s1.judokas}</span>
+                    <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="${__s1.verwijder}">&times;</button>
+                `;
+                container.appendChild(item);
+                updateHiddenInput();
+                if (window.triggerAutoSave) window.triggerAutoSave();
+            });
+
+            // ========== PRIORITEIT VOLGORDE DRAG & DROP ==========
+            const prioriteitContainer = document.getElementById('prioriteit-container');
+            const prioriteitInput = document.getElementById('prioriteit_input');
+
+            function updatePrioriteitInput() {
+                const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
+                const prioriteit = Array.from(items).map(item => item.dataset.key);
+                prioriteitInput.value = JSON.stringify(prioriteit);
+            }
+
+            let draggedPrioriteitItem = null;
+
+            prioriteitContainer.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('prioriteit-item')) {
+                    draggedPrioriteitItem = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+
+            prioriteitContainer.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('prioriteit-item')) {
+                    e.target.style.opacity = '1';
+                    draggedPrioriteitItem = null;
+                }
+            });
+
+            prioriteitContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.prioriteit-item');
+                if (target && target !== draggedPrioriteitItem) {
+                    const rect = target.getBoundingClientRect();
+                    const midX = rect.left + rect.width / 2;
+                    if (e.clientX < midX) {
+                        prioriteitContainer.insertBefore(draggedPrioriteitItem, target);
+                    } else {
+                        prioriteitContainer.insertBefore(draggedPrioriteitItem, target.nextSibling);
+                    }
+                }
+            });
+
+            prioriteitContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                updatePrioriteitInput();
+                // Update numbers
+                const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
+                const labels = { leeftijd: '📅 ' + <?php echo json_encode(__('Leeftijd'), 15, 512) ?>, gewicht: '🏋️ ' + <?php echo json_encode(__('Gewicht'), 15, 512) ?>, band: '🥋 ' + <?php echo json_encode(__('Band'), 15, 512) ?> };
+                items.forEach((item, idx) => {
+                    item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
+                });
+                if (window.triggerAutoSave) window.triggerAutoSave();
+            });
+
+            // ========== WEDSTRIJDSCHEMA DRAG & DROP ==========
+            document.querySelectorAll('.schema-container').forEach(container => {
+                let draggedWed = null;
+
+                container.addEventListener('dragstart', function(e) {
+                    if (e.target.classList.contains('wed-item')) {
+                        draggedWed = e.target;
+                        e.target.style.opacity = '0.5';
+                    }
+                });
+
+                container.addEventListener('dragend', function(e) {
+                    if (e.target.classList.contains('wed-item')) {
+                        e.target.style.opacity = '1';
+                        draggedWed = null;
+                    }
+                });
+
+                container.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    const target = e.target.closest('.wed-item');
+                    if (target && target !== draggedWed) {
+                        const rect = target.getBoundingClientRect();
+                        const midX = rect.left + rect.width / 2;
+                        if (e.clientX < midX) {
+                            container.insertBefore(draggedWed, target);
+                        } else {
+                            container.insertBefore(draggedWed, target.nextSibling);
+                        }
+                    }
+                });
+
+                container.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    updateWedstrijdNumbers(container);
+                    updateWedstrijdSchemasInput();
+                    if (window.triggerAutoSave) window.triggerAutoSave();
+                });
+            });
+
+            function updateWedstrijdNumbers(container) {
+                const items = container.querySelectorAll('.wed-item');
+                items.forEach((item, idx) => {
+                    const numSpan = item.querySelector('span:first-child');
+                    if (numSpan) numSpan.textContent = `${idx + 1}.`;
+                });
+            }
+
+            function updateWedstrijdSchemasInput() {
+                const schemas = {};
+                document.querySelectorAll('.schema-container').forEach(container => {
+                    const grootte = parseInt(container.dataset.grootte);
+                    const wedstrijden = [];
+                    container.querySelectorAll('.wed-item').forEach(item => {
+                        wedstrijden.push([parseInt(item.dataset.wit), parseInt(item.dataset.blauw)]);
+                    });
+                    schemas[grootte] = wedstrijden;
+                });
+                document.getElementById('wedstrijd_schemas_input').value = JSON.stringify(schemas);
+            }
+
+        });
+
+        // Alpine component voor tabs
+        function wedstrijdSchemas() {
+            return { activeTab: 4 };
+        }
+        </script>
+
+        <!-- GEWICHT -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Weging')); ?></h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Weging verplicht checkbox -->
+                <div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="weging_verplicht" value="0">
+                        <input type="checkbox" name="weging_verplicht" value="1"
+                               <?php echo e(old('weging_verplicht', $toernooi->weging_verplicht ?? true) ? 'checked' : ''); ?>
+
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-3">
+                            <span class="font-medium text-gray-700"><?php echo e(__('Weging verplicht')); ?></span>
+                            <span class="block text-sm text-gray-500"><?php echo e(__('Uitschakelen voor toernooien zonder weegplicht')); ?></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Max wegingen -->
+                <div class="flex items-center gap-2">
+                    <label for="max_wegingen" class="text-gray-700 font-medium"><?php echo e(__('Max aantal wegingen:')); ?></label>
+                    <input type="text" name="max_wegingen" id="max_wegingen"
+                           value="<?php echo e(old('max_wegingen', $toernooi->max_wegingen)); ?>"
+                           placeholder="-" class="w-12 border rounded px-2 py-1 text-center">
+                </div>
+
+            </div>
+
+            <div class="max-w-md border-t pt-4">
+                <label for="gewicht_tolerantie" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Gewichtstolerantie (kg)')); ?></label>
+                <input type="number" name="gewicht_tolerantie" id="gewicht_tolerantie"
+                       value="<?php echo e(old('gewicht_tolerantie', $toernooi->gewicht_tolerantie)); ?>"
+                       class="w-full border rounded px-3 py-2" min="0" max="5" step="0.1">
+                <p class="text-gray-500 text-sm mt-1">
+                    <?php echo e(__('Hoeveel kg mag een judoka boven de gewichtsklasse-limiet wegen?')); ?>
+
+                    <?php echo e(__('Standaard: 0.5 kg. Gebruik 0.3 voor strikter beleid.')); ?>
+
+                </p>
+            </div>
+        </div>
+
+        <!-- DOJO / COACH -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Dojo / Coach')); ?></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Judoka's per coach -->
+                <div class="flex items-center gap-2" x-data="{ value: <?php echo e(old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5)); ?> }">
+                    <label for="judokas_per_coach" class="text-gray-700 font-medium"><?php echo e(__('Judoka\'s per coach kaart:')); ?></label>
+                    <input type="number" name="judokas_per_coach" id="judokas_per_coach"
+                           x-model="value"
+                           class="w-16 border rounded px-2 py-1 text-center" min="1">
+                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm"><?php echo e(__('Hoog aantal')); ?></span>
+                </div>
+
+                <!-- Coach in/uitcheck systeem -->
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <input type="checkbox" name="coach_incheck_actief" id="coach_incheck_actief"
+                           value="1" <?php echo e(old('coach_incheck_actief', $toernooi->coach_incheck_actief) ? 'checked' : ''); ?>
+
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="coach_incheck_actief" class="text-gray-700 font-medium"><?php echo e(__('Coach in/uitcheck bij dojo')); ?></label>
+                        <p class="text-sm text-gray-500"><?php echo e(__('Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen')); ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DANPUNTEN (JBN) -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Danpunten (JBN)')); ?></h2>
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <input type="hidden" name="danpunten_actief" value="0">
+                <input type="checkbox" name="danpunten_actief" id="danpunten_actief"
+                       value="1" <?php echo e(old('danpunten_actief', $toernooi->danpunten_actief) ? 'checked' : ''); ?>
+
+                       class="w-5 h-5 text-blue-600 rounded">
+                <div>
+                    <label for="danpunten_actief" class="text-gray-700 font-medium"><?php echo e(__('Danpunten registreren')); ?></label>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Gewonnen wedstrijden bijhouden voor bruine banden. JBN lidnummer wordt verplicht. Na afloop exporteren als CSV voor de JBN.')); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORIEËN INSTELLING -->
+        <?php
+            // Lees preset type uit gewichtsklassen JSON
+            $gewichtsklassenData = $toernooi->gewichtsklassen;
+            if (!is_array($gewichtsklassenData)) {
+                $gewichtsklassenData = [];
+            }
+            $categorieType = $gewichtsklassenData['_preset_type'] ?? 'geen_standaard';
+            $eigenPresetId = $gewichtsklassenData['_eigen_preset_id'] ?? null;
+            $eigenPresetNaam = null;
+
+            // Als er een eigen preset is opgeslagen, gebruik 'eigen' als type en haal de naam op
+            if ($eigenPresetId) {
+                $categorieType = 'eigen';
+                $eigenPreset = \App\Models\GewichtsklassenPreset::find($eigenPresetId);
+                $eigenPresetNaam = $eigenPreset?->naam;
+            }
+
+            // Backwards compatibility
+            if ($categorieType === 'geen_standaard' && ($toernooi->gebruik_gewichtsklassen ?? false)) {
+                $categorieType = 'jbn_2026';
+            }
+        ?>
+        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '<?php echo e($categorieType); ?>' }">
+            <div class="flex justify-between items-start mb-4 pb-2 border-b">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800"><?php echo e(__('Categorieën Instelling')); ?></h2>
+                    <p class="text-gray-600 text-sm mt-1"><?php echo e(__('Kies een startpunt en pas categorieën aan.')); ?></p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Hoofdkeuze: radio buttons -->
+                    <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="jbn_2025"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadJbn2025()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                JBN 2025
+                            </span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="jbn_2026"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadJbn2026()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                JBN 2026
+                            </span>
+                        </label>
+                        <label class="cursor-pointer" id="eigen-preset-radio-label" <?php if(!$eigenPresetNaam): ?> style="display:none" <?php endif; ?>>
+                            <input type="radio" name="categorie_type" value="eigen"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadEigenPreset()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm text-gray-400 peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
+                                <?php echo e($eigenPresetNaam ?? __('Eigen preset...')); ?>
+
+                            </span>
+                        </label>
+                    </div>
+                    <!-- Eigen presets -->
+                    <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[120px]">
+                        <option value=""><?php echo e(__('Preset...')); ?></option>
+                    </select>
+                    <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="<?php echo e(__('Huidige configuratie opslaan')); ?>">
+                        <?php echo e(__('Opslaan')); ?>
+
+                    </button>
+                    <button type="button" id="btn-delete-preset" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm" title="<?php echo e(__('Geselecteerde preset verwijderen')); ?>">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preset opslaan modal -->
+            <div id="preset-save-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-bold mb-4" id="preset-modal-title"><?php echo e(__('Preset opslaan')); ?></h3>
+                    <div id="preset-modal-content"></div>
+                </div>
+            </div>
+
+            <!-- Sorteer prioriteit: altijd tonen, bepaalt volgorde binnen harde criteria -->
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <!-- Prioriteit drag & drop -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-yellow-800 text-sm font-medium"><?php echo e(__('Sorteer prioriteit:')); ?></span>
+                    <button type="button"
+                            x-data="{ open: false }"
+                            @click="open = !open"
+                            class="relative text-yellow-600 hover:text-yellow-800">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
+                        <div x-show="open"
+                             @click.away="open = false"
+                             x-transition
+                             class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
+                            <p class="font-medium mb-1"><?php echo e(__('Sorteer volgorde binnen categorie')); ?></p>
+                            <p class="text-xs"><?php echo e(__('Bepaalt hoe judoka\'s worden gesorteerd voordat ze over poules worden verdeeld.')); ?></p>
+                            <ul class="text-xs mt-2 space-y-1">
+                                <li><strong><?php echo e(__('Leeftijd:')); ?></strong> <?php echo e(__('Jongste judoka\'s eerst')); ?></li>
+                                <li><strong><?php echo e(__('Gewicht:')); ?></strong> <?php echo e(__('Lichtste judoka\'s eerst')); ?></li>
+                                <li><strong><?php echo e(__('Band:')); ?></strong> <?php echo e(__('Lagere banden eerst (wit → zwart)')); ?></li>
+                            </ul>
+                        </div>
+                    </button>
+                    <div id="prioriteit-container" class="flex gap-2">
+                        <?php
+                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['band', 'gewicht', 'leeftijd'];
+                            // Backwards compatibility: filter old keys, keep only valid ones
+                            $validKeys = ['leeftijd', 'gewicht', 'band'];
+                            $prioriteiten = array_values(array_filter($prioriteiten, fn($k) => in_array($k, $validKeys)));
+                            // Ensure all 3 keys exist
+                            foreach ($validKeys as $key) {
+                                if (!in_array($key, $prioriteiten)) {
+                                    $prioriteiten[] = $key;
+                                }
+                            }
+                            $prioriteiten = array_slice(array_unique($prioriteiten), 0, 3);
+                            $labels = ['leeftijd' => '📅 Leeftijd', 'gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band'];
+                        ?>
+                        <?php $__currentLoopData = $prioriteiten; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $key): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="<?php echo e($key); ?>"><?php echo e($idx + 1); ?>. <?php echo e($labels[$key] ?? $key); ?></div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                    <span class="text-yellow-600 text-xs"><?php echo e(__('(sleep om te wisselen)')); ?></span>
+                </div>
+                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='<?php echo json_encode($prioriteiten, 15, 512) ?>'>
+
+            </div>
+
+            <?php
+                $gewichtsklassen = $toernooi->getAlleGewichtsklassen();
+            ?>
+
+            <!-- Container wordt gevuld door JavaScript met één template voor alle categorieën -->
+            <div id="gewichtsklassen-container" class="space-y-3"></div>
+
+            <!-- Initiële data voor JavaScript -->
+            <script>
+                window.initieleGewichtsklassen = <?php echo json_encode($gewichtsklassen, 15, 512) ?>;
+                window.initieleWedstrijdSysteem = <?php echo json_encode(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? [], 512) ?>;
+                window.initialePuntenCompWedstrijden = <?php echo json_encode(old('punten_competitie_wedstrijden', $toernooi->punten_competitie_wedstrijden) ?? [], 512) ?>;
+                window.isWimpelAbo = <?php echo json_encode($toernooi->isWimpelAbo(), 15, 512) ?>;
+            </script>
+
+            <div class="mt-4 flex gap-2">
+                <button type="button" id="add-categorie" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                    <?php echo e(__('+ Categorie toevoegen')); ?>
+
+                </button>
+            </div>
+
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <strong><?php echo e(__('JBN 2025:')); ?></strong> <?php echo e(__('U8, U10, U12, U15, U18, U21 (vaste gewichtsklassen)')); ?><br>
+                <strong><?php echo e(__('JBN 2026:')); ?></strong> <?php echo e(__('U7/U9 dynamisch, U11+ vaste klassen (M/V gescheiden)')); ?>
+
+            </div>
+
+            <input type="hidden" name="gewichtsklassen_json" id="gewichtsklassen_json_input">
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // i18n translations for this script block
+            const __t = {
+                confirmLeegCategorieen: <?php echo json_encode(__('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?'), 15, 512) ?>,
+                confirmJbn2025: <?php echo json_encode(__('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?'), 15, 512) ?>,
+                confirmJbn2026: <?php echo json_encode(__('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?'), 15, 512) ?>,
+                confirmVerwijderCategorie: <?php echo json_encode(__('Deze categorie verwijderen?'), 15, 512) ?>,
+                confirmLoadPreset: <?php echo json_encode(__('Preset ":naam" laden? Dit vervangt alle huidige instellingen.'), 15, 512) ?>,
+                confirmDeletePreset: <?php echo json_encode(__('Preset ":naam" definitief verwijderen?'), 15, 512) ?>,
+                presetOpslaan: <?php echo json_encode(__('Preset opslaan'), 15, 512) ?>,
+                presetBijgewerkt: <?php echo json_encode(__('Preset bijgewerkt'), 15, 512) ?>,
+                presetOpgeslagen: <?php echo json_encode(__('Preset opgeslagen'), 15, 512) ?>,
+                presetVerwijderd: <?php echo json_encode(__('Preset verwijderd'), 15, 512) ?>,
+                konPresetNietOpslaan: <?php echo json_encode(__('Kon preset niet opslaan'), 15, 512) ?>,
+                konPresetNietVerwijderen: <?php echo json_encode(__('Kon preset niet verwijderen'), 15, 512) ?>,
+                foutBijOpslaan: <?php echo json_encode(__('Fout bij opslaan'), 15, 512) ?>,
+                erGingIetsMisBijOpslaan: <?php echo json_encode(__('Er ging iets mis bij het opslaan'), 15, 512) ?>,
+                foutBijVerwijderen: <?php echo json_encode(__('Fout bij verwijderen'), 15, 512) ?>,
+                erGingIetsMis: <?php echo json_encode(__('Er ging iets mis'), 15, 512) ?>,
+                vulNaamIn: <?php echo json_encode(__('Vul een naam in'), 15, 512) ?>,
+                eigenPresetPlaceholder: <?php echo json_encode(__('Eigen preset...'), 15, 512) ?>,
+                jeHebtGeladen: <?php echo json_encode(__('Je hebt ":naam" geladen. Wat wil je doen?'), 15, 512) ?>,
+                overschrijven: <?php echo json_encode(__('":naam" overschrijven'), 15, 512) ?>,
+                nieuwePresetMaken: <?php echo json_encode(__('Nieuwe preset maken'), 15, 512) ?>,
+                annuleren: <?php echo json_encode(__('Annuleren'), 15, 512) ?>,
+                nieuwePreset: <?php echo json_encode(__('Nieuwe preset'), 15, 512) ?>,
+                naamVoorPreset: <?php echo json_encode(__('Naam voor preset:'), 15, 512) ?>,
+                opslaan: <?php echo json_encode(__('Opslaan'), 15, 512) ?>,
+                kommaVergeten: <?php echo json_encode(__("Komma vergeten? Gebruik komma's: -20, -23 (niet: -20 -23)"), 512) ?>,
+                eliminatieVereisen: <?php echo json_encode(__('Eliminatie en kruisfinale vereisen:'), 15, 512) ?>,
+                gewichtsklassenIngevuld: <?php echo json_encode(__('gewichtsklassen ingevuld'), 15, 512) ?>,
+            };
+
+            // Herstel scroll positie na preset opslaan (fallback)
+            const presetScrollRestore = sessionStorage.getItem('preset_scroll_restore');
+            if (presetScrollRestore) {
+                sessionStorage.removeItem('preset_scroll_restore');
+                setTimeout(() => window.scrollTo(0, parseInt(presetScrollRestore)), 100);
+            }
+
+            const container = document.getElementById('gewichtsklassen-container');
+            const jsonInput = document.getElementById('gewichtsklassen_json_input');
+
+            // JBN presets (gemengd = default, gescheiden = uitzondering)
+            const jbn2025 = <?php echo json_encode(\App\Models\Toernooi::getJbn2025Gewichtsklassen(), 15, 512) ?>;
+            const jbn2026 = <?php echo json_encode(\App\Models\Toernooi::getJbn2026Gewichtsklassen(), 15, 512) ?>;
+
+            // i18n strings (moved to __t object above)
+
+            function updateJsonInput() {
+                const items = container.querySelectorAll('.gewichtsklasse-item');
+                const data = {};
+
+                // Sla preset type op
+                const presetRadio = document.querySelector('input[name="categorie_type"]:checked');
+                const presetDropdown = document.getElementById('eigen-presets-dropdown');
+                if (presetRadio) {
+                    data._preset_type = presetRadio.value;
+                }
+                if (presetDropdown && presetDropdown.value) {
+                    data._eigen_preset_id = presetDropdown.value;
+                }
+
+                items.forEach(item => {
+                    const key = item.dataset.key;
+                    const leeftijd = parseInt(item.querySelector('.leeftijd-input').value) || 99;
+                    const label = item.querySelector('.label-input').value;
+                    const toonLabel = item.querySelector('.toon-label-checkbox')?.checked ?? true;
+                    const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
+                    const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
+                    const maxLft = parseInt(item.querySelector('.max-lft-input')?.value) || 0;
+                    const bandFilter = item.querySelector('.band-filter-select')?.value || null;
+                    const gewichten = item.querySelector('.gewichten-input')?.value
+                        .split(',')
+                        .map(g => g.trim())
+                        .filter(g => g) || [];
+                    const systeem = item.querySelector('.systeem-select')?.value || 'poules';
+                    const pcAantal = parseInt(item.querySelector('.pc-aantal-select')?.value) || 4;
+                    const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
+                    const bandGrens = item.querySelector('.band-grens-select')?.value || '';
+                    const bandVerschil1 = parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1;
+                    const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
+                    if (systeem === 'punten_competitie') {
+                        entry.punten_competitie_wedstrijden = pcAantal;
+                    }
+                    data[key] = entry;
+                });
+                jsonInput.value = JSON.stringify(data);
+            }
+
+            // Global functies voor radio buttons
+            window.loadGeenStandaard = function() {
+                if (confirm(__t.confirmLeegCategorieen)) {
+                    container.innerHTML = '';
+                    updateJsonInput();
+                } else {
+                    // Reset radio naar vorige waarde
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            window.loadJbn2025 = function() {
+                if (confirm(__t.confirmJbn2025)) {
+                    renderCategorieen(jbn2025);
+                } else {
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            window.loadJbn2026 = function() {
+                if (confirm(__t.confirmJbn2026)) {
+                    renderCategorieen(jbn2026);
+                } else {
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            // Load eigen preset when radio button is clicked
+            window.loadEigenPreset = function() {
+                const presetId = document.getElementById('eigen-presets-dropdown').value;
+                if (!presetId) return;
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                if (preset && preset.configuratie) {
+                    renderCategorieen(preset.configuratie);
+                }
+            }
+
+            // Toggle gewichtsklassen visibility based on max_kg_verschil
+            window.toggleGewichtsklassen = function(input) {
+                const item = input.closest('.gewichtsklasse-item');
+                const gewichtenContainer = item.querySelector('.gewichten-container');
+                const dynamischLabel = item.querySelector('.dynamisch-label');
+                const maxKg = parseFloat(input.value) || 0;
+
+                if (maxKg > 0) {
+                    gewichtenContainer?.classList.add('hidden');
+                    dynamischLabel?.classList.remove('hidden');
+                } else {
+                    gewichtenContainer?.classList.remove('hidden');
+                    dynamischLabel?.classList.add('hidden');
+                }
+
+                // Check warning na toggle
+                const gewichtenInput = item.querySelector('.gewichten-input');
+                if (gewichtenInput) checkGewichtsklassenWarning(gewichtenInput);
+
+                // Check of eliminatie/kruisfinale beschikbaar zijn
+                checkSysteemBeschikbaarheid(item);
+                updateJsonInput();
+            }
+
+            window.togglePuntenCompSelect = function(select) {
+                const item = select.closest('.gewichtsklasse-item');
+                const pcSelect = item.querySelector('.pc-aantal-select');
+                if (select.value === 'punten_competitie') {
+                    pcSelect?.classList.remove('hidden');
+                } else {
+                    pcSelect?.classList.add('hidden');
+                }
+                updateJsonInput();
+            }
+
+            // Check of Δkg=0 maar geen gewichtsklassen ingevuld + komma vergeten
+            window.checkGewichtsklassenWarning = function(input) {
+                const item = input.closest('.gewichtsklasse-item');
+                const maxKgInput = item.querySelector('.max-kg-input');
+                const warning = item.querySelector('.gewichten-warning');
+                const kommaWarning = item.querySelector('.komma-warning');
+                const maxKg = parseFloat(maxKgInput?.value) || 0;
+                const gewichten = input.value.trim();
+
+                // Toon warning als Δkg=0 maar geen gewichtsklassen ingevuld
+                if (maxKg === 0 && !gewichten) {
+                    warning?.classList.remove('hidden');
+                    input.classList.add('border-red-400');
+                } else {
+                    warning?.classList.add('hidden');
+                    input.classList.remove('border-red-400');
+                }
+
+                // Check op vergeten komma: "-20 -23" of "20 23" in een enkele entry
+                let kommaFout = false;
+                if (gewichten) {
+                    const entries = gewichten.split(',').map(g => g.trim()).filter(g => g);
+                    for (const entry of entries) {
+                        if (/[+-]?\d+(\.\d+)?\s+[+-]?\d/.test(entry)) {
+                            kommaFout = true;
+                            break;
+                        }
+                    }
+                }
+                if (kommaFout) {
+                    if (!kommaWarning) {
+                        const warn = document.createElement('p');
+                        warn.className = 'komma-warning text-red-600 text-xs mt-1 font-bold';
+                        warn.textContent = '⚠ ' + __t.kommaVergeten;
+                        input.parentNode.appendChild(warn);
+                    } else {
+                        kommaWarning.classList.remove('hidden');
+                    }
+                    input.classList.add('border-red-400');
+                } else if (kommaWarning) {
+                    kommaWarning.classList.add('hidden');
+                }
+
+                // Update ook systeem-beschikbaarheid (gewichten gewijzigd)
+                checkSysteemBeschikbaarheid(item);
+
+                updateJsonInput();
+            }
+
+            // Check of eliminatie/kruisfinale beschikbaar zijn (vereisen vaste gewichtsklassen + Δlft=0)
+            window.checkSysteemBeschikbaarheid = function(item) {
+                const maxKgInput = item.querySelector('.max-kg-input');
+                const maxLftInput = item.querySelector('.max-lft-input');
+                const gewichtenInput = item.querySelector('.gewichten-input');
+                const systeemSelect = item.querySelector('.systeem-select');
+                if (!systeemSelect) return;
+
+                const maxKg = parseFloat(maxKgInput?.value) || 0;
+                const maxLft = parseInt(maxLftInput?.value) || 0;
+                const gewichten = gewichtenInput?.value?.trim() || '';
+                const beschikbaar = maxKg === 0 && maxLft === 0 && gewichten.length > 0;
+
+                // Eliminatie en kruisfinale options
+                const eliminatieOption = systeemSelect.querySelector('option[value="eliminatie"]');
+                const kruisfinaleOption = systeemSelect.querySelector('option[value="poules_kruisfinale"]');
+
+                if (eliminatieOption) {
+                    eliminatieOption.disabled = !beschikbaar;
+                }
+                if (kruisfinaleOption) {
+                    kruisfinaleOption.disabled = !beschikbaar;
+                }
+
+                // Als huidig geselecteerd systeem niet meer beschikbaar is → terugzetten naar poules
+                if (!beschikbaar && (systeemSelect.value === 'eliminatie' || systeemSelect.value === 'poules_kruisfinale')) {
+                    systeemSelect.value = 'poules';
+                    togglePuntenCompSelect(systeemSelect);
+                }
+
+                // Warning tonen/verbergen
+                let systeemWarning = item.querySelector('.systeem-warning');
+                if (!beschikbaar && (eliminatieOption || kruisfinaleOption)) {
+                    // Build specific warning message
+                    const redenen = [];
+                    if (maxKg > 0) redenen.push('Δkg=0');
+                    if (maxLft > 0) redenen.push('Δlft=0');
+                    if (!gewichten) redenen.push(__t.gewichtsklassenIngevuld);
+                    const msg = __t.eliminatieVereisen + ' ' + redenen.join(', ');
+
+                    if (!systeemWarning) {
+                        systeemWarning = document.createElement('p');
+                        systeemWarning.className = 'systeem-warning text-amber-600 text-xs mt-1';
+                        systeemSelect.parentNode.appendChild(systeemWarning);
+                    }
+                    systeemWarning.textContent = msg;
+                    systeemWarning.classList.remove('hidden');
+                } else if (systeemWarning) {
+                    systeemWarning.classList.add('hidden');
+                }
+            }
+
+            // Sorteer categorieën: jong→oud, gewicht licht→zwaar, band laag→hoog
+            function sorteerCategorieen(data) {
+                const bandFilterVolgorde = {
+                    '': 0, 'tm_wit': 1, 'tm_geel': 2, 'tm_oranje': 3, 'tm_groen': 4, 'tm_blauw': 5, 'tm_bruin': 6,
+                    'vanaf_geel': 10, 'vanaf_oranje': 11, 'vanaf_groen': 12, 'vanaf_blauw': 13, 'vanaf_bruin': 14, 'vanaf_zwart': 15
+                };
+
+                const sorted = Object.entries(data).sort((a, b) => {
+                    const [, itemA] = a;
+                    const [, itemB] = b;
+
+                    // 1. Leeftijd: jong → oud
+                    const leeftijdA = itemA.max_leeftijd || 99;
+                    const leeftijdB = itemB.max_leeftijd || 99;
+                    if (leeftijdA !== leeftijdB) return leeftijdA - leeftijdB;
+
+                    // 2. Gewicht: licht → zwaar (eerste gewicht uit array)
+                    const gewichtA = itemA.gewichten?.[0] ? parseFloat(itemA.gewichten[0].replace(/[^\d.]/g, '')) : 0;
+                    const gewichtB = itemB.gewichten?.[0] ? parseFloat(itemB.gewichten[0].replace(/[^\d.]/g, '')) : 0;
+                    if (gewichtA !== gewichtB) return gewichtA - gewichtB;
+
+                    // 3. Band: laag → hoog
+                    const bandA = bandFilterVolgorde[itemA.band_filter || ''] || 0;
+                    const bandB = bandFilterVolgorde[itemB.band_filter || ''] || 0;
+                    return bandA - bandB;
+                });
+                return sorted;
+            }
+
+            // Single template function for all categories (DRY principle)
+            function createCategorieElement(key, item) {
+                const div = document.createElement('div');
+                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
+                div.dataset.key = key;
+                div.draggable = true;
+
+                const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
+                const label = item.label || '';
+                const geslacht = item.geslacht || 'gemengd';
+                const toonLabel = item.toon_label_in_titel ?? true;
+                const maxKg = item.max_kg_verschil || 0;
+                const maxLft = item.max_leeftijd_verschil || 0;
+                const maxBand = item.max_band_verschil || 0;
+                const bandGrens = item.band_grens || '';
+                const bandVerschil1 = item.band_verschil_beginners ?? 1;
+
+                // Support both old band_tot and new band_filter
+                let bandFilter = item.band_filter || item.band_tot || '';
+                if (bandFilter && !bandFilter.includes('_')) {
+                    bandFilter = 'tm_' + bandFilter;
+                }
+
+                // Get wedstrijd systeem from initieleWedstrijdSysteem
+                const systeem = window.initieleWedstrijdSysteem?.[key] || 'poules';
+                const pcAantal = window.initialePuntenCompWedstrijden?.[key] || 4;
+
+                const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
+                const dynamischHidden = maxKg > 0 ? '' : 'hidden';
+
+                div.innerHTML = `
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
+                        <div class="flex items-center gap-1">
+                            <label class="text-gray-600 text-sm">Naam:</label>
+                            <input type="text" name="gewichtsklassen_label[${key}]"
+                                   value="${label}"
+                                   placeholder="Categorie naam"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-40">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="checkbox" name="gewichtsklassen_toon_label[${key}]"
+                                   class="toon-label-checkbox"
+                                   ${toonLabel ? 'checked' : ''}>
+                            <label class="text-gray-500 text-xs">in titel</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
+                            <input type="number" name="gewichtsklassen_leeftijd[${key}]"
+                                   value="${leeftijdValue}"
+                                   placeholder="99"
+                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                   min="5" max="99">
+                            <span class="text-xs text-gray-500">jr</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select name="gewichtsklassen_geslacht[${key}]"
+                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
+                                <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
+                                <option value="M" ${geslacht === 'M' ? 'selected' : ''}>M</option>
+                                <option value="V" ${geslacht === 'V' ? 'selected' : ''}>V</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <select name="gewichtsklassen_band_filter[${key}]"
+                                    class="band-filter-select border rounded px-1 py-1 text-xs bg-white"
+                                    title="Band filter (hard criterium)">
+                                <option value="" ${!bandFilter ? 'selected' : ''}>Alle</option>
+                                <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>≤wit</option>
+                                <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>≤geel</option>
+                                <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>≤oranje</option>
+                                <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>≤groen</option>
+                                <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>≥geel</option>
+                                <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>≥oranje</option>
+                                <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>≥groen</option>
+                                <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>≥blauw</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <select name="wedstrijd_systeem[${key}]"
+                                    class="systeem-select border rounded px-2 py-1 text-sm bg-white"
+                                    onchange="togglePuntenCompSelect(this); checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item'))"
+                                    ${window.isWimpelAbo ? 'disabled' : ''}>
+                                <option value="punten_competitie" ${window.isWimpelAbo || systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
+                                ${!window.isWimpelAbo ? `<option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
+                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale</option>
+                                <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>` : ''}
+                            </select>
+                            ${window.isWimpelAbo ? `<input type="hidden" name="wedstrijd_systeem[${key}]" value="punten_competitie">` : ''}
+                            <select name="punten_competitie_wedstrijden[${key}]"
+                                    class="pc-aantal-select border rounded px-1 py-1 text-xs bg-white ${systeem === 'punten_competitie' ? '' : 'hidden'}"
+                                    title="Aantal wedstrijden per judoka">
+                                <option value="3" ${pcAantal == 3 ? 'selected' : ''}>3x</option>
+                                <option value="4" ${pcAantal == 4 ? 'selected' : ''}>4x</option>
+                                <option value="5" ${pcAantal == 5 ? 'selected' : ''}>5x</option>
+                            </select>
+                            <button type="button" class="remove-categorie text-red-400 hover:text-red-600 text-lg ml-1" title="Verwijder categorie">&times;</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
+                            <input type="number" name="gewichtsklassen_max_kg[${key}]"
+                                   value="${maxKg}"
+                                   class="max-kg-input w-14 border rounded px-2 py-1.5 text-center text-sm"
+                                   min="0" max="10" step="0.5"
+                                   onchange="toggleGewichtsklassen(this)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
+                            <input type="number" name="gewichtsklassen_max_lft[${key}]"
+                                   value="${maxLft}"
+                                   class="max-lft-input w-14 border rounded px-2 py-1.5 text-center text-sm"
+                                   min="0" max="5" step="1"
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule"
+                                   onchange="checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item')); updateJsonInput()">
+                        </div>
+                        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
+                            <select name="gewichtsklassen_band_grens[${key}]"
+                                    class="band-grens-select border rounded px-2 py-1 text-sm bg-white"
+                                    title="Tot welke band geldt het eerste verschil">
+                                <option value="" ${!bandGrens ? 'selected' : ''}>-</option>
+                                <option value="wit" ${bandGrens === 'wit' ? 'selected' : ''}>wit</option>
+                                <option value="geel" ${bandGrens === 'geel' ? 'selected' : ''}>geel</option>
+                                <option value="oranje" ${bandGrens === 'oranje' ? 'selected' : ''}>oranje</option>
+                            </select>
+                            <label class="text-gray-600 text-sm">Δ:</label>
+                            <input type="number" name="gewichtsklassen_band_verschil_1[${key}]"
+                                   value="${bandVerschil1}"
+                                   class="band-verschil-1-input w-12 border rounded px-2 py-1 text-center text-sm"
+                                   min="0" max="3" step="1"
+                                   title="Max band verschil voor beginners">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δband:</label>
+                            <input type="number" name="gewichtsklassen_max_band[${key}]"
+                                   value="${maxBand}"
+                                   class="max-band-input w-12 border rounded px-2 py-1.5 text-center text-sm"
+                                   min="0" max="6" step="1"
+                                   title="0 = geen limiet, max band verschil algemeen">
+                        </div>
+                        <div class="gewichten-container flex-1 ${gewichtenHidden}">
+                            <input type="text" name="gewichtsklassen[${key}]"
+                                   value="${(item.gewichten || []).join(', ')}"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
+                                   placeholder="-20, -23, -26, +26"
+                                   onchange="checkGewichtsklassenWarning(this)">
+                            <div class="gewichten-warning hidden text-red-600 text-xs mt-1">
+                                ⚠️ Δkg=0 maar geen gewichtsklassen ingevuld
+                            </div>
+                        </div>
+                        <div class="dynamisch-label text-sm text-blue-600 italic ${dynamischHidden}">
+                            Dynamische indeling
+                        </div>
+                    </div>
+                `;
+                return div;
+            }
+
+            function renderCategorieen(data, sorteer = true) {
+                container.innerHTML = '';
+                const entries = sorteer ? sorteerCategorieen(data) : Object.entries(data);
+                for (const [key, item] of entries) {
+                    container.appendChild(createCategorieElement(key, item));
+                }
+                // Check alle gewichtsklassen warnings na render
+                container.querySelectorAll('.gewichten-input').forEach(input => {
+                    checkGewichtsklassenWarning(input);
+                });
+                // Check systeem beschikbaarheid na render
+                container.querySelectorAll('.gewichtsklasse-item').forEach(item => {
+                    checkSysteemBeschikbaarheid(item);
+                });
+                updateJsonInput();
+            }
+
+            // Initial load - render saved categories
+            if (window.initieleGewichtsklassen && Object.keys(window.initieleGewichtsklassen).length > 0) {
+                renderCategorieen(window.initieleGewichtsklassen, false);
+            }
+
+            // Eigen presets
+            const presetsDropdown = document.getElementById('eigen-presets-dropdown');
+            let eigenPresets = [];
+
+            // Load user presets on page load (only for organisator)
+            // Opgeslagen eigen preset ID (uit gewichtsklassen JSON)
+            const opgeslagenEigenPresetId = <?php echo e($eigenPresetId ?? 'null'); ?>;
+
+            // Request counter om race conditions te voorkomen
+            let presetRequestId = 0;
+
+            // Load presets. Optional selectPresetId to select after loading (used after saving new preset)
+            async function loadEigenPresets(selectPresetId = null) {
+                <?php if(Auth::guard('organisator')->check()): ?>
+                const thisRequestId = ++presetRequestId;
+                try {
+                    const response = await fetch('<?php echo e(route("organisator.presets.index", ["organisator" => $toernooi->organisator])); ?>', {
+                        credentials: 'same-origin'
+                    });
+
+                    // Als er een nieuwere request is, negeer deze response
+                    if (thisRequestId !== presetRequestId) return;
+
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            eigenPresets = await response.json();
+                            presetsDropdown.innerHTML = '<option value="">' + __t.eigenPresetPlaceholder + '</option>';
+                            eigenPresets.forEach(preset => {
+                                const option = document.createElement('option');
+                                option.value = String(preset.id);
+                                option.textContent = preset.naam;
+                                presetsDropdown.appendChild(option);
+                            });
+
+                            // Determine which preset to select: passed parameter, or initial saved preset
+                            const presetIdToSelect = selectPresetId || opgeslagenEigenPresetId;
+                            if (presetIdToSelect) {
+                                const presetToSelect = eigenPresets.find(p => String(p.id) === String(presetIdToSelect));
+                                if (presetToSelect) {
+                                    huidigePresetId = presetToSelect.id;
+                                    huidigePresetNaam = presetToSelect.naam;
+                                    presetsDropdown.value = String(presetToSelect.id);
+                                    updateEigenPresetRadio(presetToSelect.naam, true);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('loadEigenPresets error:', e);
+                }
+                <?php endif; ?>
+            }
+            loadEigenPresets();
+
+            // Track currently loaded preset
+            let huidigePresetId = opgeslagenEigenPresetId;
+            let huidigePresetNaam = null;
+
+            // DOM elements for eigen preset radio
+            const eigenPresetRadioLabel = document.getElementById('eigen-preset-radio-label');
+            const eigenPresetNaamDisplay = document.getElementById('eigen-preset-naam-display');
+            const eigenPresetRadio = document.querySelector('input[name="categorie_type"][value="eigen"]');
+
+            // Show/hide eigen preset radio button with name
+            function updateEigenPresetRadio(naam, activate = false) {
+                if (naam) {
+                    eigenPresetNaamDisplay.textContent = naam;
+                    eigenPresetRadioLabel.style.display = '';
+                    if (activate) {
+                        eigenPresetRadio.checked = true;
+                        // Also update Alpine state
+                        const alpineRoot = document.querySelector('[x-data*="categorieType"]');
+                        if (alpineRoot && alpineRoot._x_dataStack) {
+                            alpineRoot._x_dataStack[0].categorieType = 'eigen';
+                        }
+                    }
+                } else {
+                    eigenPresetRadioLabel.style.display = 'none';
+                }
+                updateJsonInput();
+            }
+
+            // Load selected preset
+            presetsDropdown.addEventListener('change', () => {
+                const presetId = presetsDropdown.value;
+                if (!presetId) {
+                    huidigePresetId = null;
+                    huidigePresetNaam = null;
+                    updateEigenPresetRadio(null);
+                    return;
+                }
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                if (!preset) return;
+
+                if (confirm(__t.confirmLoadPreset.replace(':naam', preset.naam))) {
+                    renderCategorieen(preset.configuratie);
+                    huidigePresetId = preset.id;
+                    huidigePresetNaam = preset.naam;
+                    // Show and activate eigen preset radio
+                    updateEigenPresetRadio(preset.naam, true);
+                } else {
+                    // User cancelled - reset to previous state
+                    presetsDropdown.value = huidigePresetId || '';
+                }
+            });
+
+            // Preset modal helpers
+            const presetModal = document.getElementById('preset-save-modal');
+            const presetModalTitle = document.getElementById('preset-modal-title');
+            const presetModalContent = document.getElementById('preset-modal-content');
+
+            function showPresetModal(title, content) {
+                presetModalTitle.textContent = title;
+                presetModalContent.innerHTML = content;
+                presetModal.classList.remove('hidden');
+            }
+
+            function hidePresetModal() {
+                presetModal.classList.add('hidden');
+                // Blur focus om scroll naar andere elementen te voorkomen
+                document.activeElement?.blur();
+            }
+
+            // Close modal on backdrop click
+            presetModal.addEventListener('click', (e) => {
+                if (e.target === presetModal) hidePresetModal();
+            });
+
+            // Collect current configuration
+            function collectConfiguratie() {
+                const configuratie = {};
+                container.querySelectorAll('.gewichtsklasse-item').forEach(item => {
+                    const key = item.dataset.key;
+                    configuratie[key] = {
+                        max_leeftijd: parseInt(item.querySelector('.leeftijd-input')?.value) || 99,
+                        label: item.querySelector('.label-input')?.value || key,
+                        geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
+                        max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
+                        max_leeftijd_verschil: parseInt(item.querySelector('.max-lft-input')?.value) || 0,
+                        max_band_verschil: parseInt(item.querySelector('.max-band-input')?.value) || 0,
+                        band_grens: item.querySelector('.band-grens-select')?.value || '',
+                        band_verschil_beginners: parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1,
+                        band_filter: item.querySelector('.band-filter-select')?.value || '',
+                        gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
+                        wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',
+                        punten_competitie_wedstrijden: parseInt(item.querySelector('.pc-aantal-select')?.value) || 4,
+                    };
+                });
+                return configuratie;
+            }
+
+            // Delete preset button (moet vóór savePreset staan voor forward reference)
+            const deletePresetBtn = document.getElementById('btn-delete-preset');
+
+            // Show/hide delete button based on selection
+            function updateDeleteButton() {
+                const presetId = presetsDropdown.value;
+                if (presetId) {
+                    deletePresetBtn.classList.remove('hidden');
+                } else {
+                    deletePresetBtn.classList.add('hidden');
+                }
+            }
+
+            // Save preset to server - SIMPEL
+            async function savePreset(naam, overschrijven = false) {
+                const configuratie = collectConfiguratie();
+
+                try {
+                    const response = await fetch('<?php echo e(route("organisator.presets.store", ["organisator" => $toernooi->organisator])); ?>', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+                        },
+                        body: JSON.stringify({ naam, configuratie, overschrijven })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // 1. Sluit modal
+                        hidePresetModal();
+
+                        // 2. Toon success
+                        showAppToast(overschrijven ? '✓ ' + __t.presetBijgewerkt : '✓ ' + __t.presetOpgeslagen, 'success');
+
+                        // 3. Update tracking VOORDAT we presets laden
+                        huidigePresetId = data.id;
+                        huidigePresetNaam = data.naam;
+
+                        // 4. Laad presets opnieuw van server (met nieuwe preset) en selecteer
+                        await loadEigenPresets(data.id);
+
+                        // 5. Update delete button
+                        updateDeleteButton();
+                    } else {
+                        showAppToast('✗ ' + (data.message || __t.konPresetNietOpslaan), 'error');
+                    }
+                } catch (e) {
+                    console.error(__t.foutBijOpslaan + ':', e);
+                    showAppToast('✗ ' + __t.erGingIetsMisBijOpslaan, 'error');
+                }
+            }
+
+            // Save current config as preset
+            document.getElementById('btn-save-preset').addEventListener('click', () => {
+                if (huidigePresetId && huidigePresetNaam) {
+                    // Show 3-button modal
+                    showPresetModal(__t.presetOpslaan, `
+                        <p class="mb-4 text-gray-600">${__t.jeHebtGeladen.replace(':naam', huidigePresetNaam)}</p>
+                        <div class="flex flex-col gap-2">
+                            <button type="button" onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                                📝 ${__t.overschrijven.replace(':naam', huidigePresetNaam)}
+                            </button>
+                            <button type="button" onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                                ➕ ${__t.nieuwePresetMaken}
+                            </button>
+                            <button type="button" onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                                ${__t.annuleren}
+                            </button>
+                        </div>
+                    `);
+                } else {
+                    // Show new preset input directly
+                    showNewPresetInput();
+                }
+            });
+
+            // Show input for new preset name
+            window.showNewPresetInput = function() {
+                showPresetModal(__t.nieuwePreset, `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">${__t.naamVoorPreset}</label>
+                        <input type="text" id="new-preset-naam" class="w-full border rounded px-3 py-2" placeholder="Bijv. Mijn toernooi preset" autofocus>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                            💾 ${__t.opslaan}
+                        </button>
+                        <button type="button" onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                            ${__t.annuleren}
+                        </button>
+                    </div>
+                `);
+                setTimeout(() => document.getElementById('new-preset-naam')?.focus(), 100);
+            };
+
+            // Save new preset from input
+            window.saveNewPreset = function() {
+                const input = document.getElementById('new-preset-naam');
+                const naam = input?.value?.trim();
+                if (!naam) {
+                    showAppToast(__t.vulNaamIn, 'error');
+                    return;
+                }
+                savePreset(naam, false);
+            };
+
+            // Make savePreset and hidePresetModal available globally
+            window.savePreset = savePreset;
+            window.hidePresetModal = hidePresetModal;
+
+            // Update delete button visibility when dropdown changes
+            presetsDropdown.addEventListener('change', () => {
+                updateDeleteButton();
+            });
+
+            // Delete preset
+            deletePresetBtn.addEventListener('click', async () => {
+                const presetId = presetsDropdown.value;
+                if (!presetId) return;
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                const presetNaam = preset?.naam || 'deze preset';
+
+                if (!confirm(__t.confirmDeletePreset.replace(':naam', presetNaam))) return;
+
+                try {
+                    const response = await fetch(`<?php echo e(url('organisator/presets')); ?>/${presetId}`, {
+                        method: 'DELETE',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+                        }
+                    });
+
+                    if (response.ok) {
+                        showAppToast('✓ ' + __t.presetVerwijderd, 'success');
+                        // Reset state
+                        if (huidigePresetId == presetId) {
+                            huidigePresetId = null;
+                            huidigePresetNaam = null;
+                            updateEigenPresetRadio(null);
+                        }
+                        // Reload presets
+                        await loadEigenPresets();
+                        updateDeleteButton();
+                    } else {
+                        const data = await response.json();
+                        showAppToast('✗ ' + (data.error || __t.konPresetNietVerwijderen), 'error');
+                    }
+                } catch (e) {
+                    console.error(__t.foutBijVerwijderen + ':', e);
+                    showAppToast('✗ ' + __t.erGingIetsMis, 'error');
+                }
+            });
+
+            // Add category - uses same template function as renderCategorieen (DRY)
+            document.getElementById('add-categorie').addEventListener('click', () => {
+                const newKey = 'custom_' + Date.now();
+                // Default values for new category (dynamic grouping enabled)
+                const newItem = {
+                    label: '',
+                    max_leeftijd: 99,
+                    geslacht: 'gemengd',
+                    max_kg_verschil: 3,
+                    max_leeftijd_verschil: 2,
+                    max_band_verschil: 2,
+                    band_grens: 'geel',
+                    band_verschil_beginners: 1,
+                    band_filter: '',
+                    gewichten: [],
+                    toon_label_in_titel: true
+                };
+                container.appendChild(createCategorieElement(newKey, newItem));
+                updateJsonInput();
+            });
+
+            // Remove category
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-categorie')) {
+                    if (confirm(__t.confirmVerwijderCategorie)) {
+                        e.target.closest('.gewichtsklasse-item').remove();
+                        updateJsonInput();
+                    }
+                }
+            });
+
+            // Update JSON on any input change in categories container
+            container.addEventListener('input', (e) => {
+                updateJsonInput();
+            });
+            container.addEventListener('change', (e) => {
+                updateJsonInput();
+            });
+
+            // Drag & Drop for reordering categories
+            let draggedItem = null;
+
+            container.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.gewichtsklasse-item');
+                if (item) {
+                    draggedItem = item;
+                    item.classList.add('opacity-50', 'border-dashed', 'border-blue-400');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            container.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.gewichtsklasse-item');
+                if (item) {
+                    item.classList.remove('opacity-50', 'border-dashed', 'border-blue-400');
+                }
+                draggedItem = null;
+                // Remove all drag-over styling
+                container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                    el.classList.remove('border-t-4', 'border-t-blue-500');
+                });
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const targetItem = e.target.closest('.gewichtsklasse-item');
+                if (targetItem && targetItem !== draggedItem) {
+                    // Remove previous indicators
+                    container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                        el.classList.remove('border-t-4', 'border-t-blue-500');
+                    });
+                    // Add indicator to target
+                    targetItem.classList.add('border-t-4', 'border-t-blue-500');
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetItem = e.target.closest('.gewichtsklasse-item');
+                if (targetItem && draggedItem && targetItem !== draggedItem) {
+                    // Get positions
+                    const items = [...container.querySelectorAll('.gewichtsklasse-item')];
+                    const draggedIndex = items.indexOf(draggedItem);
+                    const targetIndex = items.indexOf(targetItem);
+
+                    // Insert before or after based on position
+                    if (draggedIndex < targetIndex) {
+                        targetItem.after(draggedItem);
+                    } else {
+                        targetItem.before(draggedItem);
+                    }
+
+                    // Update JSON
+                    updateJsonInput();
+                }
+                // Remove indicators
+                container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                    el.classList.remove('border-t-4', 'border-t-blue-500');
+                });
+            });
+
+            // Initial update
+            updateJsonInput();
+        });
+        </script>
+
+        <!-- ACTIES -->
+        <div class="flex justify-between items-center">
+            <a href="<?php echo e(route('toernooi.show', $toernooi->routeParams())); ?>" class="text-gray-600 hover:text-gray-800">
+                <?php echo e(__('Annuleren')); ?>
+
+            </a>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
+                <?php echo e(__('Instellingen Opslaan')); ?>
+
+            </button>
+        </div>
+    </form>
+    </div>
+
+    <!-- TAB: ORGANISATIE -->
+    <div x-show="activeTab === 'organisatie'" x-cloak>
+
+    <!-- TOERNOOI PAKKET -->
+    <?php if(auth()->guard('organisator')->check()): ?>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Toernooi Pakket')); ?></h2>
+
+        <?php if($toernooi->isPaidTier()): ?>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-green-600 text-xl">✓</span>
+                    <span class="font-bold text-green-800"><?php echo e(__('Betaald Pakket')); ?></span>
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm"><?php echo e($toernooi->paid_tier); ?></span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Maximum judoka\'s')); ?></span>
+                        <p class="text-xl font-bold text-green-700"><?php echo e($toernooi->paid_max_judokas); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Huidige judoka\'s')); ?></span>
+                        <p class="text-xl font-bold text-gray-700"><?php echo e($toernooi->judokas()->count()); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Betaald op')); ?></span>
+                        <p class="text-xl font-bold text-gray-700"><?php echo e($toernooi->paid_at?->format('d-m-Y') ?? '-'); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Print/Noodplan')); ?></span>
+                        <p class="text-xl font-bold text-green-600"><?php echo e(__('Beschikbaar')); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            
+            <?php
+                $freemiumService = app(\App\Services\FreemiumService::class);
+                $upgradeOptions = collect($freemiumService->getUpgradeOptions($toernooi))
+                    ->filter(fn($opt) => $opt['max'] > $toernooi->paid_max_judokas);
+            ?>
+
+            <?php if($upgradeOptions->isNotEmpty()): ?>
+            <div class="mt-4 pt-4 border-t">
+                <p class="text-gray-600 mb-3"><?php echo e(__('Meer judoka\'s nodig? Upgrade naar een hoger pakket:')); ?></p>
+                <a href="<?php echo e(route('toernooi.upgrade', $toernooi->routeParams())); ?>" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                    </svg>
+                    <?php echo e(__('Upgraden')); ?>
+
+                </a>
+            </div>
+            <?php endif; ?>
+
+        <?php else: ?>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-blue-600 text-xl">ℹ</span>
+                    <span class="font-bold text-blue-800"><?php echo e(__('Gratis Pakket')); ?></span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Maximum judoka\'s')); ?></span>
+                        <p class="text-xl font-bold text-blue-700"><?php echo e(\App\Services\FreemiumService::FREE_MAX_JUDOKAS); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Huidige judoka\'s')); ?></span>
+                        <p class="text-xl font-bold text-gray-700"><?php echo e($toernooi->judokas()->count()); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Plaatsen over')); ?></span>
+                        <?php $remaining = \App\Services\FreemiumService::FREE_MAX_JUDOKAS - $toernooi->judokas()->count(); ?>
+                        <p class="text-xl font-bold <?php echo e($remaining <= 10 ? 'text-orange-600' : 'text-gray-700'); ?>"><?php echo e(max(0, $remaining)); ?></p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600"><?php echo e(__('Print/Noodplan')); ?></span>
+                        <p class="text-sm text-gray-500"><?php echo e(__('Beschikbaar bij betaald pakket')); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-lg"><?php echo e(__('Meer judoka\'s nodig?')); ?></p>
+                        <p class="text-blue-100 text-sm"><?php echo e(__('Upgrade naar een betaald pakket vanaf €20')); ?></p>
+                    </div>
+                    <a href="<?php echo e(route('toernooi.upgrade', $toernooi->routeParams())); ?>" class="px-4 py-2 bg-white text-blue-600 rounded font-bold hover:bg-blue-50">
+                        <?php echo e(__('Upgraden')); ?>
+
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- VRIJWILLIGERS (device toegangen met binding) -->
+    <?php echo $__env->make('pages.toernooi.partials.device-toegangen', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <!-- TEMPLATE OPSLAAN -->
+    <?php if(auth()->guard('organisator')->check()): ?>
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Opslaan als Template')); ?></h2>
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.')); ?>
+
+        </p>
+
+        <div x-show="!showForm" class="flex gap-4">
+            <button type="button" @click="showForm = true" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                <?php echo e(__('Nieuwe template maken')); ?>
+
+            </button>
+        </div>
+
+        <div x-show="showForm" x-cloak class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-medium mb-1"><?php echo e(__('Template naam')); ?> *</label>
+                <input type="text" x-model="naam" placeholder="<?php echo e(__('Bijv. Intern toernooi, Open toernooi')); ?>" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-1"><?php echo e(__('Beschrijving (optioneel)')); ?></label>
+                <input type="text" x-model="beschrijving" placeholder="<?php echo e(__('Korte omschrijving van dit type toernooi')); ?>" class="w-full border rounded px-3 py-2">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" @click="save()" :disabled="loading || !naam.trim()"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <span x-show="!loading"><?php echo e(__('Opslaan')); ?></span>
+                    <span x-show="loading"><?php echo e(__('Bezig...')); ?></span>
+                </button>
+                <button type="button" @click="showForm = false; naam = ''; beschrijving = ''" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                    <?php echo e(__('Annuleren')); ?>
+
+                </button>
+            </div>
+            <p x-show="message" x-text="message" :class="success ? 'text-green-600' : 'text-red-600'" class="text-sm"></p>
+        </div>
+    </div>
+
+    <script>
+    function templateSave() {
+        const __t = {
+            templateOpgeslagen: <?php echo json_encode(__('Template opgeslagen!'), 15, 512) ?>,
+            foutBijOpslaan: <?php echo json_encode(__('Fout bij opslaan'), 15, 512) ?>,
+        };
+        return {
+            showForm: false,
+            naam: '',
+            beschrijving: '',
+            loading: false,
+            message: '',
+            success: false,
+            async save() {
+                this.loading = true;
+                this.message = '';
+                try {
+                    const res = await fetch('<?php echo e(route("toernooi.template.store", $toernooi->routeParams())); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        this.success = true;
+                        this.message = data.message || __t.templateOpgeslagen;
+                        this.naam = '';
+                        this.beschrijving = '';
+                        setTimeout(() => { this.showForm = false; this.message = ''; }, 2000);
+                    } else {
+                        this.success = false;
+                        this.message = data.error || __t.foutBijOpslaan;
+                    }
+                } catch (e) {
+                    this.success = false;
+                    this.message = __t.foutBijOpslaan;
+                }
+                this.loading = false;
+            }
+        }
+    }
+    </script>
+    <?php endif; ?>
+
+    <!-- PUBLIEKE APP -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Publieke app')); ?></h2>
+        <?php
+            $publiekUrl = route('publiek.index', [$toernooi->organisator->slug, $toernooi->slug]);
+        ?>
+        <div class="flex flex-wrap gap-4 items-center">
+            <a href="<?php echo e($publiekUrl); ?>" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <?php echo e(__('Bekijk publieke pagina')); ?>
+
+            </a>
+            <button type="button" onclick="navigator.clipboard.writeText('<?php echo e($publiekUrl); ?>').then(() => { this.textContent = 'Gekopieerd!'; setTimeout(() => { this.innerHTML = '<svg class=\'w-5 h-5 inline mr-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\'></path></svg>URL kopiëren'; }, 2000); })" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <?php echo e(__('URL kopiëren')); ?>
+
+            </button>
+            <form action="<?php echo e(route('toernooi.portaal.instellingen', $toernooi->routeParams())); ?>" method="POST" class="inline">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
+                <input type="hidden" name="portaal_modus" value="<?php echo e($toernooi->portaal_modus ?? 'mutaties'); ?>">
+                <input type="hidden" name="weegkaarten_publiek" value="<?php echo e($toernooi->weegkaarten_publiek ? '0' : '1'); ?>">
+                <button type="submit" class="px-4 py-2 rounded flex items-center gap-2 <?php echo e($toernooi->weegkaarten_publiek ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'); ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/>
+                    </svg>
+                    <?php echo e(__('Weegkaarten')); ?> <?php echo e($toernooi->weegkaarten_publiek ? __('aan') : __('uit')); ?>
+
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHAT SERVER (Reverb) -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Realtime Server (Reverb)')); ?></h2>
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Realtime updates voor alle interfaces: chat, live scores, beurtaanduiding, bracket updates.')); ?>
+
+        </p>
+
+        <!-- Health check -->
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full animate-pulse" :class="running ? 'bg-green-500' : 'bg-red-500'"></span>
+                <span class="font-medium" x-text="running ? 'Actief' : 'Gestopt'"></span>
+            </div>
+
+            <template x-if="!local">
+                <div class="flex gap-2">
+                    <button type="button" @click="start()" :disabled="running || loading"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
+                        <span x-show="!loading"><?php echo e(__('Start')); ?></span>
+                        <span x-show="loading">...</span>
+                    </button>
+                    <button type="button" @click="restart()" :disabled="loading"
+                            class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
+                        <span x-show="!loading"><?php echo e(__('Herstart')); ?></span>
+                        <span x-show="loading">...</span>
+                    </button>
+                    <button type="button" @click="stop()" :disabled="!running || loading"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
+                        <span x-show="!loading"><?php echo e(__('Stop')); ?></span>
+                        <span x-show="loading">...</span>
+                    </button>
+                </div>
+            </template>
+
+            <template x-if="local">
+                <span class="text-sm text-gray-500"><?php echo e(__('(Alleen beschikbaar op production server)')); ?></span>
+            </template>
+        </div>
+
+        <!-- Polling fallback info -->
+        <div class="rounded p-3 text-sm" :class="running ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'">
+            <template x-if="running">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <span><?php echo e(__('Realtime updates actief — publieke apps ontvangen direct nieuwe scores.')); ?></span>
+                </div>
+            </template>
+            <template x-if="!running">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    <span><?php echo e(__('Reverb is uitgevallen — publieke apps schakelen automatisch over op polling (elke 15 sec).')); ?></span>
+                </div>
+            </template>
+        </div>
+
+        <p class="text-sm text-gray-500 mt-3" x-show="message" x-text="message"></p>
+    </div>
+
+    <script>
+    function reverbStatus() {
+        const __t = {
+            konStatusNietOphalen: <?php echo json_encode(__('Kon status niet ophalen'), 15, 512) ?>,
+            foutBijStarten: <?php echo json_encode(__('Fout bij starten'), 15, 512) ?>,
+            foutBijHerstarten: <?php echo json_encode(__('Fout bij herstarten'), 15, 512) ?>,
+            foutBijStoppen: <?php echo json_encode(__('Fout bij stoppen'), 15, 512) ?>,
+        };
+        return {
+            running: false,
+            loading: false,
+            local: false,
+            message: '',
+            init() {
+                this.checkStatus();
+            },
+            async checkStatus() {
+                try {
+                    const res = await fetch('<?php echo e(route("toernooi.reverb.status", $toernooi->routeParams())); ?>', {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    this.running = data.running;
+                    this.local = data.local || false;
+                } catch (e) {
+                    this.message = __t.konStatusNietOphalen;
+                }
+            },
+            async start() {
+                this.loading = true;
+                try {
+                    const res = await fetch('<?php echo e(route("toernooi.reverb.start", $toernooi->routeParams())); ?>', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    this.message = data.message;
+                    await this.checkStatus();
+                } catch (e) {
+                    this.message = __t.foutBijStarten;
+                }
+                this.loading = false;
+            },
+            async restart() {
+                this.loading = true;
+                try {
+                    const res = await fetch('<?php echo e(route("toernooi.reverb.restart", $toernooi->routeParams())); ?>', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    this.message = data.message;
+                    await this.checkStatus();
+                } catch (e) {
+                    this.message = __t.foutBijHerstarten;
+                }
+                this.loading = false;
+            },
+            async stop() {
+                this.loading = true;
+                try {
+                    const res = await fetch('<?php echo e(route("toernooi.reverb.stop", $toernooi->routeParams())); ?>', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    this.message = data.message;
+                    await this.checkStatus();
+                } catch (e) {
+                    this.message = __t.foutBijStoppen;
+                }
+                this.loading = false;
+            }
+        }
+    }
+    </script>
+
+    <!-- INSCHRIJVING & PORTAAL -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Inschrijving & Portaal')); ?></h2>
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Bepaal hoe judoka\'s in het systeem komen en wat budoscholen zelf kunnen doen via het portaal.')); ?>
+
+        </p>
+
+        <form action="<?php echo e(route('toernooi.portaal.instellingen', $toernooi->routeParams())); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+
+            <div class="space-y-4">
+                <!-- Portaal Modus -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <label for="portaal_modus" class="block font-bold text-gray-800 mb-2"><?php echo e(__('Portaal modus')); ?></label>
+                    <select name="portaal_modus" id="portaal_modus"
+                            class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onchange="toggleMollieOptie()">
+                        <option value="uit" <?php echo e(($toernooi->portaal_modus ?? 'mutaties') === 'uit' ? 'selected' : ''); ?>>
+                            <?php echo e(__('Uit - Alleen bekijken (organisator beheert alles)')); ?>
+
+                        </option>
+                        <option value="mutaties" <?php echo e(($toernooi->portaal_modus ?? 'mutaties') === 'mutaties' ? 'selected' : ''); ?>>
+                            <?php echo e(__('Alleen mutaties - Budoscholen kunnen wijzigen, niet inschrijven')); ?>
+
+                        </option>
+                        <option value="volledig" <?php echo e(($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'selected' : ''); ?>>
+                            <?php echo e(__('Volledig - Budoscholen kunnen inschrijven én wijzigen')); ?>
+
+                        </option>
+                    </select>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <strong><?php echo e(__('Tip:')); ?></strong> <?php echo e(__('Budoscholen kunnen hun judoka\'s altijd bekijken, ongeacht deze instelling.')); ?>
+
+                    </p>
+                </div>
+
+                <!-- Uitleg per modus -->
+                <div class="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
+                    <strong><?php echo e(__('Wanneer welke modus?')); ?></strong>
+                    <ul class="list-disc ml-5 mt-1 space-y-1">
+                        <li><strong><?php echo e(__('Uit:')); ?></strong> <?php echo e(__('Je importeert zelf via CSV of voegt handmatig judoka\'s toe')); ?></li>
+                        <li><strong><?php echo e(__('Alleen mutaties:')); ?></strong> <?php echo e(__('Inschrijving via extern systeem, budoscholen corrigeren gewicht/band via portaal')); ?></li>
+                        <li><strong><?php echo e(__('Volledig:')); ?></strong> <?php echo e(__('Budoscholen schrijven zelf in via het portaal')); ?></li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg">
+                        <?php echo e(__('Opslaan')); ?>
+
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    function toggleMollieOptie() {
+        const modus = document.getElementById('portaal_modus').value;
+        const mollieSection = document.getElementById('mollie-section');
+        if (mollieSection) {
+            // Mollie optie alleen relevant bij 'volledig' modus
+            const hint = mollieSection.querySelector('.mollie-hint');
+            if (hint) {
+                hint.style.display = modus === 'volledig' ? 'none' : 'block';
+            }
+        }
+    }
+    // Init on page load
+    document.addEventListener('DOMContentLoaded', toggleMollieOptie);
+    </script>
+
+    <!-- ONLINE BETALINGEN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" id="mollie-section">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Online Betalingen')); ?></h2>
+
+        <!-- Hint als portaal niet op volledig staat -->
+        <div class="mollie-hint p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4 <?php echo e(($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'hidden' : ''); ?>">
+            <p class="text-yellow-800 text-sm">
+                <strong><?php echo e(__('Let op:')); ?></strong> <?php echo e(__('Online betalingen zijn alleen zinvol als het portaal op "Volledig" staat (nieuwe inschrijvingen).')); ?>
+
+                <?php echo e(__('Bij "Uit" of "Alleen mutaties" regel je de betaling extern.')); ?>
+
+            </p>
+        </div>
+
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka\'s definitief ingeschreven zijn.')); ?>
+
+        </p>
+
+        <form action="<?php echo e(route('toernooi.betalingen.instellingen', $toernooi->routeParams())); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                    <div>
+                        <h3 class="font-bold"><?php echo e(__('Online betalingen actief')); ?></h3>
+                        <p class="text-sm text-gray-500"><?php echo e(__('Coaches moeten betalen bij inschrijving')); ?></p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="betaling_actief" value="1" class="sr-only peer"
+                               <?php echo e($toernooi->betaling_actief ? 'checked' : ''); ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="inschrijfgeld" class="block text-gray-700 font-medium mb-1"><?php echo e(__('Inschrijfgeld per judoka')); ?></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">€</span>
+                            <input type="number" name="inschrijfgeld" id="inschrijfgeld" step="0.01" min="0"
+                                   value="<?php echo e(old('inschrijfgeld', $toernooi->inschrijfgeld ?? '15.00')); ?>"
+                                   class="w-full border rounded px-3 py-2 pl-8" placeholder="15.00">
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1"><?php echo e(__('Bijv. 15.00 voor €15 per judoka')); ?></p>
+                    </div>
+                </div>
+
+                <!-- Payment Provider Keuze -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <h3 class="font-bold mb-3"><?php echo e(__('Betaalprovider')); ?></h3>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-white transition <?php echo e(($toernooi->payment_provider ?? 'mollie') === 'mollie' ? 'border-blue-500 bg-blue-50' : ''); ?>">
+                            <input type="radio" name="payment_provider" value="mollie"
+                                   <?php echo e(($toernooi->payment_provider ?? 'mollie') === 'mollie' ? 'checked' : ''); ?>
+
+                                   class="mt-1">
+                            <div>
+                                <span class="font-medium">Mollie</span>
+                                <span class="text-gray-500 text-sm ml-1">— iDEAL, Bancontact, creditcard</span>
+                                <p class="text-xs text-gray-400"><?php echo e(__('Europa')); ?> | €0,29 + 0% <?php echo e(__('per transactie')); ?></p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-white transition <?php echo e(($toernooi->payment_provider ?? 'mollie') === 'stripe' ? 'border-blue-500 bg-blue-50' : ''); ?>">
+                            <input type="radio" name="payment_provider" value="stripe"
+                                   <?php echo e(($toernooi->payment_provider ?? 'mollie') === 'stripe' ? 'checked' : ''); ?>
+
+                                   class="mt-1">
+                            <div>
+                                <span class="font-medium">Stripe</span>
+                                <span class="text-gray-500 text-sm ml-1">— Creditcard, Google Pay, Apple Pay</span>
+                                <p class="text-xs text-gray-400"><?php echo e(__('Wereldwijd')); ?> | 1,5% + €0,25 <?php echo e(__('per transactie')); ?></p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Provider Account Koppeling -->
+                <?php if(($toernooi->payment_provider ?? 'mollie') === 'mollie'): ?>
+                
+                <div class="p-4 border rounded-lg <?php echo e($toernooi->mollie_onboarded ? 'bg-green-50 border-green-200' : 'bg-gray-50'); ?>">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold flex items-center gap-2">
+                                <?php if($toernooi->mollie_onboarded): ?>
+                                <span class="text-green-600">✓</span>
+                                <?php endif; ?>
+                                Mollie Account
+                            </h3>
+                            <?php if($toernooi->mollie_onboarded): ?>
+                            <p class="text-sm text-green-700">
+                                <?php echo e(__('Gekoppeld:')); ?> <?php echo e($toernooi->mollie_organization_name ?? __('Onbekend')); ?>
+
+                                <span class="text-gray-500">(<?php echo e($toernooi->mollie_mode); ?>)</span>
+                            </p>
+                            <?php else: ?>
+                            <p class="text-sm text-gray-500"><?php echo e(__('Koppel je Mollie account om betalingen te ontvangen')); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <?php if($toernooi->mollie_onboarded): ?>
+                            <form action="<?php echo e(route('toernooi.mollie.disconnect', $toernooi->routeParams())); ?>" method="POST" class="inline"
+                                  onsubmit="return confirm('<?php echo e(__('Weet je zeker dat je de Mollie koppeling wilt verbreken?')); ?>')">
+                                <?php echo csrf_field(); ?>
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    <?php echo e(__('Ontkoppelen')); ?>
+
+                                </button>
+                            </form>
+                            <?php else: ?>
+                            <a href="<?php echo e(route('toernooi.mollie.authorize', $toernooi->routeParams())); ?>" target="_blank"
+                               class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
+                                <span><?php echo e(__('Koppel Mollie')); ?></span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
+                
+                <?php
+                    $stripeConnected = $toernooi->stripe_account_id && $toernooi->mollie_mode === 'connect';
+                    $stripePending = $toernooi->stripe_account_id && $toernooi->mollie_mode !== 'connect';
+                ?>
+                <div class="p-4 border rounded-lg <?php echo e($stripeConnected ? 'bg-green-50 border-green-200' : ($stripePending ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50')); ?>">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold flex items-center gap-2">
+                                <?php if($stripeConnected): ?>
+                                <span class="text-green-600">✓</span>
+                                <?php elseif($stripePending): ?>
+                                <span class="text-yellow-600">⏳</span>
+                                <?php endif; ?>
+                                Stripe Account
+                            </h3>
+                            <?php if($stripeConnected): ?>
+                            <p class="text-sm text-green-700">
+                                <?php echo e(__('Gekoppeld — betalingen gaan direct naar jouw rekening')); ?>
+
+                            </p>
+                            <?php elseif($stripePending): ?>
+                            <p class="text-sm text-yellow-700">
+                                <?php echo e(__('Onboarding nog niet afgerond — klik opnieuw om verder te gaan')); ?>
+
+                            </p>
+                            <?php else: ?>
+                            <p class="text-sm text-gray-500"><?php echo e(__('Koppel je Stripe account om betalingen direct te ontvangen')); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <?php if($stripeConnected): ?>
+                            <form action="<?php echo e(route('toernooi.stripe.disconnect', $toernooi->routeParams())); ?>" method="POST" class="inline"
+                                  onsubmit="return confirm('<?php echo e(__('Weet je zeker dat je de Stripe koppeling wilt verbreken?')); ?>')">
+                                <?php echo csrf_field(); ?>
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    <?php echo e(__('Ontkoppelen')); ?>
+
+                                </button>
+                            </form>
+                            <?php else: ?>
+                            <a href="<?php echo e(route('toernooi.stripe.authorize', $toernooi->routeParams())); ?>"
+                               class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
+                                <span><?php echo e($stripePending ? __('Onboarding afronden') : __('Koppel Stripe')); ?></span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if($toernooi->betaling_actief): ?>
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h4 class="font-bold text-green-800 mb-2"><?php echo e(__('Betalingen overzicht')); ?></h4>
+                    <?php
+                        $totaalBetaald = $toernooi->betalingen()->where('status', 'paid')->sum('bedrag');
+                        $aantalBetaaldeJudokas = $toernooi->judokas()->whereNotNull('betaald_op')->count();
+                        $aantalOnbetaaldeJudokas = $toernooi->judokas()->whereNull('betaald_op')->where(function($q) {
+                            $q->whereNotNull('geboortejaar')
+                              ->whereNotNull('geslacht')
+                              ->whereNotNull('band')
+                              ->whereNotNull('gewicht');
+                        })->count();
+                    ?>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-2xl font-bold text-green-600">€<?php echo e(number_format($totaalBetaald, 2, ',', '.')); ?></p>
+                            <p class="text-sm text-gray-600"><?php echo e(__('Totaal ontvangen')); ?></p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-green-600"><?php echo e($aantalBetaaldeJudokas); ?></p>
+                            <p class="text-sm text-gray-600"><?php echo e(__('Betaalde judoka\'s')); ?></p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-orange-600"><?php echo e($aantalOnbetaaldeJudokas); ?></p>
+                            <p class="text-sm text-gray-600"><?php echo e(__('Wachtend op betaling')); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                    <?php echo e(__('Betaling Instellingen Opslaan')); ?>
+
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- BLOKTIJDEN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b"><?php echo e(__('Bloktijden')); ?></h2>
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.')); ?>
+
+        </p>
+
+        <form action="<?php echo e(route('toernooi.bloktijden', $toernooi->routeParams())); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b bg-gray-50">
+                            <th class="text-left py-2 px-3 font-medium"><?php echo e(__('Blok')); ?></th>
+                            <th class="text-left py-2 px-3 font-medium"><?php echo e(__('Weging Start')); ?></th>
+                            <th class="text-left py-2 px-3 font-medium"><?php echo e(__('Weging Einde')); ?></th>
+                            <th class="text-left py-2 px-3 font-medium"><?php echo e(__('Start Wedstrijden')); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-3 font-medium"><?php echo e(__('Blok')); ?> <?php echo e($blok->nummer); ?></td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[<?php echo e($blok->id); ?>][weging_start]"
+                                       value="<?php echo e($blok->weging_start?->format('H:i') ?? '08:00'); ?>"
+                                       step="900"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[<?php echo e($blok->id); ?>][weging_einde]"
+                                       value="<?php echo e($blok->weging_einde?->format('H:i') ?? '09:00'); ?>"
+                                       step="900"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[<?php echo e($blok->id); ?>][starttijd]"
+                                       value="<?php echo e($blok->starttijd?->format('H:i') ?? '09:00'); ?>"
+                                       step="900"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                        </tr>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <strong><?php echo e(__('Tip:')); ?></strong> <?php echo e(__('De weger ziet een countdown timer en krijgt een rode waarschuwing wanneer de weegtijd voorbij is. De weging wordt handmatig gesloten via de knop in de weging interface.')); ?>
+
+            </div>
+
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                    <?php echo e(__('Bloktijden Opslaan')); ?>
+
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TOERNOOI AFRONDEN -->
+    <div class="bg-green-50 border-2 border-green-300 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">🏆</span> <?php echo e(__('Toernooi Afronden')); ?>
+
+        </h2>
+        <?php if($toernooi->isAfgesloten()): ?>
+        <p class="text-green-700 mb-4">
+            <?php echo e(__('Dit toernooi is afgesloten op')); ?> <strong><?php echo e($toernooi->afgesloten_at->format('d-m-Y H:i')); ?></strong>.
+        </p>
+        <a href="<?php echo e(route('toernooi.afsluiten', $toernooi->routeParams())); ?>"
+           class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
+            <?php echo e(__('Bekijk Resultaten & Statistieken')); ?>
+
+        </a>
+        <?php else: ?>
+        <p class="text-green-700 mb-4">
+            <?php echo e(__('Na afloop van het toernooi kun je hier alles afronden. Je krijgt een overzicht van alle resultaten, statistieken en club rankings.')); ?>
+
+        </p>
+        <a href="<?php echo e(route('toernooi.afsluiten', $toernooi->routeParams())); ?>"
+           class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
+            <?php echo e(__('Toernooi Afronden & Resultaten Bekijken')); ?>
+
+        </a>
+        <?php endif; ?>
+    </div>
+
+    <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
+    <?php if($toernooi->weegkaarten_gemaakt_op): ?>
+    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">
+        <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">⚠️</span> <?php echo e(__('Noodknop: Heropen Voorbereiding')); ?>
+
+        </h2>
+        <p class="text-red-700 mb-4">
+            <?php echo e(__('Voorbereiding is afgerond op')); ?> <strong><?php echo e($toernooi->weegkaarten_gemaakt_op->format('d-m-Y H:i')); ?></strong>.
+            <?php echo e(__('Judoka\'s, poules en blokken zijn nu read-only.')); ?>
+
+        </p>
+
+        <div class="bg-red-100 border border-red-300 rounded p-3 mb-4 text-sm text-red-800">
+            <strong><?php echo e(__('LET OP - ALLEEN GEBRUIKEN BIJ NOOD!')); ?></strong>
+            <ul class="list-disc list-inside mt-2">
+                <li><?php echo e(__('Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!')); ?></li>
+                <li><?php echo e(__('Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden')); ?></li>
+                <li><?php echo e(__('Na wijzigingen: opnieuw "Maak weegkaarten" klikken')); ?></li>
+                <li><?php echo e(__('Oude geprinte weegkaarten zijn dan ONGELDIG')); ?></li>
+            </ul>
+        </div>
+
+        <button @click="showConfirm = true" x-show="!showConfirm"
+                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+            <?php echo e(__('Heropen Voorbereiding')); ?>
+
+        </button>
+
+        <div x-show="showConfirm" x-cloak class="bg-white border border-red-300 rounded-lg p-4 mt-4">
+            <p class="font-medium text-red-800 mb-3"><?php echo e(__('Bevestig met het organisator wachtwoord:')); ?></p>
+            <form action="<?php echo e(route('toernooi.heropen-voorbereiding', $toernooi->routeParams())); ?>" method="POST" class="flex items-end gap-3">
+                <?php echo csrf_field(); ?>
+                <div class="flex-1">
+                    <label class="block text-sm text-gray-600 mb-1"><?php echo e(__('Wachtwoord')); ?></label>
+                    <div class="relative">
+                        <input type="password" name="wachtwoord" x-model="wachtwoord" required
+                               class="w-full border rounded px-3 py-2 pr-10" placeholder="<?php echo e(__('Voer wachtwoord in')); ?>">
+                        <button type="button" onclick="togglePassword(this)" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                            <svg class="eye-closed h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
+                            <svg class="eye-open h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" :disabled="!wachtwoord"
+                        class="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold rounded-lg">
+                    <?php echo e(__('Bevestig Heropenen')); ?>
+
+                </button>
+                <button type="button" @click="showConfirm = false; wachtwoord = ''"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    <?php echo e(__('Annuleren')); ?>
+
+                </button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- NOODKNOP: RESET BLOK -->
+    <?php if($toernooi->blokken->isNotEmpty()): ?>
+    <div class="bg-orange-50 border-2 border-orange-300 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-orange-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">🔄</span> <?php echo e(__('Noodknop: Reset Blok naar Eind Voorbereiding')); ?>
+
+        </h2>
+        <p class="text-orange-700 mb-4">
+            <?php echo e(__('Reset een blok naar de status aan het einde van de voorbereiding. Handig als er iets mis is gegaan tijdens de wedstrijddag.')); ?>
+
+        </p>
+
+        <div class="bg-orange-100 border border-orange-300 rounded p-3 mb-4 text-sm text-orange-800">
+            <strong><?php echo e(__('Dit doet de reset:')); ?></strong>
+            <ul class="list-disc list-inside mt-2">
+                <li><?php echo e(__('Verwijdert alle wedstrijden van poules in dit blok')); ?></li>
+                <li><?php echo e(__('Reset doorstuur-status (poules worden weer grijs)')); ?></li>
+                <li><?php echo e(__('Reset zaalindeling (zaaloverzicht wordt leeg)')); ?></li>
+                <li><?php echo e(__('Judoka\'s en poule-indelingen blijven intact')); ?></li>
+            </ul>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <?php $__currentLoopData = $toernooi->blokken->sortBy('nummer'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php
+                $blokWedstrijden = $toernooi->poules()
+                    ->where('blok_id', $blok->id)
+                    ->withCount('wedstrijden')
+                    ->get()
+                    ->sum('wedstrijden_count');
+            ?>
+            <form action="<?php echo e(route('toernooi.blok.reset-blok', $toernooi->routeParams())); ?>" method="POST" class="inline">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="blok_nummer" value="<?php echo e($blok->nummer); ?>">
+                <button type="submit"
+                        class="px-4 py-2 <?php echo e($blokWedstrijden > 0 ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-400 cursor-not-allowed'); ?> text-white font-bold rounded-lg"
+                        <?php echo e($blokWedstrijden == 0 ? 'disabled' : ''); ?>
+
+                        onclick="return confirm('<?php echo e(__('Reset Blok :nummer?', ['nummer' => $blok->nummer])); ?>\n\n<?php echo e(__(':aantal wedstrijden worden verwijderd.', ['aantal' => $blokWedstrijden])); ?>\n<?php echo e(__('Poules blijven op hun mat.')); ?>\n<?php echo e(__('Status wordt teruggezet naar eind voorbereiding.')); ?>')">
+                    <?php echo e(__('Blok')); ?> <?php echo e($blok->nummer); ?> <?php echo e($blokWedstrijden > 0 ? "({$blokWedstrijden}w)" : __('(geen wed.)')); ?>
+
+                </button>
+            </form>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    </div><!-- End TAB: ORGANISATIE -->
+
+    <!-- TAB: NOODPLAN -->
+    <div x-show="activeTab === 'noodplan'" x-cloak>
+
+    <!-- ==================== VOORBEREIDING ==================== -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📋</span> <?php echo e(__('VOORBEREIDING')); ?>
+
+        </h2>
+
+        <!-- Printen -->
+        <h3 class="font-semibold text-gray-700 mb-3"><?php echo e(__('Printen')); ?></h3>
+        <div class="space-y-3 mb-6">
+            <!-- 1. Poules printen -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('1. Poules printen (na voorbereiding)')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Per blok, per mat')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<?php echo e(route('toernooi.noodplan.poules', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"><?php echo e(__('Alle')); ?></a>
+                    <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"><?php echo e($blok->nummer); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+
+            <!-- 2. Weeglijsten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('2. Weeglijsten')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Alfabetisch per blok, met invulvak')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<?php echo e(route('toernooi.noodplan.weeglijst', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"><?php echo e(__('Alle')); ?></a>
+                    <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.weeglijst', $toernooi->routeParamsWith(['blok' => $blok->nummer]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"><?php echo e($blok->nummer); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+
+            <!-- 3. Weegkaarten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('3. Weegkaarten')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Per judoka (QR + gegevens)')); ?></p>
+                </div>
+                <div class="flex gap-2 relative">
+                    <a href="<?php echo e(route('toernooi.noodplan.weegkaarten', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"><?php echo e(__('Alle')); ?></a>
+                    <div class="relative">
+                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"><?php echo e(__('Per club')); ?> ▼</button>
+                        <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                            <?php $__currentLoopData = $clubs ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $club): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <a href="<?php echo e(route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club]))); ?>" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100"><?php echo e($club->naam); ?></a>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Coachkaarten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('4. Coachkaarten')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Toegang dojo (alle en per club)')); ?></p>
+                </div>
+                <div class="flex gap-2 relative">
+                    <a href="<?php echo e(route('toernooi.noodplan.coachkaarten', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"><?php echo e(__('Alle')); ?></a>
+                    <div class="relative">
+                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"><?php echo e(__('Per club')); ?> ▼</button>
+                        <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                            <?php $__currentLoopData = $clubs ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $club): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <a href="<?php echo e(route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club]))); ?>" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100"><?php echo e($club->naam); ?></a>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Contactlijst -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('5. Contactlijst')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Coach contactgegevens per club')); ?></p>
+                </div>
+                <a href="<?php echo e(route('toernooi.noodplan.contactlijst', $toernooi->routeParams())); ?>" target="_blank"
+                   class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"><?php echo e(__('Bekijken')); ?></a>
+            </div>
+
+            <!-- 6. Lege wedstrijdschema's -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('6. Lege wedstrijdschema\'s')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Handmatig invullen bij noodgeval')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <?php for($i = 2; $i <= 7; $i++): ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.leeg-schema', $toernooi->routeParamsWith(['aantal' => $i]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"><?php echo e($i); ?></a>
+                    <?php endfor; ?>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== WEDSTRIJDDAG ==================== -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🏆</span> <?php echo e(__('WEDSTRIJDDAG')); ?>
+
+        </h2>
+
+        <h3 class="font-semibold text-gray-700 mb-3"><?php echo e(__('Printen')); ?></h3>
+        <div class="space-y-3">
+            <!-- 1. Poules matrix -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('1. Poules printen (matrix)')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Per blok, per mat (na overpoulen)')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<?php echo e(route('toernooi.noodplan.poules', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"><?php echo e(__('Alle')); ?></a>
+                    <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"><?php echo e($blok->nummer); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+
+            <!-- 2. Wedstrijdschema's matrix -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('2. Wedstrijdschema\'s (matrix)')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Judoka\'s ingevuld, uitslagen leeg')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<?php echo e(route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"><?php echo e(__('Alle')); ?></a>
+                    <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"><?php echo e($blok->nummer); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+
+            <!-- 3. Live wedstrijd schema's -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h4 class="font-medium"><?php echo e(__('3. Wedstrijdschema\'s (live)')); ?></h4>
+                    <p class="text-sm text-gray-500"><?php echo e(__('Met alle gespeelde wedstrijden + scores')); ?></p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<?php echo e(route('toernooi.noodplan.live-schemas', $toernooi->routeParams())); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"><?php echo e(__('Alle')); ?></a>
+                    <?php $__currentLoopData = $blokken; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $blok): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e(route('toernooi.noodplan.live-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer]))); ?>" target="_blank"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"><?php echo e($blok->nummer); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== NETWERK CONFIGURATIE ==================== -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="netwerkConfig()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🌐</span> <?php echo e(__('NETWERK CONFIGURATIE')); ?>
+
+        </h2>
+
+        <!-- Uitleg WiFi vs Internet met live status -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-blue-800"><?php echo e(__('Lokaal netwerk vs Internet - wat is het verschil?')); ?></h3>
+                <span class="text-xs text-gray-500"><?php echo e(__('Laatst gecontroleerd:')); ?> <span x-text="laatsteCheck"></span></span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div class="bg-white p-3 rounded border">
+                    <div class="flex items-center justify-between">
+                        <strong class="text-blue-700"><?php echo e(__('Lokaal netwerk')); ?></strong>
+                        <span class="text-xs px-2 py-0.5 rounded"
+                              :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : (wifiStatus === 'no-server' || wifiStatus === 'no-ip' ? 'bg-gray-200 text-gray-600' : 'bg-red-200 text-red-800')">
+                            <span x-show="wifiStatus === 'connected'" x-text="'🟢 ' + wifiLatency + 'ms'"></span>
+                            <span x-show="wifiStatus === 'no-server'">⚪ Server uit</span>
+                            <span x-show="wifiStatus === 'no-ip'">⚪ Geen IP</span>
+                            <span x-show="wifiStatus === 'offline'">🔴 Offline</span>
+                            <span x-show="wifiStatus === 'checking'">⏳</span>
+                        </span>
+                    </div>
+                    <p class="text-gray-600 mt-1"><?php echo e(__('Verbinding tussen tablets en laptop (WiFi of LAN). Werkt ook zonder internet!')); ?></p>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                    <div class="flex items-center justify-between">
+                        <strong class="text-green-700"><?php echo e(__('Internet (cloud)')); ?></strong>
+                        <span class="text-xs px-2 py-0.5 rounded"
+                              :class="internetStatus === 'connected' ? 'bg-green-200 text-green-800' : (internetStatus === 'slow' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800')">
+                            <span x-show="internetStatus === 'connected'" x-text="'🟢 ' + latency + 'ms'"></span>
+                            <span x-show="internetStatus === 'slow'" x-text="'🟡 ' + latency + 'ms'"></span>
+                            <span x-show="internetStatus === 'offline'">🔴 Offline</span>
+                        </span>
+                    </div>
+                    <p class="text-gray-600 mt-1"><?php echo e(__('Verbinding met judotournament.org voor live sync. Vereist werkend internet.')); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Netwerk modus keuze -->
+        <div class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3"><?php echo e(__('Welke setup gebruik je?')); ?></h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div @click="heeftEigenRouter = true; saveNetwerkConfig()"
+                     class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                     :class="heeftEigenRouter === true ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📡</span>
+                        <div>
+                            <strong class="text-gray-800"><?php echo e(__('MET eigen router (Deco)')); ?></strong>
+                            <p class="text-sm text-gray-600"><?php echo e(__('Tablets blijven op eigen WiFi, alleen bron wisselt')); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div @click="heeftEigenRouter = false; saveNetwerkConfig()"
+                     class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                     :class="heeftEigenRouter === false ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📱</span>
+                        <div>
+                            <strong class="text-gray-800"><?php echo e(__('ZONDER eigen router')); ?></strong>
+                            <p class="text-sm text-gray-600"><?php echo e(__('Sporthal WiFi + mobiele hotspot als backup')); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IP Adressen configuratie -->
+        <div class="mb-6" x-data="{ showHelp: false }">
+            <h3 class="font-bold text-gray-800 mb-3"><?php echo e(__('IP-adressen configureren')); ?></h3>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('Primaire laptop IP')); ?></label>
+                    <div class="flex">
+                        <input type="text" x-model="primaryIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.1.100"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(primaryIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('Standby laptop IP')); ?></label>
+                    <div class="flex">
+                        <input type="text" x-model="standbyIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.1.101"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(standbyIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('Hotspot IP (backup)')); ?></label>
+                    <div class="flex">
+                        <input type="text" x-model="hotspotIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.43.1"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(hotspotIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 mt-2">
+                <p class="text-xs text-gray-500"><?php echo e(__('Tip: Noteer deze IP\'s ook op papier voor noodgevallen')); ?></p>
+                <button type="button" @click="showHelp = !showHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                    <?php echo e(__('Hoe vind ik mijn IP?')); ?>
+
+                </button>
+            </div>
+
+            <!-- Uitleg IP vinden (inklapbaar) -->
+            <div x-show="showHelp" x-collapse class="bg-blue-50 border border-blue-200 rounded p-4 mt-3">
+                <p class="text-sm text-blue-800 font-medium mb-2"><?php echo e(__('Hoe vind je het IP-adres van een laptop?')); ?></p>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong><?php echo e(__('Windows:')); ?></strong> <?php echo e(__('Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"')); ?></p>
+                    <p><strong><?php echo e(__('Of:')); ?></strong> <?php echo e(__('Instellingen → Netwerk → WiFi → Hardware-eigenschappen')); ?></p>
+                    <p class="text-xs text-blue-600 mt-2"><?php echo e(__('Het IP begint meestal met 192.168.x.x (lokaal netwerk)')); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario tabel: MET eigen router -->
+        <div x-show="heeftEigenRouter" class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3"><?php echo e(__('Wat te doen bij storingen (MET eigen router)')); ?></h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left"><?php echo e(__('Situatie')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('WiFi')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('Internet')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('Actie')); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Alles werkt')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Eigen router')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Via sporthal')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Niets doen, cloud sync actief')); ?></td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Internet weg')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Eigen router')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Uitgevallen')); ?></td>
+                            <td class="border p-2">
+                                <strong><?php echo e(__('1. Maak hotspot op mobiel')); ?></strong><br>
+                                <strong><?php echo e(__('2. Verbind primaire server met hotspot')); ?></strong><br>
+                                <span class="text-xs text-gray-600"><?php echo e(__('Tablets blijven op eigen WiFi!')); ?></span>
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Hotspot niet mogelijk')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Eigen router')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Geen')); ?></td>
+                            <td class="border p-2">
+                                <strong><?php echo e(__('Start lokale server')); ?></strong><br>
+                                <span class="text-xs text-gray-600"><?php echo e(__('Tablets blijven op eigen WiFi, geen cloud sync')); ?></span>
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Noodgeval')); ?></td>
+                            <td class="border p-2 text-center" colspan="2"><?php echo e(__('WiFi én internet uitgevallen')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Print schema\'s, verder op papier')); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scenario tabel: ZONDER eigen router -->
+        <div x-show="!heeftEigenRouter" class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3"><?php echo e(__('Wat te doen bij storingen (ZONDER eigen router)')); ?></h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left"><?php echo e(__('Situatie')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('WiFi')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('Internet')); ?></th>
+                            <th class="border p-2 text-left"><?php echo e(__('Actie')); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Alles werkt')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Sporthal WiFi')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Via sporthal')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Niets doen, cloud sync actief')); ?></td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Internet weg')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Sporthal WiFi')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Uitgevallen')); ?></td>
+                            <td class="border p-2">
+                                <strong><?php echo e(__('1. Maak hotspot op mobiel')); ?></strong><br>
+                                <strong><?php echo e(__('2. Verbind primaire server met hotspot')); ?></strong><br>
+                                <span class="text-xs text-gray-600"><?php echo e(__('Tablets blijven op sporthal WiFi!')); ?></span>
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Sporthal WiFi weg')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Uitgevallen')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Geen')); ?></td>
+                            <td class="border p-2">
+                                <strong><?php echo e(__('1. Maak hotspot op mobiel')); ?></strong><br>
+                                <strong><?php echo e(__('2. Verbind primaire server met hotspot')); ?></strong><br>
+                                <strong><?php echo e(__('3. Zet tablets op hotspot')); ?></strong><br>
+                                <span class="text-xs text-gray-600"><?php echo e(__('Alle tablets moeten wisselen!')); ?></span>
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium"><?php echo e(__('Noodgeval')); ?></td>
+                            <td class="border p-2 text-center" colspan="2"><?php echo e(__('WiFi én internet uitgevallen')); ?></td>
+                            <td class="border p-2"><?php echo e(__('Print schema\'s, verder op papier')); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gekopieerd feedback -->
+        <div x-show="copied" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
+            <?php echo e(__('Gekopieerd!')); ?>
+
+        </div>
+    </div>
+
+    <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🔄</span> <?php echo e(__('BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER')); ?>
+
+        </h2>
+        <p class="text-sm text-gray-600 mb-4"><?php echo e(__('Alleen uitvoeren als internet uitvalt tijdens het toernooi.')); ?></p>
+
+        <div class="space-y-4">
+            <!-- Stap 1: Laptop starten -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <h3 class="font-bold text-green-800 mb-2"><?php echo e(__('1. Open de JudoToernooi app op je laptop')); ?></h3>
+                <p class="text-sm text-green-700">
+                    <?php echo e(__('Dubbelklik op het')); ?> <strong><?php echo e(__('JudoToernooi')); ?></strong> <?php echo e(__('icoon op je bureaublad.')); ?>
+
+                    <?php echo e(__('De lokale server start automatisch.')); ?>
+
+                </p>
+            </div>
+
+            <!-- Stap 2: Tablets verbinden -->
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded">
+                <h3 class="font-bold text-blue-800 mb-2"><?php echo e(__('2. Verbind de tablets met de laptop')); ?></h3>
+                <p class="text-sm text-blue-700 mb-2">
+                    <?php echo e(__('Open op elke tablet de browser en ga naar:')); ?>
+
+                </p>
+                <div class="flex items-center gap-2 bg-blue-100 p-3 rounded">
+                    <template x-if="!editingIp">
+                        <code class="text-lg font-bold text-blue-900" x-text="'http://' + (primaryIp || '[laptop-ip]') + ':8000'"></code>
+                    </template>
+                    <template x-if="editingIp">
+                        <div class="flex items-center gap-1">
+                            <span class="text-lg font-bold text-blue-900">http://</span>
+                            <input type="text" x-model="newIp" x-ref="ipInput"
+                                   class="w-36 px-2 py-1 border rounded font-mono text-blue-900"
+                                   placeholder="192.168.x.x"
+                                   @keyup.enter="saveIp()"
+                                   @keyup.escape="editingIp = false">
+                            <span class="text-lg font-bold text-blue-900">:8000</span>
+                        </div>
+                    </template>
+                    <template x-if="!editingIp">
+                        <button @click="copyUrl()" type="button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                            📋 <?php echo e(__('Kopieer')); ?>
+
+                        </button>
+                    </template>
+                    <template x-if="!editingIp">
+                        <button @click="startEditIp()" type="button" class="px-2 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                            ✏️
+                        </button>
+                    </template>
+                    <template x-if="editingIp">
+                        <button @click="saveIp()" type="button" class="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                            ✓ <?php echo e(__('Opslaan')); ?>
+
+                        </button>
+                    </template>
+                    <template x-if="editingIp">
+                        <button @click="editingIp = false" type="button" class="px-2 py-1 bg-gray-400 text-white rounded text-sm hover:bg-gray-500">
+                            ✕
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Stap 3: Backup inladen -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-bold text-purple-800"><?php echo e(__('3. Laad de noodbackup in (indien nodig)')); ?></h3>
+                    <label class="px-4 py-2 bg-purple-600 text-white rounded cursor-pointer hover:bg-purple-700 font-medium">
+                        <?php echo e(__('Selecteer bestand')); ?>
+
+                        <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
+                    </label>
+                </div>
+                <p class="text-sm text-purple-700">
+                    <?php echo e(__('Alleen nodig als de laptop geen recente data heeft.')); ?>
+
+                </p>
+                <p class="text-xs text-purple-600 mt-2" x-show="uitslagCount > 0">
+                    ✓ <span x-text="uitslagCount"></span> <?php echo e(__('wedstrijden geladen')); ?>
+
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voorbereiding avond ervoor -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanBackup()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📦</span> <?php echo e(__('VOORBEREIDING (avond ervoor)')); ?>
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <!-- Noodbackup download -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-bold text-purple-800"><?php echo e(__('Download noodbackup')); ?></h3>
+                        <p class="text-sm text-purple-600"><?php echo e(__('Alle gegevens voor als internet uitvalt')); ?></p>
+                    </div>
+                    <button @click="downloadBackup()" type="button"
+                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium whitespace-nowrap">
+                        📥 <?php echo e(__('Download')); ?>
+
+                    </button>
+                </div>
+            </div>
+
+            <!-- Excel backup -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-bold text-green-800"><?php echo e(__('Download poule-indeling')); ?></h3>
+                        <p class="text-sm text-green-600"><?php echo e(__('Excel met alle poules (voor printen)')); ?></p>
+                    </div>
+                    <a href="<?php echo e(route('toernooi.noodplan.export-poules', array_merge($toernooi->routeParams(), ['format' => 'excel']))); ?>"
+                       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium whitespace-nowrap">
+                        📥 <?php echo e(__('Download')); ?>
+
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+            <strong class="text-yellow-800"><?php echo e(__('Tip:')); ?></strong>
+            <span class="text-yellow-700"><?php echo e(__('Bewaar deze bestanden op een USB-stick én op de laptop die je meeneemt.')); ?></span>
+        </div>
+    </div>
+
+    <script>
+    const __tn = {
+        ongeldigIpFormaat: <?php echo json_encode(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100'), 15, 512) ?>,
+        foutBijOpslaanNetwerkConfig: <?php echo json_encode(__('Fout bij opslaan netwerk config:'), 15, 512) ?>,
+        foutBijDownloaden: <?php echo json_encode(__('Fout bij downloaden:'), 15, 512) ?>,
+        foutBijOpslaan: <?php echo json_encode(__('Fout bij opslaan:'), 15, 512) ?>,
+        gekopieerd: <?php echo json_encode(__('Gekopieerd:'), 15, 512) ?>,
+        geenDataBeschikbaar: <?php echo json_encode(__('Geen data beschikbaar (server offline en geen lokale cache).'), 15, 512) ?>,
+        ditBackupVanAnder: <?php echo json_encode(__('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?'), 15, 512) ?>,
+        backupGeladen: <?php echo json_encode(__('Backup geladen: :poules poules, :uitslagen uitslagen'), 512) ?>,
+        ongeldigJsonBestand: <?php echo json_encode(__('Ongeldig JSON bestand:'), 15, 512) ?>,
+    };
+    function verbindingStatus() {
+        return {
+            wifiStatus: 'checking',
+            wifiLatency: null,
+            internetStatus: 'checking',
+            latency: null,
+            laatsteCheck: '-',
+            localServerIp: '<?php echo e($toernooi->local_server_primary_ip ?? ""); ?>',
+
+            init() {
+                this.checkVerbinding();
+                // Check elke 30 seconden
+                setInterval(() => this.checkVerbinding(), 30000);
+            },
+
+            async checkVerbinding() {
+                // WiFi check - ping lokale server als IP bekend is
+                if (this.localServerIp) {
+                    const wifiStart = Date.now();
+                    try {
+                        const wifiResponse = await fetch(`http://${this.localServerIp}:8000/ping`, {
+                            method: 'GET',
+                            cache: 'no-store',
+                            mode: 'no-cors',
+                            signal: AbortSignal.timeout(3000)
+                        });
+                        this.wifiLatency = Date.now() - wifiStart;
+                        this.wifiStatus = 'connected';
+                    } catch (e) {
+                        // no-cors geeft altijd opaque response, dus check alleen tijd
+                        const elapsed = Date.now() - wifiStart;
+                        if (elapsed < 2900) {
+                            this.wifiLatency = elapsed;
+                            this.wifiStatus = 'connected';
+                        } else {
+                            this.wifiStatus = navigator.onLine ? 'no-server' : 'offline';
+                            this.wifiLatency = null;
+                        }
+                    }
+                } else {
+                    this.wifiStatus = navigator.onLine ? 'no-ip' : 'offline';
+                    this.wifiLatency = null;
+                }
+
+                // Internet check (ping naar cloud)
+                const startTime = Date.now();
+                try {
+                    const response = await fetch('/ping', {
+                        method: 'GET',
+                        cache: 'no-store',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const endTime = Date.now();
+                    this.latency = endTime - startTime;
+
+                    if (response.ok) {
+                        this.internetStatus = this.latency > 2000 ? 'slow' : 'connected';
+                    } else {
+                        this.internetStatus = 'offline';
+                    }
+                } catch (e) {
+                    this.internetStatus = 'offline';
+                }
+
+                this.laatsteCheck = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
+            }
+        };
+    }
+
+    function netwerkConfig() {
+        return {
+            toernooiId: <?php echo e($toernooi->id); ?>,
+            heeftEigenRouter: <?php echo e($toernooi->heeft_eigen_router ? 'true' : 'false'); ?>,
+            primaryIp: '<?php echo e($toernooi->local_server_primary_ip ?? ""); ?>',
+            standbyIp: '<?php echo e($toernooi->local_server_standby_ip ?? ""); ?>',
+            hotspotIp: '<?php echo e($toernooi->hotspot_ip ?? ""); ?>',
+            copied: false,
+
+            async saveNetwerkConfig() {
+                try {
+                    await fetch('<?php echo e(route("toernooi.local-server-ips", $toernooi->routeParams())); ?>', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            heeft_eigen_router: this.heeftEigenRouter === true || this.heeftEigenRouter === '1',
+                            local_server_primary_ip: this.primaryIp,
+                            local_server_standby_ip: this.standbyIp,
+                            hotspot_ip: this.hotspotIp
+                        })
+                    });
+                } catch (e) {
+                    console.error(__tn.foutBijOpslaanNetwerkConfig, e);
+                }
+            },
+
+            copyToClipboard(text) {
+                if (!text) return;
+                navigator.clipboard.writeText(text);
+                this.copied = true;
+                setTimeout(() => this.copied = false, 2000);
+            }
+        };
+    }
+
+    function noodplanBackup() {
+        return {
+            toernooiId: <?php echo e($toernooi->id); ?>,
+            toernooiNaam: '<?php echo e($toernooi->slug); ?>',
+
+            async downloadBackup() {
+                try {
+                    const response = await fetch('<?php echo e(route("toernooi.noodplan.sync-data", $toernooi->routeParams())); ?>');
+                    if (!response.ok) throw new Error('Server error');
+                    const data = await response.json();
+                    this.saveAsFile(data);
+                } catch (e) {
+                    alert(__tn.foutBijDownloaden + ' ' + e.message);
+                }
+            },
+
+            saveAsFile(data) {
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const filename = `noodbackup_${this.toernooiNaam}_${timestamp}.json`;
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+    }
+
+    function noodplanLocalServer() {
+        return {
+            toernooiId: <?php echo e($toernooi->id); ?>,
+            toernooiNaam: '<?php echo e($toernooi->slug); ?>',
+            primaryIp: '<?php echo e($toernooi->local_server_primary_ip ?? ""); ?>',
+            uitslagCount: 0,
+            laatsteSync: null,
+            editingIp: false,
+            newIp: '',
+
+            init() {
+                this.loadFromStorage();
+                setInterval(() => this.loadFromStorage(), 1000);
+            },
+
+            startEditIp() {
+                this.newIp = this.primaryIp || '';
+                this.editingIp = true;
+                this.$nextTick(() => this.$refs.ipInput?.focus());
+            },
+
+            async saveIp() {
+                const ip = this.newIp.trim();
+                if (!ip) {
+                    this.editingIp = false;
+                    return;
+                }
+                // Valideer IP formaat
+                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                if (!ipRegex.test(ip)) {
+                    alert(__tn.ongeldigIpFormaat);
+                    return;
+                }
+                try {
+                    await fetch('<?php echo e(route("toernooi.local-server-ips", $toernooi->routeParams())); ?>', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ local_server_primary_ip: ip })
+                    });
+                    this.primaryIp = ip;
+                    this.editingIp = false;
+                } catch (e) {
+                    alert(__tn.foutBijOpslaan + ' ' + e.message);
+                }
+            },
+
+            copyUrl() {
+                const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
+                navigator.clipboard.writeText(url);
+                alert(__tn.gekopieerd + ' ' + url);
+            },
+
+            loadFromStorage() {
+                const countKey = `noodplan_${this.toernooiId}_count`;
+                const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+
+                const count = localStorage.getItem(countKey);
+                this.uitslagCount = count ? parseInt(count) : 0;
+
+                const sync = localStorage.getItem(syncKey);
+                if (sync) {
+                    const date = new Date(sync);
+                    this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+                }
+            },
+
+            async downloadBackup() {
+                try {
+                    const response = await fetch('<?php echo e(route("toernooi.noodplan.sync-data", $toernooi->routeParams())); ?>');
+                    if (!response.ok) throw new Error('Server error');
+                    const data = await response.json();
+                    this.saveAsFile(data);
+                } catch (e) {
+                    const storageKey = `noodplan_${this.toernooiId}_poules`;
+                    const data = localStorage.getItem(storageKey);
+                    if (data) {
+                        this.saveAsFile(JSON.parse(data));
+                    } else {
+                        alert(__tn.geenDataBeschikbaar);
+                    }
+                }
+            },
+
+            saveAsFile(data) {
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+                const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            },
+
+            loadJsonBackup(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
+                            if (!confirm(__tn.ditBackupVanAnder.replace(':id', data.toernooi_id))) {
+                                return;
+                            }
+                        }
+
+                        const storageKey = `noodplan_${this.toernooiId}_poules`;
+                        const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                        const countKey = `noodplan_${this.toernooiId}_count`;
+
+                        localStorage.setItem(storageKey, JSON.stringify(data));
+                        localStorage.setItem(syncKey, new Date().toISOString());
+
+                        let count = 0;
+                        if (data.poules) {
+                            data.poules.forEach(p => {
+                                if (p.wedstrijden) {
+                                    p.wedstrijden.forEach(w => {
+                                        if (w.is_gespeeld) count++;
+                                    });
+                                }
+                            });
+                        }
+                        localStorage.setItem(countKey, count.toString());
+                        this.loadFromStorage();
+                        alert(__tn.backupGeladen.replace(':poules', data.poules?.length || 0).replace(':uitslagen', count));
+                    } catch (err) {
+                        alert(__tn.ongeldigJsonBestand + ' ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+        };
+    }
+    </script>
+
+    </div><!-- End TAB: NOODPLAN -->
+
+    <!-- TAB: TEST (alleen voor admin) -->
+    <?php if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin'): ?>
+    <div x-show="activeTab === 'admin'" x-cloak>
+
+    <!-- RESET ALLES -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">💥</span> <?php echo e(__('Reset Alles')); ?>
+
+        </h2>
+        <p class="text-gray-600 mb-4">
+            <?php echo e(__('Verwijder ALLE wedstrijden van ALLE categorieën en haal alles van de matten. Terug naar start!')); ?>
+
+        </p>
+
+        <form action="<?php echo e(route('toernooi.blok.reset-alles', $toernooi->routeParams())); ?>" method="POST"
+              onsubmit="return confirm('<?php echo e(__('WEET JE HET ZEKER?')); ?>\n\n<?php echo e(__('Dit verwijdert ALLE wedstrijden van ALLE categorieën!')); ?>\n\n<?php echo e(__("Judoka\'s blijven behouden.")); ?>')">
+            <?php echo csrf_field(); ?>
+            <button type="submit" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
+                🔥 RESET ALLES 🔥
+            </button>
+        </form>
+
+        <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
+            <strong><?php echo e(__('Dit verwijdert:')); ?></strong>
+            <ul class="list-disc list-inside mt-1">
+                <li><?php echo e(__('Alle wedstrijden (alle blokken, alle matten)')); ?></li>
+                <li><?php echo e(__('Alle mat-toewijzingen')); ?></li>
+                <li><?php echo e(__('Alle doorstuur-status')); ?></li>
+            </ul>
+            <strong class="block mt-2"><?php echo e(__('Dit blijft behouden:')); ?></strong> <?php echo e(__('Judoka\'s, clubs, poule-indelingen')); ?>
+
+        </div>
+    </div>
+
+    <!-- DEBUG INFO -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">🐛</span> <?php echo e(__('Debug Info')); ?>
+
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium"><?php echo e(__('Totaal judoka\'s:')); ?></span>
+                <span class="float-right"><?php echo e($toernooi->judokas()->count()); ?></span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium"><?php echo e(__('Totaal poules:')); ?></span>
+                <span class="float-right"><?php echo e($toernooi->poules()->count()); ?></span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium"><?php echo e(__('Totaal wedstrijden:')); ?></span>
+                <span class="float-right"><?php echo e(\App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->count()); ?></span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium"><?php echo e(__('Gespeelde wedstrijden:')); ?></span>
+                <span class="float-right"><?php echo e(\App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->where('is_gespeeld', true)->count()); ?></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVITEITEN LOG -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">📋</span> <?php echo e(__('Activiteiten Log')); ?>
+
+        </h2>
+        <p class="text-gray-600 mb-4 text-sm"><?php echo e(__('Bekijk wie wat wanneer heeft gedaan in dit toernooi.')); ?></p>
+        <a href="<?php echo e(route('toernooi.activiteiten', $toernooi->routeParams())); ?>"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+            📋 <?php echo e(__('Bekijk activiteiten')); ?>
+
+        </a>
+    </div>
+
+    <!-- TOERNOOI VERWIJDEREN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6 border-2 border-red-300">
+        <h2 class="text-xl font-bold text-red-800 mb-4 pb-2 border-b border-red-200 flex items-center gap-2">
+            <span class="text-2xl">🗑️</span> <?php echo e(__('Toernooi Verwijderen')); ?>
+
+        </h2>
+
+        <p class="text-gray-700 mb-4">
+            <?php echo e(__('Verwijder dit toernooi permanent.')); ?> <strong class="text-red-600"><?php echo e(__('Dit kan niet ongedaan gemaakt worden!')); ?></strong>
+        </p>
+
+        <form action="<?php echo e(route('toernooi.destroy', $toernooi->routeParams())); ?>" method="POST"
+              onsubmit="return confirm('<?php echo e(__('WEET JE HET ABSOLUUT ZEKER?')); ?>\n\n<?php echo e(__('Dit verwijdert het GEHELE toernooi:')); ?>\n<?php echo e(__("- Alle judoka\'s")); ?>\n<?php echo e(__('- Alle clubs')); ?>\n<?php echo e(__('- Alle poules')); ?>\n<?php echo e(__('- Alle wedstrijden')); ?>\n<?php echo e(__('- Alle resultaten')); ?>\n\n<?php echo e(__('Dit kan NIET ongedaan worden!')); ?>')">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('DELETE'); ?>
+            <button type="submit" class="px-8 py-4 bg-red-700 hover:bg-red-800 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
+                🗑️ VERWIJDER TOERNOOI 🗑️
+            </button>
+        </form>
+
+        <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
+            <strong><?php echo e(__('Dit verwijdert ALLES:')); ?></strong>
+            <ul class="list-disc list-inside mt-1">
+                <li><?php echo e(__('Alle judoka\'s en hun gegevens')); ?></li>
+                <li><?php echo e(__('Alle clubs')); ?></li>
+                <li><?php echo e(__('Alle poules en wedstrijden')); ?></li>
+                <li><?php echo e(__('Alle resultaten en statistieken')); ?></li>
+            </ul>
+        </div>
+    </div>
+
+    </div><!-- End TAB: TEST -->
+    <?php endif; ?>
+
+</div>
+
+<script>
+// Toggle eliminatie gewichtsklassen visibility
+function toggleEliminatieGewichtsklassen(selectElement) {
+    const leeftijdsklasse = selectElement.dataset.leeftijdsklasse;
+    const container = document.getElementById('eliminatie-gewichtsklassen-' + leeftijdsklasse);
+    if (container) {
+        if (selectElement.value === 'eliminatie') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.wedstrijd-systeem-select').forEach(function(select) {
+        toggleEliminatieGewichtsklassen(select);
+    });
+});
+
+// Toggle password visibility
+function togglePassword(button) {
+    const input = button.parentElement.querySelector('input');
+    const eyeClosed = button.querySelector('.eye-closed');
+    const eyeOpen = button.querySelector('.eye-open');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeClosed.classList.add('hidden');
+        eyeOpen.classList.remove('hidden');
+    } else {
+        input.type = 'password';
+        eyeClosed.classList.remove('hidden');
+        eyeOpen.classList.add('hidden');
+    }
+}
+</script>
+
+<script>
+// Auto-save for toernooi settings
+// Global trigger function for drag & drop handlers
+window.triggerAutoSave = function() {};
+
+(function() {
+    const __ta = {
+        opslaan: <?php echo json_encode(__('Opslaan...'), 15, 512) ?>,
+        opgeslagen: <?php echo json_encode(__('Opgeslagen'), 15, 512) ?>,
+        foutBijOpslaan: <?php echo json_encode(__('Fout bij opslaan'), 15, 512) ?>,
+        onbekendeFout: <?php echo json_encode(__('Onbekende fout'), 15, 512) ?>,
+        overlappendeCat: <?php echo json_encode(__('Overlappende categorieën gedetecteerd!'), 15, 512) ?>,
+        overlapUitleg: <?php echo json_encode(__("Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan."), 15, 512) ?>,
+    };
+
+    const form = document.getElementById('toernooi-form');
+    if (!form) return;
+
+    const status = document.getElementById('save-status');
+    let saveTimeout = null;
+    let isDirty = false;  // Track if form has unsaved changes
+
+    function showStatus(text, type) {
+        status.textContent = text;
+        status.classList.remove('hidden', 'text-gray-400', 'text-green-600', 'text-red-600', 'bg-green-100', 'bg-red-100', 'bg-gray-100', 'border-green-300', 'border-red-300', 'border-gray-300');
+        if (type === 'success') { status.classList.add('text-green-600', 'bg-green-100', 'border-green-300'); } else if (type === 'error') { status.classList.add('text-red-600', 'bg-red-100', 'border-red-300'); } else { status.classList.add('text-gray-600', 'bg-gray-100', 'border-gray-300'); }
+    }
+
+    function markDirty() {
+        isDirty = true;
+    }
+
+    function markClean() {
+        isDirty = false;
+    }
+
+    // Expose trigger for drag & drop handlers
+    window.triggerAutoSave = function() {
+        markDirty();
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(autoSave, 500);
+    };
+
+    function autoSave() {
+        if (!isDirty) return;
+
+        // Ensure JSON is up-to-date before saving
+        if (typeof updateJsonInput === 'function') {
+            updateJsonInput();
+        }
+
+        showStatus(__ta.opslaan, 'default');
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    // Handle Laravel validation errors
+                    if (data.errors) {
+                        const firstError = Object.values(data.errors)[0];
+                        const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                        console.error('Validation error:', data.errors);
+                        throw new Error(errorMsg);
+                    }
+                    if (data.message) {
+                        throw new Error(data.message);
+                    }
+                    throw new Error('Server error: ' + response.status);
+                }).catch(e => {
+                    // If response is not JSON, get text
+                    if (e instanceof SyntaxError) {
+                        return response.text().then(text => {
+                            console.error('Server response:', text);
+                            throw new Error('Server error: ' + response.status);
+                        });
+                    }
+                    throw e;
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.success) {
+                showStatus('✓ ' + __ta.opgeslagen, 'success');
+                markClean();
+                setTimeout(() => status.classList.add('hidden'), 2000);
+
+                // Update overlap warning banner dynamically
+                const overlapAlert = document.getElementById('overlap-warning-alert');
+                if (data.overlapWarning) {
+                    if (overlapAlert) {
+                        overlapAlert.querySelector('.text-sm').textContent = data.overlapWarning;
+                        overlapAlert.classList.remove('hidden');
+                    } else {
+                        // Create banner if it doesn't exist
+                        const banner = document.createElement('div');
+                        banner.id = 'overlap-warning-alert';
+                        banner.className = 'mb-6 p-4 bg-orange-100 border-2 border-orange-500 rounded-lg';
+                        banner.innerHTML = `
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">⚠️</span>
+                                <div>
+                                    <p class="font-bold text-orange-800">${__ta.overlappendeCat}</p>
+                                    <p class="text-sm text-orange-700">${data.overlapWarning}</p>
+                                    <p class="text-xs text-orange-600 mt-1">${__ta.overlapUitleg}</p>
+                                </div>
+                            </div>
+                        `;
+                        const tabsContainer = document.querySelector('.flex.border-b.mb-6');
+                        if (tabsContainer) {
+                            tabsContainer.after(banner);
+                        }
+                    }
+                } else if (overlapAlert) {
+                    overlapAlert.classList.add('hidden');
+                }
+
+                // Show blokken warning if poules were moved to sleepvak
+                if (data.blokkenWarning) {
+                    alert(data.blokkenWarning);
+                }
+            } else {
+                const errorMsg = data?.message || data?.error || __ta.onbekendeFout;
+                console.error('Save failed:', data);
+                showStatus('✗ ' + errorMsg, 'error');
+                setTimeout(() => status.classList.add('hidden'), 5000);
+            }
+        })
+        .catch((error) => {
+            console.error('Auto-save error:', error);
+            showStatus('✗ ' + (error.message || __ta.foutBijOpslaan), 'error');
+            setTimeout(() => status.classList.add('hidden'), 5000);
+        });
+    }
+
+    // Listen for changes on all form elements (using event delegation for dynamic elements)
+    form.addEventListener('change', (e) => {
+        if (e.target.matches('input, select, textarea')) {
+            markDirty();
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(autoSave, 500);
+        }
+    });
+    form.addEventListener('input', (e) => {
+        if (e.target.matches('input[type="text"], input[type="number"], textarea')) {
+            markDirty();
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(autoSave, 1500);
+        }
+    });
+
+    // Reset dirty flag on form submit (prevents false warning)
+    form.addEventListener('submit', (e) => {
+        // Ensure JSON is up-to-date before submit
+        if (typeof updateJsonInput === 'function') {
+            updateJsonInput();
+        }
+        markClean();
+
+        // Save scroll position to restore after reload
+        sessionStorage.setItem('toernooi_edit_scroll', window.scrollY);
+    });
+
+    // Save scroll position for ALL forms on the page (not just toernooi-form)
+    document.addEventListener('submit', (e) => {
+        if (e.target.tagName === 'FORM') {
+            sessionStorage.setItem('toernooi_edit_scroll', window.scrollY);
+        }
+    }, true);
+
+    // Restore scroll position after form submit (if success message present)
+    <?php if(session('success')): ?>
+    const savedScroll = sessionStorage.getItem('toernooi_edit_scroll');
+    if (savedScroll) {
+        window.scrollTo(0, parseInt(savedScroll));
+        sessionStorage.removeItem('toernooi_edit_scroll');
+    }
+    <?php endif; ?>
+
+    // Warn before leaving if there are unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+})();
+</script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/judotoernooi/staging/resources/views/pages/toernooi/edit.blade.php ENDPATH**/ ?>
