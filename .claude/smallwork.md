@@ -14,6 +14,30 @@
 
 ---
 
+## Sessie: 25 maart 2026
+
+### Fix: Datum+tijd overal i.p.v. diffForHumans
+- **Type:** UI fix
+- **Wat:** Alle `diffForHumans()` ("1 dag geleden", "Nooit") vervangen door `d-m-Y H:i` formaat. Relatieve tijd als hover tooltip. "Nooit" → "-".
+- **Bestanden:** klanten.blade.php, klant-edit.blade.php, toernooi/index.blade.php, organisator/dashboard.blade.php
+
+### Fix: Dubbele "Laatste login" verwijderd
+- **Type:** UI fix
+- **Wat:** "Laatste login" stond in titelbalk én in "Laatst actief" kolom van toernooien tabel. Titelbalk-versie verwijderd (alleen "Klant sinds" blijft).
+- **Bestanden:** toernooi/index.blade.php
+
+### Feat: Upgrade-link bij judoka import limiet
+- **Type:** Feature
+- **Wat:** Blauwe banner met "Meer deelnemers nodig?" + link naar Instellingen → Organisatie tab wanneer free tier limiet bereikt wordt bij handmatig toevoegen of CSV import.
+- **Bestanden:** JudokaController.php, judoka/index.blade.php, judoka/import.blade.php
+
+### Fix: laatste_login bij registratie
+- **Type:** Bug fix
+- **Wat:** `updateLaatsteLogin()` werd niet aangeroepen bij nieuwe registratie → "Nooit ingelogd" voor nieuwe accounts.
+- **Bestanden:** OrganisatorAuthController.php
+
+---
+
 ## Sessie: 24 maart 2026
 
 ### UI: Clubs Uitnodigen pagina heringedeeld
