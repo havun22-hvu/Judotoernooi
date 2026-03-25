@@ -197,8 +197,8 @@
                         @endif
                     </div>
                 </div>
-                <div class="text-xs text-gray-400">
-                    {{ $org->laatste_login->diffForHumans() }}
+                <div class="text-xs text-gray-400" title="{{ $org->laatste_login->diffForHumans() }}">
+                    {{ $org->laatste_login->format('d-m-Y H:i') }}
                 </div>
             </div>
             @endforeach
@@ -270,11 +270,11 @@
                     <span>{{ __('Klant sinds') }}: <strong>{{ $organisator->created_at?->format('d-m-Y') ?? '-' }}</strong></span>
                     <span>{{ __('Laatste login') }}:
                         @if($organisator->laatste_login)
-                            <strong class="{{ $organisator->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-green-600' }}">
-                                {{ $organisator->laatste_login->diffForHumans() }}
+                            <strong class="{{ $organisator->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-green-600' }}" title="{{ $organisator->laatste_login->diffForHumans() }}">
+                                {{ $organisator->laatste_login->format('d-m-Y H:i') }}
                             </strong>
                         @else
-                            <strong class="text-gray-400">{{ __('Nooit') }}</strong>
+                            <strong class="text-gray-400">-</strong>
                         @endif
                     </span>
                 </div>
@@ -365,8 +365,8 @@
                             <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ __('Gratis') }}</span>
                         @endif
                     </td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {{ $toernooi->updated_at?->diffForHumans() ?? '-' }}
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500" @if($toernooi->updated_at) title="{{ $toernooi->updated_at->diffForHumans() }}" @endif>
+                        {{ $toernooi->updated_at?->format('d-m-Y H:i') ?? '-' }}
                     </td>
                     <td class="px-6 py-3 whitespace-nowrap space-x-2">
                         <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">{{ __('Open') }}</a>
@@ -394,7 +394,7 @@
                     <span class="text-gray-500 text-sm ml-2">{{ $organisator->email }}</span>
                 </div>
                 <div class="text-sm text-gray-500">
-                    {{ __('Laatste login') }}: {{ $organisator->laatste_login?->diffForHumans() ?? __('Nooit') }}
+                    {{ __('Laatste login') }}: {{ $organisator->laatste_login?->format('d-m-Y H:i') ?? '-' }}
                 </div>
             </div>
         </div>

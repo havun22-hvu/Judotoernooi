@@ -271,7 +271,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span>{{ __('Laatst bewerkt') }}:</span>
-                        <span>{{ $toernooi->updated_at ? $toernooi->updated_at->diffForHumans() : '-' }}</span>
+                        <span @if($toernooi->updated_at) title="{{ $toernooi->updated_at->diffForHumans() }}" @endif>{{ $toernooi->updated_at ? $toernooi->updated_at->format('d-m-Y H:i') : '-' }}</span>
                     </div>
                 </div>
 

@@ -178,6 +178,7 @@ class OrganisatorAuthController extends Controller
         ]);
 
         Auth::guard('organisator')->login($organisator, true);
+        $organisator->updateLaatsteLogin();
         session()->save();
 
         // Redirect to password setup
