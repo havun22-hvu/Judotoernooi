@@ -95,6 +95,26 @@ De free tier biedt **downloadbare demo CSV's** met fake judoka's, zodat de organ
 
 ---
 
+## Toernooi Type (UI zichtbaarheid)
+
+De instellingen pagina past zich aan op het toernooi type. Dit bepaalt **alleen de zichtbaarheid** van secties in de UI — niet de betalingslogica.
+
+| Type | Zichtbaar in instellingen | Typisch gebruik |
+|------|--------------------------|-----------------|
+| **Intern** (default) | Basis instellingen (poules, matten, categorieën) | Kleine clubtoernooien, beginners |
+| **Open** | Alles: + eliminatie, danpunten, coachkaarten | Grotere open toernooien |
+
+**Wat verborgen wordt bij "intern":**
+- Eliminatie systeem sectie
+- Danpunten (JBN) sectie
+- Coachkaarten sectie (in noodplan/admin)
+
+**Belangrijk:** De betalings-gate blijft apart. Bij "open" worden secties zichtbaar maar de features vereisen nog steeds een betaald pakket om ingesteld/gebruikt te worden.
+
+**Database:** `toernooi_type` enum (`intern`, `open`), default `intern`. Bestaande toernooien → `open`.
+
+---
+
 ## Betaalde Staffels
 
 | Staffel | Max Judoka's | Prijs |

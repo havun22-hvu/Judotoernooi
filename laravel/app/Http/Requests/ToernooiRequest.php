@@ -40,6 +40,7 @@ class ToernooiRequest extends FormRequest
         return [
             'template_id' => 'nullable|integer|exists:toernooi_templates,id',
             'naam' => 'required|string|max:255',
+            'toernooi_type' => 'nullable|in:intern,open',
             'organisatie' => 'nullable|string|max:255',
             'datum' => 'required|date',
             'inschrijving_deadline' => 'nullable|date|before_or_equal:datum',

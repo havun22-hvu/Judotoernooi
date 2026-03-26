@@ -120,6 +120,7 @@ class Toernooi extends Model
         'paid_at',
         'toernooi_betaling_id',
         'naam',
+        'toernooi_type',
         'slug',
         'organisatie',
         'datum',
@@ -651,6 +652,14 @@ class Toernooi extends Model
     public function toernooiBetaling(): BelongsTo
     {
         return $this->belongsTo(ToernooiBetaling::class);
+    }
+
+    /**
+     * Check if this is an open tournament (shows advanced settings like eliminatie, danpunten, coachkaarten)
+     */
+    public function isOpenToernooi(): bool
+    {
+        return $this->toernooi_type === 'open';
     }
 
     /**

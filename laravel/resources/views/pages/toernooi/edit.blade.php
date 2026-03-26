@@ -153,6 +153,29 @@
                     <x-location-autocomplete name="locatie" :value="old('locatie', $toernooi->locatie)" placeholder="{{ __('Zoek sporthal of adres...') }}" />
                 </div>
             </div>
+
+            {{-- Tournament type selector --}}
+            <div class="mt-4 pt-4 border-t">
+                <label class="block text-gray-700 font-medium mb-2">{{ __('Type toernooi') }}</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors {{ old('toernooi_type', $toernooi->toernooi_type) === 'intern' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}"
+                           onclick="this.querySelector('input').checked = true; document.querySelectorAll('[name=toernooi_type]').forEach(r => r.closest('label').className = r.closest('label').className.replace(/border-blue-500 bg-blue-50/, 'border-gray-200')); this.className = this.className.replace('border-gray-200', 'border-blue-500 bg-blue-50')">
+                        <input type="radio" name="toernooi_type" value="intern" {{ old('toernooi_type', $toernooi->toernooi_type) === 'intern' ? 'checked' : '' }} class="hidden">
+                        <div>
+                            <span class="font-medium text-gray-800">{{ __('Intern toernooi') }}</span>
+                            <p class="text-xs text-gray-500">{{ __('Klein clubtoernooi — eenvoudige instellingen') }}</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors {{ old('toernooi_type', $toernooi->toernooi_type) === 'open' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}"
+                           onclick="this.querySelector('input').checked = true; document.querySelectorAll('[name=toernooi_type]').forEach(r => r.closest('label').className = r.closest('label').className.replace(/border-blue-500 bg-blue-50/, 'border-gray-200')); this.className = this.className.replace('border-gray-200', 'border-blue-500 bg-blue-50')">
+                        <input type="radio" name="toernooi_type" value="open" {{ old('toernooi_type', $toernooi->toernooi_type) === 'open' ? 'checked' : '' }} class="hidden">
+                        <div>
+                            <span class="font-medium text-gray-800">{{ __('Open toernooi') }}</span>
+                            <p class="text-xs text-gray-500">{{ __('Groter toernooi — eliminatie, danpunten, coachkaarten') }}</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <!-- INSCHRIJVING -->
@@ -327,14 +350,15 @@
                             <tr>
                                 <td class="py-2 font-medium text-gray-400">{{ __('5+ judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">10w+</td>
-                                <td class="py-2 text-gray-400 text-xs">{{ __('Altijd enkel (round-robin)') }}</td>
+                                <td class="py-2 text-gray-400 text-xs">{{ __('Altijd enkel') }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Eliminatie Type (KO systeem) — alleen voor betaald -->
+            <!-- Eliminatie Type (KO systeem) — alleen voor open toernooi -->
+            @if($toernooi->isOpenToernooi())
             @if($toernooi->canUseEliminatie())
             <div class="border-t pt-4 mt-4">
                 <h3 class="font-medium text-gray-700 mb-2">{{ __('Knock-out Systeem') }}</h3>
@@ -418,6 +442,7 @@
                 </div>
             </div>
             @endif
+            @endif {{-- isOpenToernooi --}}
 
         </div>
 
@@ -470,7 +495,7 @@
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="text-sm font-medium text-gray-700">{{ __(':aantal wedstrijden', ['aantal' => $aantalWed]) }}</span>
                                 <span class="text-xs text-gray-400">
-                                    @if($grootte <= 3){{ __('(dubbele round-robin)') }}@else{{ __('(enkelvoudige round-robin)') }}@endif
+                                    @if($grootte <= 3){{ __('(dubbel)') }}@else{{ __('(enkel)') }}@endif
                                 </span>
                             </div>
                             <div class="schema-container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2" data-grootte="{{ $grootte }}">
@@ -788,7 +813,8 @@
             </div>
         </div>
 
-        <!-- DANPUNTEN (JBN) -->
+        <!-- DANPUNTEN (JBN) — alleen voor open toernooi -->
+        @if($toernooi->isOpenToernooi())
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Danpunten (JBN)') }}</h2>
             @if(($toernooi->plan_type ?? 'free') === 'free')
@@ -809,6 +835,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         <!-- CATEGORIEËN INSTELLING -->
         @php
@@ -2754,7 +2781,8 @@
                 </div>
             </div>
 
-            <!-- 4. Coachkaarten -->
+            <!-- 4. Coachkaarten — alleen voor open toernooi -->
+            @if($toernooi->isOpenToernooi())
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
                 <div>
                     <h4 class="font-medium">{{ __('4. Coachkaarten') }}</h4>
@@ -2773,6 +2801,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- 5. Contactlijst -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
