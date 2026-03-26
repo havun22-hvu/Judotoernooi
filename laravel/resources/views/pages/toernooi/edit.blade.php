@@ -83,7 +83,7 @@
         </div>
 
         <!-- TABS -->
-        <div class="flex border-b">
+        <div class="flex border-b items-end">
         <button type="button"
                 @click="activeTab = 'toernooi'"
                 :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -110,6 +110,12 @@
             {{ __('Admin') }}
         </button>
         @endif
+        <div class="ml-auto pb-2" x-show="activeTab === 'toernooi'" x-cloak>
+            <button type="button" onclick="document.getElementById('toernooi-form')?.requestSubmit()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
+                {{ __('Opslaan') }}
+            </button>
+        </div>
         </div>
     </div>
 
@@ -1892,15 +1898,7 @@
         });
         </script>
 
-        <!-- ACTIES -->
-        <div class="flex justify-between items-center">
-            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-gray-600 hover:text-gray-800">
-                {{ __('Annuleren') }}
-            </a>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
-                {{ __('Instellingen Opslaan') }}
-            </button>
-        </div>
+        {{-- Submit button removed — autosave handles saving, header button available for manual save --}}
     </form>
     </div>
 
