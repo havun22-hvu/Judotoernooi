@@ -29,12 +29,10 @@ php artisan serve --port=8007
 | Bestand | Inhoud |
 |---------|--------|
 | `context.md` | Dit bestand - overzicht |
-| `features.md` | Functionaliteit, classificatie, auth |
-| `mollie.md` | Betalingen configuratie |
 | `deploy.md` | Deploy instructies |
 | `handover.md` | Laatste sessie info |
 | `smallwork.md` | Kleine fixes (archief in `archive/`) |
-| `handover/` | Gedetailleerde sessie handovers |
+| `archive/` | Gearchiveerde handovers, smallwork, oude docs |
 
 ## Core Features
 

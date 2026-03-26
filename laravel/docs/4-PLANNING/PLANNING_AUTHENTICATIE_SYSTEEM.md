@@ -1,7 +1,8 @@
 # JudoToernooi - Authenticatie & Device Binding Systeem
 
-> **Status:** Planning bijgewerkt
+> **Status:** GEREALISEERD — auth systeem is live (email+wachtwoord, device binding, passkeys)
 > **Laatst bijgewerkt:** 2026-01-04
+> **Let op:** Dit was het oorspronkelijke plan. Actuele implementatie kan afwijken.
 > **Zie ook:** `ROLLEN_HIERARCHIE.md` voor complete rolbeschrijvingen
 
 ---

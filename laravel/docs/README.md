@@ -43,6 +43,8 @@ docs/
   - [Test Matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md)
 - [Wimpeltoernooi](./2-FEATURES/WIMPELTOERNOOI.md) - Doorlopend puntensysteem per organisator
 - [Danpunten](./2-FEATURES/DANPUNTEN.md) - JBN danpunten registratie voor bruine banden
+- [Judoka Database](./2-FEATURES/JUDOKA-DATABASE.md) - Stambestand import in toernooi
+- [Scorebord App](./2-FEATURES/SCOREBORD-APP.md) - Android scorebord + web display
 
 ### 3a. Technical
 - [Codebase-structuur](./3-TECHNICAL/CODEBASE-STRUCTUUR.md) - Volledig overzicht mappen en key files
@@ -57,12 +59,12 @@ docs/
 - [Code Standaarden](./3-DEVELOPMENT/CODE-STANDAARDEN.md) - **Verplichte** coding conventions
 - [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) - Exceptions, Circuit Breaker, Rate Limiting, Activity Logging
 
-### 4. Planning
-- [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding
+### 4. Planning (historisch)
+- [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - GEREALISEERD
 - [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md) - Offline fallback
-- [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - Publieke website vs live app
-- [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - Meerdere organisatoren
-- [Club Stambestand](./4-PLANNING/PLANNING_CLUB_STAMBESTAND.md) - Judoka stambestand per club + wimpelkoppeling
+- [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - GEREALISEERD
+- [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - ON HOLD (slug-based routing is live)
+- [Club Stambestand](./4-PLANNING/PLANNING_CLUB_STAMBESTAND.md) - Judoka stambestand per club
 
 ### 5. Reglement
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)

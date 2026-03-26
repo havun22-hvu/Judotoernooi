@@ -1,5 +1,8 @@
 # Planning: Intropage vs PWA Live App
 
+> **Status:** GEREALISEERD — PWA interfaces zijn live (publiek, dojo, spreker, coach)
+> **Let op:** Dit was het oorspronkelijke plan. Zie `2-FEATURES/INTERFACES.md` voor actuele docs.
+
 ## Overzicht
 
 Er is een duidelijke scheiding nodig tussen:

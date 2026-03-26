@@ -1,7 +1,8 @@
 # Planning: Multi-Tenancy
 
-> **Status:** On Hold (besluit: 13 jan 2026)
+> **Status:** ON HOLD — subdomeinen niet nodig, slug-based routing is live
 > **Reden:** Subdomeinen niet nodig op dit moment, mogelijk later
+> **Let op:** Multi-tenancy is al werkend via organisator slugs (`/{slug}/toernooi/...`)
 > **Doel:** Wereldwijde SaaS-applicatie met tenant isolatie en meertaligheid
 
 ## Overzicht
