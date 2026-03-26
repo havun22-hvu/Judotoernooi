@@ -290,6 +290,15 @@
                                 🔄
                             </button>
                         </form>
+                        {{-- Archiveer knop --}}
+                        <form action="{{ route('toernooi.archiveer', $toernooi->routeParams()) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="text-gray-400 hover:text-gray-600" title="{{ __('Archiveer toernooi') }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                </svg>
+                            </button>
+                        </form>
                         {{-- Delete knop --}}
                         <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
@@ -303,6 +312,82 @@
                 </div>
             </div>
             @endforeach
+        </div>
+        @endif
+
+        {{-- Archief sectie --}}
+        @if($gearchiveerd->isNotEmpty())
+        <div x-data="{ open: false }" class="mt-8">
+            <button @click="open = !open" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
+                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+                {{ __('Archief') }} ({{ $gearchiveerd->count() }})
+            </button>
+            <div x-show="open" x-collapse>
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    @foreach($gearchiveerd as $toernooi)
+                    <div class="bg-white rounded-lg shadow p-6 opacity-70 hover:opacity-100 transition-opacity">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-lg font-bold text-gray-800">{{ $toernooi->naam }}</h3>
+                            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">{{ __('Archief') }}</span>
+                        </div>
+
+                        <div class="flex items-center text-gray-600 mb-2">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="font-medium">{{ $toernooi->datum ? $toernooi->datum->format('d-m-Y') : __('Geen datum') }}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-3">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {{ $toernooi->judokas_count ?? $toernooi->judokas()->count() }} judoka's
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                {{ $toernooi->poules_count ?? $toernooi->poules()->count() }} poules
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}"
+                               class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
+                                {{ __('Openen') }}
+                            </a>
+                            <div class="flex items-center gap-2">
+                                {{-- Terugzetten knop --}}
+                                <form action="{{ route('toernooi.archiveer', $toernooi->routeParams()) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-green-500 hover:text-green-700" title="{{ __('Terugzetten naar actief') }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {{-- Delete knop --}}
+                                <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
+                                      onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data en kan niet ongedaan worden!')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-400 hover:text-red-600" title="{{ __('Verwijder toernooi') }}">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
         @endif
     </main>

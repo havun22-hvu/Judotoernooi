@@ -381,6 +381,25 @@ class ToernooiController extends Controller
         return $redirect->with('success', 'Toernooi bijgewerkt');
     }
 
+    public function toggleArchiveer(Organisator $organisator, Toernooi $toernooi): RedirectResponse
+    {
+        $loggedIn = auth('organisator')->user();
+
+        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->ownsToernooi($toernooi))) {
+            return redirect()
+                ->route('organisator.dashboard', $organisator)
+                ->with('error', 'Je hebt geen rechten om dit toernooi te archiveren');
+        }
+
+        $toernooi->update(['is_gearchiveerd' => !$toernooi->is_gearchiveerd]);
+
+        $actie = $toernooi->is_gearchiveerd ? 'gearchiveerd' : 'teruggezet';
+
+        return redirect()
+            ->route('organisator.dashboard', $organisator)
+            ->with('success', "Toernooi '{$toernooi->naam}' {$actie}");
+    }
+
     public function destroy(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $loggedIn = auth('organisator')->user();
@@ -495,14 +514,16 @@ class ToernooiController extends Controller
         $organisator = $organisator->fresh();
 
         // Everyone sees only their own toernooien — sitebeheerder uses /admin for other organisatoren
-        $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
+        $alleToernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
+        $toernooien = $alleToernooien->where('is_gearchiveerd', false);
+        $gearchiveerd = $alleToernooien->where('is_gearchiveerd', true);
 
         // Restore organisator's locale when returning to dashboard
         $locale = $organisator->locale ?? config('app.locale');
         session()->put('locale', $locale);
         app()->setLocale($locale);
 
-        return view('organisator.dashboard', compact('organisator', 'toernooien'));
+        return view('organisator.dashboard', compact('organisator', 'toernooien', 'gearchiveerd'));
     }
 
     public function updateWachtwoorden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse

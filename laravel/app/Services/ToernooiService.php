@@ -21,11 +21,6 @@ class ToernooiService
             // Get the owner organisator
             $organisator = auth('organisator')->user();
 
-            // Clean up old tournaments from this organisator (fresh start)
-            if ($organisator) {
-                $this->verwijderOudeToernooien($organisator->id);
-            }
-
             $toernooi = Toernooi::create([
                 'organisator_id' => $organisator?->id,
                 'naam' => $data['naam'],

@@ -372,6 +372,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::get('edit', [ToernooiController::class, 'edit'])->name('edit');
     Route::put('/', [ToernooiController::class, 'update'])->name('update');
     Route::delete('/', [ToernooiController::class, 'destroy'])->name('destroy');
+    Route::post('archiveer', [ToernooiController::class, 'toggleArchiveer'])->name('archiveer');
     Route::put('wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('wachtwoorden');
     Route::put('bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('bloktijden');
     Route::put('betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
