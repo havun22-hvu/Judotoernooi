@@ -787,7 +787,8 @@
             </div>
         </div>
 
-        <!-- DOJO / COACH -->
+        <!-- DOJO / COACH — alleen voor open toernooi -->
+        @if($toernooi->isOpenToernooi())
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Dojo / Coach') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -812,6 +813,7 @@
                 </div>
             </div>
         </div>
+        @endif {{-- isOpenToernooi Dojo/Coach --}}
 
         <!-- DANPUNTEN (JBN) — alleen voor open toernooi -->
         @if($toernooi->isOpenToernooi())
@@ -3835,6 +3837,16 @@ window.triggerAutoSave = function() {};
     // Listen for changes on all form elements (using event delegation for dynamic elements)
     form.addEventListener('change', (e) => {
         if (e.target.matches('input, select, textarea')) {
+            // Reload page after saving toernooi_type (sections appear/disappear)
+            if (e.target.name === 'toernooi_type') {
+                markDirty();
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    autoSave();
+                    setTimeout(() => window.location.reload(), 800);
+                }, 300);
+                return;
+            }
             markDirty();
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, 500);
