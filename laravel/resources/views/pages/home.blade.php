@@ -369,11 +369,12 @@
                     __('Zaaloverzicht'),
                     __('Blokplanning'),
                     __('Excel import/export'),
-                    __('Automatische herclassificatie'),
+                    __('Herclassificatie bij afwijkend gewicht'),
                     __('Spreker-interface'),
                     __('Noodpakket (offline)'),
                     __("Poules & wedstrijdschema's printen"),
                     __('Medailles & prijzen'),
+                    __('Live app voor ouders & coaches'),
                 ] as $feature)
                     <span class="bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200">
                         {{ $feature }}
