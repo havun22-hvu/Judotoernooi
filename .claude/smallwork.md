@@ -14,6 +14,30 @@
 
 ---
 
+## Sessie: 27 maart 2026
+
+### Feat: Toernooi type (intern/open)
+- **Type:** Feature
+- **Wat:** Nieuw `toernooi_type` veld (intern/open). Bij intern worden eliminatie, danpunten, dojo/coach en coachkaarten secties verborgen in instellingen. Betalingslogica ongewijzigd. Radio buttons met autosave + page reload.
+- **Bestanden:** edit.blade.php, Toernooi.php, ToernooiRequest.php, migratie
+
+### Fix: Round-robin tekst versimpeld
+- **Type:** UI fix
+- **Wat:** "(dubbele round-robin)" → "(dubbel)", "(enkelvoudige round-robin)" → "(enkel)", "Altijd enkel (round-robin)" → "Altijd enkel"
+- **Bestanden:** edit.blade.php
+
+### Feat: Homepage redesign
+- **Type:** UI redesign
+- **Wat:** Professionelere SaaS-look: diepere blue-950 tinten, SVG Heroicons i.p.v. emoji's, strakere typografie (extrabold hero), subtielere shadows, meer whitruimte. Screenshots en stappen als @foreach loops. Feature tags: "Herclassificatie bij afwijkend gewicht" (was "Automatische herclassificatie"), "Live app voor ouders & coaches" toegevoegd. Deployed production.
+- **Bestanden:** home.blade.php
+
+### Docs: Grote docs cleanup
+- **Type:** Documentatie
+- **Wat:** 11 bestanden gearchiveerd (.claude/archive/). smallwork 1139→164 regels. handover opgeschoond. Planning docs gemarkeerd als GEREALISEERD/ON HOLD. README.md bijgewerkt. FREEMIUM.md uitgebreid met toernooi type sectie.
+- **Bestanden:** diverse .md bestanden
+
+---
+
 ## Sessie: 25 maart 2026
 
 ### Fix: Datum+tijd overal i.p.v. diffForHumans
