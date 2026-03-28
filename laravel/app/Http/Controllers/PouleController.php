@@ -194,6 +194,7 @@ class PouleController extends Controller
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $gewichtsklasse,
             'titel' => $titel,
+            'type' => 'voorronde',
             'aantal_judokas' => 0,
             'aantal_wedstrijden' => 0,
         ]);

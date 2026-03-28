@@ -38,6 +38,7 @@ class PouleModelTest extends TestCase
             'toernooi_id' => $toernooi->id,
             'leeftijdsklasse' => 'Test',
             'categorie_key' => 'test_cat',
+            'titel' => 'Test Poule',
         ], $extra));
     }
 
@@ -97,8 +98,8 @@ class PouleModelTest extends TestCase
 
         $poule->refresh();
         $this->assertEquals(3, $poule->aantal_judokas);
-        // 3*(3-1)/2 = 3 matches
-        $this->assertEquals(3, $poule->aantal_wedstrijden);
+        // 3*(3-1)/2 = 3, but dubbel_bij_3 is default true → 6
+        $this->assertEquals(6, $poule->aantal_wedstrijden);
     }
 
     #[Test]
@@ -172,8 +173,8 @@ class PouleModelTest extends TestCase
         $poule->refresh();
 
         $this->assertEquals(2, $poule->aantal_judokas);
-        // 2*(2-1)/2 = 1 match
-        $this->assertEquals(1, $poule->aantal_wedstrijden);
+        // 2*(2-1)/2 = 1, but dubbel_bij_2 is default true → 2
+        $this->assertEquals(2, $poule->aantal_wedstrijden);
     }
 
     // ========================================================================
@@ -611,7 +612,13 @@ class PouleModelTest extends TestCase
     #[Test]
     public function berekenAantalWedstrijden_round_robin_formula(): void
     {
-        $toernooi = $this->maakToernooiMetConfig(['max_kg_verschil' => 0]);
+        // Disable all dubbel settings to test pure round-robin
+        $toernooi = $this->maakToernooiMetConfig(['max_kg_verschil' => 0], [
+            'dubbel_bij_2_judokas' => false,
+            'dubbel_bij_3_judokas' => false,
+            'dubbel_bij_4_judokas' => false,
+            'best_of_three_bij_2' => false,
+        ]);
         $poule = $this->maakPoule($toernooi);
 
         // n*(n-1)/2
