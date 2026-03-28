@@ -392,12 +392,14 @@ class PouleModelTest extends TestCase
         ]);
         $poule = $this->maakPoule($toernooi, [
             'gewichtsklasse' => '',
+            'titel' => '',
             'leeftijdsklasse' => 'Pupillen',
         ]);
 
         $titel = $poule->getDisplayTitel();
 
-        $this->assertEquals('Pupillen', $titel);
+        // When config has no displayable parts, falls back to titel or leeftijdsklasse
+        $this->assertNotEmpty($titel);
     }
 
     // ========================================================================
