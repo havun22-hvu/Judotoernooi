@@ -94,6 +94,14 @@
                                     <span x-show="copiedId !== 'pin_' + toegang.id">📋 PIN</span>
                                     <span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
                                 </button>
+                                {{-- LCD Display (alleen voor mat) --}}
+                                <a x-show="rol.key === 'mat'"
+                                   :href="'{{ url($toernooi->organisator->slug . '/' . $toernooi->slug . '/mat/scoreboard-live') }}/' + toegang.mat_nummer"
+                                   target="_blank"
+                                   class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm"
+                                   title="{{ __('Scorebord openen op TV/LCD') }}">
+                                    📺 LCD
+                                </a>
                                 {{-- Test link --}}
                                 <a :href="toegang.url" target="_blank"
                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm" title="{{ __('Test') }}">
