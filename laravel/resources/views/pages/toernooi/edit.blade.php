@@ -177,7 +177,7 @@
                         <input type="radio" name="toernooi_type" value="open" {{ old('toernooi_type', $toernooi->toernooi_type) === 'open' ? 'checked' : '' }} class="hidden">
                         <div>
                             <span class="font-medium text-gray-800">{{ __('Open toernooi') }}</span>
-                            <p class="text-xs text-gray-500">{{ __('Groter toernooi — eliminatie, danpunten, coachkaarten') }}</p>
+                            <p class="text-xs text-gray-500">{{ __('Alle opties inclusief eliminatie, danpunten, coachkaarten') }}</p>
                         </div>
                     </label>
                 </div>
