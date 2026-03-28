@@ -6,97 +6,158 @@
     <title>Scorebord - Mat {{ $matId }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', 'Helvetica Neue', sans-serif; }
+        html, body { height: 100%; overflow: hidden; background: #111827; font-family: 'Arial Black', 'Helvetica Neue', sans-serif; }
 
         .scoreboard {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            grid-template-rows: 1fr auto;
-            height: 100vh;
-            gap: 4px;
-            padding: 4px;
-        }
-
-        /* Display view: WIT links, BLAUW rechts (gespiegeld t.o.v. bediening) */
-        .panel {
             display: flex;
             flex-direction: column;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-        }
-        .panel-wit {
-            background: #fff;
-            border: 4px solid #d1d5db;
-            order: 1;
-        }
-        .panel-blauw {
-            background: #1e40af;
-            order: 3;
+            height: 100vh;
         }
 
-        .panel-header {
-            padding: 12px 20px;
+        /* 1. Names row */
+        .names-row {
+            display: flex;
+            flex-direction: row;
+        }
+        .name-card {
+            flex: 1;
+            padding: 10px 20px;
             text-align: center;
         }
-        .panel-wit .panel-header { background: #f3f4f6; }
-        .panel-blauw .panel-header { background: #1e3a8a; }
-
+        .name-card-wit { background: #F3F4F6; }
+        .name-card-blauw { background: #1E3A8A; }
         .naam {
             font-weight: 900;
             text-transform: uppercase;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: clamp(20px, 4vw, 48px);
+            font-size: clamp(18px, 3vw, 36px);
         }
-        .panel-wit .naam { color: #1f2937; }
-        .panel-blauw .naam { color: #fff; }
-
+        .name-card-wit .naam { color: #1F2937; }
+        .name-card-blauw .naam { color: #FFF; }
         .club {
-            font-size: clamp(12px, 2vw, 22px);
+            font-size: clamp(10px, 1.5vw, 18px);
             font-weight: 500;
         }
-        .panel-wit .club { color: #6b7280; }
-        .panel-blauw .club { color: #93c5fd; }
+        .name-card-wit .club { color: #6B7280; }
+        .name-card-blauw .club { color: #93C5FD; }
 
-        .score-row {
-            flex: 1;
+        /* 2. Spacer between names and timer */
+        .spacer-row {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(8px, 2vw, 24px);
-            padding: 8px;
+            flex-direction: row;
+            height: 8px;
         }
 
-        .score-box {
+        /* 3. Timer row */
+        .timer-row {
+            display: flex;
+            flex-direction: row;
+        }
+        .timer-side { flex: 1; }
+        .timer-center {
+            background: #111827;
+            padding: 4px 24px;
             text-align: center;
         }
-        .score-label {
-            font-size: clamp(10px, 1.5vw, 18px);
-            font-weight: 700;
-            letter-spacing: 2px;
-        }
-        .panel-wit .score-label { color: #6b7280; }
-        .panel-blauw .score-label { color: #93c5fd; }
-
-        .score-value {
-            font-size: clamp(40px, 10vw, 140px);
+        .timer {
+            font-size: clamp(48px, 10vw, 100px);
             font-weight: 900;
+            color: #EF4444;
+            font-family: 'Courier New', monospace;
             font-variant-numeric: tabular-nums;
             line-height: 1;
         }
-        .panel-wit .score-value { color: #1f2937; }
-        .panel-blauw .score-value { color: #fff; }
+        .timer.warning { color: #EF4444; }
+        .timer.golden-score { color: #EAB308; }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #374151;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #22C55E;
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+        .progress-fill.warning { background: #EF4444; }
+        .golden-score-badge {
+            display: none;
+            background: #EAB308;
+            color: #000;
+            font-weight: 900;
+            font-size: clamp(12px, 1.5vw, 20px);
+            padding: 2px 16px;
+            border-radius: 20px;
+            margin-top: 4px;
+            animation: pulse 1.5s infinite;
+        }
+        .golden-score-badge.active { display: inline-block; }
 
+        /* 4. Scores row — Y/W/I vertical, red on dark */
+        .scores-row {
+            display: flex;
+            flex-direction: row;
+            flex: 3;
+        }
+        .score-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 10px;
+            gap: 4px;
+        }
+        .score-col-wit { background: #F3F4F6; }
+        .score-col-blauw { background: #1E3A8A; }
+        .score-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+        .score-label {
+            font-size: clamp(14px, 2vw, 24px);
+            font-weight: 700;
+            min-width: 24px;
+            text-align: right;
+        }
+        .score-col-wit .score-label { color: #6B7280; }
+        .score-col-blauw .score-label { color: #93C5FD; }
+        .score-value {
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            color: #EF4444;
+            background: #1F2937;
+            padding: 4px 12px;
+            border-radius: 8px;
+            min-width: clamp(48px, 6vw, 80px);
+            text-align: center;
+        }
+
+        /* 5. Shido row */
         .shido-row {
             display: flex;
-            gap: clamp(4px, 0.5vw, 8px);
-            padding: 8px 16px 12px;
+            flex-direction: row;
         }
-        .panel-wit .shido-row { justify-content: flex-end; }
-        .panel-blauw .shido-row { justify-content: flex-start; }
-
+        .shido-col {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0;
+            gap: clamp(4px, 0.5vw, 8px);
+        }
+        .shido-col-wit { background: #F3F4F6; }
+        .shido-col-blauw { background: #1E3A8A; }
         .shido-card {
             width: clamp(20px, 3vw, 40px);
             height: clamp(28px, 4vw, 56px);
@@ -105,22 +166,55 @@
             background: rgba(156,163,175,0.2);
         }
         .shido-card.active {
-            background: #facc15;
-            border: 2px solid #eab308;
+            background: #FACC15;
+            border: 2px solid #EAB308;
         }
 
-        /* Osaekomi indicator */
+        /* 6. Osaekomi row */
+        .osaekomi-row {
+            display: flex;
+            flex-direction: row;
+        }
+        .osaekomi-btn-col {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            position: relative;
+        }
+        .osaekomi-btn-col-wit { background: #F3F4F6; }
+        .osaekomi-btn-col-blauw { background: #1E3A8A; }
+        .osaekomi-timer-col {
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 16px;
+        }
+        .osaekomi-time {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            color: #6B7280;
+            font-variant-numeric: tabular-nums;
+        }
+        .osaekomi-time.active { color: #F97316; }
+        .osaekomi-zone {
+            font-size: clamp(10px, 1.2vw, 16px);
+            font-weight: 800;
+            color: #F97316;
+            margin-left: 8px;
+        }
         .osaekomi-indicator {
             display: none;
             position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #f97316;
-            color: #fff;
+            background: #F97316;
+            color: #FFF;
             border-radius: 50%;
-            width: clamp(80px, 12vw, 160px);
-            height: clamp(80px, 12vw, 160px);
-            font-size: clamp(30px, 6vw, 72px);
+            width: clamp(40px, 6vw, 80px);
+            height: clamp(40px, 6vw, 80px);
+            font-size: clamp(18px, 3vw, 36px);
             font-weight: 900;
             align-items: center;
             justify-content: center;
@@ -128,105 +222,41 @@
         }
         .osaekomi-indicator.active { display: flex; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
-        }
-
-        /* Center column: timer */
-        .center-col {
-            order: 2;
+        /* 7. Osaekomi times row */
+        .osaekomi-times-row {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: clamp(180px, 25vw, 400px);
-            padding: 8px;
+            flex-direction: row;
+            flex: 1;
+            min-height: 40px;
         }
+        .osaekomi-times-col {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 6px;
+        }
+        .osaekomi-times-col-wit { background: #F3F4F6; }
+        .osaekomi-times-col-blauw { background: #1E3A8A; }
 
-        .timer {
-            font-size: clamp(48px, 10vw, 120px);
-            font-weight: 900;
-            color: #fff;
-            font-family: 'Courier New', monospace;
-            font-variant-numeric: tabular-nums;
+        /* 8. Footer */
+        .footer-row {
+            background: #111827;
+            padding: 6px 16px;
             text-align: center;
-            cursor: default;
-            user-select: none;
         }
-        .timer.warning { color: #ef4444; }
-        .timer.golden-score { color: #eab308; }
-
-        .progress-bar {
-            width: 80%;
-            height: 6px;
-            background: #374151;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        .progress-fill {
-            height: 100%;
-            background: #22c55e;
-            border-radius: 3px;
-            transition: width 0.1s linear;
-        }
-        .progress-fill.warning { background: #ef4444; }
-
-        .golden-score-badge {
-            display: none;
-            background: #eab308;
-            color: #000;
-            font-weight: 900;
-            font-size: clamp(14px, 2vw, 24px);
-            padding: 4px 20px;
-            border-radius: 20px;
-            margin-top: 8px;
-            animation: pulse 1.5s infinite;
-        }
-        .golden-score-badge.active { display: block; }
-
-        /* Bottom bar: osaekomi */
-        .bottom-bar {
-            grid-column: 1 / -1;
-            background: #1f2937;
-            border-top: 1px solid #374151;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px;
-            gap: clamp(16px, 3vw, 40px);
+        .footer-text {
+            color: #6B7280;
+            font-size: 12px;
         }
 
-        .osaekomi-label {
-            color: #9ca3af;
-            font-size: clamp(11px, 1.5vw, 18px);
-            font-weight: 600;
-        }
-        .osaekomi-time {
-            font-size: clamp(36px, 6vw, 72px);
-            font-weight: 900;
-            font-family: 'Courier New', monospace;
-            color: #6b7280;
-            font-variant-numeric: tabular-nums;
-        }
-        .osaekomi-time.active { color: #f97316; }
+        /* Half colors */
+        .half-wit { background: #F3F4F6; flex: 1; }
+        .half-blauw { background: #1E3A8A; flex: 1; }
 
-        .osaekomi-zone {
-            font-size: clamp(10px, 1.2vw, 16px);
-            font-weight: 800;
-            color: #f97316;
-        }
-
-        /* Waiting state */
-        .waiting {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: #6b7280;
-            font-size: clamp(16px, 3vw, 32px);
-            font-weight: 600;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
         }
 
         /* Winner overlay */
@@ -246,17 +276,17 @@
             font-weight: 900;
             text-transform: uppercase;
         }
-        .winner-name.blauw { color: #3b82f6; }
-        .winner-name.wit { color: #fff; }
+        .winner-name.blauw { color: #3B82F6; }
+        .winner-name.wit { color: #FFF; }
         .winner-title {
             font-size: clamp(24px, 5vw, 56px);
-            color: #facc15;
+            color: #FACC15;
             font-weight: 900;
             margin-top: 8px;
         }
         .winner-type {
             font-size: clamp(14px, 2.5vw, 28px);
-            color: #9ca3af;
+            color: #9CA3AF;
             font-weight: 600;
             margin-top: 4px;
         }
@@ -264,82 +294,82 @@
 </head>
 <body>
     <div id="app">
-        {{-- Scoreboard — altijd zichtbaar --}}
         <div class="scoreboard" id="scoreboard">
-            {{-- WIT panel (LEFT on display — gespiegeld) --}}
-            <div class="panel panel-wit">
-                <div class="panel-header">
+            {{-- 1. Names — wit links, blauw rechts (gespiegeld) --}}
+            <div class="names-row">
+                <div class="name-card name-card-wit">
                     <div class="naam" id="wit-naam">WIT</div>
                     <div class="club" id="wit-club"></div>
                 </div>
-                <div class="score-row">
-                    <div class="score-box">
-                        <div class="score-label">Y</div>
-                        <div class="score-value" id="wit-yuko">0</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-label">W</div>
-                        <div class="score-value" id="wit-wazaari">0</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-label">I</div>
-                        <div class="score-value" id="wit-ippon">0</div>
-                    </div>
+                <div class="name-card name-card-blauw">
+                    <div class="naam" id="blauw-naam">BLAUW</div>
+                    <div class="club" id="blauw-club"></div>
                 </div>
-                <div class="shido-row">
+            </div>
+
+            {{-- 2. Spacer --}}
+            <div class="spacer-row">
+                <div class="half-wit"></div>
+                <div class="half-blauw"></div>
+            </div>
+
+            {{-- 3. Timer — donker midden, kleur zijkanten --}}
+            <div class="timer-row">
+                <div class="timer-side half-wit"></div>
+                <div class="timer-center">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                    <div class="timer" id="timer-display">4:00</div>
+                    <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
+                </div>
+                <div class="timer-side half-blauw"></div>
+            </div>
+
+            {{-- 4. Scores Y/W/I + Shido's --}}
+            <div class="scores-row">
+                <div class="score-col score-col-wit">
+                    <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="wit-yuko">0</span></div>
+                    <div class="score-box"><span class="score-label">W</span><span class="score-value" id="wit-wazaari">0</span></div>
+                    <div class="score-box"><span class="score-label">I</span><span class="score-value" id="wit-ippon">0</span></div>
+                </div>
+                <div class="score-col score-col-blauw">
+                    <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="blauw-yuko">0</span></div>
+                    <div class="score-box"><span class="score-label">W</span><span class="score-value" id="blauw-wazaari">0</span></div>
+                    <div class="score-box"><span class="score-label">I</span><span class="score-value" id="blauw-ippon">0</span></div>
+                </div>
+            </div>
+
+            {{-- 5. Shido's --}}
+            <div class="shido-row">
+                <div class="shido-col shido-col-wit">
                     <div class="shido-card" id="wit-shido-1"></div>
                     <div class="shido-card" id="wit-shido-2"></div>
                     <div class="shido-card" id="wit-shido-3"></div>
                 </div>
-                <div class="osaekomi-indicator" id="wit-osaekomi">
-                    <span id="wit-osaekomi-time">0</span>
-                </div>
-            </div>
-
-            {{-- Timer center --}}
-            <div class="center-col">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="timer" id="timer-display">4:00</div>
-                <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
-            </div>
-
-            {{-- BLAUW panel (RIGHT on display — gespiegeld) --}}
-            <div class="panel panel-blauw">
-                <div class="panel-header">
-                    <div class="naam" id="blauw-naam">BLAUW</div>
-                    <div class="club" id="blauw-club"></div>
-                </div>
-                <div class="score-row">
-                    <div class="score-box">
-                        <div class="score-label">Y</div>
-                        <div class="score-value" id="blauw-yuko">0</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-label">W</div>
-                        <div class="score-value" id="blauw-wazaari">0</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-label">I</div>
-                        <div class="score-value" id="blauw-ippon">0</div>
-                    </div>
-                </div>
-                <div class="shido-row">
+                <div class="shido-col shido-col-blauw">
                     <div class="shido-card" id="blauw-shido-1"></div>
                     <div class="shido-card" id="blauw-shido-2"></div>
                     <div class="shido-card" id="blauw-shido-3"></div>
                 </div>
-                <div class="osaekomi-indicator" id="blauw-osaekomi">
-                    <span id="blauw-osaekomi-time">0</span>
+            </div>
+
+            {{-- 6. Osaekomi — knoppen in kleur, timer donker midden --}}
+            <div class="osaekomi-row">
+                <div class="osaekomi-btn-col osaekomi-btn-col-wit">
+                    <div class="osaekomi-indicator" id="wit-osaekomi"><span id="wit-osaekomi-time">0</span></div>
+                </div>
+                <div class="osaekomi-timer-col">
+                    <span class="osaekomi-time" id="osaekomi-display">00</span>
+                    <span class="osaekomi-zone" id="osaekomi-zone"></span>
+                </div>
+                <div class="osaekomi-btn-col osaekomi-btn-col-blauw">
+                    <div class="osaekomi-indicator" id="blauw-osaekomi"><span id="blauw-osaekomi-time">0</span></div>
                 </div>
             </div>
 
-            {{-- Osaekomi bottom bar --}}
-            <div class="bottom-bar">
-                <span class="osaekomi-label">Osaekomi</span>
-                <span class="osaekomi-time" id="osaekomi-display">00</span>
-                <span class="osaekomi-zone" id="osaekomi-zone"></span>
+            {{-- 7. Osaekomi tijden --}}
+            <div class="osaekomi-times-row">
+                <div class="osaekomi-times-col osaekomi-times-col-wit"></div>
+                <div class="osaekomi-times-col osaekomi-times-col-blauw"></div>
             </div>
         </div>
 
