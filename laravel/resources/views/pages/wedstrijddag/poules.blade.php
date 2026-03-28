@@ -1340,26 +1340,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert(__fout + ': ' + (data.error || data.message || __onbekendeFout));
                         window.location.reload();
                     } else {
-                        // Update gewichtsrange en problematische poules voor beide poules
+                        // DO NOT REMOVE: Update gewichtsrange en problematische poules voor beide poules
+                        // Uses 'problemen' array from Poule::checkPouleRegels() (weight + age checks)
                         if (data.van_poule) {
+                            const vanHeeftRegelproblemen = (data.van_poule.problemen || []).length > 0;
                             const vanPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.van_poule.id}"]`);
                             if (vanPouleCard) {
                                 updatePouleTitel(vanPouleCard, data.van_poule);
                                 updatePouleCountsFromServer(vanPouleCard, data.van_poule);
-                                updatePouleGewichtsStyling(vanPouleCard, data.van_poule.is_gewicht_problematisch);
+                                updatePouleGewichtsStyling(vanPouleCard, vanHeeftRegelproblemen);
                             }
-                            updateGewichtsrangeBox(data.van_poule.id, data.van_poule.is_gewicht_problematisch);
+                            updateGewichtsrangeBox(data.van_poule.id, vanHeeftRegelproblemen);
                             updateProblematischePoules(data.van_poule, data.van_poule.aantal_judokas > 0 && data.van_poule.aantal_judokas < 3);
                             updateTeVeelJudokas(data.van_poule, data.van_poule.aantal_judokas >= 6);
                         }
                         if (data.naar_poule) {
+                            const naarHeeftRegelproblemen = (data.naar_poule.problemen || []).length > 0;
                             const naarPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.naar_poule.id}"]`);
                             if (naarPouleCard) {
                                 updatePouleTitel(naarPouleCard, data.naar_poule);
                                 updatePouleCountsFromServer(naarPouleCard, data.naar_poule);
-                                updatePouleGewichtsStyling(naarPouleCard, data.naar_poule.is_gewicht_problematisch);
+                                updatePouleGewichtsStyling(naarPouleCard, naarHeeftRegelproblemen);
                             }
-                            updateGewichtsrangeBox(data.naar_poule.id, data.naar_poule.is_gewicht_problematisch);
+                            updateGewichtsrangeBox(data.naar_poule.id, naarHeeftRegelproblemen);
                             updateProblematischePoules(data.naar_poule, data.naar_poule.aantal_judokas > 0 && data.naar_poule.aantal_judokas < 3);
                             updateTeVeelJudokas(data.naar_poule, data.naar_poule.aantal_judokas >= 6);
                         }

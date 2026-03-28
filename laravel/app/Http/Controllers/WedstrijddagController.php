@@ -230,14 +230,10 @@ class WedstrijddagController extends Controller
 
             $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
-            // Use per-category isDynamisch() check instead of global toernooi setting
-            $nieuweIsDynamisch = $nieuwePoule->isDynamisch();
-            $nieuweIsProblematisch = $nieuweIsDynamisch ? ($nieuwePoule->isProblematischNaWeging() !== null) : false;
-
+            // DO NOT REMOVE: Check all poule rules (weight + age) for both poules
+            // @see Poule::checkPouleRegels() — checks max_kg_verschil + max_leeftijd_verschil
             if ($oudePouleData && isset($oudePoule)) {
-                $oudeIsDynamisch = $oudePoule->isDynamisch();
-                $oudePouleData['is_dynamisch'] = $oudeIsDynamisch;
-                $oudePouleData['is_gewicht_problematisch'] = $oudeIsDynamisch ? ($oudePoule->isProblematischNaWeging() !== null) : false;
+                $oudePouleData['problemen'] = $oudePoule->checkPouleRegels();
                 $oudePouleData['titel'] = $oudePoule->getDisplayTitel();
             }
 
@@ -251,7 +247,6 @@ class WedstrijddagController extends Controller
                 'oudePouleData' => $oudePouleData,
                 'nieuwePoule' => $nieuwePoule,
                 'actieveJudokasNieuw' => $actieveJudokasNieuw,
-                'nieuweIsProblematisch' => $nieuweIsProblematisch,
                 'judokaPastInPoule' => $judokaPastInPoule,
             ];
         });
@@ -273,8 +268,8 @@ class WedstrijddagController extends Controller
                 'titel' => $result['nieuwePoule']->getDisplayTitel(),
                 'aantal_judokas' => $result['actieveJudokasNieuw'],
                 'aantal_wedstrijden' => $result['nieuwePoule']->berekenAantalWedstrijden($result['actieveJudokasNieuw']),
-                'is_dynamisch' => $result['nieuwePoule']->isDynamisch(),
-                'is_gewicht_problematisch' => $result['nieuweIsProblematisch'],
+                // DO NOT REMOVE: problemen feeds JS warning UI after mutations
+                'problemen' => $result['nieuwePoule']->checkPouleRegels(),
             ],
             'judoka_id' => $judoka->id,
             'judoka_past_in_poule' => $result['judokaPastInPoule'],
@@ -469,6 +464,8 @@ class WedstrijddagController extends Controller
                     'id' => $poule->id,
                     'aantal_judokas' => $actieveJudokas,
                     'aantal_wedstrijden' => $aantalWedstrijden,
+                    // DO NOT REMOVE: problemen feeds JS warning UI after mutations
+                    'problemen' => $poule->checkPouleRegels(),
                 ],
             ]);
         });
