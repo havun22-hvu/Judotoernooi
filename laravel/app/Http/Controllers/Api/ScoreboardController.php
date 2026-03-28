@@ -62,6 +62,7 @@ class ScoreboardController extends Controller
             'toernooi_id' => $toegang->toernooi_id,
             'mat_id' => $mat?->id,
             'mat_naam' => $mat ? "Mat {$mat->nummer}" : null,
+            'display_code' => $toegang->getDisplayCode(),
             'reverb_config' => [
                 'host' => env('VITE_REVERB_HOST', parse_url(config('app.url'), PHP_URL_HOST)),
                 'port' => (int) env('VITE_REVERB_PORT', 443),

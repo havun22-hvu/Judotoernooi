@@ -666,6 +666,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 // Scoreboard live display — public, no auth needed (shown on TV/LCD next to mat)
 Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController::class, 'scoreboardLive'])->name('mat.scoreboard-live');
 
+// Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
+Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');
+
 // Coach Portal with code and PIN - NEW URL structure: /{org}/{toernooi}/school/{code}
 Route::prefix('{organisator}/{toernooi}/school')->name('coach.portal.')->group(function () {
     Route::get('{code}', [CoachPortalController::class, 'indexCode'])->name('code');

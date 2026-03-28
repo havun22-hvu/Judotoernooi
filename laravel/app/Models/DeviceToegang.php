@@ -47,9 +47,29 @@ class DeviceToegang extends Model
     {
         do {
             $code = strtoupper(Str::random(12));
-        } while (self::where('code', $code)->exists());
+            $prefix = substr($code, 0, 4);
+        } while (
+            self::where('code', $code)->exists()
+            || self::where('code', 'LIKE', $prefix . '%')->exists()
+        );
 
         return $code;
+    }
+
+    /**
+     * Get the 4-character display code for /tv/{code} URLs.
+     */
+    public function getDisplayCode(): string
+    {
+        return substr($this->code, 0, 4);
+    }
+
+    /**
+     * Find a DeviceToegang by its 4-character display code.
+     */
+    public static function findByDisplayCode(string $displayCode): ?self
+    {
+        return self::where('code', 'LIKE', strtoupper($displayCode) . '%')->first();
     }
 
     public static function generatePincode(): string

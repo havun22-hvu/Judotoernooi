@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\MatUpdate;
 use App\Events\ScoreboardAssignment;
 use App\Http\Requests\WedstrijdUitslagRequest;
+use App\Models\DeviceToegang;
 use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Blok;
@@ -1150,6 +1151,27 @@ class MatController extends Controller
         return view('pages.mat.scoreboard-live', [
             'toernooi' => $toernooi,
             'matId' => $matId,
+        ]);
+    }
+
+    /**
+     * Short TV URL: /tv/{4-char code} → redirect to scoreboard-live
+     */
+    public function tvRedirect(string $code)
+    {
+        $toegang = DeviceToegang::findByDisplayCode($code);
+
+        if (! $toegang || ! $toegang->mat_nummer) {
+            abort(404, 'Ongeldige TV code');
+        }
+
+        $toernooi = $toegang->toernooi;
+        $organisator = $toernooi->organisator;
+
+        return redirect()->route('mat.scoreboard-live', [
+            'organisator' => $organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'mat' => $toegang->mat_nummer,
         ]);
     }
 
