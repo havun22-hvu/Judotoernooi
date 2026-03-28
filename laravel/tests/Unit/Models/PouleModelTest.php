@@ -375,7 +375,7 @@ class PouleModelTest extends TestCase
             'max_leeftijd_verschil' => 0,
             'toon_label_in_titel' => false,
         ]);
-        $poule = $this->maakPoule($toernooi, ['gewichtsklasse' => null, 'titel' => 'Mijn Poule']);
+        $poule = $this->maakPoule($toernooi, ['gewichtsklasse' => '', 'titel' => 'Mijn Poule']);
 
         $titel = $poule->getDisplayTitel();
 
@@ -391,8 +391,7 @@ class PouleModelTest extends TestCase
             'toon_label_in_titel' => false,
         ]);
         $poule = $this->maakPoule($toernooi, [
-            'gewichtsklasse' => null,
-            'titel' => null,
+            'gewichtsklasse' => '',
             'leeftijdsklasse' => 'Pupillen',
         ]);
 

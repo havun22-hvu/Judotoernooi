@@ -182,7 +182,7 @@ class PouleController extends Controller
         $categorieKey = $existingPoule?->categorie_key;
 
         // Create the poule
-        $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $gewichtsklasse = $validated['gewichtsklasse'] ?? '';
         $titel = $gewichtsklasse
             ? $validated['leeftijdsklasse'] . ' ' . $gewichtsklasse
             : $validated['leeftijdsklasse'];
