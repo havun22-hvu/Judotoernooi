@@ -1148,9 +1148,26 @@ class MatController extends Controller
         $matModel = $toernooi->matten()->where('nummer', $mat)->first();
         $matId = $matModel ? $matModel->id : $mat;
 
+        // Load current active match so LCD has data on page load
+        $currentMatch = null;
+        if ($matModel) {
+            $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
+            if ($matModel->actieveWedstrijd) {
+                $w = $matModel->actieveWedstrijd;
+                $currentMatch = [
+                    'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
+                    'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
+                    'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
+                    'match_duration' => 240,
+                ];
+            }
+        }
+
         return view('pages.mat.scoreboard-live', [
             'toernooi' => $toernooi,
             'matId' => $matId,
+            'matNummer' => $matModel?->nummer ?? $mat,
+            'currentMatch' => $currentMatch,
         ]);
     }
 

@@ -188,6 +188,7 @@
         .osaekomi-timer-col {
             background: #111827;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 1vh 2vw;
@@ -248,6 +249,16 @@
         .footer-text {
             color: #6B7280;
             font-size: 12px;
+        }
+
+        /* Section labels */
+        .section-label {
+            color: #6B7280;
+            font-size: clamp(10px, 1.5vh, 18px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
         }
 
         /* Half colors */
@@ -317,6 +328,7 @@
             <div class="timer-row">
                 <div class="timer-side half-wit"></div>
                 <div class="timer-center">
+                    <div class="section-label">Mat {{ $matNummer ?? '' }}</div>
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
                     <div class="timer" id="timer-display">4:00</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
@@ -358,6 +370,7 @@
                     <div class="osaekomi-indicator" id="wit-osaekomi"><span id="wit-osaekomi-time">0</span></div>
                 </div>
                 <div class="osaekomi-timer-col">
+                    <div class="section-label">Osaekomi</div>
                     <span class="osaekomi-time" id="osaekomi-display">00</span>
                     <span class="osaekomi-zone" id="osaekomi-zone"></span>
                 </div>
@@ -392,6 +405,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const toernooiId = @js($toernooi->id);
         const matId = @js($matId);
+        const initialMatch = @js($currentMatch ?? null);
 
         // State
         let matchDuration = 240;
@@ -419,6 +433,16 @@
             winnerName: document.getElementById('winner-name'),
             winnerType: document.getElementById('winner-type'),
         };
+
+        // Load initial match data from server (if match already active)
+        if (initialMatch) {
+            document.getElementById('wit-naam').textContent = initialMatch.judoka_wit?.naam || 'WIT';
+            document.getElementById('wit-club').textContent = initialMatch.judoka_wit?.club || '';
+            document.getElementById('blauw-naam').textContent = initialMatch.judoka_blauw?.naam || 'BLAUW';
+            document.getElementById('blauw-club').textContent = initialMatch.judoka_blauw?.club || '';
+            matchDuration = initialMatch.match_duration || 240;
+            timeRemaining = matchDuration;
+        }
 
         function formatTime(seconds) {
             const mins = Math.floor(seconds / 60);
