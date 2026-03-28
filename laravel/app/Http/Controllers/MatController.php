@@ -1143,9 +1143,13 @@ class MatController extends Controller
      */
     public function scoreboardLive(Organisator $organisator, Toernooi $toernooi, $mat): View
     {
+        // Look up mat by nummer to get the actual ID for Reverb channel
+        $matModel = $toernooi->matten()->where('nummer', $mat)->first();
+        $matId = $matModel ? $matModel->id : $mat;
+
         return view('pages.mat.scoreboard-live', [
             'toernooi' => $toernooi,
-            'matId' => $mat,
+            'matId' => $matId,
         ]);
     }
 

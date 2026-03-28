@@ -264,13 +264,8 @@
 </head>
 <body>
     <div id="app">
-        {{-- Waiting state --}}
-        <div class="waiting" id="waiting">
-            Wacht op wedstrijd — Mat {{ $matId }}
-        </div>
-
-        {{-- Scoreboard --}}
-        <div class="scoreboard" id="scoreboard" style="display: none;">
+        {{-- Scoreboard — altijd zichtbaar --}}
+        <div class="scoreboard" id="scoreboard">
             {{-- WIT panel (LEFT on display — gespiegeld) --}}
             <div class="panel panel-wit">
                 <div class="panel-header">
@@ -384,7 +379,6 @@
 
         // DOM refs
         const els = {
-            waiting: document.getElementById('waiting'),
             scoreboard: document.getElementById('scoreboard'),
             timer: document.getElementById('timer-display'),
             progress: document.getElementById('progress-fill'),
@@ -502,9 +496,6 @@
         function handleEvent(data) {
             switch (data.event) {
                 case 'match.start':
-                    // Show scoreboard, hide waiting
-                    els.waiting.style.display = 'none';
-                    els.scoreboard.style.display = 'grid';
                     els.winnerOverlay.classList.remove('active');
 
                     // Set names (display is mirrored: wit left, blauw right)
