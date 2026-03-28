@@ -21,7 +21,7 @@
         }
         .name-card {
             flex: 1;
-            padding: 10px 20px;
+            padding: 1.5vh 20px;
             text-align: center;
         }
         .name-card-wit { background: #F3F4F6; }
@@ -32,12 +32,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: clamp(18px, 3vw, 36px);
+            font-size: clamp(24px, 5vh, 64px);
         }
         .name-card-wit .naam { color: #1F2937; }
         .name-card-blauw .naam { color: #FFF; }
         .club {
-            font-size: clamp(10px, 1.5vw, 18px);
+            font-size: clamp(12px, 2.5vh, 28px);
             font-weight: 500;
         }
         .name-card-wit .club { color: #6B7280; }
@@ -58,11 +58,11 @@
         .timer-side { flex: 1; }
         .timer-center {
             background: #111827;
-            padding: 4px 24px;
+            padding: 1vh 3vw;
             text-align: center;
         }
         .timer {
-            font-size: clamp(48px, 10vw, 100px);
+            font-size: clamp(48px, 14vh, 160px);
             font-weight: 900;
             color: #EF4444;
             font-family: 'Courier New', monospace;
@@ -73,7 +73,7 @@
         .timer.golden-score { color: #EAB308; }
         .progress-bar {
             width: 100%;
-            height: 4px;
+            height: 6px;
             background: #374151;
             border-radius: 2px;
             overflow: hidden;
@@ -91,8 +91,8 @@
             background: #EAB308;
             color: #000;
             font-weight: 900;
-            font-size: clamp(12px, 1.5vw, 20px);
-            padding: 2px 16px;
+            font-size: clamp(14px, 2.5vh, 28px);
+            padding: 0.5vh 2vw;
             border-radius: 20px;
             margin-top: 4px;
             animation: pulse 1.5s infinite;
@@ -111,8 +111,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 10px;
-            gap: 4px;
+            padding-top: 2vh;
+            gap: 1vh;
         }
         .score-col-wit { background: #F3F4F6; }
         .score-col-blauw { background: #1E3A8A; }
@@ -120,26 +120,26 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 8px;
+            gap: 1vw;
         }
         .score-label {
-            font-size: clamp(14px, 2vw, 24px);
+            font-size: clamp(18px, 3vh, 36px);
             font-weight: 700;
-            min-width: 24px;
+            min-width: 2vw;
             text-align: right;
         }
         .score-col-wit .score-label { color: #6B7280; }
         .score-col-blauw .score-label { color: #93C5FD; }
         .score-value {
-            font-size: clamp(36px, 6vw, 72px);
+            font-size: clamp(40px, 10vh, 120px);
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             line-height: 1;
             color: #EF4444;
             background: #1F2937;
-            padding: 4px 12px;
+            padding: 0.5vh 1.5vw;
             border-radius: 8px;
-            min-width: clamp(48px, 6vw, 80px);
+            min-width: clamp(60px, 8vw, 140px);
             text-align: center;
         }
 
@@ -153,14 +153,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 0;
-            gap: clamp(4px, 0.5vw, 8px);
+            padding: 1vh 0;
+            gap: clamp(6px, 1vw, 16px);
         }
         .shido-col-wit { background: #F3F4F6; }
         .shido-col-blauw { background: #1E3A8A; }
         .shido-card {
-            width: clamp(20px, 3vw, 40px);
-            height: clamp(28px, 4vw, 56px);
+            width: clamp(24px, 3vw, 50px);
+            height: clamp(32px, 5vh, 70px);
             border-radius: 4px;
             border: 2px dashed rgba(156,163,175,0.5);
             background: rgba(156,163,175,0.2);
@@ -180,7 +180,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 0;
+            padding: 1.5vh 0;
             position: relative;
         }
         .osaekomi-btn-col-wit { background: #F3F4F6; }
@@ -190,10 +190,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 16px;
+            padding: 1vh 2vw;
         }
         .osaekomi-time {
-            font-size: clamp(32px, 5vw, 56px);
+            font-size: clamp(36px, 8vh, 80px);
             font-weight: 900;
             font-family: 'Courier New', monospace;
             color: #6B7280;
@@ -201,7 +201,7 @@
         }
         .osaekomi-time.active { color: #F97316; }
         .osaekomi-zone {
-            font-size: clamp(10px, 1.2vw, 16px);
+            font-size: clamp(14px, 2.5vh, 28px);
             font-weight: 800;
             color: #F97316;
             margin-left: 8px;
@@ -212,9 +212,9 @@
             background: #F97316;
             color: #FFF;
             border-radius: 50%;
-            width: clamp(40px, 6vw, 80px);
-            height: clamp(40px, 6vw, 80px);
-            font-size: clamp(18px, 3vw, 36px);
+            width: clamp(60px, 10vh, 120px);
+            height: clamp(60px, 10vh, 120px);
+            font-size: clamp(24px, 5vh, 52px);
             font-weight: 900;
             align-items: center;
             justify-content: center;
