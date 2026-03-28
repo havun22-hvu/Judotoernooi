@@ -72,6 +72,42 @@
 </div>
 @endif
 
+{{-- Club aanmeldingen van publieke pagina --}}
+@if(isset($aanmeldingen) && $aanmeldingen->count() > 0)
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+    <h3 class="font-bold text-yellow-800 mb-3">{{ __('Nieuwe aanmeldingen') }} ({{ $aanmeldingen->count() }})</h3>
+    <div class="space-y-2">
+        @foreach($aanmeldingen as $aanmelding)
+        <div class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border">
+            <div>
+                <span class="font-medium text-gray-800">{{ $aanmelding->club_naam }}</span>
+                @if($aanmelding->contact_naam)
+                    <span class="text-gray-500 text-sm ml-2">{{ $aanmelding->contact_naam }}</span>
+                @endif
+                @if($aanmelding->email)
+                    <span class="text-gray-400 text-sm ml-2">{{ $aanmelding->email }}</span>
+                @endif
+                @if($aanmelding->telefoon)
+                    <span class="text-gray-400 text-sm ml-2">{{ $aanmelding->telefoon }}</span>
+                @endif
+                <span class="text-gray-400 text-xs ml-2">{{ $aanmelding->created_at->diffForHumans() }}</span>
+            </div>
+            <div class="flex gap-2">
+                <form action="{{ route('toernooi.club.aanmelding.goedkeur', $toernooi->routeParamsWith(['aanmelding' => $aanmelding])) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">{{ __('Goedkeuren') }}</button>
+                </form>
+                <form action="{{ route('toernooi.club.aanmelding.afwijs', $toernooi->routeParamsWith(['aanmelding' => $aanmelding])) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm rounded">{{ __('Afwijzen') }}</button>
+                </form>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 @if($clubs->isEmpty())
 <div class="bg-white rounded-lg shadow p-8 text-center">
     <p class="text-gray-500 mb-4">{{ __('Je hebt nog geen clubs in je clublijst.') }}</p>

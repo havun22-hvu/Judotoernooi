@@ -297,6 +297,72 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Club aanmelding formulier --}}
+            @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="{ aanmeldOpen: false, aanmeldVerstuurd: false, aanmeldError: '', aanmeldLoading: false }">
+                <div class="flex items-center justify-between cursor-pointer" @click="aanmeldOpen = !aanmeldOpen">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">{{ __('Deelnemen met jouw club?') }}</h3>
+                        <p class="text-sm text-gray-500">{{ __('Meld je club aan en de organisator neemt contact met je op.') }}</p>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400 transition-transform" :class="aanmeldOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+
+                <div x-show="aanmeldOpen" x-collapse x-cloak class="mt-4 pt-4 border-t">
+                    <template x-if="aanmeldVerstuurd">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                            <p class="font-medium text-green-800">{{ __('Aanmelding ontvangen!') }}</p>
+                            <p class="text-sm text-green-600 mt-1">{{ __('De organisator neemt contact met je op.') }}</p>
+                        </div>
+                    </template>
+
+                    <template x-if="!aanmeldVerstuurd">
+                        <form @submit.prevent="
+                            aanmeldLoading = true;
+                            aanmeldError = '';
+                            fetch('{{ route('publiek.club-aanmelding', $toernooi->routeParams()) }}', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                                body: JSON.stringify({ club_naam: $refs.clubNaam.value, contact_naam: $refs.contactNaam.value, email: $refs.email.value, telefoon: $refs.telefoon.value })
+                            }).then(r => r.json()).then(data => {
+                                aanmeldLoading = false;
+                                if (data.success) { aanmeldVerstuurd = true; }
+                                else { aanmeldError = data.error || '{{ __('Er ging iets mis.') }}'; }
+                            }).catch(() => { aanmeldLoading = false; aanmeldError = '{{ __('Verbindingsfout. Probeer opnieuw.') }}'; })
+                        ">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Clubnaam') }} *</label>
+                                    <input type="text" x-ref="clubNaam" required class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="{{ __('bijv. Judoschool Hoorn') }}">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Contactpersoon') }}</label>
+                                    <input type="text" x-ref="contactNaam" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="{{ __('Naam coach') }}">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('E-mail') }}</label>
+                                    <input type="email" x-ref="email" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="{{ __('coach@judoschool.nl') }}">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Telefoon') }}</label>
+                                    <input type="tel" x-ref="telefoon" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="{{ __('06-12345678') }}">
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">{{ __('E-mail of telefoon is verplicht.') }}</p>
+                            <div x-show="aanmeldError" x-cloak class="mt-2 text-sm text-red-600" x-text="aanmeldError"></div>
+                            <button type="submit" :disabled="aanmeldLoading"
+                                    class="mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg text-sm disabled:opacity-50">
+                                <span x-show="!aanmeldLoading">{{ __('Aanmelden') }}</span>
+                                <span x-show="aanmeldLoading">{{ __('Verzenden...') }}</span>
+                            </button>
+                        </form>
+                    </template>
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Live Matten Tab -->

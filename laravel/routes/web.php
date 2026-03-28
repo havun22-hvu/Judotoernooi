@@ -501,6 +501,8 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('club/{club}/toggle', [ClubController::class, 'toggleClub'])->name('club.toggle');
         Route::post('club/select-all', [ClubController::class, 'selectAllClubs'])->name('club.select-all');
         Route::post('club/deselect-all', [ClubController::class, 'deselectAllClubs'])->name('club.deselect-all');
+        Route::post('club/aanmelding/{aanmelding}/goedkeur', [ClubController::class, 'goedkeurAanmelding'])->name('club.aanmelding.goedkeur');
+        Route::post('club/aanmelding/{aanmelding}/afwijs', [ClubController::class, 'afwijsAanmelding'])->name('club.aanmelding.afwijs');
         Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
         Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');
@@ -824,6 +826,7 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
         Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
         Route::get('matten', [PubliekController::class, 'matten'])->name('matten');
     });
+    Route::post('aanmelden', [PubliekController::class, 'clubAanmelding'])->middleware('throttle:5,60')->name('club-aanmelding');
     Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
     Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
     Route::get('danpunten.csv', [PubliekController::class, 'exportDanpunten'])->name('export-danpunten');

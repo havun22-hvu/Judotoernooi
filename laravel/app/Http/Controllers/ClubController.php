@@ -218,7 +218,56 @@ class ClubController extends Controller
         // Ensure clubs have portal access
         $this->ensureClubsHavePortalAccess($toernooi);
 
-        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten', 'uitgenodigdeClubIds', 'uitgenodigdeClubs', 'organisator'));
+        $aanmeldingen = \App\Models\ClubAanmelding::where('toernooi_id', $toernooi->id)
+            ->where('status', 'pending')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten', 'uitgenodigdeClubIds', 'uitgenodigdeClubs', 'organisator', 'aanmeldingen'));
+    }
+
+    /**
+     * Approve a club registration — create/link club and generate portal access
+     */
+    public function goedkeurAanmelding(Organisator $organisator, Toernooi $toernooi, \App\Models\ClubAanmelding $aanmelding): \Illuminate\Http\RedirectResponse
+    {
+        if ($aanmelding->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        $club = Club::findOrCreateByName($aanmelding->club_naam, $organisator->id);
+
+        if ($aanmelding->contact_naam) $club->update(['contact_naam' => $aanmelding->contact_naam]);
+        if ($aanmelding->email) $club->update(['email' => $aanmelding->email]);
+        if ($aanmelding->telefoon) $club->update(['telefoon' => $aanmelding->telefoon]);
+
+        // Link club to toernooi with portal access
+        if (!$toernooi->clubs()->where('club_id', $club->id)->exists()) {
+            $toernooi->clubs()->attach($club->id, [
+                'portal_code' => \App\Models\DeviceToegang::generateCode(),
+                'pincode' => str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT),
+            ]);
+        }
+
+        $aanmelding->update(['status' => 'goedgekeurd']);
+
+        return redirect()->route('toernooi.club.index', $toernooi->routeParams())
+            ->with('success', "Club '{$aanmelding->club_naam}' goedgekeurd en uitgenodigd.");
+    }
+
+    /**
+     * Reject a club registration
+     */
+    public function afwijsAanmelding(Organisator $organisator, Toernooi $toernooi, \App\Models\ClubAanmelding $aanmelding): \Illuminate\Http\RedirectResponse
+    {
+        if ($aanmelding->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        $aanmelding->update(['status' => 'afgewezen']);
+
+        return redirect()->route('toernooi.club.index', $toernooi->routeParams())
+            ->with('success', "Aanmelding van '{$aanmelding->club_naam}' afgewezen.");
     }
 
     /**

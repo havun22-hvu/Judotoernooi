@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Band;
+use App\Models\Club;
+use App\Models\ClubAanmelding;
 use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Judoka;
@@ -939,5 +941,49 @@ class PubliekController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Store a club registration request from the public page
+     */
+    public function clubAanmelding(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'club_naam' => 'required|string|max:255',
+            'contact_naam' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefoon' => 'nullable|string|max:20',
+        ]);
+
+        if (empty($validated['email']) && empty($validated['telefoon'])) {
+            return response()->json(['error' => __('Vul een e-mailadres of telefoonnummer in.')], 422);
+        }
+
+        // Check for duplicate club name at this organisator
+        $organisatorId = $toernooi->organisator_id;
+        $bestaandeClub = Club::where('organisator_id', $organisatorId)
+            ->whereRaw('LOWER(naam) = ?', [strtolower($validated['club_naam'])])
+            ->first();
+
+        if ($bestaandeClub) {
+            // Check if already linked to this toernooi
+            if ($toernooi->clubs()->where('club_id', $bestaandeClub->id)->exists()) {
+                return response()->json(['error' => __('Deze club is al aangemeld voor dit toernooi.')], 422);
+            }
+        }
+
+        // Create club if not exists, update contact info
+        $club = Club::findOrCreateByName($validated['club_naam'], $organisatorId);
+        if (!empty($validated['contact_naam'])) $club->update(['contact_naam' => $validated['contact_naam']]);
+        if (!empty($validated['email'])) $club->update(['email' => $validated['email']]);
+        if (!empty($validated['telefoon'])) $club->update(['telefoon' => $validated['telefoon']]);
+
+        // Save aanmelding for tracking
+        ClubAanmelding::create([
+            'toernooi_id' => $toernooi->id,
+            ...$validated,
+        ]);
+
+        return response()->json(['success' => true, 'message' => __('Aanmelding ontvangen! De organisator neemt contact met u op.')]);
     }
 }
