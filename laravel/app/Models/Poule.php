@@ -486,6 +486,52 @@ class Poule extends Model
     }
 
     /**
+     * Check all poule composition rules (weight, age, band) against category config.
+     * Returns array of violations, empty array if all OK.
+     */
+    public function checkPouleRegels(): array
+    {
+        $config = $this->getCategorieConfig();
+        $problemen = [];
+
+        $maxKg = (float) ($config['max_kg_verschil'] ?? 0);
+        $maxLft = (int) ($config['max_leeftijd_verschil'] ?? 0);
+
+        // Weight check (only for dynamic categories with max_kg_verschil > 0)
+        if ($maxKg > 0) {
+            $gewichten = $this->judokas->map(fn($j) => $j->gewicht)->filter()->values();
+            if ($gewichten->count() >= 2) {
+                $verschil = round($gewichten->max() - $gewichten->min(), 1);
+                if ($verschil > $maxKg) {
+                    $problemen[] = [
+                        'type' => 'gewicht',
+                        'verschil' => $verschil,
+                        'max' => $maxKg,
+                    ];
+                }
+            }
+        }
+
+        // Age check (only when max_leeftijd_verschil > 0)
+        if ($maxLft > 0) {
+            $huidigJaar = now()->year;
+            $leeftijden = $this->judokas->map(fn($j) => $j->geboortejaar ? ($huidigJaar - $j->geboortejaar) : null)->filter()->values();
+            if ($leeftijden->count() >= 2) {
+                $verschil = $leeftijden->max() - $leeftijden->min();
+                if ($verschil > $maxLft) {
+                    $problemen[] = [
+                        'type' => 'leeftijd',
+                        'verschil' => $verschil,
+                        'max' => $maxLft,
+                    ];
+                }
+            }
+        }
+
+        return $problemen;
+    }
+
+    /**
      * Check of poule problematisch is na weging (range > max_kg_verschil)
      * Retourneert null als niet problematisch, anders array met details
      *

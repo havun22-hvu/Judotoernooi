@@ -211,24 +211,15 @@
 </div>
 
 @php
-    // Helper om gewichtsverschil te berekenen
-    $berekenGewichtVerschil = function($poule) {
-        $gewichten = $poule->judokas->map(fn($j) => $j->gewicht)->filter()->values();
-        if ($gewichten->count() < 2) return 0;
-        return $gewichten->max() - $gewichten->min();
-    };
-
     // Poules zijn problematisch als:
     // 1. Grootte niet in toegestane groottes staat, OF
-    // 2. Gewichtsverschil > max_kg_verschil uit categorie config
+    // 2. Gewicht/leeftijd regels overschreden (checkPouleRegels)
     // (excl. eliminatie/kruisfinale)
-    $problematischePoules = $poules->filter(function($p) use ($isProblematischeGrootte, $berekenGewichtVerschil) {
+    $problematischePoules = $poules->filter(function($p) use ($isProblematischeGrootte) {
         if ($p->type === 'eliminatie' || $p->type === 'kruisfinale') return false;
         $heeftGrootteProbleem = $isProblematischeGrootte($p->judokas_count);
-        $config = $p->getCategorieConfig();
-        $maxKg = (float) ($config['max_kg_verschil'] ?? 0);
-        $heeftGewichtProbleem = $maxKg > 0 && $berekenGewichtVerschil($p) > $maxKg;
-        return $heeftGrootteProbleem || $heeftGewichtProbleem;
+        $heeftRegelProbleem = count($p->checkPouleRegels()) > 0;
+        return $heeftGrootteProbleem || $heeftRegelProbleem;
     });
 @endphp
 
@@ -236,17 +227,26 @@
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">{{ __('Problematische poules') }} (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-    <p class="text-red-700 text-sm mb-3">{{ __('Poules met verkeerde grootte of te groot gewichtsverschil. Klik om naar de poule te gaan:') }}</p>
+    <p class="text-red-700 text-sm mb-3">{{ __('Poules met verkeerde grootte of te groot gewichts-/leeftijdsverschil. Klik om naar de poule te gaan:') }}</p>
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         @php
-            $gVerschil = $berekenGewichtVerschil($p);
-            $pConfig = $p->getCategorieConfig();
-            $pMaxKg = (float) ($pConfig['max_kg_verschil'] ?? 0);
+            $problemen = $p->checkPouleRegels();
             $isGrootte = $isProblematischeGrootte($p->judokas_count);
-            $isGewicht = $pMaxKg > 0 && $gVerschil > $pMaxKg;
-            $chipClass = $isGewicht ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
-            $probleem = $isGewicht ? __(':verschil kg verschil', ['verschil' => round($gVerschil, 1)]) : __(':aantal judoka\'s', ['aantal' => $p->judokas_count]);
+            $heeftRegelProbleem = count($problemen) > 0;
+
+            if ($isGrootte) {
+                $chipClass = 'bg-red-100 text-red-800 hover:bg-red-200';
+                $probleem = __(':aantal judoka\'s', ['aantal' => $p->judokas_count]);
+            } else {
+                $chipClass = 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+                $labels = collect($problemen)->map(function($pr) {
+                    if ($pr['type'] === 'gewicht') return __(':verschil kg verschil', ['verschil' => $pr['verschil']]);
+                    if ($pr['type'] === 'leeftijd') return __(':verschil jaar verschil', ['verschil' => $pr['verschil']]);
+                    return '';
+                })->filter()->implode(', ');
+                $probleem = $labels;
+            }
         @endphp
         <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 {{ $chipClass }} rounded-full text-sm cursor-pointer transition-colors">
             #{{ $p->nummer }} {{ $p->getDisplayTitel() }} ({{ $probleem }})
@@ -340,14 +340,16 @@
                         $gewichtVerschil = $maxG - $minG;
                     }
                 }
-                // Gewichtswaarschuwing alleen bij variabele gewichtsklassen
-                $categorieConfig = $poule->getCategorieConfig();
-                $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
-                // Bij vaste gewichtsklassen (max_kg_verschil = 0) geen waarschuwing
-                // Bij variabele gewichtsklassen: waarschuwing als verschil > toegestaan maximum
-                $heeftGewichtWaarschuwing = $maxKgVerschil > 0 && isset($gewichtVerschil) && $gewichtVerschil > $maxKgVerschil && !$isKruisfinale && !$isEliminatie;
+                // Check all poule rules (weight + age) via model method
+                $pouleRegelproblemen = (!$isKruisfinale && !$isEliminatie) ? $poule->checkPouleRegels() : [];
+                $heeftRegelWaarschuwing = count($pouleRegelproblemen) > 0;
+                $regelTooltip = collect($pouleRegelproblemen)->map(function($pr) {
+                    if ($pr['type'] === 'gewicht') return __('Gewichtsverschil te groot: :verschilkg (max :maxkg)', ['verschil' => $pr['verschil'], 'max' => $pr['max']]);
+                    if ($pr['type'] === 'leeftijd') return __('Leeftijdsverschil te groot: :verschilj (max :maxj)', ['verschil' => $pr['verschil'], 'max' => $pr['max']]);
+                    return '';
+                })->filter()->implode("\n");
             @endphp
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow flex flex-col {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftGewichtWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow flex flex-col {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftRegelWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $isEliminatie ? 'bg-orange-100' : ($isKruisfinale ? 'bg-purple-100' : ($isProbleem ? 'bg-red-100' : 'bg-blue-100')) }}">
                     <div class="flex justify-between items-center">
@@ -358,8 +360,8 @@
                                 #{{ $poule->nummer }} {{ __('Kruisfinale') }} {{ $poule->gewichtsklasse }} kg
                             @else
                                 <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->getDisplayTitel() }}</span>
-                                @if($heeftGewichtWaarschuwing)
-                                <span class="ml-1 text-orange-600" title="{{ __('Gewichtsverschil te groot: :verschilkg (max :maxkg)', ['verschil' => round($gewichtVerschil, 1), 'max' => $maxKgVerschil]) }}">⚠️</span>
+                                @if($heeftRegelWaarschuwing)
+                                <span class="ml-1 text-orange-600" title="{{ $regelTooltip }}">⚠️</span>
                                 @endif
                             @endif
                         </div>
@@ -544,9 +546,11 @@ const __selecteer = @json(__('Selecteer...'));
 const __selecteerEerstLeeftijdsklasse = @json(__('Selecteer eerst leeftijdsklasse'));
 const __variabel = @json(__('Variabel'));
 const __problematischePoules = @json(__('Problematische poules'));
-const __dezePoulesMinder3 = @json(__('Poules met verkeerde grootte of te groot gewichtsverschil. Klik om naar de poule te gaan:'));
+const __dezePoulesMinder3 = @json(__('Poules met verkeerde grootte of te groot gewichts-/leeftijdsverschil. Klik om naar de poule te gaan:'));
 const __kgVerschil = @json(__(':verschil kg verschil'));
+const __lftVerschil = @json(__(':verschil jaar verschil'));
 const __gewichtsverschilTeGroot = @json(__('Gewichtsverschil te groot: :verschilkg (max :maxkg)'));
+const __leeftijdsverschilTeGroot = @json(__('Leeftijdsverschil te groot: :verschilj (max :maxj)'));
 const __foutBijOmzetten = @json(__('Fout bij omzetten'));
 const __foutBijAanmaken = @json(__('Fout bij aanmaken'));
 const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
@@ -1161,15 +1165,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove delete button
             headerTop?.querySelector('.delete-empty-btn')?.remove();
 
-            // Update problematic styling (grootte niet in toegestane groottes = problematic, skip kruisfinale/eliminatie)
+            // Parse problemen from server response
+            const problemen = pouleData.problemen || [];
             const heeftGrootteProbleem = isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale && !isEliminatie;
-            const heeftGewichtProbleem = pouleData.is_gewicht_problematisch && !isKruisfinale && !isEliminatie;
+            const heeftRegelProbleem = problemen.length > 0 && !isKruisfinale && !isEliminatie;
 
             if (heeftGrootteProbleem) {
                 pouleCard.classList.add('border-2', 'border-red-300');
+                pouleCard.classList.remove('border-orange-300');
                 header?.classList.add('bg-red-100');
                 header?.classList.remove('bg-blue-100');
-            } else if (heeftGewichtProbleem) {
+            } else if (heeftRegelProbleem) {
                 pouleCard.classList.remove('border-red-300');
                 pouleCard.classList.add('border-2', 'border-orange-300');
                 header?.classList.remove('bg-red-100');
@@ -1180,14 +1186,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 header?.classList.add('bg-blue-100');
             }
 
-            // Update weight warning icon
+            // Update warning icon (weight + age)
             if (!isKruisfinale && !isEliminatie) {
                 const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
                 const existingWarning = titelEl?.parentElement?.querySelector('.text-orange-600');
-                if (heeftGewichtProbleem && pouleData.gewicht_verschil > 0) {
-                    const tooltip = __gewichtsverschilTeGroot
-                        .replace(':verschil', pouleData.gewicht_verschil)
-                        .replace(':max', pouleData.max_kg_verschil);
+                if (heeftRegelProbleem) {
+                    const tooltipParts = problemen.map(p => {
+                        if (p.type === 'gewicht') return __gewichtsverschilTeGroot.replace(':verschil', p.verschil).replace(':max', p.max);
+                        if (p.type === 'leeftijd') return __leeftijdsverschilTeGroot.replace(':verschil', p.verschil).replace(':max', p.max);
+                        return '';
+                    }).filter(Boolean);
+                    const tooltip = tooltipParts.join('\n');
                     if (existingWarning) {
                         existingWarning.title = tooltip;
                     } else if (titelEl) {
@@ -1216,29 +1225,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const existingLink = document.querySelector(`[data-probleem-poule="${pouleData.id}"]`);
 
         const heeftGrootteProbleem = isProblematischeGrootte(pouleData.judokas_count);
-        const heeftGewichtProbleem = pouleData.is_gewicht_problematisch === true;
-        const isProblematic = heeftGrootteProbleem || heeftGewichtProbleem;
+        const problemen = pouleData.problemen || [];
+        const heeftRegelProbleem = problemen.length > 0;
+        const isProblematic = heeftGrootteProbleem || heeftRegelProbleem;
 
         const pouleCard = document.getElementById(`poule-${pouleData.id}`);
         const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
         const titel = pouleData.titel || '';
 
-        // Determine chip style and label
-        const chipClass = heeftGewichtProbleem && !heeftGrootteProbleem
-            ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
-            : 'bg-red-100 text-red-800 hover:bg-red-200';
-        const probleem = heeftGewichtProbleem && !heeftGrootteProbleem
-            ? __kgVerschil.replace(':verschil', pouleData.gewicht_verschil)
-            : pouleData.judokas_count + " judoka's";
+        // Determine chip style and label based on problem type
+        let chipClass, probleem;
+        if (heeftGrootteProbleem) {
+            chipClass = 'bg-red-100 text-red-800 hover:bg-red-200';
+            probleem = pouleData.judokas_count + " judoka's";
+        } else if (heeftRegelProbleem) {
+            chipClass = 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+            const labels = problemen.map(p => {
+                if (p.type === 'gewicht') return __kgVerschil.replace(':verschil', p.verschil);
+                if (p.type === 'leeftijd') return __lftVerschil.replace(':verschil', p.verschil);
+                return '';
+            }).filter(Boolean);
+            probleem = labels.join(', ');
+        }
 
         if (isProblematic) {
             if (existingLink) {
-                // Update existing link with new info
                 existingLink.className = `inline-flex items-center px-3 py-1 ${chipClass} rounded-full text-sm cursor-pointer transition-colors`;
                 existingLink.innerHTML = `#${nummer} ${titel} (${probleem})`;
             } else {
                 if (!linksContainer) {
-                    // Create the entire problematic section
                     container.innerHTML = `
                         <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
                             <h3 class="font-bold text-red-800 mb-2">${__problematischePoules} (<span id="problematische-count">1</span>)</h3>
@@ -1264,7 +1279,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } else {
-            // Remove from problematic list if no longer problematic
             if (existingLink) {
                 existingLink.remove();
 

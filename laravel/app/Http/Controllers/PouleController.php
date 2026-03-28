@@ -1116,13 +1116,7 @@ class PouleController extends Controller
     private function buildPouleResponse(Poule $poule): array
     {
         $isDynamisch = $poule->isDynamisch();
-        $gewichtProbleem = $isDynamisch ? $poule->isProblematischNaWeging() : null;
-        $config = $poule->getCategorieConfig();
-        $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
-
-        // Calculate weight range from current judokas
-        $gewichten = $poule->judokas->map(fn($j) => $j->gewicht)->filter()->values();
-        $gewichtVerschil = $gewichten->count() >= 2 ? round($gewichten->max() - $gewichten->min(), 1) : 0;
+        $problemen = $poule->checkPouleRegels();
 
         return [
             'id' => $poule->id,
@@ -1133,9 +1127,7 @@ class PouleController extends Controller
             'titel' => $poule->getDisplayTitel(),
             'gewichtsklasse' => $poule->gewichtsklasse,
             'is_dynamisch' => $isDynamisch,
-            'is_gewicht_problematisch' => $gewichtProbleem !== null,
-            'gewicht_verschil' => $gewichtVerschil,
-            'max_kg_verschil' => $maxKgVerschil,
+            'problemen' => $problemen,
         ];
     }
 
