@@ -356,7 +356,13 @@
         </div>
     </div>
 
-    @vite(['resources/js/app.js'])
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    @php
+        $reverbHost = parse_url(config('app.url'), PHP_URL_HOST);
+        $reverbPort = config('reverb.apps.apps.0.options.port') ?? 443;
+        $reverbKey = config('reverb.apps.apps.0.key') ?? env('REVERB_APP_KEY');
+        $reverbScheme = config('reverb.apps.apps.0.options.scheme') ?? 'https';
+    @endphp
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const toernooiId = @js($toernooi->id);
@@ -472,16 +478,26 @@
             els.osaekomiZone.textContent = '';
         }
 
-        // Listen for Reverb events
-        const channelName = `scoreboard-display.${toernooiId}.${matId}`;
+        // Connect to Reverb via Pusher
+        const pusher = new Pusher('{{ $reverbKey }}', {
+            wsHost: '{{ $reverbHost }}',
+            wsPort: {{ $reverbPort }},
+            wssPort: {{ $reverbPort }},
+            forceTLS: {{ $reverbScheme === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true,
+            cluster: 'mt1'
+        });
 
-        if (window.Echo) {
-            window.Echo.channel(channelName)
-                .listen('.scoreboard.event', (payload) => {
-                    // Backend wraps event data in 'data' key via broadcastWith()
-                    handleEvent(payload.data || payload);
-                });
-        }
+        const channelName = `scoreboard-display.${toernooiId}.${matId}`;
+        const channel = pusher.subscribe(channelName);
+
+        channel.bind('scoreboard.event', (payload) => {
+            handleEvent(payload.data || payload);
+        });
+
+        pusher.connection.bind('connected', () => console.log('Reverb: verbonden'));
+        pusher.connection.bind('error', (err) => console.error('Reverb: fout', err));
 
         function handleEvent(data) {
             switch (data.event) {
