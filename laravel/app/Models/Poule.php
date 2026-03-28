@@ -486,8 +486,18 @@ class Poule extends Model
     }
 
     /**
-     * Check all poule composition rules (weight, age, band) against category config.
+     * DO NOT REMOVE: Check all poule composition rules against category config.
      * Returns array of violations, empty array if all OK.
+     *
+     * CRITICAL: This method MUST be called after EVERY poule mutation (add/remove/move judoka).
+     * It is used by buildPouleResponse() in PouleController which feeds the JS UI updates.
+     * Without this, poule warnings (orange border, warning icon, problematic list) will NOT update.
+     *
+     * Checks: max_kg_verschil, max_leeftijd_verschil from category config.
+     * See CLASSIFICATIE.md "Harde Criteria voor POULE-INDELING (Stap 4)"
+     *
+     * @see PouleController::buildPouleResponse() — includes problemen in every API response
+     * @see resources/views/pages/poule/index.blade.php — initial render + JS updatePouleStats()
      */
     public function checkPouleRegels(): array
     {
@@ -497,7 +507,7 @@ class Poule extends Model
         $maxKg = (float) ($config['max_kg_verschil'] ?? 0);
         $maxLft = (int) ($config['max_leeftijd_verschil'] ?? 0);
 
-        // Weight check (only for dynamic categories with max_kg_verschil > 0)
+        // DO NOT REMOVE: Weight check (only for dynamic categories with max_kg_verschil > 0)
         if ($maxKg > 0) {
             $gewichten = $this->judokas->map(fn($j) => $j->gewicht)->filter()->values();
             if ($gewichten->count() >= 2) {
@@ -512,7 +522,7 @@ class Poule extends Model
             }
         }
 
-        // Age check (only when max_leeftijd_verschil > 0)
+        // DO NOT REMOVE: Age check (only when max_leeftijd_verschil > 0)
         if ($maxLft > 0) {
             $huidigJaar = now()->year;
             $leeftijden = $this->judokas->map(fn($j) => $j->geboortejaar ? ($huidigJaar - $j->geboortejaar) : null)->filter()->values();

@@ -211,10 +211,10 @@
 </div>
 
 @php
-    // Poules zijn problematisch als:
-    // 1. Grootte niet in toegestane groottes staat, OF
-    // 2. Gewicht/leeftijd regels overschreden (checkPouleRegels)
-    // (excl. eliminatie/kruisfinale)
+    // DO NOT REMOVE: Problematic poule detection on initial render.
+    // Uses Poule::checkPouleRegels() to check weight AND age limits.
+    // The JS equivalent is updateProblematischePoules() which runs after mutations.
+    // Both MUST check the same rules — if you change one, change the other.
     $problematischePoules = $poules->filter(function($p) use ($isProblematischeGrootte) {
         if ($p->type === 'eliminatie' || $p->type === 'kruisfinale') return false;
         $heeftGrootteProbleem = $isProblematischeGrootte($p->judokas_count);
@@ -340,7 +340,8 @@
                         $gewichtVerschil = $maxG - $minG;
                     }
                 }
-                // Check all poule rules (weight + age) via model method
+                // DO NOT REMOVE: Check all poule rules (weight + age) via model method
+                // This drives the orange border + warning icon on each poule card
                 $pouleRegelproblemen = (!$isKruisfinale && !$isEliminatie) ? $poule->checkPouleRegels() : [];
                 $heeftRegelWaarschuwing = count($pouleRegelproblemen) > 0;
                 $regelTooltip = collect($pouleRegelproblemen)->map(function($pr) {
@@ -1105,6 +1106,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    /**
+     * DO NOT REMOVE: Updates poule card UI after ANY mutation (drag, remove, unsubscribe).
+     * Handles: count, title, border color, weight/age warning icon, problematic list.
+     * pouleData MUST contain 'problemen' array from server (Poule::checkPouleRegels).
+     * Without this function, poule warnings will NOT update after mutations.
+     */
     function updatePouleStats(pouleData) {
         const pouleCard = document.getElementById(`poule-${pouleData.id}`);
         if (!pouleCard) return;

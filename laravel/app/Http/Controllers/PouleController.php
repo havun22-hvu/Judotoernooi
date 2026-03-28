@@ -1113,9 +1113,24 @@ class PouleController extends Controller
     /**
      * Build standard poule response data for drag-and-drop endpoints
      */
+    /**
+     * DO NOT REMOVE: Build standardized poule response for ALL mutation API endpoints.
+     *
+     * CRITICAL: The 'problemen' key MUST always be included. It contains the result of
+     * Poule::checkPouleRegels() which checks weight AND age limits. The frontend JS
+     * (updatePouleStats + updateProblematischePoules) depends on this to show/hide warnings.
+     *
+     * Every controller method that mutates a poule MUST return this response for affected poules.
+     * If you remove 'problemen' or stop calling checkPouleRegels(), the poule warnings will
+     * silently stop updating after drag/remove operations.
+     *
+     * @see Poule::checkPouleRegels() — the actual rule checking
+     * @see resources/views/pages/poule/index.blade.php — updatePouleStats() JS function
+     */
     private function buildPouleResponse(Poule $poule): array
     {
         $isDynamisch = $poule->isDynamisch();
+        // DO NOT REMOVE: problemen must always be recalculated and included
         $problemen = $poule->checkPouleRegels();
 
         return [
@@ -1127,7 +1142,7 @@ class PouleController extends Controller
             'titel' => $poule->getDisplayTitel(),
             'gewichtsklasse' => $poule->gewichtsklasse,
             'is_dynamisch' => $isDynamisch,
-            'problemen' => $problemen,
+            'problemen' => $problemen, // DO NOT REMOVE: feeds JS warning UI
         ];
     }
 
