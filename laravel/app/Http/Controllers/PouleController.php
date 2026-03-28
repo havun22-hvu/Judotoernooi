@@ -1116,6 +1116,13 @@ class PouleController extends Controller
     private function buildPouleResponse(Poule $poule): array
     {
         $isDynamisch = $poule->isDynamisch();
+        $gewichtProbleem = $isDynamisch ? $poule->isProblematischNaWeging() : null;
+        $config = $poule->getCategorieConfig();
+        $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
+
+        // Calculate weight range from current judokas
+        $gewichten = $poule->judokas->map(fn($j) => $j->gewicht)->filter()->values();
+        $gewichtVerschil = $gewichten->count() >= 2 ? round($gewichten->max() - $gewichten->min(), 1) : 0;
 
         return [
             'id' => $poule->id,
@@ -1126,7 +1133,9 @@ class PouleController extends Controller
             'titel' => $poule->getDisplayTitel(),
             'gewichtsklasse' => $poule->gewichtsklasse,
             'is_dynamisch' => $isDynamisch,
-            'is_gewicht_problematisch' => $isDynamisch ? ($poule->isProblematischNaWeging() !== null) : false,
+            'is_gewicht_problematisch' => $gewichtProbleem !== null,
+            'gewicht_verschil' => $gewichtVerschil,
+            'max_kg_verschil' => $maxKgVerschil,
         ];
     }
 
@@ -1266,12 +1275,15 @@ class PouleController extends Controller
         $judoka->update(['aanwezigheid' => 'afgemeld']);
 
         // Remove from all poules
+        $updatedPoules = [];
         foreach ($judoka->poules as $poule) {
             $poule->judokas()->detach($judoka->id);
             $poule->wedstrijden()->delete();
             $poule->load('judokas');
             $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
             $poule->updateStatistieken();
+            $poule->refresh();
+            $updatedPoules[] = $this->buildPouleResponse($poule);
         }
 
         ActivityLogger::log($toernooi, 'uitschrijven', "{$judoka->naam} uitgeschreven (geen tegenstanders)", [
@@ -1281,6 +1293,7 @@ class PouleController extends Controller
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} is uitgeschreven",
+            'updated_poules' => $updatedPoules,
         ]);
     }
 }

@@ -544,7 +544,9 @@ const __selecteer = @json(__('Selecteer...'));
 const __selecteerEerstLeeftijdsklasse = @json(__('Selecteer eerst leeftijdsklasse'));
 const __variabel = @json(__('Variabel'));
 const __problematischePoules = @json(__('Problematische poules'));
-const __dezePoulesMinder3 = @json(__('Deze poules hebben minder dan 3 judoka\'s. Klik om naar de poule te gaan:'));
+const __dezePoulesMinder3 = @json(__('Poules met verkeerde grootte of te groot gewichtsverschil. Klik om naar de poule te gaan:'));
+const __kgVerschil = @json(__(':verschil kg verschil'));
+const __gewichtsverschilTeGroot = @json(__('Gewichtsverschil te groot: :verschilkg (max :maxkg)'));
 const __foutBijOmzetten = @json(__('Fout bij omzetten'));
 const __foutBijAanmaken = @json(__('Fout bij aanmaken'));
 const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
@@ -725,12 +727,19 @@ async function uitschrijvenJudoka(judokaId, naam, pouleId) {
             // Remove judoka from DOM
             const judokaEl = document.querySelector(`[data-judoka-id="${judokaId}"][data-poule-id="${pouleId}"]`);
             if (judokaEl) judokaEl.remove();
-            // Update poule count
-            const countEl = document.querySelector(`[data-poule-count="${pouleId}"]`);
-            if (countEl) countEl.textContent = '0';
-            const wedEl = document.querySelector(`[data-poule-wedstrijden="${pouleId}"]`);
-            if (wedEl) wedEl.textContent = '-';
-            // Show empty placeholder
+
+            // Update poule stats from server response
+            if (data.updated_poules) {
+                data.updated_poules.forEach(pouleData => updatePouleStats(pouleData));
+            } else {
+                // Fallback: manual count update
+                const countEl = document.querySelector(`[data-poule-count="${pouleId}"]`);
+                if (countEl) countEl.textContent = '0';
+                const wedEl = document.querySelector(`[data-poule-wedstrijden="${pouleId}"]`);
+                if (wedEl) wedEl.textContent = '-';
+            }
+
+            // Show empty placeholder if poule is empty
             const pouleBody = document.querySelector(`#poule-${pouleId} .sortable-poule`);
             if (pouleBody && pouleBody.children.length === 0) {
                 pouleBody.innerHTML = '<div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">{{ __('Leeg') }}</div>';
@@ -1153,14 +1162,44 @@ document.addEventListener('DOMContentLoaded', function() {
             headerTop?.querySelector('.delete-empty-btn')?.remove();
 
             // Update problematic styling (grootte niet in toegestane groottes = problematic, skip kruisfinale/eliminatie)
-            if (isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale && !isEliminatie) {
+            const heeftGrootteProbleem = isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale && !isEliminatie;
+            const heeftGewichtProbleem = pouleData.is_gewicht_problematisch && !isKruisfinale && !isEliminatie;
+
+            if (heeftGrootteProbleem) {
                 pouleCard.classList.add('border-2', 'border-red-300');
                 header?.classList.add('bg-red-100');
                 header?.classList.remove('bg-blue-100');
-            } else if (!isKruisfinale && !isEliminatie) {
-                pouleCard.classList.remove('border-2', 'border-red-300');
+            } else if (heeftGewichtProbleem) {
+                pouleCard.classList.remove('border-red-300');
+                pouleCard.classList.add('border-2', 'border-orange-300');
                 header?.classList.remove('bg-red-100');
                 header?.classList.add('bg-blue-100');
+            } else if (!isKruisfinale && !isEliminatie) {
+                pouleCard.classList.remove('border-2', 'border-red-300', 'border-orange-300');
+                header?.classList.remove('bg-red-100');
+                header?.classList.add('bg-blue-100');
+            }
+
+            // Update weight warning icon
+            if (!isKruisfinale && !isEliminatie) {
+                const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
+                const existingWarning = titelEl?.parentElement?.querySelector('.text-orange-600');
+                if (heeftGewichtProbleem && pouleData.gewicht_verschil > 0) {
+                    const tooltip = __gewichtsverschilTeGroot
+                        .replace(':verschil', pouleData.gewicht_verschil)
+                        .replace(':max', pouleData.max_kg_verschil);
+                    if (existingWarning) {
+                        existingWarning.title = tooltip;
+                    } else if (titelEl) {
+                        const warningSpan = document.createElement('span');
+                        warningSpan.className = 'ml-1 text-orange-600';
+                        warningSpan.title = tooltip;
+                        warningSpan.textContent = '\u26A0\uFE0F';
+                        titelEl.after(warningSpan);
+                    }
+                } else if (existingWarning) {
+                    existingWarning.remove();
+                }
             }
         }
 
@@ -1176,66 +1215,64 @@ document.addEventListener('DOMContentLoaded', function() {
         const countEl = document.getElementById('problematische-count');
         const existingLink = document.querySelector(`[data-probleem-poule="${pouleData.id}"]`);
 
-        const isProblematic = isProblematischeGrootte(pouleData.judokas_count);
+        const heeftGrootteProbleem = isProblematischeGrootte(pouleData.judokas_count);
+        const heeftGewichtProbleem = pouleData.is_gewicht_problematisch === true;
+        const isProblematic = heeftGrootteProbleem || heeftGewichtProbleem;
+
+        const pouleCard = document.getElementById(`poule-${pouleData.id}`);
+        const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
+        const titel = pouleData.titel || '';
+
+        // Determine chip style and label
+        const chipClass = heeftGewichtProbleem && !heeftGrootteProbleem
+            ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+            : 'bg-red-100 text-red-800 hover:bg-red-200';
+        const probleem = heeftGewichtProbleem && !heeftGrootteProbleem
+            ? __kgVerschil.replace(':verschil', pouleData.gewicht_verschil)
+            : pouleData.judokas_count + " judoka's";
 
         if (isProblematic) {
-            // Update or add the link
             if (existingLink) {
-                // Update count in existing link
-                const linkCount = existingLink.querySelector(`[data-probleem-count="${pouleData.id}"]`);
-                if (linkCount) linkCount.textContent = pouleData.judokas_count;
+                // Update existing link with new info
+                existingLink.className = `inline-flex items-center px-3 py-1 ${chipClass} rounded-full text-sm cursor-pointer transition-colors`;
+                existingLink.innerHTML = `#${nummer} ${titel} (${probleem})`;
             } else {
-                // Need to add new link - ensure container exists
                 if (!linksContainer) {
                     // Create the entire problematic section
-                    const pouleCard = document.getElementById(`poule-${pouleData.id}`);
-                    const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
-                    const leeftijd = pouleCard?.dataset.pouleLeeftijdsklasse || '';
-                    const gewicht = pouleCard?.dataset.pouleGewichtsklasse || '';
-
                     container.innerHTML = `
                         <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
                             <h3 class="font-bold text-red-800 mb-2">${__problematischePoules} (<span id="problematische-count">1</span>)</h3>
                             <p class="text-red-700 text-sm mb-3">${__dezePoulesMinder3}</p>
                             <div id="problematische-links" class="flex flex-wrap gap-2">
-                                <a href="#poule-${pouleData.id}" data-probleem-poule="${pouleData.id}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-                                    #${nummer} ${leeftijd} / ${gewicht} kg (<span data-probleem-count="${pouleData.id}">${pouleData.judokas_count}</span>)
+                                <a href="#poule-${pouleData.id}" data-probleem-poule="${pouleData.id}" class="inline-flex items-center px-3 py-1 ${chipClass} rounded-full text-sm cursor-pointer transition-colors">
+                                    #${nummer} ${titel} (${probleem})
                                 </a>
                             </div>
                         </div>
                     `;
                 } else {
-                    // Add new link to existing container
-                    const pouleCard = document.getElementById(`poule-${pouleData.id}`);
-                    const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
-                    const leeftijd = pouleCard?.dataset.pouleLeeftijdsklasse || '';
-                    const gewicht = pouleCard?.dataset.pouleGewichtsklasse || '';
-
                     const newLink = document.createElement('a');
                     newLink.href = `#poule-${pouleData.id}`;
                     newLink.dataset.probleemPoule = pouleData.id;
-                    newLink.className = 'inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors';
-                    newLink.innerHTML = `#${nummer} ${leeftijd} / ${gewicht} kg (<span data-probleem-count="${pouleData.id}">${pouleData.judokas_count}</span>)`;
+                    newLink.className = `inline-flex items-center px-3 py-1 ${chipClass} rounded-full text-sm cursor-pointer transition-colors`;
+                    newLink.innerHTML = `#${nummer} ${titel} (${probleem})`;
                     linksContainer.appendChild(newLink);
 
-                    // Update count
                     if (countEl) {
                         countEl.textContent = parseInt(countEl.textContent) + 1;
                     }
                 }
             }
         } else {
-            // Remove from problematic list if present
+            // Remove from problematic list if no longer problematic
             if (existingLink) {
                 existingLink.remove();
 
-                // Update count
                 const newLinksContainer = document.getElementById('problematische-links');
                 if (countEl && newLinksContainer) {
                     const remaining = newLinksContainer.querySelectorAll('[data-probleem-poule]').length;
                     countEl.textContent = remaining;
 
-                    // Hide entire section if no more problematic poules
                     if (remaining === 0) {
                         container.innerHTML = '';
                     }
