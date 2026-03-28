@@ -58,6 +58,11 @@
                                         ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
+                                {{-- Token (eerste 4 tekens) --}}
+                                <div class="text-center">
+                                    <span class="text-xs text-gray-500 block">Token</span>
+                                    <span class="font-mono font-bold text-lg text-gray-400" x-text="toegang.code ? toegang.code.substring(0, 4) : ''"></span>
+                                </div>
                                 {{-- PIN --}}
                                 <div class="text-center">
                                     <span class="text-xs text-gray-500 block">PIN</span>
