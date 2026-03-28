@@ -46,6 +46,16 @@
                         <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         {{ __('Ververs gegevens') }}
                     </button>
+                    @if(isset($matNummer) && isset($matten))
+                    @php $matModel = $matten->firstWhere('nummer', $matNummer); @endphp
+                    @if($matModel)
+                    <a href="{{ route('mat.scoreboard-live', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'mat' => $matModel->id]) }}" target="_blank"
+                       class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        {{ __('Scorebord Display') }}
+                    </a>
+                    @endif
+                    @endif
                     <hr class="my-1">
                     <button type="button" @click="menuOpen = false; showHelp = true"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">

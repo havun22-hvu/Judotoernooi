@@ -13,7 +13,14 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @foreach($matten as $mat)
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-bold mb-4">Mat {{ $mat->nummer }}</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Mat {{ $mat->nummer }}</h2>
+            <a href="{{ route('mat.scoreboard-live', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'mat' => $mat->id]) }}" target="_blank"
+               class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded flex items-center gap-1"
+               title="{{ __('Scorebord Display openen op TV/LCD') }}">
+                📺 {{ __('Display') }}
+            </a>
+        </div>
 
         <div class="space-y-2">
             @if($blokken->count() === 1)
