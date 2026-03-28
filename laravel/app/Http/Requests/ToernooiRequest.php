@@ -41,6 +41,7 @@ class ToernooiRequest extends FormRequest
             'template_id' => 'nullable|integer|exists:toernooi_templates,id',
             'naam' => 'required|string|max:255',
             'toernooi_type' => 'nullable|in:intern,open',
+            'zichtbaar_op_agenda' => 'nullable|boolean',
             'organisatie' => 'nullable|string|max:255',
             'datum' => 'required|date',
             'inschrijving_deadline' => 'nullable|date|before_or_equal:datum',

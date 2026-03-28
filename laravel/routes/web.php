@@ -172,7 +172,16 @@ Route::post('/locale/{locale}', function (\Illuminate\Http\Request $request, str
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Homepage
-Route::get('/', fn() => view('pages.home'))->name('home');
+Route::get('/', function () {
+    $agendaToernooien = \App\Models\Toernooi::where('zichtbaar_op_agenda', true)
+        ->where('datum', '>=', now()->startOfDay())
+        ->whereNull('afgesloten_at')
+        ->with('organisator')
+        ->orderBy('datum')
+        ->limit(12)
+        ->get();
+    return view('pages.home', compact('agendaToernooien'));
+})->name('home');
 
 // Help pagina
 Route::get('/help', fn() => view('pages.help'))->name('help');

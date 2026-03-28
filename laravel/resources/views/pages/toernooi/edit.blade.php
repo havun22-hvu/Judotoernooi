@@ -210,6 +210,20 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Zichtbaar op wedstrijdagenda --}}
+            <div class="mt-4 pt-4 border-t">
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="zichtbaar_op_agenda" value="0">
+                    <input type="checkbox" name="zichtbaar_op_agenda" id="zichtbaar_op_agenda"
+                           value="1" {{ old('zichtbaar_op_agenda', $toernooi->zichtbaar_op_agenda) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="zichtbaar_op_agenda" class="text-gray-700 font-medium">{{ __('Toon op wedstrijdagenda') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Zichtbaar op de publieke agenda op judotournament.org. Clubs kunnen zich aanmelden.') }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- MATTEN & BLOKKEN -->
