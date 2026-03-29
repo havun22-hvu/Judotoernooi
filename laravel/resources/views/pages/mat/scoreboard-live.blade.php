@@ -105,7 +105,7 @@
         .scores-row {
             display: flex;
             flex-direction: row;
-            flex: 1.3;
+            flex: 0.8;
         }
         .score-col {
             flex: 1;
