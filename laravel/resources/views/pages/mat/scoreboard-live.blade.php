@@ -390,6 +390,7 @@
                     <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
                 </div>
                 <div class="osaekomi-timer-col">
+                    <div class="section-label">Osaekomi</div>
                     <span class="osaekomi-time" id="osaekomi-display">00</span>
                     <span class="osaekomi-zone" id="osaekomi-zone"></span>
                 </div>
