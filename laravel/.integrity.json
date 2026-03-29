@@ -1,0 +1,42 @@
+{
+    "version": "2.0",
+    "project": "judotoernooi",
+    "updated": "2026-03-29",
+    "description": "Critical element checks — VP-05",
+    "checks": [
+        {
+            "file": "resources/views/layouts/app.blade.php",
+            "description": "Main layout must contain CSRF, navigation tabs, footer with legal links",
+            "must_contain": [
+                "csrf-token",
+                "Voorwaarden",
+                "Privacy",
+                "Cookies",
+                "Herroeping"
+            ]
+        },
+        {
+            "file": "resources/views/pages/poule/index.blade.php",
+            "description": "Poule page must contain key JS functions",
+            "must_contain": [
+                "updatePouleStats"
+            ]
+        },
+        {
+            "file": "resources/views/pages/mat/scoreboard.blade.php",
+            "description": "Scoreboard must contain scoring elements",
+            "must_contain": [
+                "scoreboard"
+            ]
+        },
+        {
+            "file": "resources/views/pages/coach/afrekenen.blade.php",
+            "description": "Payment page must contain form with CSRF",
+            "must_contain": [
+                "csrf",
+                "method=\"POST\"",
+                "coach.portal.betalen"
+            ]
+        }
+    ]
+}
