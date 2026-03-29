@@ -272,7 +272,7 @@
                 <span class="mx-1">•</span>
                 {{ __('BTW-vrij (KOR)') }}
                 <span class="mx-1">•</span>
-                {{ config('company.address', 'Jacques Bloemhof 57') }}, {{ config('company.postal_code', '1628 VN') }} {{ config('company.city', 'Hoorn') }}
+                <a href="mailto:havun22@gmail.com" class="hover:text-gray-200">havun22@gmail.com</a>
             </div>
         </div>
     </footer>
