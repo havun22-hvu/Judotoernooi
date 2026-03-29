@@ -134,8 +134,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 1vh;
-            gap: 0.8vh;
+            padding-top: 0;
+            gap: 0.5vh;
         }
         .score-box {
             display: flex;
@@ -169,7 +169,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1.5vh 0;
+            padding: 0.5vh 0;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
@@ -196,7 +196,7 @@
             display: flex;
             flex-direction: row;
         }
-        .middle-banen-top { flex: 0.6; }
+        .middle-banen-top { flex: 0.8; }
         .middle-banen-bottom { flex: 1; }
         .middle-half-wit { background: #F3F4F6; flex: 1; }
         .middle-half-blauw { background: #1E3A8A; flex: 1; }
