@@ -60,11 +60,11 @@
         .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 0.5vh 3vw;
+            padding: 2vh 5vw;
             text-align: center;
         }
         .timer {
-            font-size: clamp(64px, 18vh, 200px);
+            font-size: clamp(72px, 22vh, 240px);
             font-weight: 900;
             color: #EF4444;
             font-family: 'Courier New', monospace;
