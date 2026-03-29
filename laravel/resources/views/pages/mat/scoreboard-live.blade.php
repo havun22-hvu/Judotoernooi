@@ -133,7 +133,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            padding-top: 2vh;
             flex: 1;
             gap: 1vh;
         }
@@ -169,7 +170,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2.5vh 0 1.5vh;
+            padding: 1.5vh 0;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
