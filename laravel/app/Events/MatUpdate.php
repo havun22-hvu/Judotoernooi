@@ -7,6 +7,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Real-time mat updates for scores, beurten (groen/geel/blauw), and poule status.
@@ -35,6 +36,9 @@ class MatUpdate implements ShouldBroadcastNow
         $this->matId = $matId;
         $this->type = $type;
         $this->data = $data;
+
+        // Activate heartbeat for this tournament (15 min TTL)
+        Cache::put("toernooi:{$toernooiId}:heartbeat_active", true, now()->addMinutes(15));
     }
 
     /**

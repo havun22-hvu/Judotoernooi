@@ -516,7 +516,7 @@
                     </svg>
                     <span x-text="liveLoading ? 'Laden...' : 'Ververs'"></span>
                 </button>
-                <p class="text-gray-400 text-xs mt-2">Vernieuwd automatisch elke 15 seconden</p>
+                <p class="text-gray-400 text-xs mt-2">Vernieuwd automatisch via live verbinding</p>
             </div>
         </div>
         @endif
@@ -1097,23 +1097,8 @@
                         this.loadMatten();
                     }
 
-                    // Real-time updates via Reverb, polling fallback als Reverb uitvalt
+                    // Real-time updates via Reverb (heartbeat every second, no polling)
                     this.setupRealtimeListeners();
-                    this.startPollingFallback();
-                },
-
-                // Polling fallback: alleen actief als Reverb niet verbonden is
-                startPollingFallback() {
-                    if (!poulesGegenereerd) return;
-                    setInterval(() => {
-                        if (this.isConnected) return; // Reverb werkt, skip polling
-                        if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
-                            this.loadFavorieten();
-                        }
-                        if (this.activeTab === 'live') {
-                            this.loadMatten();
-                        }
-                    }, 15000);
                 },
 
                 // Force refresh - herlaad alles en herconnect WebSocket
@@ -1145,27 +1130,33 @@
                         this.isConnected = false;
                     });
 
-                    // Score update - reload matten + favorieten
+                    // Heartbeat: full mat state pushed every second from server
+                    window.addEventListener('mat-heartbeat', (e) => {
+                        this.isConnected = true;
+                        this.wsMessageCount++;
+                        if (e.detail && e.detail.matten) {
+                            this.liveMatten = e.detail.matten;
+                        }
+                    });
+
+                    // Score update - reload favorieten (matten come via heartbeat)
                     window.addEventListener('mat-score-update', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
-                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
                     });
 
-                    // Beurt update (groen/geel/blauw)
+                    // Beurt update (groen/geel/blauw) - favorieten only
                     window.addEventListener('mat-beurt-update', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
-                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
                     });
 
-                    // Poule klaar - reload everything
+                    // Poule klaar - reload favorieten
                     window.addEventListener('mat-poule-klaar', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
-                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
                     });
 

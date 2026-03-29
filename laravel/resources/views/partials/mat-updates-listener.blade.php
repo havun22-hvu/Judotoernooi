@@ -82,6 +82,11 @@
             matChannel.bind('mat.update', handleMatUpdate);
         }
 
+        // Bind to heartbeat event (full mat state every second)
+        toernooiChannel.bind('mat.heartbeat', function(data) {
+            window.dispatchEvent(new CustomEvent('mat-heartbeat', { detail: data }));
+        });
+
         console.log('Mat updates WebSocket connected for toernooi:', matUpdateConfig.toernooiId);
 
         // Connection status - dispatch events for UI to track

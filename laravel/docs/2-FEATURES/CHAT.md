@@ -271,15 +271,53 @@ supervisorctl status reverb-staging
 # Nginx proxy naar /app → 127.0.0.1:8081
 ```
 
-## Polling fallback
+## Server-side Heartbeat Broadcast (Publiek PWA)
 
-Real-time updates verminderen de noodzaak voor polling, maar polling blijft als fallback:
+De publieke app ontvangt continu mat-state via een server-side heartbeat. Geen polling.
 
-| View | Oude polling | Nieuwe polling | Real-time |
-|------|-------------|----------------|-----------|
-| Publiek | 15 sec | 60 sec | ✓ |
-| Spreker | 10 sec | 10 sec | ✓ (poule_klaar) |
-| Mat Interface | 30 sec | Geen | ✓ (score, beurt, poule_klaar, bracket) |
+### Hoe het werkt
+
+1. **Activatie**: Bij elke `MatUpdate` event → cache key `toernooi:{id}:heartbeat_active` (15 min TTL)
+2. **Heartbeat command**: `php artisan toernooi:heartbeat` — long-running process (supervisor)
+3. **Elke seconde**: broadcast volledige mat-state voor alle actieve toernooien via Reverb
+4. **Auto-stop**: stopt broadcast na 15 min zonder activiteit (cache key vervalt)
+5. **Publieke app**: ontvangt `mat.heartbeat` event met volledige mat-data, update direct in UI
+
+### Event type: `heartbeat`
+
+```javascript
+// Publieke app ontvangt heartbeat met volledige mat-state
+window.addEventListener('mat-heartbeat', (e) => {
+    // e.detail.matten = volledige mat array, direct toekennen
+    this.liveMatten = e.detail.matten;
+});
+```
+
+### Supervisor config
+
+```ini
+[program:toernooi-heartbeat]
+command=php /var/www/judotoernooi/laravel/artisan toernooi:heartbeat
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/www/judotoernooi/laravel/storage/logs/heartbeat.log
+```
+
+### Key files
+
+- `app/Console/Commands/ToernooiHeartbeat.php` — long-running heartbeat command
+- `app/Events/MatUpdate.php` — zet cache key bij elke actie
+- `resources/views/partials/mat-updates-listener.blade.php` — client-side listener
+
+### Geen polling meer
+
+| View | Real-time | Polling |
+|------|-----------|---------|
+| Publiek | ✓ heartbeat (1s) | Geen |
+| Spreker | ✓ (poule_klaar) | 10 sec |
+| Mat Interface | ✓ (score, beurt, poule_klaar, bracket) | Geen |
 
 ---
 
