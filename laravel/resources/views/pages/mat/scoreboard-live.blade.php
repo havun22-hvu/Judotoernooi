@@ -676,6 +676,52 @@
                     els.winnerType.textContent = (data.uitslag_type || '').toUpperCase();
                     els.winnerOverlay.classList.add('active');
                     break;
+
+                case 'match.assign':
+                    // Match assigned to mat (groen gezet) — show names, reset scores
+                    els.winnerOverlay.classList.remove('active');
+                    document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
+                    document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
+                    document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
+                    document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
+                    matchDuration = data.match_duration || 240;
+                    timeRemaining = matchDuration;
+                    isRunning = false;
+                    isGoldenScore = false;
+                    osaekomiActive = false;
+                    osaekomiTimes = { wit: [], blauw: [] };
+                    clearOsaekomiState();
+                    renderOsaekomiTimes();
+                    updateScores({
+                        wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+                        blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+                    });
+                    updateTimerDisplay();
+                    break;
+
+                case 'match.unassign':
+                    // Match removed from mat — reset to standby
+                    isRunning = false;
+                    isGoldenScore = false;
+                    if (timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
+                    osaekomiActive = false;
+                    if (osaekomiAnimFrame) cancelAnimationFrame(osaekomiAnimFrame);
+                    osaekomiTimes = { wit: [], blauw: [] };
+                    clearOsaekomiState();
+                    renderOsaekomiTimes();
+                    document.getElementById('wit-naam').textContent = 'WIT';
+                    document.getElementById('wit-club').textContent = '';
+                    document.getElementById('blauw-naam').textContent = 'BLAUW';
+                    document.getElementById('blauw-club').textContent = '';
+                    matchDuration = 240;
+                    timeRemaining = matchDuration;
+                    updateScores({
+                        wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+                        blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+                    });
+                    updateTimerDisplay();
+                    els.winnerOverlay.classList.remove('active');
+                    break;
             }
         }
     });

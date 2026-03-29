@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\MatUpdate;
 use App\Events\ScoreboardAssignment;
+use App\Events\ScoreboardEvent;
 use App\Http\Requests\WedstrijdUitslagRequest;
 use App\Models\DeviceToegang;
 use App\Models\Judoka;
@@ -540,13 +541,13 @@ class MatController extends Controller
             'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
         ]);
 
-        // Notify scoreboard app when active match is set (green)
+        // Notify scoreboard app + LCD display when active match changes
         if ($mat->actieve_wedstrijd_id) {
             $actieveWedstrijd = Wedstrijd::with(['judokaWit.club', 'judokaBlauw.club', 'poule'])
                 ->find($mat->actieve_wedstrijd_id);
 
             if ($actieveWedstrijd) {
-                ScoreboardAssignment::dispatch($toernooiId, $mat->id, [
+                $matchData = [
                     'id' => $actieveWedstrijd->id,
                     'judoka_wit' => [
                         'id' => $actieveWedstrijd->judokaWit?->id,
@@ -563,8 +564,23 @@ class MatController extends Controller
                     'groep' => $actieveWedstrijd->groep,
                     'match_duration' => 240,
                     'updated_at' => $actieveWedstrijd->updated_at?->toISOString(),
+                ];
+
+                // Notify scoreboard app
+                ScoreboardAssignment::dispatch($toernooiId, $mat->id, $matchData);
+
+                // Notify LCD display directly (no app relay needed)
+                ScoreboardEvent::dispatch($toernooiId, $mat->id, [
+                    'event' => 'match.assign',
+                    ...$matchData,
                 ]);
             }
+        } else {
+            // Active match cleared — notify app and LCD to reset
+            ScoreboardAssignment::dispatch($toernooiId, $mat->id, []);
+            ScoreboardEvent::dispatch($toernooiId, $mat->id, [
+                'event' => 'match.unassign',
+            ]);
         }
 
         return response()->json([
