@@ -16,6 +16,9 @@ class FreemiumService
     public const FREE_MAX_HANDMATIG = 20;
     public const DEMO_CSV_VARIANTS = [30, 40, 50];
 
+    // Staging discount factor (0.5 = 50% off)
+    public const STAGING_KORTING = 0.5;
+
     // Pricing tiers
     public const STAFFELS = [
         '51-100' => ['min' => 51, 'max' => 100, 'prijs' => 20],
@@ -139,18 +142,46 @@ class FreemiumService
         $huidigeJudokas = $toernooi->judokas()->count();
         $alBetaald = $this->getAlBetaaldePrijs($toernooi);
 
+        $isStaging = $this->isStagingKorting();
+
         return collect(self::STAFFELS)
             ->filter(fn($staffel) => $staffel['max'] > $huidigeJudokas)
-            ->map(fn($staffel, $key) => [
-                'tier' => $key,
-                'min' => $staffel['min'],
-                'max' => $staffel['max'],
-                'prijs' => max(0, $staffel['prijs'] - $alBetaald),
-                'volle_prijs' => $staffel['prijs'],
-                'label' => "Tot {$staffel['max']} judoka's",
-            ])
+            ->map(function ($staffel, $key) use ($alBetaald, $isStaging) {
+                $basisPrijs = $staffel['prijs'];
+                if ($isStaging) {
+                    $basisPrijs = round($basisPrijs * self::STAGING_KORTING, 2);
+                }
+                return [
+                    'tier' => $key,
+                    'min' => $staffel['min'],
+                    'max' => $staffel['max'],
+                    'prijs' => max(0, $basisPrijs - $alBetaald),
+                    'volle_prijs' => $staffel['prijs'],
+                    'staging_korting' => $isStaging,
+                    'label' => "Tot {$staffel['max']} judoka's",
+                ];
+            })
             ->values()
             ->all();
+    }
+
+    /**
+     * Check if staging discount applies
+     */
+    public function isStagingKorting(): bool
+    {
+        return app()->environment('staging');
+    }
+
+    /**
+     * Apply staging discount to a price
+     */
+    public function pasKortingToe(float $prijs): float
+    {
+        if ($this->isStagingKorting()) {
+            return round($prijs * self::STAGING_KORTING, 2);
+        }
+        return $prijs;
     }
 
     /**

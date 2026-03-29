@@ -108,7 +108,8 @@ class ToernooiBetalingController extends Controller
         }
 
         $alBetaald = $this->freemiumService->getAlBetaaldePrijs($toernooi);
-        $prijs = max(0, $tierInfo['prijs'] - $alBetaald);
+        $basisPrijs = $this->freemiumService->pasKortingToe($tierInfo['prijs']);
+        $prijs = max(0, $basisPrijs - $alBetaald);
         $maxJudokas = $tierInfo['max'];
 
         $organisator = Auth::guard('organisator')->user();

@@ -13,6 +13,12 @@
     </h1>
     <p class="text-gray-600 mb-8">{{ $toernooi->naam }}</p>
 
+    @if(app()->environment('staging'))
+    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <p class="text-orange-800 font-medium">Staging omgeving: 50% korting op alle staffelprijzen</p>
+    </div>
+    @endif
+
     {{-- Current status --}}
     <div class="{{ ($isReUpgrade ?? false) ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200' }} border rounded-lg p-6 mb-8">
         <h2 class="text-lg font-semibold {{ ($isReUpgrade ?? false) ? 'text-green-800' : 'text-blue-800' }} mb-4">
