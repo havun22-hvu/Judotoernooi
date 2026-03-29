@@ -618,6 +618,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     // Wedstrijddag routes (admin only)
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
         Route::get('wedstrijddag/poules', [WedstrijddagController::class, 'poules'])->name('wedstrijddag.poules');
+        Route::post('wedstrijddag/heartbeat-toggle', [WedstrijddagController::class, 'toggleHeartbeat'])->name('wedstrijddag.heartbeat-toggle');
         Route::post('wedstrijddag/verplaats-judoka', [WedstrijddagController::class, 'verplaatsJudoka'])->name('wedstrijddag.verplaats-judoka');
         Route::post('wedstrijddag/naar-zaaloverzicht', [WedstrijddagController::class, 'naarZaaloverzicht'])->name('wedstrijddag.naar-zaaloverzicht');
         Route::post('wedstrijddag/naar-zaaloverzicht-poule', [WedstrijddagController::class, 'naarZaaloverzichtPoule'])->name('wedstrijddag.naar-zaaloverzicht-poule');

@@ -48,9 +48,22 @@
 <div x-data="wedstrijddagPoules()" class="space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">{{ __('Wedstrijddag Poules') }}</h1>
-        <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            {{ __('Verifieer poules') }}
-        </button>
+        <div class="flex items-center gap-3">
+            {{-- Heartbeat toggle --}}
+            <div x-data="{ active: {{ ($heartbeatActive ?? false) ? 'true' : 'false' }}, loading: false }" class="flex items-center gap-2">
+                <button @click="loading = true; fetch('{{ route('wedstrijddag.heartbeat-toggle', $toernooi->routeParams()) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { active = d.active; loading = false; }).catch(() => loading = false)"
+                        :class="active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+                        class="text-white text-sm font-medium py-2 px-3 rounded flex items-center gap-1.5 transition-colors"
+                        :disabled="loading">
+                    <span x-show="!loading" :class="active ? 'text-green-200' : 'text-gray-200'" class="text-xs">&#9679;</span>
+                    <svg x-show="loading" x-cloak class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <span x-text="active ? 'LIVE' : 'LIVE uit'"></span>
+                </button>
+            </div>
+            <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                {{ __('Verifieer poules') }}
+            </button>
+        </div>
     </div>
 
     {{-- Waarschuwing: poules niet op matten --}}

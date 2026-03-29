@@ -11,6 +11,7 @@ use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\ActivityLogger;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -139,14 +140,30 @@ class WedstrijddagController extends Controller
         // Clubs for quick-add judoka modal
         $clubs = Club::where('organisator_id', $organisator->id)->orderBy('naam')->get();
 
+        $heartbeatActive = Cache::has("toernooi:{$toernooi->id}:heartbeat_active");
+
         return view('pages.wedstrijddag.poules', compact(
             'toernooi',
             'blokken',
             'sentToZaaloverzicht',
             'problematischeGewichtsPoules',
             'clubs',
-            'matWaarschuwing'
+            'matWaarschuwing',
+            'heartbeatActive'
         ));
+    }
+
+    public function toggleHeartbeat(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $cacheKey = "toernooi:{$toernooi->id}:heartbeat_active";
+
+        if (Cache::has($cacheKey)) {
+            Cache::forget($cacheKey);
+            return response()->json(['active' => false, 'message' => 'Heartbeat gestopt']);
+        }
+
+        Cache::put($cacheKey, true, now()->addMinutes(15));
+        return response()->json(['active' => true, 'message' => 'Heartbeat geactiveerd (15 min)']);
     }
 
     public function verplaatsJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse

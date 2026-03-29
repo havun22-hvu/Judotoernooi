@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Log;
  * Long-running heartbeat command that broadcasts mat state every second
  * for active tournaments via Reverb. Auto-stops when no activity for 15 min.
  *
- * Activated by MatUpdate event setting cache key toernooi:{id}:heartbeat_active.
+ * Usage:
+ *   php artisan toernooi:heartbeat          — run heartbeat process (supervisor)
+ *   php artisan toernooi:heartbeat:on {id}  — manually activate for a tournament
+ *   php artisan toernooi:heartbeat:off {id} — manually deactivate
  */
 class ToernooiHeartbeat extends Command
 {
@@ -37,7 +40,6 @@ class ToernooiHeartbeat extends Command
 
     private function getActiveToernooien(): array
     {
-        // Only check toernooien that are in wedstrijddag phase (have matten + poules)
         $toernooien = Toernooi::whereHas('matten')->whereHas('poules')->get();
         $active = [];
 
