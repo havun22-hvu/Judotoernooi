@@ -245,16 +245,21 @@
             animation: blink 1s infinite;
         }
 
-        /* 8. Footer */
-        .footer-row {
+        /* 0. Header — poule info */
+        .header-row {
             background: #111827;
-            padding: 6px 16px;
+            padding: 1vh 16px 0.5vh;
             text-align: center;
         }
-        .footer-text {
+        .header-poule {
+            color: #FFFFFF;
+            font-size: clamp(16px, 3vh, 36px);
+            font-weight: 800;
+        }
+        .header-mat {
             color: #6B7280;
-            font-size: clamp(10px, 1.5vh, 16px);
-            font-family: 'Courier New', monospace;
+            font-size: clamp(10px, 1.5vh, 18px);
+            font-weight: 600;
         }
 
         /* Section labels */
@@ -316,6 +321,12 @@
 <body>
     <div id="app">
         <div class="scoreboard" id="scoreboard">
+            {{-- 0. Header — poule info --}}
+            <div class="header-row">
+                <div class="header-mat">Mat {{ $matNummer ?? '' }}</div>
+                <div class="header-poule" id="header-poule"></div>
+            </div>
+
             {{-- 1. Names — wit links, blauw rechts (gespiegeld t.o.v. bediening) --}}
             <div class="names-row">
                 <div class="name-card name-card-wit">
@@ -338,7 +349,6 @@
             <div class="timer-row">
                 <div class="timer-side half-wit"></div>
                 <div class="timer-center">
-                    <div class="section-label">Mat {{ $matNummer ?? '' }}</div>
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
                     <div class="timer" id="timer-display">4:00</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
@@ -443,10 +453,12 @@
             winnerOverlay: document.getElementById('winner-overlay'),
             winnerName: document.getElementById('winner-name'),
             winnerType: document.getElementById('winner-type'),
+            headerPoule: document.getElementById('header-poule'),
         };
 
         // Load initial match data
         if (initialMatch) {
+            els.headerPoule.textContent = [initialMatch.poule_naam, initialMatch.ronde ? `Ronde ${initialMatch.ronde}` : ''].filter(Boolean).join(' · ');
             document.getElementById('wit-naam').textContent = initialMatch.judoka_wit?.naam || 'WIT';
             document.getElementById('wit-club').textContent = initialMatch.judoka_wit?.club || '';
             document.getElementById('blauw-naam').textContent = initialMatch.judoka_blauw?.naam || 'BLAUW';
@@ -577,6 +589,7 @@
             switch (data.event) {
                 case 'match.start':
                     els.winnerOverlay.classList.remove('active');
+                    els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
 
                     document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
                     document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
@@ -681,6 +694,7 @@
                 case 'match.assign':
                     // Match assigned to mat (groen gezet) — show names, reset scores
                     els.winnerOverlay.classList.remove('active');
+                    els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
                     document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
                     document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
                     document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
@@ -702,6 +716,7 @@
 
                 case 'match.unassign':
                     // Match removed from mat — reset to standby
+                    els.headerPoule.textContent = '';
                     isRunning = false;
                     isGoldenScore = false;
                     if (timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
