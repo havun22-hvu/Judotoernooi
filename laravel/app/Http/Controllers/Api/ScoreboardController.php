@@ -146,9 +146,11 @@ class ScoreboardController extends Controller
             ], 400);
         }
 
-        // Convert structured scores to flat values for storage
-        $scoreWit = $this->flattenScore($validated['score_wit'] ?? []);
-        $scoreBlauw = $this->flattenScore($validated['score_blauw'] ?? []);
+        // Convert to judopunten (JP) for storage: winner gets JP based on uitslag_type, loser gets 0
+        $isWitWinnaar = $validated['winnaar_id'] == $wedstrijd->judoka_wit_id;
+        $jp = $this->uitslagTypeToJP($validated['uitslag_type']);
+        $scoreWit = $isWitWinnaar ? $jp : 0;
+        $scoreBlauw = $isWitWinnaar ? 0 : $jp;
 
         // Handle elimination vs pool match
         if ($wedstrijd->groep) {
@@ -285,17 +287,16 @@ class ScoreboardController extends Controller
     }
 
     /**
-     * Convert structured score array to flat integer for database storage.
-     * Format: ippon=10, wazaari count + yuko count combined
+     * Convert uitslag_type to judopunten (JP) for the winner.
+     * Ippon (incl. awasete/hansoku) = 10, Waza-ari = 7, Yuko/Hantei = 5
      */
-    private function flattenScore(array $score): int
+    private function uitslagTypeToJP(string $uitslagType): int
     {
-        if (($score['ippon'] ?? false)) {
-            return 10; // Ippon
-        }
-
-        // Combine: wazaari * 1 + yuko (stored as single value for compatibility)
-        return ($score['wazaari'] ?? 0);
+        return match ($uitslagType) {
+            'ippon', 'hansoku-make' => 10,
+            'wazaari' => 7,
+            default => 5, // yuko, hantei, etc.
+        };
     }
 
     /**
