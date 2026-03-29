@@ -1139,25 +1139,35 @@
                         }
                     });
 
-                    // Score update - reload favorieten (matten come via heartbeat)
+                    // Score update - reload matten + favorieten
                     window.addEventListener('mat-score-update', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
+                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
                     });
 
-                    // Beurt update (groen/geel/blauw) - favorieten only
+                    // Beurt update (groen/geel/blauw) - reload matten + favorieten
                     window.addEventListener('mat-beurt-update', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
+                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
                     });
 
-                    // Poule klaar - reload favorieten
+                    // Poule klaar - reload matten + favorieten
                     window.addEventListener('mat-poule-klaar', (e) => {
                         this.isConnected = true;
                         this.wsMessageCount++;
+                        this.loadMatten();
                         if (this.favorieten.length > 0) this.loadFavorieten();
+                    });
+
+                    // Bracket update - reload matten
+                    window.addEventListener('mat-bracket-update', (e) => {
+                        this.isConnected = true;
+                        this.wsMessageCount++;
+                        this.loadMatten();
                     });
 
                     // Start met check - als Reverb geladen is zijn we verbonden
@@ -1166,6 +1176,14 @@
                             this.isConnected = true;
                         }
                     }, 2000);
+
+                    // Fallback polling als Reverb niet werkt (30s interval)
+                    setInterval(() => {
+                        if (!this.isConnected && poulesGegenereerd) {
+                            this.loadMatten();
+                            if (this.favorieten.length > 0) this.loadFavorieten();
+                        }
+                    }, 30000);
                 },
 
                 isFavoriet(id) {
