@@ -60,8 +60,11 @@ return [
     // Branch prefix for hotfix branches
     'branch_prefix' => 'hotfix/autofix-',
 
-    // Auto-create PR via GitHub CLI after successful fix
+    // Auto-create PR via GitHub REST API after successful fix
     'auto_pr' => env('AUTOFIX_AUTO_PR', true),
+
+    // GitHub personal access token for PR creation (needs 'repo' scope)
+    'github_token' => env('GITHUB_TOKEN'),
 
     // Risk levels that trigger dry-run only (notification, no code fix)
     'dry_run_on_risk' => ['medium', 'high'],

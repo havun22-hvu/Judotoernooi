@@ -866,42 +866,9 @@ class AutoFixService
 
         Log::info('AutoFix: Fix committed to branch', ['branch' => $branch, 'file' => $file]);
 
-        // Create PR via GitHub CLI (if available and auto_pr enabled)
+        // Create PR via GitHub REST API
         if (config('autofix.auto_pr', false)) {
-            $prTitle = sprintf('[AutoFix] %s', Str::limit($message, 60));
-            $prBody = sprintf(
-                "## AutoFix Proposal #%d\n\n"
-                . "**Exception:** `%s`\n"
-                . "**File:** `%s`\n"
-                . "**Risk:** %s\n\n"
-                . "---\n\n"
-                . "Review URL: %s/autofix/%s\n\n"
-                . "This PR was automatically created by AutoFix. Review the changes and merge if correct.",
-                $proposal->id,
-                $proposal->exception_class,
-                $file,
-                $this->extractRisk($proposal->claude_analysis),
-                config('app.url'),
-                $proposal->approval_token
-            );
-
-            $prCommand = sprintf(
-                'cd %s && gh pr create --base %s --head %s --title %s --body %s 2>&1',
-                escapeshellarg($basePath),
-                escapeshellarg($mainBranch),
-                escapeshellarg($branch),
-                escapeshellarg($prTitle),
-                escapeshellarg($prBody)
-            );
-
-            exec($prCommand, $prOutput, $prReturn);
-
-            if ($prReturn === 0) {
-                $prUrl = trim(implode("\n", $prOutput));
-                Log::info('AutoFix: PR created', ['url' => $prUrl, 'branch' => $branch]);
-            } else {
-                Log::warning('AutoFix: PR creation failed (gh CLI)', ['output' => implode("\n", $prOutput)]);
-            }
+            $this->createGitHubPR($basePath, $mainBranch, $branch, $file, $proposal);
         }
 
         // Switch back to main branch so the server keeps serving from main
@@ -926,6 +893,69 @@ class AutoFixService
             Log::warning('AutoFix: git push failed', ['output' => implode("\n", $output)]);
         } else {
             Log::info('AutoFix: Changes committed and pushed', ['file' => $file]);
+        }
+    }
+
+    /**
+     * Create a Pull Request via the GitHub REST API.
+     */
+    protected function createGitHubPR(string $basePath, string $mainBranch, string $branch, string $file, AutofixProposal $proposal): void
+    {
+        $token = config('autofix.github_token');
+        if (!$token) {
+            Log::warning('AutoFix: No GITHUB_TOKEN configured, skipping PR creation');
+            return;
+        }
+
+        // Detect owner/repo from git remote
+        exec(sprintf('cd %s && git remote get-url origin 2>/dev/null', escapeshellarg($basePath)), $remoteOutput);
+        $remoteUrl = trim($remoteOutput[0] ?? '');
+
+        if (!preg_match('#[:/]([^/]+)/([^/.]+?)(?:\.git)?$#', $remoteUrl, $repoMatch)) {
+            Log::warning('AutoFix: Could not parse GitHub owner/repo from remote', ['remote' => $remoteUrl]);
+            return;
+        }
+
+        $owner = $repoMatch[1];
+        $repo = $repoMatch[2];
+
+        $prTitle = sprintf('[AutoFix] %s', Str::limit($file . ': ' . $proposal->exception_class, 60));
+        $prBody = sprintf(
+            "## AutoFix Proposal #%d\n\n"
+            . "**Exception:** `%s`\n"
+            . "**File:** `%s`\n"
+            . "**Risk:** %s\n\n"
+            . "---\n\n"
+            . "Review URL: %s/autofix/%s\n\n"
+            . "This PR was automatically created by AutoFix. Review the changes and merge if correct.",
+            $proposal->id,
+            $proposal->exception_class,
+            $file,
+            $this->extractRisk($proposal->claude_analysis),
+            config('app.url'),
+            $proposal->approval_token
+        );
+
+        try {
+            $response = Http::withToken($token)
+                ->post("https://api.github.com/repos/{$owner}/{$repo}/pulls", [
+                    'title' => $prTitle,
+                    'body' => $prBody,
+                    'head' => $branch,
+                    'base' => $mainBranch,
+                ]);
+
+            if ($response->successful()) {
+                $prUrl = $response->json('html_url');
+                Log::info('AutoFix: PR created via GitHub API', ['url' => $prUrl, 'branch' => $branch]);
+            } else {
+                Log::warning('AutoFix: GitHub API PR creation failed', [
+                    'status' => $response->status(),
+                    'body' => Str::limit($response->body(), 300),
+                ]);
+            }
+        } catch (Throwable $apiError) {
+            Log::warning('AutoFix: GitHub API call failed', ['error' => $apiError->getMessage()]);
         }
     }
 
