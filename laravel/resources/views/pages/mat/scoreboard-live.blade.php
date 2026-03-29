@@ -133,9 +133,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
             flex: 1;
             gap: 0.8vh;
+            padding-bottom: 1vh;
         }
         .score-box {
             display: flex;
@@ -186,17 +187,18 @@
 
         /* Middle column — osaekomi (doorlopende banen, donker vak in midden) */
         .middle-col {
-            flex: 1;
+            flex: 0.7;
             flex-basis: 0;
             display: flex;
             flex-direction: column;
         }
         /* Top half of middle = split wit/blauw banen */
         .middle-banen {
-            flex: 1;
             display: flex;
             flex-direction: row;
         }
+        .middle-banen-top { flex: 0.3; }
+        .middle-banen-bottom { flex: 1; }
         .middle-half-wit { background: #F3F4F6; flex: 1; }
         .middle-half-blauw { background: #1E3A8A; flex: 1; }
 
@@ -362,9 +364,9 @@
                     </div>
                 </div>
 
-                {{-- Midden kolom: doorlopende banen boven, donker osaekomi vak, banen onder --}}
+                {{-- Midden kolom: kleine banen boven, donker osaekomi vak, grotere banen onder --}}
                 <div class="middle-col">
-                    <div class="middle-banen">
+                    <div class="middle-banen middle-banen-top">
                         <div class="middle-half-wit"></div>
                         <div class="middle-half-blauw"></div>
                     </div>
@@ -381,7 +383,7 @@
                             <div class="osaekomi-times-col" id="blauw-osaekomi-times"></div>
                         </div>
                     </div>
-                    <div class="middle-banen">
+                    <div class="middle-banen middle-banen-bottom">
                         <div class="middle-half-wit"></div>
                         <div class="middle-half-blauw"></div>
                     </div>
