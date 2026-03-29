@@ -36,6 +36,21 @@
 - **Wat:** Eerste 4 tekens van device token getoond naast PIN in device toegangen.
 - **Bestanden:** device-toegangen.blade.php
 
+### Feat: Club aanmelding via publieke pagina
+- **Type:** Feature
+- **Wat:** Clubs kunnen zich aanmelden via formulier op de publieke info tab. Club wordt direct aangemaakt. Organisator ziet aanmeldingen met goedkeur/afwijs knoppen op "Clubs Uitnodigen" pagina.
+- **Bestanden:** PubliekController.php, ClubController.php, ClubAanmelding.php, publiek/index.blade.php, club/index.blade.php, web.php, migratie
+
+### Feat: Wedstrijdagenda op homepage
+- **Type:** Feature
+- **Wat:** Komende toernooien op homepage (opt-in via `zichtbaar_op_agenda`). Cards met datum/locatie/organisator. Link wisselt: aanmelding vóór weging, live na weging. LIVE/VANDAAG badges.
+- **Bestanden:** home.blade.php, edit.blade.php, Toernooi.php, web.php, migratie
+
+### Fix: Open toernooi beschrijving
+- **Type:** UI fix
+- **Wat:** "Groter toernooi — eliminatie..." → "Alle opties inclusief eliminatie..."
+- **Bestanden:** edit.blade.php
+
 ---
 
 ## Sessie: 27 maart 2026
