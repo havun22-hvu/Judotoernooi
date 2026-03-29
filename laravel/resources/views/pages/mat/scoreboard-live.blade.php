@@ -22,11 +22,12 @@
         .name-card {
             flex: 1;
             flex-basis: 0;
-            padding: 1.5vh 8px;
+            padding: 2vh 8px 1.5vh;
             text-align: center;
+            border-bottom: 3px solid rgba(0,0,0,0.3);
         }
-        .name-card-wit { background: #F3F4F6; }
-        .name-card-blauw { background: #1E3A8A; }
+        .name-card-wit { background: #F3F4F6; border-bottom-color: #D1D5DB; }
+        .name-card-blauw { background: #1E3A8A; border-bottom-color: rgba(255,255,255,0.2); }
         .naam {
             font-weight: 900;
             text-transform: uppercase;
@@ -48,7 +49,7 @@
         .spacer-row {
             display: flex;
             flex-direction: row;
-            height: 8px;
+            height: 1.5vh;
         }
 
         /* 3. Timer row */
@@ -112,9 +113,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            padding-top: 1vh;
-            gap: 1vh;
+            justify-content: center;
+            gap: 0.8vh;
         }
         .score-col-wit { background: #F3F4F6; }
         .score-col-blauw { background: #1E3A8A; }
