@@ -405,10 +405,10 @@
 
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     @php
-        $reverbHost = parse_url(config('app.url'), PHP_URL_HOST);
-        $reverbPort = config('reverb.apps.apps.0.options.port') ?? 443;
-        $reverbKey = config('reverb.apps.apps.0.key') ?? env('REVERB_APP_KEY');
-        $reverbScheme = config('reverb.apps.apps.0.options.scheme') ?? 'https';
+        $reverbHost = env('VITE_REVERB_HOST', parse_url(config('app.url'), PHP_URL_HOST));
+        $reverbPort = (int) env('VITE_REVERB_PORT', 443);
+        $reverbKey = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY');
+        $reverbScheme = env('VITE_REVERB_SCHEME', 'https');
     @endphp
     <script>
     document.addEventListener('DOMContentLoaded', function() {
