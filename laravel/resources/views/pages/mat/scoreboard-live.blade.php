@@ -70,7 +70,7 @@
         .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 2.5vh 5vw;
+            padding: 3vh 5vw;
             text-align: center;
         }
         .timer {
@@ -169,7 +169,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0.5vh 0;
+            padding: 3vh 0 0;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
@@ -337,7 +337,7 @@
             </div>
 
             {{-- Spacer tussen namen en timer --}}
-            <div style="display:flex;flex-direction:row;height:1.5vh">
+            <div style="display:flex;flex-direction:row;height:0.5vh">
                 <div class="half-wit"></div>
                 <div class="half-blauw"></div>
             </div>
