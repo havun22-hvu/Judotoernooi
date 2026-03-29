@@ -70,11 +70,11 @@
         .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 3.5vh 3.5vw;
+            padding: 2.5vh 5vw;
             text-align: center;
         }
         .timer {
-            font-size: clamp(64px, 18vh, 200px);
+            font-size: clamp(72px, 22vh, 240px);
             font-weight: 900;
             color: #EF4444;
             font-family: 'Courier New', monospace;
@@ -125,6 +125,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
+            padding-top: 1vh;
         }
         .side-col-wit { background: #F3F4F6; }
         .side-col-blauw { background: #1E3A8A; }
