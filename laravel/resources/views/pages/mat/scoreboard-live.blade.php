@@ -104,7 +104,7 @@
         .scores-row {
             display: flex;
             flex-direction: row;
-            flex: 3;
+            flex: 2.5;
         }
         .score-col {
             flex: 1;
@@ -223,7 +223,7 @@
         .osaekomi-times-row {
             display: flex;
             flex-direction: row;
-            flex: 1;
+            flex: 1.5;
             min-height: 40px;
         }
         .osaekomi-times-col {
