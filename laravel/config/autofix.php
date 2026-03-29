@@ -54,6 +54,18 @@ return [
         '#Permission denied.*\.sock#i',
     ],
 
+    // Branch model: create hotfix branch + PR instead of pushing directly to main
+    'branch_model' => env('AUTOFIX_BRANCH_MODEL', true),
+
+    // Branch prefix for hotfix branches
+    'branch_prefix' => 'hotfix/autofix-',
+
+    // Auto-create PR via GitHub CLI after successful fix
+    'auto_pr' => env('AUTOFIX_AUTO_PR', true),
+
+    // Risk levels that trigger dry-run only (notification, no code fix)
+    'dry_run_on_risk' => ['medium', 'high'],
+
     // Files that should never be modified by AutoFix
     'protected_files' => [
         'artisan',

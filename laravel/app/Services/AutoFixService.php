@@ -44,6 +44,18 @@ class AutoFixService
                     continue;
                 }
 
+                // Check if risk level triggers dry-run mode
+                if ($this->isDryRunRisk($analysis['analysis'])) {
+                    $proposal = $this->createProposal($e, $file, $line, $codeContext, $analysis, $attempt);
+                    $proposal->update(['status' => 'notify_only']);
+                    $this->sendDryRunNotification($e, $file, $line, $proposal);
+                    Log::info('AutoFix: DRY-RUN (medium/high risk) - no auto-fix, notification sent', [
+                        'proposal_id' => $proposal->id,
+                        'exception' => get_class($e),
+                    ]);
+                    return;
+                }
+
                 // Check if Claude recommends NOTIFY_ONLY (no code fix possible)
                 if ($this->isNotifyOnly($analysis['analysis'])) {
                     $proposal = $this->createProposal($e, $file, $line, $codeContext, $analysis, $attempt);
@@ -642,6 +654,68 @@ class AutoFixService
     }
 
     /**
+     * Check if the risk level in Claude's response triggers dry-run mode.
+     */
+    protected function isDryRunRisk(string $analysis): bool
+    {
+        $dryRunRisks = config('autofix.dry_run_on_risk', []);
+        if (empty($dryRunRisks)) {
+            return false;
+        }
+
+        $risk = $this->extractRisk($analysis);
+        return in_array($risk, $dryRunRisks);
+    }
+
+    /**
+     * Send notification for dry-run (risk too high for auto-fix).
+     */
+    protected function sendDryRunNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal): void
+    {
+        $email = config('autofix.email');
+        if (!$email) {
+            return;
+        }
+
+        try {
+            $risk = $this->extractRisk($proposal->claude_analysis);
+            $analysisText = $proposal->claude_analysis;
+            if (preg_match('/ANALYSIS:\s*(.+?)(?:\n\n|$)/s', $analysisText, $match)) {
+                $analysisText = trim($match[1]);
+            }
+
+            $reviewUrl = config('app.url') . '/autofix/' . $proposal->approval_token;
+
+            $body = "[AutoFix] DRY-RUN - Risk '{$risk}' te hoog voor auto-fix\n\n"
+                . "Exception: " . get_class($e) . "\n"
+                . "Message: " . $e->getMessage() . "\n"
+                . "File: {$file}:{$line}\n"
+                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
+                . "Risk: {$risk}\n"
+                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
+                . "--- Claude's analyse ---\n"
+                . $analysisText . "\n\n"
+                . "--- Voorgestelde fix ---\n"
+                . Str::limit($proposal->claude_analysis, 1000) . "\n\n"
+                . "Review: {$reviewUrl}\n\n"
+                . "Deze fix is NIET automatisch toegepast vanwege het risico-niveau. "
+                . "Bekijk de fix en pas handmatig toe als correct.";
+
+            Mail::raw($body, function ($message) use ($email, $e, $risk) {
+                $message->to($email)
+                    ->subject("[AutoFix DRY-RUN] Risk: {$risk} - " . class_basename(get_class($e)));
+            });
+
+            $proposal->update(['email_sent_at' => now()]);
+
+        } catch (Throwable $mailError) {
+            Log::warning('AutoFix: Dry-run notification email failed', [
+                'error' => $mailError->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Check if Claude's response indicates NOTIFY_ONLY (no code fix possible).
      */
     protected function isNotifyOnly(string $analysis): bool
@@ -715,7 +789,7 @@ class AutoFixService
     }
 
     /**
-     * Commit and push the fix to git so local environments stay in sync.
+     * Commit fix to a hotfix branch and create a PR, or push directly if branch model is disabled.
      */
     public function gitCommitAndPush(AutofixProposal $proposal): void
     {
@@ -735,11 +809,7 @@ class AutoFixService
                 $risk = strtolower($riskMatch[1]);
             }
 
-            // Build structured commit message:
-            // Line 1: autofix(file): short description
-            // Line 3: Exception: class
-            // Line 4: Risk: level
-            // Line 5: Proposal: #id
+            // Build structured commit message
             $shortFile = str_replace('.blade', '', basename($file, '.php'));
             $prefix = "autofix({$shortFile}): ";
             $maxAnalysis = max(20, 72 - strlen($prefix));
@@ -752,24 +822,122 @@ class AutoFixService
 
             $message = $title . "\n\n" . $body;
 
-            $commands = sprintf(
-                'cd %s && git add %s && git commit %s -m %s && git push 2>&1',
-                escapeshellarg($basePath),
-                escapeshellarg($file),
-                escapeshellarg($file),
-                escapeshellarg($message)
-            );
-
-            exec($commands, $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                Log::warning('AutoFix: git push failed', ['output' => implode("\n", $output)]);
+            if (config('autofix.branch_model', false)) {
+                $this->gitBranchAndPR($basePath, $file, $message, $proposal);
             } else {
-                Log::info('AutoFix: Changes committed and pushed', ['file' => $file]);
+                $this->gitDirectPush($basePath, $file, $message);
             }
         } catch (Throwable $gitError) {
             Log::warning('AutoFix: git operations failed', ['error' => $gitError->getMessage()]);
         }
+    }
+
+    /**
+     * Create a hotfix branch, commit, push, and create a PR via GitHub CLI.
+     */
+    protected function gitBranchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
+    {
+        $branchPrefix = config('autofix.branch_prefix', 'hotfix/autofix-');
+        $branch = $branchPrefix . date('Ymd-His');
+
+        // Detect the main branch name
+        exec(sprintf('cd %s && git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed "s@^refs/remotes/origin/@@"', escapeshellarg($basePath)), $mainOutput);
+        $mainBranch = trim($mainOutput[0] ?? 'main');
+
+        // Create branch, commit, push
+        $commands = sprintf(
+            'cd %s && git checkout -b %s && git add %s && git commit -m %s && git push -u origin %s 2>&1',
+            escapeshellarg($basePath),
+            escapeshellarg($branch),
+            escapeshellarg($file),
+            escapeshellarg($message),
+            escapeshellarg($branch)
+        );
+
+        exec($commands, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            Log::warning('AutoFix: branch+push failed, falling back to direct push', ['output' => implode("\n", $output)]);
+            // Fallback: go back to main branch and push directly
+            exec(sprintf('cd %s && git checkout %s 2>&1', escapeshellarg($basePath), escapeshellarg($mainBranch)));
+            $this->gitDirectPush($basePath, $file, $message);
+            return;
+        }
+
+        Log::info('AutoFix: Fix committed to branch', ['branch' => $branch, 'file' => $file]);
+
+        // Create PR via GitHub CLI (if available and auto_pr enabled)
+        if (config('autofix.auto_pr', false)) {
+            $prTitle = sprintf('[AutoFix] %s', Str::limit($message, 60));
+            $prBody = sprintf(
+                "## AutoFix Proposal #%d\n\n"
+                . "**Exception:** `%s`\n"
+                . "**File:** `%s`\n"
+                . "**Risk:** %s\n\n"
+                . "---\n\n"
+                . "Review URL: %s/autofix/%s\n\n"
+                . "This PR was automatically created by AutoFix. Review the changes and merge if correct.",
+                $proposal->id,
+                $proposal->exception_class,
+                $file,
+                $this->extractRisk($proposal->claude_analysis),
+                config('app.url'),
+                $proposal->approval_token
+            );
+
+            $prCommand = sprintf(
+                'cd %s && gh pr create --base %s --head %s --title %s --body %s 2>&1',
+                escapeshellarg($basePath),
+                escapeshellarg($mainBranch),
+                escapeshellarg($branch),
+                escapeshellarg($prTitle),
+                escapeshellarg($prBody)
+            );
+
+            exec($prCommand, $prOutput, $prReturn);
+
+            if ($prReturn === 0) {
+                $prUrl = trim(implode("\n", $prOutput));
+                Log::info('AutoFix: PR created', ['url' => $prUrl, 'branch' => $branch]);
+            } else {
+                Log::warning('AutoFix: PR creation failed (gh CLI)', ['output' => implode("\n", $prOutput)]);
+            }
+        }
+
+        // Switch back to main branch so the server keeps serving from main
+        exec(sprintf('cd %s && git checkout %s 2>&1', escapeshellarg($basePath), escapeshellarg($mainBranch)));
+    }
+
+    /**
+     * Push directly to the current branch (legacy behavior).
+     */
+    protected function gitDirectPush(string $basePath, string $file, string $message): void
+    {
+        $commands = sprintf(
+            'cd %s && git add %s && git commit -m %s && git push 2>&1',
+            escapeshellarg($basePath),
+            escapeshellarg($file),
+            escapeshellarg($message)
+        );
+
+        exec($commands, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            Log::warning('AutoFix: git push failed', ['output' => implode("\n", $output)]);
+        } else {
+            Log::info('AutoFix: Changes committed and pushed', ['file' => $file]);
+        }
+    }
+
+    /**
+     * Extract RISK level from Claude's analysis.
+     */
+    protected function extractRisk(string $analysis): string
+    {
+        if (preg_match('/RISK:\s*(low|medium|high)/i', $analysis, $match)) {
+            return strtolower($match[1]);
+        }
+        return 'unknown';
     }
 
     /**
