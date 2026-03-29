@@ -64,7 +64,7 @@
             text-align: center;
         }
         .timer {
-            font-size: clamp(48px, 14vh, 160px);
+            font-size: clamp(64px, 18vh, 200px);
             font-weight: 900;
             color: #EF4444;
             font-family: 'Courier New', monospace;
