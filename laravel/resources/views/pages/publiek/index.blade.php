@@ -385,7 +385,7 @@
             </template>
 
             <!-- Matten grid -->
-            <div x-show="liveMatten.length > 0" :class="selectedMatId ? '' : 'grid grid-cols-1 lg:grid-cols-2 gap-4'">
+            <div x-show="liveMatten.length > 0" :class="selectedMatId ? '' : (liveMatten.length > 4 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3' : 'grid grid-cols-1 lg:grid-cols-2 gap-4')"
                 <template x-for="mat in liveMatten" :key="mat.id">
                     <div x-show="!selectedMatId || selectedMatId === mat.id"
                          :class="selectedMatId === mat.id ? 'mb-4' : ''"
