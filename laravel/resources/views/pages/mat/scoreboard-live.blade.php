@@ -70,7 +70,7 @@
         .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 1.5vh 5vw;
+            padding: 2.5vh 5vw;
             text-align: center;
         }
         .timer {
@@ -134,9 +134,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 2vh;
-            flex: 1;
-            gap: 1vh;
+            padding-top: 1vh;
+            gap: 0.8vh;
         }
         .score-box {
             display: flex;
@@ -338,7 +337,7 @@
             </div>
 
             {{-- Spacer tussen namen en timer --}}
-            <div style="display:flex;flex-direction:row;height:1vh">
+            <div style="display:flex;flex-direction:row;height:1.5vh">
                 <div class="half-wit"></div>
                 <div class="half-blauw"></div>
             </div>
