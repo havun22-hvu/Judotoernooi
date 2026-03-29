@@ -14,6 +14,23 @@
             height: 100vh;
         }
 
+        /* 0. Header — poule info */
+        .header-row {
+            background: #111827;
+            padding: 1vh 16px 0.5vh;
+            text-align: center;
+        }
+        .header-poule {
+            color: #FFFFFF;
+            font-size: clamp(16px, 3vh, 36px);
+            font-weight: 800;
+        }
+        .header-mat {
+            color: #6B7280;
+            font-size: clamp(10px, 1.5vh, 18px);
+            font-weight: 600;
+        }
+
         /* 1. Names row */
         .names-row {
             display: flex;
@@ -45,14 +62,7 @@
         .name-card-wit .club { color: #6B7280; }
         .name-card-blauw .club { color: #93C5FD; }
 
-        /* 2. Spacer between names and timer */
-        .spacer-row {
-            display: flex;
-            flex-direction: row;
-            height: 1.5vh;
-        }
-
-        /* 3. Timer row */
+        /* 2. Timer row — donker midden, kleur zijkanten */
         .timer-row {
             display: flex;
             flex-direction: row;
@@ -60,7 +70,7 @@
         .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 3vh 5vw;
+            padding: 1.5vh 5vw;
             text-align: center;
         }
         .timer {
@@ -101,23 +111,32 @@
         }
         .golden-score-badge.active { display: inline-block; }
 
-        /* 4. Scores row — Y/W/I, red on dark */
-        .scores-row {
+        /* 3. Main content — 3-kolom layout */
+        .main-3col {
             display: flex;
             flex-direction: row;
-            flex: 0.8;
+            flex: 1;
         }
-        .score-col {
+
+        /* Side columns (wit/blauw) — scores + shido's */
+        .side-col {
             flex: 1;
             flex-basis: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+        .side-col-wit { background: #F3F4F6; }
+        .side-col-blauw { background: #1E3A8A; }
+
+        .scores-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
+            flex: 1;
             gap: 0.8vh;
         }
-        .score-col-wit { background: #F3F4F6; }
-        .score-col-blauw { background: #1E3A8A; }
         .score-box {
             display: flex;
             flex-direction: row;
@@ -131,8 +150,8 @@
             text-align: right;
             letter-spacing: 1px;
         }
-        .score-col-wit .score-label { color: #6B7280; }
-        .score-col-blauw .score-label { color: #93C5FD; }
+        .side-col-wit .score-label { color: #6B7280; }
+        .side-col-blauw .score-label { color: #93C5FD; }
         .score-value {
             font-size: clamp(36px, 10vh, 120px);
             font-weight: 900;
@@ -146,23 +165,13 @@
             text-align: center;
         }
 
-        /* 5. Shido row */
-        .shido-row {
-            display: flex;
-            flex-direction: row;
-            flex: 0.3;
-        }
-        .shido-col {
-            flex: 1;
-            flex-basis: 0;
+        .shido-section {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1vh 0;
+            padding: 1.5vh 0;
             gap: clamp(6px, 1vw, 16px);
         }
-        .shido-col-wit { background: #F3F4F6; }
-        .shido-col-blauw { background: #1E3A8A; }
         .shido-card {
             width: clamp(24px, 3vw, 50px);
             height: clamp(32px, 5vh, 70px);
@@ -175,37 +184,30 @@
             border: 2px solid #EAB308;
         }
 
-        /* 6. Osaekomi row */
-        .osaekomi-row {
-            display: flex;
-            flex-direction: row;
-            flex: 0.8;
-        }
-        .osaekomi-side {
+        /* Middle column — osaekomi (doorlopende banen, donker vak in midden) */
+        .middle-col {
             flex: 1;
             flex-basis: 0;
             display: flex;
-            align-items: center;
-            padding: 1vh 0;
+            flex-direction: column;
         }
-        .osaekomi-side-wit { background: #F3F4F6; justify-content: flex-end; padding-right: 2vw; }
-        .osaekomi-side-blauw { background: #1E3A8A; justify-content: flex-start; padding-left: 2vw; }
-        .osaekomi-dot {
-            width: clamp(24px, 4vh, 48px);
-            height: clamp(24px, 4vh, 48px);
-            border-radius: 50%;
-            background: #374151;
+        /* Top half of middle = split wit/blauw banen */
+        .middle-banen {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
         }
-        .osaekomi-dot.active {
-            background: #22C55E;
-        }
-        .osaekomi-timer-col {
+        .middle-half-wit { background: #F3F4F6; flex: 1; }
+        .middle-half-blauw { background: #1E3A8A; flex: 1; }
+
+        /* Osaekomi dark box in middle */
+        .osaekomi-box {
             background: #111827;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 0.5vh 2vw;
+            justify-content: flex-start;
+            padding: 1.5vh 2vw;
         }
         .osaekomi-label {
             color: #FFFFFF;
@@ -213,6 +215,22 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 3px;
+        }
+        .osaekomi-dots-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 2vw;
+            margin-top: 0.5vh;
+        }
+        .osaekomi-dot {
+            width: clamp(20px, 3vh, 40px);
+            height: clamp(20px, 3vh, 40px);
+            border-radius: 50%;
+            background: #374151;
+        }
+        .osaekomi-dot.active {
+            background: #22C55E;
         }
         .osaekomi-time {
             font-size: clamp(36px, 8vh, 80px);
@@ -228,25 +246,19 @@
             color: #F97316;
         }
 
-        /* 7. Osaekomi times row */
-        .osaekomi-times-row {
+        /* Osaekomi times in dark box */
+        .osaekomi-times-section {
             display: flex;
             flex-direction: row;
-            flex: 3;
-            min-height: 40px;
+            gap: 3vw;
+            margin-top: 1vh;
         }
         .osaekomi-times-col {
-            flex: 1;
-            flex-basis: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            padding-top: 6px;
             gap: 4px;
         }
-        .osaekomi-times-col-wit { background: #F3F4F6; }
-        .osaekomi-times-col-blauw { background: #1E3A8A; }
         .osaekomi-time-entry {
             font-size: clamp(16px, 3vh, 32px);
             font-weight: 800;
@@ -254,32 +266,7 @@
             animation: blink 1s infinite;
         }
 
-        /* 0. Header — poule info */
-        .header-row {
-            background: #111827;
-            padding: 1vh 16px 0.5vh;
-            text-align: center;
-        }
-        .header-poule {
-            color: #FFFFFF;
-            font-size: clamp(16px, 3vh, 36px);
-            font-weight: 800;
-        }
-        .header-mat {
-            color: #6B7280;
-            font-size: clamp(10px, 1.5vh, 18px);
-            font-weight: 600;
-        }
-
-        /* Section labels */
-        .section-label {
-            color: #6B7280;
-            font-size: clamp(10px, 1.5vh, 18px);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 2px;
-        }
+        /* Bottom half of middle = split wit/blauw banen */
 
         /* Half colors */
         .half-wit { background: #F3F4F6; flex: 1; flex-basis: 0; }
@@ -348,13 +335,7 @@
                 </div>
             </div>
 
-            {{-- 2. Spacer --}}
-            <div class="spacer-row">
-                <div class="half-wit"></div>
-                <div class="half-blauw"></div>
-            </div>
-
-            {{-- 3. Timer — donker midden, kleur zijkanten --}}
+            {{-- 2. Timer — donker midden, kleur zijkanten --}}
             <div class="timer-row">
                 <div class="timer-side half-wit"></div>
                 <div class="timer-center">
@@ -365,53 +346,60 @@
                 <div class="timer-side half-blauw"></div>
             </div>
 
-            {{-- 4. Scores Y/W/I --}}
-            <div class="scores-row">
-                <div class="score-col score-col-wit">
-                    <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="wit-yuko">0</span></div>
-                    <div class="score-box"><span class="score-label">W</span><span class="score-value" id="wit-wazaari">0</span></div>
-                    <div class="score-box"><span class="score-label">I</span><span class="score-value" id="wit-ippon">0</span></div>
+            {{-- 3. Main content — 3 kolommen: [wit scores+shido] [midden: osaekomi] [blauw scores+shido] --}}
+            <div class="main-3col">
+                {{-- Linker kolom: wit scores + shido's --}}
+                <div class="side-col side-col-wit">
+                    <div class="scores-section">
+                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="wit-yuko">0</span></div>
+                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="wit-wazaari">0</span></div>
+                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="wit-ippon">0</span></div>
+                    </div>
+                    <div class="shido-section">
+                        <div class="shido-card" id="wit-shido-1"></div>
+                        <div class="shido-card" id="wit-shido-2"></div>
+                        <div class="shido-card" id="wit-shido-3"></div>
+                    </div>
                 </div>
-                <div class="score-col score-col-blauw">
-                    <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="blauw-yuko">0</span></div>
-                    <div class="score-box"><span class="score-label">W</span><span class="score-value" id="blauw-wazaari">0</span></div>
-                    <div class="score-box"><span class="score-label">I</span><span class="score-value" id="blauw-ippon">0</span></div>
-                </div>
-            </div>
 
-            {{-- 5. Shido's --}}
-            <div class="shido-row">
-                <div class="shido-col shido-col-wit">
-                    <div class="shido-card" id="wit-shido-1"></div>
-                    <div class="shido-card" id="wit-shido-2"></div>
-                    <div class="shido-card" id="wit-shido-3"></div>
+                {{-- Midden kolom: doorlopende banen boven, donker osaekomi vak, banen onder --}}
+                <div class="middle-col">
+                    <div class="middle-banen">
+                        <div class="middle-half-wit"></div>
+                        <div class="middle-half-blauw"></div>
+                    </div>
+                    <div class="osaekomi-box">
+                        <div class="osaekomi-label">Osaekomi</div>
+                        <div class="osaekomi-dots-row">
+                            <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
+                            <span class="osaekomi-time" id="osaekomi-display">00</span>
+                            <div class="osaekomi-dot" id="blauw-osaekomi-dot"></div>
+                        </div>
+                        <span class="osaekomi-zone" id="osaekomi-zone"></span>
+                        <div class="osaekomi-times-section">
+                            <div class="osaekomi-times-col" id="wit-osaekomi-times"></div>
+                            <div class="osaekomi-times-col" id="blauw-osaekomi-times"></div>
+                        </div>
+                    </div>
+                    <div class="middle-banen">
+                        <div class="middle-half-wit"></div>
+                        <div class="middle-half-blauw"></div>
+                    </div>
                 </div>
-                <div class="shido-col shido-col-blauw">
-                    <div class="shido-card" id="blauw-shido-1"></div>
-                    <div class="shido-card" id="blauw-shido-2"></div>
-                    <div class="shido-card" id="blauw-shido-3"></div>
-                </div>
-            </div>
 
-            {{-- 6. Osaekomi — groen bolletje per kant, timer donker midden --}}
-            <div class="osaekomi-row">
-                <div class="osaekomi-side osaekomi-side-wit">
-                    <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
+                {{-- Rechter kolom: blauw scores + shido's --}}
+                <div class="side-col side-col-blauw">
+                    <div class="scores-section">
+                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="blauw-yuko">0</span></div>
+                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="blauw-wazaari">0</span></div>
+                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="blauw-ippon">0</span></div>
+                    </div>
+                    <div class="shido-section">
+                        <div class="shido-card" id="blauw-shido-1"></div>
+                        <div class="shido-card" id="blauw-shido-2"></div>
+                        <div class="shido-card" id="blauw-shido-3"></div>
+                    </div>
                 </div>
-                <div class="osaekomi-timer-col">
-                    <div class="osaekomi-label">Osaekomi</div>
-                    <span class="osaekomi-time" id="osaekomi-display">00</span>
-                    <span class="osaekomi-zone" id="osaekomi-zone"></span>
-                </div>
-                <div class="osaekomi-side osaekomi-side-blauw">
-                    <div class="osaekomi-dot" id="blauw-osaekomi-dot"></div>
-                </div>
-            </div>
-
-            {{-- 7. Osaekomi tijden --}}
-            <div class="osaekomi-times-row">
-                <div class="osaekomi-times-col osaekomi-times-col-wit" id="wit-osaekomi-times"></div>
-                <div class="osaekomi-times-col osaekomi-times-col-blauw" id="blauw-osaekomi-times"></div>
             </div>
         </div>
 
