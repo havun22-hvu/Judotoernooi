@@ -205,14 +205,21 @@
             justify-content: center;
             padding: 0.5vh 2vw;
         }
+        .osaekomi-label {
+            color: #FFFFFF;
+            font-size: clamp(14px, 3vh, 32px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
         .osaekomi-time {
             font-size: clamp(36px, 8vh, 80px);
             font-weight: 900;
             font-family: 'Courier New', monospace;
-            color: #6B7280;
+            color: #EF4444;
             font-variant-numeric: tabular-nums;
         }
-        .osaekomi-time.active { color: #F97316; }
+        .osaekomi-time.active { color: #EF4444; }
         .osaekomi-zone {
             font-size: clamp(14px, 2.5vh, 28px);
             font-weight: 800;
@@ -390,7 +397,7 @@
                     <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
                 </div>
                 <div class="osaekomi-timer-col">
-                    <div class="section-label">Osaekomi</div>
+                    <div class="osaekomi-label">Osaekomi</div>
                     <span class="osaekomi-time" id="osaekomi-display">00</span>
                     <span class="osaekomi-zone" id="osaekomi-zone"></span>
                 </div>
