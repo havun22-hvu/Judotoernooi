@@ -133,10 +133,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             flex: 1;
-            gap: 0.8vh;
-            padding-bottom: 1vh;
+            gap: 1vh;
         }
         .score-box {
             display: flex;
@@ -154,7 +153,7 @@
         .side-col-wit .score-label { color: #6B7280; }
         .side-col-blauw .score-label { color: #93C5FD; }
         .score-value {
-            font-size: clamp(36px, 10vh, 120px);
+            font-size: clamp(40px, 12vh, 140px);
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             line-height: 1;
@@ -170,7 +169,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1.5vh 0;
+            padding: 2.5vh 0 1.5vh;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
@@ -187,17 +186,17 @@
 
         /* Middle column — osaekomi (doorlopende banen, donker vak in midden) */
         .middle-col {
-            flex: 0.7;
+            flex: 0.5;
             flex-basis: 0;
             display: flex;
             flex-direction: column;
         }
-        /* Top half of middle = split wit/blauw banen */
+        /* Top/bottom banen in middle column */
         .middle-banen {
             display: flex;
             flex-direction: row;
         }
-        .middle-banen-top { flex: 0.3; }
+        .middle-banen-top { flex: 0.6; }
         .middle-banen-bottom { flex: 1; }
         .middle-half-wit { background: #F3F4F6; flex: 1; }
         .middle-half-blauw { background: #1E3A8A; flex: 1; }
@@ -335,6 +334,12 @@
                     <div class="naam" id="blauw-naam">BLAUW</div>
                     <div class="club" id="blauw-club"></div>
                 </div>
+            </div>
+
+            {{-- Spacer tussen namen en timer --}}
+            <div style="display:flex;flex-direction:row;height:1vh">
+                <div class="half-wit"></div>
+                <div class="half-blauw"></div>
             </div>
 
             {{-- 2. Timer — donker midden, kleur zijkanten --}}
