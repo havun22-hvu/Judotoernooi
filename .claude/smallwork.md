@@ -14,6 +14,30 @@
 
 ---
 
+## Sessie: 28 maart 2026
+
+### Fix: Poule regels check na mutatie
+- **Type:** Bug fix + regression guard
+- **Wat:** Gewichts- en leeftijdswaarschuwing verdween na drag/remove judoka. Nieuwe `checkPouleRegels()` methode, `problemen` key in alle API responses, JS updatet warnings. Gefixt op poule indeling EN wedstrijddag pagina.
+- **Bestanden:** Poule.php, PouleController.php, WedstrijddagController.php, poule/index.blade.php, wedstrijddag/poules.blade.php
+
+### Feat: Code coverage + 109 tests
+- **Type:** Testing infrastructure
+- **Wat:** PCOV op staging, 4 nieuwe testbestanden, coverage 8%→15.5%. Tests vonden 2 echte bugs in store().
+- **Bestanden:** PouleCheckRegelsTest.php, PouleModelTest.php, PouleIndelingServiceTest.php, PouleControllerApiTest.php, ImportServiceTest.php
+
+### Fix: PouleController::store mist type + gewichtsklasse
+- **Type:** Bug fix (gevonden door tests)
+- **Wat:** `type => 'voorronde'` en `gewichtsklasse ?? ''` ontbraken — NOT NULL violation op SQLite.
+- **Bestanden:** PouleController.php
+
+### Feat: Device token zichtbaar
+- **Type:** UI
+- **Wat:** Eerste 4 tekens van device token getoond naast PIN in device toegangen.
+- **Bestanden:** device-toegangen.blade.php
+
+---
+
 ## Sessie: 27 maart 2026
 
 ### Feat: Toernooi type (intern/open)
