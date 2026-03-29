@@ -1,7 +1,7 @@
 # Plan: LCD Display Verbeteren
 
 > **Datum:** 2026-03-29
-> **Context:** JudoScoreBoard app stuurt nu events naar backend, display moet verbeterd worden
+> **Status:** Taak 1 en 4 zijn AFGEROND. Taak 2 en 3 staan open.
 > **Blade view:** `laravel/resources/views/pages/mat/scoreboard-live.blade.php`
 
 ## Achtergrond
@@ -14,33 +14,16 @@ De app stuurt events bij elke state change → backend broadcast → display upd
 
 ## Taken
 
-### 1. Osaekomi tijden tonen op display
+### ~~1. Osaekomi tijden tonen op display~~ ✅ DONE
 
-**Wat:** De app stuurt nu `osaekomi_times` mee bij `osaekomi.start` en `osaekomi.stop` events.
-Dit is een object: `{ blauw: [12, 8], wit: [15] }` (array van seconden per kant).
+Geïmplementeerd op 2026-03-29. De Blade view:
+- Heeft `osaekomiTimes` state + `renderOsaekomiTimes()` functie
+- Verwerkt `osaekomi_times` uit `osaekomi.start`, `osaekomi.stop` en `score.update` events
+- Toont knipperende tijden met zone labels (`12s → WAZA-ARI`)
+- CSS blink animatie op `.osaekomi-time-entry`
+- Reset bij `match.start`
 
-**Te doen:**
-- In `handleEvent()` bij `osaekomi.stop` en `osaekomi.start`: lees `data.osaekomi_times`
-- Toon opgeslagen tijden onder de osaekomi sectie (per kant)
-- Tijden verdwijnen wanneer score.update binnenkomt (scheids heeft score toegekend)
-- Format: `12s → WAZA-ARI` (tijd + zone label)
-- Zones: Y=5s, W=10s, I=20s (zelfde drempels als app default)
-- Tijden moeten knipperen (CSS animation) om aandacht te trekken
-
-**Event data voorbeeld:**
-```json
-{
-  "event": "osaekomi.stop",
-  "judoka": "blauw",
-  "time": 12,
-  "osaekomi_times": {
-    "blauw": [12],
-    "wit": []
-  }
-}
-```
-
-### 2. LCD proporties vergroten voor TV
+### 2. LCD proporties vergroten voor TV — OPEN
 
 **Wat:** Display moet leesbaar zijn op TV/groot scherm op afstand (3-10 meter).
 
@@ -59,7 +42,7 @@ Dit is een object: `{ blauw: [12, 8], wit: [15] }` (array van seconden per kant)
 - Timer prominent in het midden
 - Scores zeer groot en direct leesbaar
 
-### 3. LCD link updaten in device-toegangen
+### 3. LCD link updaten in device-toegangen — OPEN
 
 **Wat:** De "LCD Display" knop bij device-toegangen (Instellingen → Organisatie) linkt nog naar de oude lange URL.
 
@@ -68,21 +51,9 @@ Dit is een object: `{ blauw: [12, 8], wit: [15] }` (array van seconden per kant)
 - Update naar `/tv/{eerste 4 tekens van code}` format
 - Gebruik `$deviceToegang->getDisplayCode()` helper (bestaat al)
 
-### 4. Backend: osaekomi_times doorlaten in ScoreboardController
+### ~~4. Backend: osaekomi_times doorlaten in ScoreboardController~~ ✅ NIET NODIG
 
-**Wat:** Controller valideert event data — check of `osaekomi_times` wordt doorgelaten.
-
-**Te doen:**
-- Check `ScoreboardController::event()` method
-- Zorg dat `osaekomi_times` in de allowed/validated data zit
-- Het wordt meegestuurd in de broadcast naar het display channel
-
-## Volgorde
-
-1. **Eerst taak 4** — backend moet data doorlaten
-2. **Dan taak 1** — osaekomi tijden tonen
-3. **Dan taak 2** — proporties vergroten
-4. **Taak 3** — klein, kan tussendoor
+Controller gebruikt `$request->all()` — alle data wordt automatisch doorgestuurd naar de broadcast. Geen wijziging nodig.
 
 ## Event types die de app stuurt
 
@@ -92,7 +63,22 @@ Dit is een object: `{ blauw: [12, 8], wit: [15] }` (array van seconden per kant)
 | `timer.start` | timestamp, remaining, golden_score |
 | `timer.stop` | remaining |
 | `timer.reset` | duration |
-| `score.update` | scores (wit/blauw: yuko, wazaari, ippon, shido) |
-| `osaekomi.start` | judoka, timestamp, osaekomi_times |
-| `osaekomi.stop` | judoka, time, osaekomi_times |
+| `score.update` | scores (wit/blauw: yuko, wazaari, ippon, shido), **osaekomi_times** |
+| `osaekomi.start` | judoka, timestamp, **osaekomi_times** |
+| `osaekomi.stop` | judoka, time, **osaekomi_times** |
 | `match.end` | winner, uitslag_type |
+
+## Wat is er veranderd (2026-03-29)
+
+### JudoScoreBoard (Android app) — commits `e391a40` en `a60374c`
+- `osaekomi.start` en `osaekomi.stop` sturen nu `osaekomi_times` mee
+- `score.update` stuurt ook `osaekomi_times` mee (via ref voor actuele waarde)
+- `awardOsaekomiScore` verwijdert tijd uit lijst VOOR score event, zodat display correcte state krijgt
+
+### JudoToernooi (Blade view) — commit `7894866a`
+- `osaekomiTimes` state + `getOsaekomiZone()` + `renderOsaekomiTimes()` functies toegevoegd
+- `osaekomi.start`: clear vorige indicators, update times, render
+- `osaekomi.stop`: update times, render
+- `score.update`: update times, render (voor wanneer tijd wordt weggetikt)
+- `match.start`: reset osaekomiTimes
+- CSS: `.osaekomi-time-entry` met blink animatie, per kant in `#wit-osaekomi-times` / `#blauw-osaekomi-times`
