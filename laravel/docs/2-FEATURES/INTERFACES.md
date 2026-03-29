@@ -1193,6 +1193,26 @@ Per mat worden getoond:
 
 **Belangrijk:** Er is maar 1 groen en 1 geel per mat, ongeacht het aantal poules op die mat.
 
+### Live Matten - Weergavemodi (Overzicht/Detail)
+
+Twee weergavemodi voor de Live Matten tab:
+
+| Modus | Gebruik | Layout |
+|-------|---------|--------|
+| **Overzicht** (standaard) | LCD/PC scherm aan de kant, alle matten in zicht | Desktop: grid 2 kolommen, Mobiel: onder elkaar |
+| **Detail** | Bij de mat zelf, 1 mat groot | Mat vult volledige breedte, grotere tekst |
+
+**Wisselen tussen modi:**
+- **Vergroten**: Klik op vierkantje-icoon (expand) rechtsboven in mat header → detail modus
+- **Verkleinen**: Klik op dubbel-vierkantje-icoon (collapse) rechtsboven → terug naar overzicht
+
+**Gedrag:**
+- Desktop overzicht: `grid-cols-2` (2 rijen als >2 matten, alles zichtbaar)
+- Mobiel/PWA overzicht: `grid-cols-1` (onder elkaar)
+- Detail: geselecteerde mat fullwidth, rest verborgen
+- State (`selectedMatId`) in Alpine.js, `null` = overzicht
+- Bij Reverb updates blijft geselecteerde mat behouden
+
 ### Favorieten Tab - Groen/Geel Weergave
 
 In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
