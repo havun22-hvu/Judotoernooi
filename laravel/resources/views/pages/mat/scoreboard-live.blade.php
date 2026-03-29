@@ -233,12 +233,24 @@
         .osaekomi-times-col {
             flex: 1;
             display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
             padding-top: 6px;
+            gap: 4px;
         }
         .osaekomi-times-col-wit { background: #F3F4F6; }
         .osaekomi-times-col-blauw { background: #1E3A8A; }
+        .osaekomi-time-entry {
+            font-size: clamp(16px, 3vh, 32px);
+            font-weight: 800;
+            color: #EF4444;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
 
         /* 8. Footer */
         .footer-row {
@@ -381,8 +393,8 @@
 
             {{-- 7. Osaekomi tijden --}}
             <div class="osaekomi-times-row">
-                <div class="osaekomi-times-col osaekomi-times-col-wit"></div>
-                <div class="osaekomi-times-col osaekomi-times-col-blauw"></div>
+                <div class="osaekomi-times-col osaekomi-times-col-wit" id="wit-osaekomi-times"></div>
+                <div class="osaekomi-times-col osaekomi-times-col-blauw" id="blauw-osaekomi-times"></div>
             </div>
         </div>
 
@@ -420,6 +432,7 @@
         let osaekomiJudoka = null;
         let osaekomiStartedAt = null;
         let osaekomiAnimFrame = null;
+        let osaekomiTimes = { wit: [], blauw: [] };
 
         // DOM refs
         const els = {
@@ -516,6 +529,27 @@
             });
         }
 
+        function getOsaekomiZone(seconds) {
+            if (seconds >= 20) return 'IPPON';
+            if (seconds >= 10) return 'WAZA-ARI';
+            if (seconds >= 5) return 'YUKO';
+            return '';
+        }
+
+        function renderOsaekomiTimes() {
+            ['wit', 'blauw'].forEach(side => {
+                const col = document.getElementById(side + '-osaekomi-times');
+                col.innerHTML = '';
+                osaekomiTimes[side].forEach(time => {
+                    const zone = getOsaekomiZone(time);
+                    const el = document.createElement('div');
+                    el.className = 'osaekomi-time-entry';
+                    el.textContent = time + 's' + (zone ? ' → ' + zone : '');
+                    col.appendChild(el);
+                });
+            });
+        }
+
         function clearOsaekomiIndicators() {
             ['wit', 'blauw'].forEach(side => {
                 const el = document.getElementById(side + '-osaekomi');
@@ -564,7 +598,9 @@
                     isRunning = false;
                     isGoldenScore = false;
                     osaekomiActive = false;
+                    osaekomiTimes = { wit: [], blauw: [] };
                     clearOsaekomiIndicators();
+                    renderOsaekomiTimes();
                     updateScores({
                         wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
                         blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
@@ -602,12 +638,21 @@
 
                 case 'score.update':
                     updateScores(data.scores);
+                    if (data.osaekomi_times) {
+                        osaekomiTimes = data.osaekomi_times;
+                        renderOsaekomiTimes();
+                    }
                     break;
 
                 case 'osaekomi.start':
+                    clearOsaekomiIndicators();
                     osaekomiActive = true;
                     osaekomiJudoka = data.judoka;
                     osaekomiStartedAt = performance.now();
+                    if (data.osaekomi_times) {
+                        osaekomiTimes = data.osaekomi_times;
+                        renderOsaekomiTimes();
+                    }
                     tickOsaekomi();
                     break;
 
@@ -615,6 +660,10 @@
                     osaekomiActive = false;
                     if (osaekomiAnimFrame) cancelAnimationFrame(osaekomiAnimFrame);
                     clearOsaekomiIndicators();
+                    if (data.osaekomi_times) {
+                        osaekomiTimes = data.osaekomi_times;
+                        renderOsaekomiTimes();
+                    }
                     break;
 
                 case 'match.end':
