@@ -184,11 +184,10 @@
             flex-basis: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
             padding: 1vh 0;
         }
-        .osaekomi-side-wit { background: #F3F4F6; }
-        .osaekomi-side-blauw { background: #1E3A8A; }
+        .osaekomi-side-wit { background: #F3F4F6; justify-content: flex-end; padding-right: 2vw; }
+        .osaekomi-side-blauw { background: #1E3A8A; justify-content: flex-start; padding-left: 2vw; }
         .osaekomi-dot {
             width: clamp(24px, 4vh, 48px);
             height: clamp(24px, 4vh, 48px);
