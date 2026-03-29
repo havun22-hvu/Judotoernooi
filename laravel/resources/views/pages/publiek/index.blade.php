@@ -388,10 +388,10 @@
             <div x-show="liveMatten.length > 0" :class="selectedMatId ? '' : (liveMatten.length > 4 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3' : 'grid grid-cols-1 lg:grid-cols-2 gap-4')"
                 <template x-for="mat in liveMatten" :key="mat.id">
                     <div x-show="!selectedMatId || selectedMatId === mat.id"
-                         :class="selectedMatId === mat.id ? 'mb-4' : ''"
+                         :class="selectedMatId === mat.id ? 'mb-4 max-w-3xl mx-auto' : ''"
                          class="bg-white rounded-lg shadow overflow-hidden">
                         <!-- Mat Header -->
-                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white" :class="selectedMatId === mat.id ? 'px-6 py-4' : 'px-4 py-3'">
                             <div class="flex justify-between items-center">
                                 <span :class="selectedMatId === mat.id ? 'text-3xl' : 'text-2xl'" class="font-bold" x-text="'{{ __('Mat') }} ' + mat.nummer"></span>
                                 <!-- Expand/Collapse button -->
