@@ -692,8 +692,8 @@
                     break;
 
                 case 'match.assign':
-                    // Match assigned to mat (groen gezet) — show names, reset scores
-                    els.winnerOverlay.classList.remove('active');
+                    // Match assigned to mat (groen gezet) — prepare next match behind overlay
+                    // Do NOT remove winner overlay here — it stays until match.start
                     els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
                     document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
                     document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
