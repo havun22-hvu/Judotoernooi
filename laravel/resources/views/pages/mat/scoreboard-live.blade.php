@@ -21,7 +21,8 @@
         }
         .name-card {
             flex: 1;
-            padding: 1.5vh 20px;
+            flex-basis: 0;
+            padding: 1.5vh 8px;
             text-align: center;
         }
         .name-card-wit { background: #F3F4F6; }
@@ -55,10 +56,10 @@
             display: flex;
             flex-direction: row;
         }
-        .timer-side { flex: 1; }
+        .timer-side { flex: 1; flex-basis: 0; }
         .timer-center {
             background: #111827;
-            padding: 1vh 3vw;
+            padding: 0.5vh 3vw;
             text-align: center;
         }
         .timer {
@@ -99,7 +100,7 @@
         }
         .golden-score-badge.active { display: inline-block; }
 
-        /* 4. Scores row — Y/W/I vertical, red on dark */
+        /* 4. Scores row — Y/W/I, red on dark */
         .scores-row {
             display: flex;
             flex-direction: row;
@@ -107,11 +108,12 @@
         }
         .score-col {
             flex: 1;
+            flex-basis: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 2vh;
+            padding-top: 1vh;
             gap: 1vh;
         }
         .score-col-wit { background: #F3F4F6; }
@@ -123,23 +125,24 @@
             gap: 1vw;
         }
         .score-label {
-            font-size: clamp(18px, 3vh, 36px);
-            font-weight: 700;
+            font-size: clamp(16px, 3vh, 36px);
+            font-weight: 800;
             min-width: 2vw;
             text-align: right;
+            letter-spacing: 1px;
         }
         .score-col-wit .score-label { color: #6B7280; }
         .score-col-blauw .score-label { color: #93C5FD; }
         .score-value {
-            font-size: clamp(40px, 10vh, 120px);
+            font-size: clamp(36px, 10vh, 120px);
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             line-height: 1;
             color: #EF4444;
-            background: #1F2937;
+            background: #111827;
             padding: 0.5vh 1.5vw;
-            border-radius: 8px;
-            min-width: clamp(60px, 8vw, 140px);
+            border-radius: 6px;
+            min-width: clamp(48px, 8vw, 140px);
             text-align: center;
         }
 
@@ -150,6 +153,7 @@
         }
         .shido-col {
             flex: 1;
+            flex-basis: 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -175,23 +179,32 @@
             display: flex;
             flex-direction: row;
         }
-        .osaekomi-btn-col {
+        .osaekomi-side {
             flex: 1;
+            flex-basis: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5vh 0;
-            position: relative;
+            padding: 1vh 0;
         }
-        .osaekomi-btn-col-wit { background: #F3F4F6; }
-        .osaekomi-btn-col-blauw { background: #1E3A8A; }
+        .osaekomi-side-wit { background: #F3F4F6; }
+        .osaekomi-side-blauw { background: #1E3A8A; }
+        .osaekomi-dot {
+            width: clamp(24px, 4vh, 48px);
+            height: clamp(24px, 4vh, 48px);
+            border-radius: 50%;
+            background: #374151;
+        }
+        .osaekomi-dot.active {
+            background: #22C55E;
+        }
         .osaekomi-timer-col {
             background: #111827;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1vh 2vw;
+            padding: 0.5vh 2vw;
         }
         .osaekomi-time {
             font-size: clamp(36px, 8vh, 80px);
@@ -205,23 +218,7 @@
             font-size: clamp(14px, 2.5vh, 28px);
             font-weight: 800;
             color: #F97316;
-            margin-left: 8px;
         }
-        .osaekomi-indicator {
-            display: none;
-            position: absolute;
-            background: #F97316;
-            color: #FFF;
-            border-radius: 50%;
-            width: clamp(60px, 10vh, 120px);
-            height: clamp(60px, 10vh, 120px);
-            font-size: clamp(24px, 5vh, 52px);
-            font-weight: 900;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 1s infinite;
-        }
-        .osaekomi-indicator.active { display: flex; }
 
         /* 7. Osaekomi times row */
         .osaekomi-times-row {
@@ -232,6 +229,7 @@
         }
         .osaekomi-times-col {
             flex: 1;
+            flex-basis: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -247,10 +245,6 @@
             color: #EF4444;
             animation: blink 1s infinite;
         }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
 
         /* 8. Footer */
         .footer-row {
@@ -260,7 +254,8 @@
         }
         .footer-text {
             color: #6B7280;
-            font-size: 12px;
+            font-size: clamp(10px, 1.5vh, 16px);
+            font-family: 'Courier New', monospace;
         }
 
         /* Section labels */
@@ -274,12 +269,16 @@
         }
 
         /* Half colors */
-        .half-wit { background: #F3F4F6; flex: 1; }
-        .half-blauw { background: #1E3A8A; flex: 1; }
+        .half-wit { background: #F3F4F6; flex: 1; flex-basis: 0; }
+        .half-blauw { background: #1E3A8A; flex: 1; flex-basis: 0; }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         /* Winner overlay */
@@ -318,7 +317,7 @@
 <body>
     <div id="app">
         <div class="scoreboard" id="scoreboard">
-            {{-- 1. Names — wit links, blauw rechts (gespiegeld) --}}
+            {{-- 1. Names — wit links, blauw rechts (gespiegeld t.o.v. bediening) --}}
             <div class="names-row">
                 <div class="name-card name-card-wit">
                     <div class="naam" id="wit-naam">WIT</div>
@@ -348,7 +347,7 @@
                 <div class="timer-side half-blauw"></div>
             </div>
 
-            {{-- 4. Scores Y/W/I + Shido's --}}
+            {{-- 4. Scores Y/W/I --}}
             <div class="scores-row">
                 <div class="score-col score-col-wit">
                     <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="wit-yuko">0</span></div>
@@ -376,18 +375,17 @@
                 </div>
             </div>
 
-            {{-- 6. Osaekomi — knoppen in kleur, timer donker midden --}}
+            {{-- 6. Osaekomi — groen bolletje per kant, timer donker midden --}}
             <div class="osaekomi-row">
-                <div class="osaekomi-btn-col osaekomi-btn-col-wit">
-                    <div class="osaekomi-indicator" id="wit-osaekomi"><span id="wit-osaekomi-time">0</span></div>
+                <div class="osaekomi-side osaekomi-side-wit">
+                    <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
                 </div>
                 <div class="osaekomi-timer-col">
-                    <div class="section-label">Osaekomi</div>
                     <span class="osaekomi-time" id="osaekomi-display">00</span>
                     <span class="osaekomi-zone" id="osaekomi-zone"></span>
                 </div>
-                <div class="osaekomi-btn-col osaekomi-btn-col-blauw">
-                    <div class="osaekomi-indicator" id="blauw-osaekomi"><span id="blauw-osaekomi-time">0</span></div>
+                <div class="osaekomi-side osaekomi-side-blauw">
+                    <div class="osaekomi-dot" id="blauw-osaekomi-dot"></div>
                 </div>
             </div>
 
@@ -436,18 +434,19 @@
 
         // DOM refs
         const els = {
-            scoreboard: document.getElementById('scoreboard'),
             timer: document.getElementById('timer-display'),
             progress: document.getElementById('progress-fill'),
             gsBadge: document.getElementById('gs-badge'),
             osaekomi: document.getElementById('osaekomi-display'),
             osaekomiZone: document.getElementById('osaekomi-zone'),
+            witDot: document.getElementById('wit-osaekomi-dot'),
+            blauwDot: document.getElementById('blauw-osaekomi-dot'),
             winnerOverlay: document.getElementById('winner-overlay'),
             winnerName: document.getElementById('winner-name'),
             winnerType: document.getElementById('winner-type'),
         };
 
-        // Load initial match data from server (if match already active)
+        // Load initial match data
         if (initialMatch) {
             document.getElementById('wit-naam').textContent = initialMatch.judoka_wit?.naam || 'WIT';
             document.getElementById('wit-club').textContent = initialMatch.judoka_wit?.club || '';
@@ -507,11 +506,6 @@
             else if (elapsed >= 5) zone = 'YUKO';
             els.osaekomiZone.textContent = zone;
 
-            // Osaekomi indicator on panel
-            const panelEl = document.getElementById(osaekomiJudoka + '-osaekomi');
-            const panelTimeEl = document.getElementById(osaekomiJudoka + '-osaekomi-time');
-            if (panelEl) { panelEl.classList.add('active'); panelTimeEl.textContent = elapsed; }
-
             osaekomiAnimFrame = requestAnimationFrame(tickOsaekomi);
         }
 
@@ -550,11 +544,9 @@
             });
         }
 
-        function clearOsaekomiIndicators() {
-            ['wit', 'blauw'].forEach(side => {
-                const el = document.getElementById(side + '-osaekomi');
-                if (el) el.classList.remove('active');
-            });
+        function clearOsaekomiState() {
+            els.witDot.classList.remove('active');
+            els.blauwDot.classList.remove('active');
             els.osaekomi.className = 'osaekomi-time';
             els.osaekomi.textContent = '00';
             els.osaekomiZone.textContent = '';
@@ -586,20 +578,18 @@
                 case 'match.start':
                     els.winnerOverlay.classList.remove('active');
 
-                    // Set names (display is mirrored: wit left, blauw right)
                     document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
                     document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
                     document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
                     document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
 
-                    // Reset state
                     matchDuration = data.match_duration || 240;
                     timeRemaining = matchDuration;
                     isRunning = false;
                     isGoldenScore = false;
                     osaekomiActive = false;
                     osaekomiTimes = { wit: [], blauw: [] };
-                    clearOsaekomiIndicators();
+                    clearOsaekomiState();
                     renderOsaekomiTimes();
                     updateScores({
                         wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
@@ -631,7 +621,7 @@
                     matchDuration = data.duration || 240;
                     timeRemaining = matchDuration;
                     osaekomiActive = false;
-                    clearOsaekomiIndicators();
+                    clearOsaekomiState();
                     els.winnerOverlay.classList.remove('active');
                     updateTimerDisplay();
                     break;
@@ -645,10 +635,15 @@
                     break;
 
                 case 'osaekomi.start':
-                    clearOsaekomiIndicators();
+                    clearOsaekomiState();
                     osaekomiActive = true;
                     osaekomiJudoka = data.judoka;
                     osaekomiStartedAt = performance.now();
+
+                    // Green dot on active side
+                    if (data.judoka === 'wit') els.witDot.classList.add('active');
+                    if (data.judoka === 'blauw') els.blauwDot.classList.add('active');
+
                     if (data.osaekomi_times) {
                         osaekomiTimes = data.osaekomi_times;
                         renderOsaekomiTimes();
@@ -659,7 +654,7 @@
                 case 'osaekomi.stop':
                     osaekomiActive = false;
                     if (osaekomiAnimFrame) cancelAnimationFrame(osaekomiAnimFrame);
-                    clearOsaekomiIndicators();
+                    clearOsaekomiState();
                     if (data.osaekomi_times) {
                         osaekomiTimes = data.osaekomi_times;
                         renderOsaekomiTimes();
@@ -671,9 +666,8 @@
                     if (timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
                     osaekomiActive = false;
                     if (osaekomiAnimFrame) cancelAnimationFrame(osaekomiAnimFrame);
-                    clearOsaekomiIndicators();
+                    clearOsaekomiState();
 
-                    // Show winner overlay
                     const winnerSide = data.winner;
                     const nameEl = winnerSide === 'blauw'
                         ? document.getElementById('blauw-naam')
