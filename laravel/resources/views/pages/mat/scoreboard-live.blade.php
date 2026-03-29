@@ -150,6 +150,7 @@
         .shido-row {
             display: flex;
             flex-direction: row;
+            flex: 0.3;
         }
         .shido-col {
             flex: 1;
@@ -178,6 +179,7 @@
         .osaekomi-row {
             display: flex;
             flex-direction: row;
+            flex: 0.8;
         }
         .osaekomi-side {
             flex: 1;
