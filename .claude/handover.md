@@ -1,52 +1,58 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 28 maart 2026
+> **Laatste update:** 29 maart 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 28 maart 2026
+## Laatste Sessie: 29 maart 2026
 
 ### Wat is gedaan:
 
-**Poule regels check (HOOFDTAAK):**
-- Bug: gewichtsverschil-waarschuwing verdween na verwijderen judoka uit poule
-- Nieuwe `Poule::checkPouleRegels()` methode — checkt max_kg_verschil + max_leeftijd_verschil
-- `buildPouleResponse()` bevat nu `problemen` array in ALLE mutatie-responses
-- Gefixt in BEIDE pagina's: poule indeling + wedstrijddag
-- DO NOT REMOVE comments op alle kritieke code
-- 13 guard tests in `PouleCheckRegelsTest.php`
+**Publieke app — Mat expand/collapse:**
+- Twee weergavemodi: overzicht (alle matten grid) en detail (1 mat groot)
+- Vierkantje-icoon rechtsboven per mat om te vergroten/verkleinen
+- Desktop: 2 kolommen, mobiel: onder elkaar
+- Docs bijgewerkt in INTERFACES.md
 
-**Code coverage opzetten:**
-- PCOV geinstalleerd op staging (php8.2-pcov)
-- 109 nieuwe tests geschreven (4 agents parallel):
-  - `PouleModelTest.php` (35 tests)
-  - `PouleIndelingServiceTest.php` (16 tests)
-  - `PouleControllerApiTest.php` (21 tests)
-  - `ImportServiceTest.php` (+37 tests)
-- Coverage: 8% → 15.5% (290 tests, 714 assertions, ALL GREEN)
+**Staging upgrade korting (50%):**
+- FreemiumService: `STAGING_KORTING = 0.5`, `pasKortingToe()`, `isStagingKorting()`
+- Halve staffelprijzen op staging om testers niet af te schrikken
+- Oranje banner op upgrade pagina: "Staging omgeving: 50% korting"
+- Production prijzen ongewijzigd
 
-**Bugs gevonden door tests:**
-- `PouleController::store()` miste `type => 'voorronde'` (NOT NULL op SQLite)
-- `PouleController::store()` zette `gewichtsklasse` op null i.p.v. ''
-
-**Kleine features:**
-- Device token (eerste 4 tekens) zichtbaar naast PIN in device toegangen
-
-**HavunCore:**
-- Nieuw pattern: `docs/kb/patterns/regression-guard-tests.md`
+**Server-side heartbeat broadcast (GROOT):**
+- Nieuw: `ToernooiHeartbeat` artisan command — long-running, elke seconde broadcast mat-state via Reverb
+- Nieuw: `MatHeartbeat` event — pusht volledige mat-data via WebSocket
+- `MatUpdate` event zet cache key `toernooi:{id}:heartbeat_active` (15 min TTL)
+- Publieke app ontvangt mat-data direct via WebSocket — geen HTTP polling meer
+- Polling fallback volledig verwijderd uit publieke app
+- Toggle: CLI (`toernooi:heartbeat-toggle {id} [--off]`) + UI (LIVE knop op wedstrijddag)
+- Supervisor config aangemaakt op production: `toernooi-heartbeat` RUNNING
+- Reverb production gefixt (stale process killed, nu via supervisor)
 
 ### Openstaande items:
 - [ ] 5 pending migraties op production (backup eerst!)
 - [ ] Coverage naar 60% target (nu 15.5%)
-- [ ] Lokaal: composer install --dev faalt door Avast SSL — apart oplossen
-- [ ] `verwijderOudeToernooien()` method kan verwijderd worden uit ToernooiService
+- [ ] Lokaal: composer install --dev faalt door Avast SSL
+- [ ] Staging heartbeat supervisor config nog niet aangemaakt (alleen production)
+- [ ] Staging upgrade korting: nog niet op staging gedeployed + getest
+- [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL — niet gerelateerd aan deze sessie
 
 ### Belangrijke context:
-- Henk werkt met 10+ parallelle Claude sessies — behandel als team
-- ~60% van tijd gaat naar herstelwerk — tests zijn NOODZAAK
-- `checkPouleRegels()` is 5x per ongeluk verwijderd — nu beschermd met tests + DO NOT REMOVE
-- Bij NIEUWE poule mutatie-endpoints: ALTIJD `buildPouleResponse()` in response
+- Heartbeat process draait op production via supervisor (`toernooi-heartbeat`)
+- Auto-start: bij elke mat actie (score/beurt) wordt heartbeat geactiveerd voor 15 min
+- Handmatig: LIVE knop op wedstrijddag pagina of CLI command
+- Reverb production draait weer correct (was FATAL door stale process op port 8080)
+
+### Server status na sessie:
+```
+reverb                  RUNNING (production, port 8080)
+reverb-staging          RUNNING (staging, port 8081)
+toernooi-heartbeat      RUNNING (production)
+laravel-worker          FATAL (niet gerelateerd)
+laravel-worker-staging  FATAL (niet gerelateerd)
+```
 
 ### Pending migraties (production):
 ```
