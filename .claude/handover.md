@@ -21,6 +21,19 @@
 - Nieuwe routes: wedstrijddag/mobiel, wedstrijddag/mat-voortgang, wedstrijddag/poules-api
 - Planning doc + INTERFACES.md + KB bijgewerkt
 
+**Staging/Production PWA onderscheid:**
+- Dynamisch manifest.json (route i.p.v. statisch bestand)
+- Staging: naam "JTStag", oranje theme_color, oranje icoon met "STAGING" banner
+- Production: ongewijzigd ("JudoToernooi", blauw)
+
+### Openstaande items:
+- [ ] Organisator Mobiel testen op staging (functioneel)
+- [ ] 5 pending migraties op production (backup eerst!)
+- [ ] Coverage naar 60% target (nu 15.5%)
+- [ ] Lokaal: composer install --dev faalt door Avast SSL
+- [ ] Staging heartbeat supervisor config nog niet aangemaakt
+- [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL
+
 ---
 
 ## Vorige Sessie: 29 maart 2026
