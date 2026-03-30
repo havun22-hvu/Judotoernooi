@@ -145,6 +145,7 @@
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
+                            <button type="button" id="qr-scan-menu-btn" onclick="openQrScanner()" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">📷 {{ __('QR Login Scanner') }}</button>
                             <hr class="my-1">
                             <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">🔄 {{ __('Forceer Update') }}</button>
                             <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
@@ -545,6 +546,96 @@
         })();
     </script>
     @endif
+    {{-- QR Login Scanner Modal (for approving desktop logins from phone) --}}
+    @auth('organisator')
+    <div id="qr-scan-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex justify-between items-center px-4 py-3 bg-blue-800 text-white">
+                <h3 class="font-semibold text-sm">{{ __('QR Login Scanner') }}</h3>
+                <button onclick="closeQrScanner()" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
+            </div>
+            <div id="qr-scan-reader" class="w-full" style="min-height: 280px;"></div>
+            <div class="px-4 py-3 text-center">
+                <p id="qr-scan-status" class="text-sm text-gray-600">{{ __('Richt de camera op de QR code op het inlogscherm') }}</p>
+                <p id="qr-scan-error" class="text-sm text-red-600 hidden mt-1"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        // Only show scanner button on touch devices
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isTouch) {
+            const btn = document.getElementById('qr-scan-menu-btn');
+            if (btn) btn.classList.remove('hidden');
+        }
+
+        let html5QrCode = null;
+        let scannerLibLoaded = false;
+
+        window.openQrScanner = function() {
+            document.getElementById('qr-scan-modal').classList.remove('hidden');
+            document.getElementById('qr-scan-error').classList.add('hidden');
+            document.getElementById('qr-scan-status').textContent = @json(__('Camera laden...'));
+
+            if (!scannerLibLoaded) {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                script.onload = function() { scannerLibLoaded = true; startScanner(); };
+                script.onerror = function() {
+                    document.getElementById('qr-scan-error').textContent = @json(__('Kan scanner niet laden'));
+                    document.getElementById('qr-scan-error').classList.remove('hidden');
+                };
+                document.head.appendChild(script);
+            } else {
+                startScanner();
+            }
+        };
+
+        function startScanner() {
+            if (html5QrCode) {
+                try { html5QrCode.stop().catch(() => {}); } catch(e) {}
+            }
+
+            html5QrCode = new Html5Qrcode('qr-scan-reader');
+            document.getElementById('qr-scan-status').textContent = @json(__('Richt de camera op de QR code op het inlogscherm'));
+
+            html5QrCode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                function onScanSuccess(decodedText) {
+                    // Check if it's a valid QR login approve URL
+                    if (decodedText.includes('/auth/qr/approve/')) {
+                        html5QrCode.stop().then(() => {
+                            document.getElementById('qr-scan-status').textContent = @json(__('QR code herkend! Doorsturen...'));
+                            window.location.href = decodedText;
+                        }).catch(() => {
+                            window.location.href = decodedText;
+                        });
+                    } else {
+                        document.getElementById('qr-scan-error').textContent = @json(__('Dit is geen login QR code'));
+                        document.getElementById('qr-scan-error').classList.remove('hidden');
+                        setTimeout(() => document.getElementById('qr-scan-error').classList.add('hidden'), 3000);
+                    }
+                },
+                function onScanFailure() { /* ignore continuous scan failures */ }
+            ).catch(function(err) {
+                document.getElementById('qr-scan-error').textContent = @json(__('Kan camera niet openen. Geef toestemming voor cameratoegang.'));
+                document.getElementById('qr-scan-error').classList.remove('hidden');
+                document.getElementById('qr-scan-status').textContent = '';
+            });
+        }
+
+        window.closeQrScanner = function() {
+            document.getElementById('qr-scan-modal').classList.add('hidden');
+            if (html5QrCode) {
+                try { html5QrCode.stop().catch(() => {}); } catch(e) {}
+            }
+        };
+    })();
+    </script>
+    @endauth
+
     @stack('scripts')
 </body>
 </html>
