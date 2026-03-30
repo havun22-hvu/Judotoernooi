@@ -113,7 +113,9 @@ Route::post('/error-report', function (\Illuminate\Http\Request $request) {
 
     $body = implode("\n", $lines);
 
-    \Illuminate\Support\Facades\Log::channel('daily')->warning('User error report', array_merge($data, ['debug' => $debugInfo]));
+    $safeDebug = $debugInfo;
+    unset($safeDebug['input']); // Never log request input (may contain passwords)
+    \Illuminate\Support\Facades\Log::channel('daily')->warning('User error report', array_merge($data, ['debug' => $safeDebug]));
 
     try {
         \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($debugInfo) {
@@ -867,3 +869,6 @@ Route::get('/{toernooiSlug}', function($toernooiSlug) {
 })
 ->name('publiek.index.legacy')
 ->where('toernooiSlug', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
+
+// Catch-all: return clean 404 for scanner/bot requests
+Route::fallback(fn() => abort(404));
