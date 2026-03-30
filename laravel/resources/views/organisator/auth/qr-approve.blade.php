@@ -90,6 +90,7 @@ async function approveLogin() {
         if (data.success) {
             document.getElementById('approve-section').classList.add('hidden');
             document.getElementById('success-section').classList.remove('hidden');
+            setTimeout(() => { window.location.href = '{{ route('organisator.dashboard', ['organisator' => auth('organisator')->user()?->slug ?? '']) }}'; }, 1500);
         } else {
             document.getElementById('error-msg').textContent = data.message || __t.approveFailed;
             document.getElementById('error-msg').classList.remove('hidden');
