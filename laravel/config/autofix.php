@@ -52,6 +52,9 @@ return [
         '#ECONNREFUSED#',
         '#No space left on device#i',
         '#Permission denied.*\.sock#i',
+        '#Too few arguments to function.*RouteFileRegistrar#i',
+        '#admin_phpinfo#i',
+        '#\.php\d?$#i',
     ],
 
     // Branch model: create hotfix branch + PR instead of pushing directly to main
