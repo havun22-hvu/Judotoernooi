@@ -53,6 +53,25 @@ Route::get('/autofix/{token}', [App\Http\Controllers\AutoFixController::class, '
 Route::post('/autofix/{token}/approve', [App\Http\Controllers\AutoFixController::class, 'approve'])->name('autofix.approve');
 Route::post('/autofix/{token}/reject', [App\Http\Controllers\AutoFixController::class, 'reject'])->name('autofix.reject');
 
+// Dynamic manifest.json (staging gets different name + color)
+Route::get('/manifest.json', function () {
+    $isStaging = app()->environment('staging');
+
+    return response()->json([
+        'name' => $isStaging ? 'JT Staging' : 'Judo Toernooi',
+        'short_name' => $isStaging ? 'JTStag' : 'JudoToernooi',
+        'description' => 'Judo toernooi management systeem',
+        'start_url' => '/',
+        'display' => 'standalone',
+        'background_color' => $isStaging ? '#ea580c' : '#1e40af',
+        'theme_color' => $isStaging ? '#ea580c' : '#1e40af',
+        'icons' => [
+            ['src' => $isStaging ? '/icon-staging-192x192.png' : '/icon-192x192.png', 'sizes' => '192x192', 'type' => 'image/png'],
+            ['src' => $isStaging ? '/icon-staging-512x512.png' : '/icon-512x512.png', 'sizes' => '512x512', 'type' => 'image/png'],
+        ],
+    ])->header('Content-Type', 'application/manifest+json');
+});
+
 // Offline mode routes (only active when OFFLINE_MODE=true)
 if (config('app.offline_mode')) {
     Route::get('/', [\App\Http\Controllers\OfflineController::class, 'index'])->name('offline.index');
