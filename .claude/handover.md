@@ -1,35 +1,31 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 29 maart 2026
+> **Laatste update:** 30 maart 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 29 maart 2026
+## Laatste Sessie: 30 maart 2026
 
 ### Wat is gedaan:
 
-**Publieke app — Mat expand/collapse:**
-- Twee weergavemodi: overzicht (alle matten grid) en detail (1 mat groot)
-- Vierkantje-icoon rechtsboven per mat om te vergroten/verkleinen
-- Desktop: 2 kolommen, mobiel: onder elkaar
-- Docs bijgewerkt in INTERFACES.md
+**Organisator Mobiel (NIEUW):**
+- Responsive mobiele view voor organisatoren die door de zaal lopen op wedstrijddag
+- 4 tabs: Zoeken, Toevoegen, Matten, Chat
+- Tab 1: Judoka zoeken op naam/club → gewicht invullen → poule bekijken → overpoulen
+- Tab 2: Nieuwe judoka toevoegen aan poule
+- Tab 3: Mat voortgang (resterende wedstrijden per mat + per poule, uitklapbaar)
+- Tab 4: Chat widget (bestaand systeem, als hoofdjury)
+- "Mobiel" knop op dashboard header
+- Hint: "Volledige voorbereiding? Open de app op tablet of PC"
+- Nieuwe routes: wedstrijddag/mobiel, wedstrijddag/mat-voortgang, wedstrijddag/poules-api
+- Planning doc + INTERFACES.md + KB bijgewerkt
 
-**Staging upgrade korting (50%):**
-- FreemiumService: `STAGING_KORTING = 0.5`, `pasKortingToe()`, `isStagingKorting()`
-- Halve staffelprijzen op staging om testers niet af te schrikken
-- Oranje banner op upgrade pagina: "Staging omgeving: 50% korting"
-- Production prijzen ongewijzigd
+---
 
-**Server-side heartbeat broadcast (GROOT):**
-- Nieuw: `ToernooiHeartbeat` artisan command — long-running, elke seconde broadcast mat-state via Reverb
-- Nieuw: `MatHeartbeat` event — pusht volledige mat-data via WebSocket
-- `MatUpdate` event zet cache key `toernooi:{id}:heartbeat_active` (15 min TTL)
-- Publieke app ontvangt mat-data direct via WebSocket — geen HTTP polling meer
-- Polling fallback volledig verwijderd uit publieke app
-- Toggle: CLI (`toernooi:heartbeat-toggle {id} [--off]`) + UI (LIVE knop op wedstrijddag)
-- Supervisor config aangemaakt op production: `toernooi-heartbeat` RUNNING
-- Reverb production gefixt (stale process killed, nu via supervisor)
+## Vorige Sessie: 29 maart 2026
+
+**Publieke app — Mat expand/collapse, Staging korting, Heartbeat broadcast**
 
 ### Openstaande items:
 - [ ] 5 pending migraties op production (backup eerst!)

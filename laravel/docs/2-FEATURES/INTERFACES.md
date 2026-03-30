@@ -15,6 +15,7 @@
 | **Mat** | Standalone PWA | Geen | URL + PIN + device |
 | **Spreker** | Standalone PWA | Geen | URL + PIN + device |
 | **Dojo** | Standalone PWA | Geen | URL + PIN + device |
+| **Organisator (mobiel)** | Responsive dashboard | Quick-actions | Email + wachtwoord (bestaande login) |
 
 ### Admin vs Device-bound
 
@@ -233,6 +234,7 @@ Alle PWA scanner interfaces (Weging, Dojo Scanner) zijn **standalone** met ident
 | **Spreker** | Spreker | iPad / Tablet | Mobiele data | manifest-spreker.json |
 | **Mat** | Mat Interface | PC / Laptop / Tablet / iPad | WiFi (jurytafel) | manifest-mat.json |
 | **Hoofdjury** | - | PC / Laptop | WiFi (jurytafel) | - |
+| **Organisator (mobiel)** | - | Smartphone | Mobiele data | - (responsive dashboard) |
 
 ### Portable gebruik (kleedkamers)
 
@@ -1261,6 +1263,53 @@ WP/JP worden **live berekend** uit wedstrijden in `PubliekController@favorieten`
 - `PubliekController@index` - Hoofd view
 - `PubliekController@favorieten` - AJAX endpoint voor favorieten poules (berekent WP/JP)
 - `resources/views/pages/publiek/index.blade.php` - Alpine.js SPA
+
+---
+
+## Organisator Mobiel (Responsive Dashboard)
+
+> **Planning:** `4-PLANNING/PLANNING_ORGANISATOR_MOBIEL.md`
+> **Concept:** Organisator loopt door de zaal en lost problemen op via smartphone
+
+### Wat is het?
+
+Geen aparte PWA — het bestaande dashboard met een **mobiele modus** die quick-action functies toont op kleine schermen. De organisator is al ingelogd via email+wachtwoord.
+
+### Quick-actions (wedstrijddag)
+
+| Functie | Beschrijving |
+|---------|--------------|
+| **Judoka Zoeken** | Zoek op naam/club → gewicht zien/invullen → poule bekijken → overpoulen |
+| **Judoka Toevoegen** | Aan bestaande poule toevoegen (last-minute, vergeten) |
+| **Mat Voortgang** | Resterende wedstrijden per mat + per poule op die mat |
+| **Chat** | Berichten naar mat/weging/dojo (bestaand chat systeem) |
+
+### UX: Verwijzing naar volledige app
+
+Op de mobiele view wordt prominent getoond:
+> "Volledige voorbereiding? Open de app op tablet of PC voor alle functies."
+
+Dit voorkomt verwarring — de smartphone is voor quick-fixes op de wedstrijddag, niet voor volledige toernooi voorbereiding.
+
+### Buiten scope
+
+- Volledige poule-indeling (te complex voor telefoon → laptop)
+- Toernooi instellingen (eenmalig, doe je vooraf)
+- Eliminatie bracket beheer (te complex voor klein scherm)
+- Spreker interface (bestaat al als aparte PWA)
+
+### Route & Bestanden
+
+```
+Route:  /{organisator}/toernooi/{toernooi}/wedstrijddag/mobiel
+View:   pages/toernooi/mobiel.blade.php
+API's:  wedstrijddag/mat-voortgang (GET), wedstrijddag/poules-api (GET)
+        + hergebruik: judoka.zoek, weging.registreer, wedstrijddag.verplaats-judoka, wedstrijddag.nieuwe-judoka
+```
+
+### Authenticatie
+
+Bestaande organisator login — geen device binding, geen aparte auth.
 
 ---
 

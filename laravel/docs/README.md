@@ -65,6 +65,7 @@ docs/
 - [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - GEREALISEERD
 - [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - ON HOLD (slug-based routing is live)
 - [Club Stambestand](./4-PLANNING/PLANNING_CLUB_STAMBESTAND.md) - Judoka stambestand per club
+- [Organisator Mobiel](./4-PLANNING/PLANNING_ORGANISATOR_MOBIEL.md) - Responsive dashboard quick-actions op smartphone
 
 ### 5. Reglement
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)

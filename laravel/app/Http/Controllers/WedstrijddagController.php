@@ -956,4 +956,125 @@ class WedstrijddagController extends Controller
 
         return null; // Alle judoka's gewogen → mag door
     }
+
+    /**
+     * Mobile organizer view - quick-actions for walking around on tournament day
+     */
+    public function mobiel(Organisator $organisator, Toernooi $toernooi): View
+    {
+        $statistieken = app(\App\Services\ToernooiService::class)->getStatistieken($toernooi);
+
+        $matten = $toernooi->matten()->orderBy('nummer')->get();
+
+        $matVoortgang = $matten->map(function ($mat) use ($toernooi) {
+            $poules = Poule::where('toernooi_id', $toernooi->id)
+                ->where('mat_id', $mat->id)
+                ->with('wedstrijden')
+                ->get();
+
+            $totaalWedstrijden = 0;
+            $gespeeld = 0;
+            $pouleDetails = [];
+
+            foreach ($poules as $poule) {
+                $pouleTotal = $poule->wedstrijden->count();
+                $poulePlayed = $poule->wedstrijden->where('is_gespeeld', true)->count();
+                $totaalWedstrijden += $pouleTotal;
+                $gespeeld += $poulePlayed;
+
+                $pouleDetails[] = [
+                    'id' => $poule->id,
+                    'nummer' => $poule->nummer,
+                    'leeftijdsklasse' => $poule->leeftijdsklasse,
+                    'totaal' => $pouleTotal,
+                    'gespeeld' => $poulePlayed,
+                    'resterend' => $pouleTotal - $poulePlayed,
+                ];
+            }
+
+            return [
+                'id' => $mat->id,
+                'nummer' => $mat->nummer,
+                'naam' => $mat->naam ?? "Mat {$mat->nummer}",
+                'totaal_wedstrijden' => $totaalWedstrijden,
+                'gespeeld' => $gespeeld,
+                'resterend' => $totaalWedstrijden - $gespeeld,
+                'poules' => $pouleDetails,
+            ];
+        });
+
+        $clubs = Club::whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
+            ->orderBy('naam')
+            ->get();
+
+        return view('pages.toernooi.mobiel', compact('toernooi', 'statistieken', 'matVoortgang', 'clubs'));
+    }
+
+    /**
+     * API: poule list for mobile view dropdowns
+     */
+    public function poulesApi(Organisator $organisator, Toernooi $toernooi): JsonResponse
+    {
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->with('blok')
+            ->orderBy('nummer')
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'nummer' => $p->nummer,
+                'leeftijdsklasse' => $p->leeftijdsklasse,
+                'gewichtsklasse' => $p->gewichtsklasse,
+                'blok' => $p->blok?->nummer,
+                'aantal_judokas' => $p->aantal_judokas,
+            ]);
+
+        return response()->json($poules);
+    }
+
+    /**
+     * API: mat progress data for mobile view (refreshable)
+     */
+    public function matVoortgangApi(Organisator $organisator, Toernooi $toernooi): JsonResponse
+    {
+        $matten = $toernooi->matten()->orderBy('nummer')->get();
+
+        $data = $matten->map(function ($mat) use ($toernooi) {
+            $poules = Poule::where('toernooi_id', $toernooi->id)
+                ->where('mat_id', $mat->id)
+                ->with('wedstrijden')
+                ->get();
+
+            $totaalWedstrijden = 0;
+            $gespeeld = 0;
+            $pouleDetails = [];
+
+            foreach ($poules as $poule) {
+                $pouleTotal = $poule->wedstrijden->count();
+                $poulePlayed = $poule->wedstrijden->where('is_gespeeld', true)->count();
+                $totaalWedstrijden += $pouleTotal;
+                $gespeeld += $poulePlayed;
+
+                $pouleDetails[] = [
+                    'id' => $poule->id,
+                    'nummer' => $poule->nummer,
+                    'leeftijdsklasse' => $poule->leeftijdsklasse,
+                    'totaal' => $pouleTotal,
+                    'gespeeld' => $poulePlayed,
+                    'resterend' => $pouleTotal - $poulePlayed,
+                ];
+            }
+
+            return [
+                'id' => $mat->id,
+                'nummer' => $mat->nummer,
+                'naam' => $mat->naam ?? "Mat {$mat->nummer}",
+                'totaal_wedstrijden' => $totaalWedstrijden,
+                'gespeeld' => $gespeeld,
+                'resterend' => $totaalWedstrijden - $gespeeld,
+                'poules' => $pouleDetails,
+            ];
+        });
+
+        return response()->json($data);
+    }
 }
