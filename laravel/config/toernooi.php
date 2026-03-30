@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'version' => '1.3.1',
+    'version' => '1.4.0',
     'version_date' => substr(trim(shell_exec('git -C ' . escapeshellarg(base_path()) . ' log -1 --format=%ci 2>/dev/null') ?: ''), 0, 16),
 
     /*

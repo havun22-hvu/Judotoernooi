@@ -511,7 +511,7 @@ document.getElementById('registerForm')?.addEventListener('submit', function() {
     if (fpInput) fpInput.value = fingerprint;
 
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    const isSmartphone = isTouchDevice && Math.min(screen.width, screen.height) < 550;
+    const isSmartphone = isTouchDevice && Math.min(screen.width, screen.height) < 768;
 
     if (isSmartphone) {
         // Smartphone: show biometric button if available
@@ -521,7 +521,7 @@ document.getElementById('registerForm')?.addEventListener('submit', function() {
                 if (canBiometric) {
                     document.getElementById('biometric-login-btn').classList.remove('hidden');
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Biometric check failed:', e); }
         }
     } else {
         // Desktop: show QR button

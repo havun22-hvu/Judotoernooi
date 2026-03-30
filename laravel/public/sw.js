@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.3.1 - 2026-02-16: Better error diagnostics for mobile drag
-const VERSION = '1.3.1';
+// v1.4.0 - 2026-03-30: Biometric login fix, QR scanner PWA
+const VERSION = '1.4.0';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

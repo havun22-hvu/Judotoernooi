@@ -64,7 +64,15 @@ class PasskeyController extends Controller
 
     public function loginOptions(AssertionRequest $request): JsonResponse
     {
-        return response()->json($request->toVerify());
+        try {
+            return response()->json($request->toVerify());
+        } catch (\Exception $e) {
+            Log::error('PASSKEY LOGIN OPTIONS - Failed', [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['error' => 'Passkey opties konden niet worden geladen'], 500);
+        }
     }
 
     public function login(AssertedRequest $request): JsonResponse
