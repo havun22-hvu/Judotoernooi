@@ -72,6 +72,13 @@ ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-staging && git pull && c
 
 > **Let op:** Zonder cache:clear kunnen gebruikers in redirect loop komen bij login!
 
+## Git Post-Merge Hook (Automatisch)
+
+Beide servers hebben een `post-merge` hook in `.git/hooks/post-merge` die automatisch
+`php artisan optimize:clear && php artisan optimize` draait na elke `git pull`.
+
+Dit voorkomt dat gecachte routes/config/views achterblijven na een deploy.
+
 ## Backup Systeem (Automatisch)
 
 | Type | Frequentie | Locatie | Retentie |
