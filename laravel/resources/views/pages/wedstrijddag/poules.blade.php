@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             {{-- Heartbeat toggle --}}
             <div x-data="{ active: {{ ($heartbeatActive ?? false) ? 'true' : 'false' }}, loading: false }" class="flex items-center gap-2">
-                <button @click="loading = true; fetch('{{ route('wedstrijddag.heartbeat-toggle', $toernooi->routeParams()) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { active = d.active; loading = false; }).catch(() => loading = false)"
+                <button @click="loading = true; fetch('{{ route('toernooi.wedstrijddag.heartbeat-toggle', $toernooi->routeParams()) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { active = d.active; loading = false; }).catch(() => loading = false)"
                         :class="active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
                         class="text-white text-sm font-medium py-2 px-3 rounded flex items-center gap-1.5 transition-colors"
                         :disabled="loading">
