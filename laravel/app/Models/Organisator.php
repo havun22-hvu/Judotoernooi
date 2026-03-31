@@ -28,6 +28,7 @@ class Organisator extends Authenticatable implements WebAuthnAuthenticatable
         'password',
         'email_verified_at',
         'laatste_login',
+        'biometric_prompted_at',
         // KYC / Facturatiegegevens
         'organisatie_naam',
         'kvk_nummer',
@@ -119,6 +120,7 @@ class Organisator extends Authenticatable implements WebAuthnAuthenticatable
         return [
             'email_verified_at' => 'datetime',
             'laatste_login' => 'datetime',
+            'biometric_prompted_at' => 'datetime',
             'password' => 'hashed',
             'is_sitebeheerder' => 'boolean',
             'kyc_compleet' => 'boolean',

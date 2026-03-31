@@ -62,6 +62,12 @@ class OrganisatorAuthController extends Controller
                 $request->session()->put('locale', $organisator->locale);
             }
 
+            // Offer biometric setup once if user has no passkeys registered
+            if (!$organisator->biometric_prompted_at && $organisator->webAuthnCredentials()->count() === 0) {
+                $organisator->update(['biometric_prompted_at' => now()]);
+                return redirect()->route('auth.setup-pin');
+            }
+
             // Sitebeheerder goes to admin dashboard, regular organisator to their dashboard
             if ($organisator->isSitebeheerder()) {
                 return redirect()->intended(route('admin.index'));
