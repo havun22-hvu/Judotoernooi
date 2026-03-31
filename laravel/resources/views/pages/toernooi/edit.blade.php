@@ -248,6 +248,20 @@
                 </div>
             </div>
 
+            <div class="mt-4 pt-4 border-t">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ __('Scorebord weergave') }}</h3>
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="mat_voorkeuren[blauw_rechts]" value="0">
+                    <input type="checkbox" name="mat_voorkeuren[blauw_rechts]" id="blauw_rechts"
+                           value="1" {{ old('mat_voorkeuren.blauw_rechts', $toernooi->mat_voorkeuren['blauw_rechts'] ?? false) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="blauw_rechts" class="text-gray-700 font-medium">{{ __('Blauw rechts op LCD scherm') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Standaard staat wit links en blauw rechts. Vink aan om dit om te draaien.') }}</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- POULE INSTELLINGEN -->

@@ -326,87 +326,92 @@
                 <div class="header-poule" id="header-poule"></div>
             </div>
 
-            {{-- 1. Names — wit links, blauw rechts (gespiegeld t.o.v. bediening) --}}
+            {{-- 1. Names — links/rechts op basis van blauwRechts instelling --}}
             <div class="names-row">
-                <div class="name-card name-card-wit">
-                    <div class="naam" id="wit-naam">WIT</div>
-                    <div class="club" id="wit-club"></div>
+                <div class="name-card name-card-{{ $blauwRechts ? 'blauw' : 'wit' }}">
+                    <div class="naam" id="{{ $blauwRechts ? 'blauw' : 'wit' }}-naam">{{ $blauwRechts ? 'BLAUW' : 'WIT' }}</div>
+                    <div class="club" id="{{ $blauwRechts ? 'blauw' : 'wit' }}-club"></div>
                 </div>
-                <div class="name-card name-card-blauw">
-                    <div class="naam" id="blauw-naam">BLAUW</div>
-                    <div class="club" id="blauw-club"></div>
+                <div class="name-card name-card-{{ $blauwRechts ? 'wit' : 'blauw' }}">
+                    <div class="naam" id="{{ $blauwRechts ? 'wit' : 'blauw' }}-naam">{{ $blauwRechts ? 'WIT' : 'BLAUW' }}</div>
+                    <div class="club" id="{{ $blauwRechts ? 'wit' : 'blauw' }}-club"></div>
                 </div>
             </div>
 
             {{-- Spacer tussen namen en timer --}}
             <div style="display:flex;flex-direction:row;height:0.5vh">
-                <div class="half-wit"></div>
-                <div class="half-blauw"></div>
+                <div class="half-{{ $blauwRechts ? 'blauw' : 'wit' }}"></div>
+                <div class="half-{{ $blauwRechts ? 'wit' : 'blauw' }}"></div>
             </div>
 
             {{-- 2. Timer — donker midden, kleur zijkanten --}}
             <div class="timer-row">
-                <div class="timer-side half-wit"></div>
+                <div class="timer-side half-{{ $blauwRechts ? 'blauw' : 'wit' }}"></div>
                 <div class="timer-center">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
                     <div class="timer" id="timer-display">4:00</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
                 </div>
-                <div class="timer-side half-blauw"></div>
+                <div class="timer-side half-{{ $blauwRechts ? 'wit' : 'blauw' }}"></div>
             </div>
 
-            {{-- 3. Main content — 3 kolommen: [wit scores+shido] [midden: osaekomi] [blauw scores+shido] --}}
+            @php
+                $leftSide = $blauwRechts ? 'blauw' : 'wit';
+                $rightSide = $blauwRechts ? 'wit' : 'blauw';
+            @endphp
+
+            {{-- 3. Main content — 3 kolommen --}}
             <div class="main-3col">
-                {{-- Linker kolom: wit scores + shido's --}}
-                <div class="side-col side-col-wit">
+                {{-- Linker kolom --}}
+                <div class="side-col side-col-{{ $leftSide }}">
                     <div class="scores-section">
-                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="wit-yuko">0</span></div>
-                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="wit-wazaari">0</span></div>
-                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="wit-ippon">0</span></div>
+                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="{{ $leftSide }}-yuko">0</span></div>
+                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="{{ $leftSide }}-wazaari">0</span></div>
+                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="{{ $leftSide }}-ippon">0</span></div>
                     </div>
                     <div class="shido-section">
-                        <div class="shido-card" id="wit-shido-1"></div>
-                        <div class="shido-card" id="wit-shido-2"></div>
-                        <div class="shido-card" id="wit-shido-3"></div>
+                        <div class="shido-card" id="{{ $leftSide }}-shido-1"></div>
+                        <div class="shido-card" id="{{ $leftSide }}-shido-2"></div>
+                        <div class="shido-card" id="{{ $leftSide }}-shido-3"></div>
                     </div>
                 </div>
 
-                {{-- Midden kolom: kleine banen boven, donker osaekomi vak, grotere banen onder --}}
+                {{-- Midden kolom --}}
                 <div class="middle-col">
                     <div class="middle-banen middle-banen-top">
-                        <div class="middle-half-wit"></div>
-                        <div class="middle-half-blauw"></div>
+                        <div class="middle-half-{{ $leftSide }}"></div>
+                        <div class="middle-half-{{ $rightSide }}"></div>
                     </div>
                     <div class="osaekomi-box">
                         <div class="osaekomi-label">Osaekomi</div>
                         <div class="osaekomi-dots-row">
-                            <div class="osaekomi-dot" id="wit-osaekomi-dot"></div>
+                            <div class="osaekomi-dot" id="{{ $leftSide }}-osaekomi-dot"></div>
                             <span class="osaekomi-time" id="osaekomi-display">00</span>
-                            <div class="osaekomi-dot" id="blauw-osaekomi-dot"></div>
+                            <div class="osaekomi-dot" id="{{ $rightSide }}-osaekomi-dot"></div>
                         </div>
                         <span class="osaekomi-zone" id="osaekomi-zone"></span>
                         <div class="osaekomi-times-section">
-                            <div class="osaekomi-times-col" id="wit-osaekomi-times"></div>
-                            <div class="osaekomi-times-col" id="blauw-osaekomi-times"></div>
+                            <div class="osaekomi-times-col" id="{{ $leftSide }}-osaekomi-times"></div>
+                            <div class="osaekomi-times-col" id="{{ $rightSide }}-osaekomi-times"></div>
                         </div>
                     </div>
                     <div class="middle-banen middle-banen-bottom">
-                        <div class="middle-half-wit"></div>
-                        <div class="middle-half-blauw"></div>
+                        <div class="middle-half-{{ $leftSide }}"></div>
+                        <div class="middle-half-{{ $rightSide }}"></div>
                     </div>
                 </div>
 
-                {{-- Rechter kolom: blauw scores + shido's --}}
-                <div class="side-col side-col-blauw">
+                {{-- Rechter kolom --}}
+                <div class="side-col side-col-{{ $rightSide }}">
                     <div class="scores-section">
-                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="blauw-yuko">0</span></div>
-                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="blauw-wazaari">0</span></div>
-                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="blauw-ippon">0</span></div>
+                        <div class="score-box"><span class="score-label">Y</span><span class="score-value" id="{{ $rightSide }}-yuko">0</span></div>
+                        <div class="score-box"><span class="score-label">W</span><span class="score-value" id="{{ $rightSide }}-wazaari">0</span></div>
+                        <div class="score-box"><span class="score-label">I</span><span class="score-value" id="{{ $rightSide }}-ippon">0</span></div>
                     </div>
                     <div class="shido-section">
-                        <div class="shido-card" id="blauw-shido-1"></div>
-                        <div class="shido-card" id="blauw-shido-2"></div>
-                        <div class="shido-card" id="blauw-shido-3"></div>
+                        <div class="shido-card" id="{{ $rightSide }}-shido-1"></div>
+                        <div class="shido-card" id="{{ $rightSide }}-shido-2"></div>
+                        <div class="shido-card" id="{{ $rightSide }}-shido-3"></div>
                     </div>
                 </div>
             </div>

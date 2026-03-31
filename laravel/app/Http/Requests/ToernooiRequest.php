@@ -78,6 +78,8 @@ class ToernooiRequest extends FormRequest
             'verdeling_prioriteiten' => 'nullable|array',
             'verdeling_prioriteiten.*' => 'string|in:leeftijd,gewicht,band',
             'wedstrijd_schemas' => 'nullable|array',
+            'mat_voorkeuren' => 'nullable|array',
+            'mat_voorkeuren.blauw_rechts' => 'nullable|boolean',
         ];
     }
 

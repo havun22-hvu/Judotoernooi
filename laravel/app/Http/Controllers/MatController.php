@@ -1179,11 +1179,14 @@ class MatController extends Controller
             }
         }
 
+        $blauwRechts = (bool) ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false);
+
         return view('pages.mat.scoreboard-live', [
             'toernooi' => $toernooi,
             'matId' => $matId,
             'matNummer' => $matModel?->nummer ?? $mat,
             'currentMatch' => $currentMatch,
+            'blauwRechts' => $blauwRechts,
         ]);
     }
 

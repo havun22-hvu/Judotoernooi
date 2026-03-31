@@ -282,6 +282,11 @@ class ToernooiController extends Controller
         // Handle danpunten_actief checkbox
         $data['danpunten_actief'] = (bool) ($data['danpunten_actief'] ?? false);
 
+        // Handle mat_voorkeuren (JSON field with boolean values)
+        if (isset($data['mat_voorkeuren'])) {
+            $data['mat_voorkeuren'] = array_map(fn($v) => (bool) $v, $data['mat_voorkeuren']);
+        }
+
         // Handle poule match settings checkboxes
         if (array_key_exists('dubbel_bij_2_judokas', $data)) {
             $data['dubbel_bij_2_judokas'] = (bool) $data['dubbel_bij_2_judokas'];
