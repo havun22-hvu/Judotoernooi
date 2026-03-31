@@ -65,7 +65,22 @@ class PasskeyController extends Controller
     public function loginOptions(AssertionRequest $request): JsonResponse
     {
         try {
-            return response()->json($request->toVerify());
+            // Let laragear create the challenge (stored via DatabaseChallengeRepository)
+            $responsable = $request->toVerify(null);
+            $data = $responsable->toResponse($request)->getData(true);
+
+            // Add ALL registered credentials — laragear skips this without a known user,
+            // but the browser needs allowCredentials to find non-discoverable passkeys.
+            $credentials = WebAuthnCredential::all(['id', 'transports']);
+            if ($credentials->isNotEmpty()) {
+                $data['allowCredentials'] = $credentials->map(fn ($c) => array_filter([
+                    'id' => $c->getKey(),
+                    'type' => 'public-key',
+                    'transports' => $c->transports,
+                ]))->values()->toArray();
+            }
+
+            return response()->json($data);
         } catch (\Exception $e) {
             Log::error('PASSKEY LOGIN OPTIONS - Failed', [
                 'error' => $e->getMessage(),
