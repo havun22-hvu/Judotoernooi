@@ -117,7 +117,9 @@ Je bouwt een **SaaS product** dat door betalende klanten wordt gebruikt. Denk bi
 - **ONDERHOUD** bestaande docs, maak niet steeds nieuwe files
 
 **Bug fix werkwijze (max 2 pogingen):**
+0. **ALTIJD EERST:** Check VSCode/IDE op syntax errors in betrokken bestanden — gratis opsporing!
 1. **Poging 1:** Analyseer probleem, check VIEW eerst (waar komt data vandaan?), fix
+   → Na elke fix: check VSCode syntax errors voordat je verder gaat
 2. **Poging 2:** Als 1 faalt, heranalyseer, probeer andere aanpak
 3. **STOP na 2 pogingen:** Breng verslag uit aan gebruiker:
    - Wat is het symptoom?

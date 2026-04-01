@@ -1,37 +1,32 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 31 maart 2026
+> **Laatste update:** 1 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 31 maart 2026
+## Laatste Sessie: 1 april 2026
 
 ### Wat is gedaan:
 
-**500 error staging opgelost:**
-- Oorzaak: `Route [wedstrijddag.mobiel] not defined` — gecachte route tabel na git pull
-- Fix: route/config/view cache gecleared op staging
+**Bug fix: Live Matten tab publieke PWA was leeg**
+- Symptoom: bij kleurbeurt (groen/geel/blauw) verschenen judoka's wel in Android scoreboard app maar niet in de publieke PWA (coach/publiek)
+- Oorzaak: ontbrekende `>` op `<div>` tag in `publiek/index.blade.php` regel 388
+- De div wrapping de matten grid miste zijn closing angle bracket → browser parsede de `<template>` als attribuut
+- API endpoint werkte correct (`/havun-1/test3/matten` gaf groen/geel/blauw data terug)
+- Fix: 1 karakter toegevoegd (`"` → `">`)
+- Deployed naar staging
 
-**Git post-merge hook (staging + production):**
-- `.git/hooks/post-merge` aangemaakt op beide servers
-- Draait automatisch `php artisan optimize:clear && optimize` na elke `git pull`
-- Voorkomt verouderde caches na deploy
-- Gedocumenteerd in `.claude/deploy.md`
-
-**Biometrische login redirect (staging + production):**
-- Probleem: biometrie-knop op login pagina faalde omdat er geen passkeys geregistreerd waren
-- Oorzaak: gebruikers werden nooit naar de setup-pin/biometrie pagina geleid
-- Fix: na wachtwoord-login, als gebruiker geen passkeys heeft → eenmalige redirect naar `/auth/setup-pin`
-- Nieuw veld `biometric_prompted_at` op organisators tabel (wordt gezet bij redirect, voorkomt herhaling)
-- Setup-pin pagina biedt PIN + biometrie (vingerafdruk/gezicht) aan op smartphones
-- "Overslaan" link blijft beschikbaar → gebruiker kan later via Account Instellingen
-
-**Strategische beslissing (door Henk):**
-- Standaard login wordt: magic link → biometrie/QR code voor webapp
-- Wordt doorgegeven aan HavunCore als standaard ontwerp voor alle projecten
+**Feedback verwerkt: VSCode syntax errors altijd checken**
+- Regel toegevoegd aan `CLAUDE.md` (bug fix werkwijze stap 0)
+- Regel toegevoegd aan `claude-werkwijze.md` (HavunCore, alle projecten):
+  - DOE sectie: "Na ELKE code wijziging: check VSCode/IDE syntax errors"
+  - Bij foutmelding stap 1: syntax errors eerst
+  - Checklist: nieuw item bovenaan
+- Memory feedback opgeslagen
 
 ### Openstaande items:
+- [ ] Fix deployen naar **production** (alleen staging gedaan)
 - [ ] Magic link als primaire login methode (nieuw standaard ontwerp, HavunCore)
 - [ ] Biometrie login testen op telefoon (setup-pin flow na wachtwoord-login)
 - [ ] 5+ pending migraties op production (backup eerst!)
@@ -41,17 +36,15 @@
 - [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL
 
 ### Belangrijke context voor volgende keer:
-- Post-merge hook staat op BEIDE servers — caches worden automatisch gecleared na git pull
-- `biometric_prompted_at` is NULL voor alle bestaande gebruikers → zij krijgen de prompt bij volgende login
-- Setup-pin pagina (`/auth/setup-pin`) heeft al volledige PIN + biometrie flow
-- PasskeyController gebruikt Laragear/WebAuthn package
-- Henk wil magic link + biometrie/QR als standaard — dit is een groter herontwerp
+- Publieke PWA Live Matten tab werkt nu weer op staging
+- Production heeft de fix nog NIET — moet nog gedeployed worden
+- Post-merge hook staat op beide servers — caches worden automatisch gecleared na git pull
 
 ---
 
-## Vorige Sessie: 30 maart 2026
+## Vorige Sessie: 31 maart 2026
 
-**Organisator Mobiel + Staging/Production PWA onderscheid**
+**Biometrische login redirect + post-merge hooks**
 Zie archive voor details.
 
 ### Pending migraties (production):
