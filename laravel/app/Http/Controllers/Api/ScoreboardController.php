@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeviceToegang;
 use App\Models\Judoka;
 use App\Models\Mat;
+use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use App\Services\ActivityLogger;
 use App\Services\EliminatieService;
@@ -51,15 +52,17 @@ class ScoreboardController extends Controller
             'laatst_actief' => now(),
         ]);
 
-        // Find the mat linked to this device
+        // Find the mat and tournament linked to this device
         $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
             ->where('nummer', $toegang->mat_nummer)
             ->first();
+        $toernooi = Toernooi::find($toegang->toernooi_id);
 
         return response()->json([
             'token' => $token,
             'rol' => $toegang->rol,
             'toernooi_id' => $toegang->toernooi_id,
+            'toernooi_naam' => $toernooi?->naam,
             'mat_id' => $mat?->id,
             'mat_naam' => $mat ? "Mat {$mat->nummer}" : null,
             'display_code' => $toegang->getDisplayCode(),
