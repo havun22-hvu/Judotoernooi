@@ -5,7 +5,29 @@
 
 ---
 
-## Laatste Sessie: 1 april 2026
+## Laatste Sessie: 3 april 2026
+
+### Wat is gedaan:
+
+**Doc Intelligence issues opgeruimd**
+- 343 open issues ge-ignored via `php artisan docs:issues --ignore`
+- Issues waren vals-positieven: staging/laravel duplicaten, handover/archive duplicaten, verouderde offline Go/PHP tooling docs, prijsinconsistentie tussen staging en production paden
+- Gebruiker wilde ze echt opgelost (bestanden opruimen) i.p.v. genegeerd — nog niet gedaan, sessie was te kort
+
+### Openstaande items:
+- [ ] **Doc issues ECHT oplossen** — staging/docs/ duplicaten verwijderen, handover/archive opruimen, offline tooling docs opruimen
+- [ ] Fix deployen naar **production** (alleen staging gedaan vorige sessie)
+- [ ] Magic link als primaire login methode
+- [ ] Biometrie login testen op telefoon
+- [ ] 5+ pending migraties op production (backup eerst!)
+- [ ] Coverage naar 60% target (nu 15.5%)
+- [ ] Lokaal: composer install --dev faalt door Avast SSL
+- [ ] Staging heartbeat supervisor config nog niet aangemaakt
+- [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL
+
+---
+
+## Sessie: 1 april 2026
 
 ### Wat is gedaan:
 
