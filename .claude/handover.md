@@ -5,18 +5,27 @@
 
 ---
 
-## Laatste Sessie: 3 april 2026
+## Laatste Sessie: 3 april 2026 (avond)
 
 ### Wat is gedaan:
 
-**Doc Intelligence issues opgeruimd**
-- 343 open issues ge-ignored via `php artisan docs:issues --ignore`
-- Issues waren vals-positieven: staging/laravel duplicaten, handover/archive duplicaten, verouderde offline Go/PHP tooling docs, prijsinconsistentie tussen staging en production paden
-- Gebruiker wilde ze echt opgelost (bestanden opruimen) i.p.v. genegeerd — nog niet gedaan, sessie was te kort
+**Dashboard UI professionalisering (WIP)**
+- Organisator dashboard (`organisator/dashboard.blade.php`): KLAAR
+  - Knoppen: 3x outline grijs, "Nieuw Toernooi" blauw filled
+  - Emoji's (reset, delete, kroon) → SVG iconen
+- Toernooi dashboard (`pages/toernooi/dashboard.blade.php`): IN PROGRESS
+  - Stats: iconen met subtiele gekleurde achtergrond, uniforme donkere getallen
+  - Menu-items: SVG iconen, pijltjes bij hover, blauwe hover accent
+  - Secties: donkerblauwe header-balk (bg-blue-800) met stap-nummering (1,2,3)
+  - Genereer knoppen: outline style met hover fill
+  - Progress bar: dunner, blauw
+  - **Gebruiker wil nog fine-tunen** — huidige versie is "bijna goed" maar nog niet af
+  - Iteraties: regenboog kleuren → te saai → karakter mist → zware balken → uniforme kleur
 
 ### Openstaande items:
-- [ ] **Doc issues ECHT oplossen** — staging/docs/ duplicaten verwijderen, handover/archive opruimen, offline tooling docs opruimen
-- [ ] Fix deployen naar **production** (alleen staging gedaan vorige sessie)
+- [ ] **Dashboard fine-tuning** — gebruiker moet nog beoordelen na refresh
+- [ ] **Deploy naar staging/production** na goedkeuring
+- [ ] Fix deployen naar **production** (publieke PWA fix vorige sessie)
 - [ ] Magic link als primaire login methode
 - [ ] Biometrie login testen op telefoon
 - [ ] 5+ pending migraties op production (backup eerst!)
@@ -24,6 +33,13 @@
 - [ ] Lokaal: composer install --dev faalt door Avast SSL
 - [ ] Staging heartbeat supervisor config nog niet aangemaakt
 - [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL
+
+### Belangrijke context voor volgende keer:
+- Gebruiker wil **professioneel met karakter**, niet saai en niet kermis
+- Één accentkleur (blauw) door hele app, consistent met navbar
+- Donkere header-balken op secties = goed, maar allemaal DEZELFDE kleur
+- Lichte header-balken = "niks", te flets
+- Emoji's zijn weg, SVG iconen overal
 
 ---
 

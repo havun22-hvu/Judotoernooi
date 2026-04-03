@@ -43,9 +43,7 @@
                     <div class="relative" x-data="{ open: false, showAbout: false }">
                         <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if($organisator->isSitebeheerder())
-                                👑
-                            @else
-                                📋
+                                <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
                             {{ $organisator->naam }}
                             <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +58,7 @@
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
                             <hr class="my-1">
-                            <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">🔄 {{ __('Forceer Update') }}</button>
+                            <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
                             <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -124,21 +122,21 @@
                 {{ __('Mijn Toernooien') }}
             </h2>
             {{-- DO NOT REMOVE: Action buttons - Wimpeltoernooi, Mijn Judoka's, Mijn Clubs, Nieuw Toernooi --}}
-            <div class="flex space-x-3">
+            <div class="flex space-x-2">
                 <a href="{{ route('organisator.wimpel.index', $organisator) }}"
-                   class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                   class="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
                     {{ __('Wimpeltoernooi') }}
                 </a>
                 <a href="{{ route('organisator.stambestand.index', $organisator) }}"
-                   class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                   class="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
                     {{ __('Mijn Judoka\'s') }}
                 </a>
                 <a href="{{ route('organisator.clubs.index', $organisator) }}"
-                   class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
+                   class="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
                     {{ __('Mijn Clubs') }}
                 </a>
                 <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
-                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
                     {{ __('Nieuw Toernooi') }}
                 </a>
             </div>
@@ -286,8 +284,10 @@
                         <form action="{{ route('toernooi.reset', $toernooi->routeParams()) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt resetten?\n\nDit verwijdert:\n- Alle judoka\'s\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.')">
                             @csrf
-                            <button type="submit" class="text-orange-400 hover:text-orange-600" title="{{ __('Reset toernooi (verwijder judoka\'s en poules)') }}">
-                                🔄
+                            <button type="submit" class="text-gray-400 hover:text-orange-600 transition-colors" title="{{ __('Reset toernooi (verwijder judoka\'s en poules)') }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
                             </button>
                         </form>
                         {{-- Archiveer knop --}}
@@ -304,8 +304,10 @@
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-400 hover:text-red-600" title="{{ __('Verwijder toernooi') }}">
-                                🗑️
+                            <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" title="{{ __('Verwijder toernooi') }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
                             </button>
                         </form>
                     </div>
@@ -378,8 +380,10 @@
                                       onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data en kan niet ongedaan worden!')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-400 hover:text-red-600" title="{{ __('Verwijder toernooi') }}">
-                                        🗑️
+                                    <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" title="{{ __('Verwijder toernooi') }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
                                     </button>
                                 </form>
                             </div>
