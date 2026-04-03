@@ -331,6 +331,48 @@ def herverdeel_kleine_poules(
                         logging.debug(f"    Direct: orphan J{orphan.id} past in poule (nu {target.size})")
                         break
 
+            # STRATEGIE 5: Break apart - splits size-2 poule, herplaats individueel
+            # Als een poule van 2 niet gemerged kan worden, probeer de judoka's
+            # individueel te plaatsen in bestaande poules (>= min_size)
+            if kleine.size == 2 and kleine in poules:
+                j1, j2 = kleine.judokas[0], kleine.judokas[1]
+                # Probeer j1 in een bestaande poule te plaatsen
+                j1_target = None
+                for target in [p for p in poules if p is not kleine and min_size <= p.size < max_size]:
+                    if past_in_poule(j1, target, max_kg, max_lft, max_band):
+                        j1_target = target
+                        break
+                # Probeer j2 in een bestaande poule te plaatsen
+                j2_target = None
+                for target in [p for p in poules if p is not kleine and p is not j1_target and min_size <= p.size < max_size]:
+                    if past_in_poule(j2, target, max_kg, max_lft, max_band):
+                        j2_target = target
+                        break
+
+                if j1_target and j2_target:
+                    # Beide passen ergens: splits en herplaats
+                    kleine.judokas.clear()
+                    j1_target.judokas.append(j1)
+                    j2_target.judokas.append(j2)
+                    verplaatste_judokas.add(j1.id)
+                    verplaatste_judokas.add(j2.id)
+                    verbeterd = True
+                    logging.debug(f"    Break apart: J{j1.id} en J{j2.id} individueel herplaatst")
+                elif j1_target or j2_target:
+                    # Één past: verplaats die, de andere wordt orphan (size 1)
+                    # → nu kan die in volgende iteratie via merge/direct geplaatst worden
+                    if j1_target:
+                        kleine.judokas.remove(j1)
+                        j1_target.judokas.append(j1)
+                        verplaatste_judokas.add(j1.id)
+                        logging.debug(f"    Break apart partial: J{j1.id} herplaatst, J{j2.id} orphan")
+                    else:
+                        kleine.judokas.remove(j2)
+                        j2_target.judokas.append(j2)
+                        verplaatste_judokas.add(j2.id)
+                        logging.debug(f"    Break apart partial: J{j2.id} herplaatst, J{j1.id} orphan")
+                    verbeterd = True
+
         if not verbeterd:
             logging.debug(f"  Geen verbetering meer na {iteratie + 1} iteraties")
             break
