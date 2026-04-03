@@ -72,6 +72,21 @@
 </div>
 @endforelse
 
+{{-- Real-time: reload page on score/beurt updates via Reverb --}}
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+@include('partials.mat-updates-listener', ['toernooi' => $toernooi, 'matId' => $mat->id])
+<script>
+    // Auto-reload page when a score or beurt update comes in for this mat
+    let reloadTimer = null;
+    ['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar'].forEach(evt => {
+        window.addEventListener(evt, () => {
+            // Debounce: wait 500ms to batch rapid updates
+            clearTimeout(reloadTimer);
+            reloadTimer = setTimeout(() => location.reload(), 500);
+        });
+    });
+</script>
+
 @if($isStandalone)
 @if(isset($toegang))
 <a href="{{ route('mat.interface', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'toegang' => $toegang->id]) }}" class="text-blue-600 hover:text-blue-800">

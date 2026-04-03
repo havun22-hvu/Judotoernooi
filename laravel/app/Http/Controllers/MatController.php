@@ -186,6 +186,19 @@ class MatController extends Controller
                 'interface' => 'mat',
             ]);
 
+            // Broadcast elimination score update to all listeners
+            $wedstrijd->load('poule.blok');
+            if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
+                $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
+                MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+                    'wedstrijd_id' => $wedstrijd->id,
+                    'poule_id' => $wedstrijd->poule_id,
+                    'winnaar_id' => $validated['winnaar_id'],
+                    'is_gespeeld' => (bool) $validated['winnaar_id'],
+                    'type' => 'eliminatie',
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'correcties' => $correcties,
