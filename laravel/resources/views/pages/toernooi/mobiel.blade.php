@@ -336,7 +336,7 @@ function mobielApp() {
 
         async laadPoules() {
             try {
-                const response = await fetch('{{ route("wedstrijddag.poules-api", $toernooi->routeParams()) }}');
+                const response = await fetch('{{ route("toernooi.wedstrijddag.poules-api", $toernooi->routeParams()) }}');
                 this.beschikbarePoules = await response.json();
             } catch (e) {
                 console.error('Failed to load poules', e);
@@ -350,7 +350,7 @@ function mobielApp() {
             }
             this.zoekLoading = true;
             try {
-                const response = await fetch('{{ route("judoka.zoek", $toernooi->routeParams()) }}?q=' + encodeURIComponent(this.zoekterm));
+                const response = await fetch('{{ route("toernooi.judoka.zoek", $toernooi->routeParams()) }}?q=' + encodeURIComponent(this.zoekterm));
                 this.zoekResultaten = await response.json();
             } catch (e) {
                 console.error('Search failed', e);
@@ -368,7 +368,7 @@ function mobielApp() {
             if (!this.geselecteerdeJudoka || !this.nieuwGewicht) return;
             this.gewichtLoading = true;
             try {
-                const response = await fetch('{{ route("weging.registreer", array_merge($toernooi->routeParams(), ["judoka" => "__ID__"])) }}'.replace('__ID__', this.geselecteerdeJudoka.id), {
+                const response = await fetch('{{ route("toernooi.weging.registreer", array_merge($toernooi->routeParams(), ["judoka" => "__ID__"])) }}'.replace('__ID__', this.geselecteerdeJudoka.id), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ function mobielApp() {
             if (!this.geselecteerdeJudoka || !this.doelPouleId) return;
             this.verplaatsLoading = true;
             try {
-                const response = await fetch('{{ route("wedstrijddag.verplaats-judoka", $toernooi->routeParams()) }}', {
+                const response = await fetch('{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -426,7 +426,7 @@ function mobielApp() {
             if (!this.nieuweJudoka.naam || !this.nieuweJudoka.poule_id) return;
             this.toevoegenLoading = true;
             try {
-                const response = await fetch('{{ route("wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
+                const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -457,7 +457,7 @@ function mobielApp() {
 
         async refreshMatVoortgang() {
             try {
-                const response = await fetch('{{ route("wedstrijddag.mat-voortgang", $toernooi->routeParams()) }}');
+                const response = await fetch('{{ route("toernooi.wedstrijddag.mat-voortgang", $toernooi->routeParams()) }}');
                 const data = await response.json();
                 // Preserve _open state
                 this.matVoortgang = data.map(m => {
