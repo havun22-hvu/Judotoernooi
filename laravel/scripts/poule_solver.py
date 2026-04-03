@@ -248,9 +248,12 @@ def herverdeel_kleine_poules(
             if merged:
                 continue
 
-            # STRATEGIE 2: Steel judoka van TE GROTE poule (> ideale grootte)
+            # STRATEGIE 2: Steel judoka van grotere poule
+            # Normaal: alleen van poules > ideale_size
+            # Voor orphans (size 1-2): ook van poules >= min_size+1 (een poule van 4→3 is OK om orphan te redden)
             if kleine.size < min_size and kleine in poules:
-                grote_poules = [p for p in poules if p.size > ideale_size]
+                steal_threshold = ideale_size if kleine.size >= min_size - 1 else min_size
+                grote_poules = [p for p in poules if p.size > steal_threshold]
 
                 for grote in grote_poules:
                     for judoka in grote.judokas:
@@ -262,7 +265,7 @@ def herverdeel_kleine_poules(
                             kleine.judokas.append(judoka)
                             verplaatste_judokas.add(judoka.id)
                             verbeterd = True
-                            logging.debug(f"    J{judoka.id} gestolen van grote poule (was {grote.size + 1})")
+                            logging.debug(f"    J{judoka.id} gestolen van poule (was {grote.size + 1})")
                             break
 
                     if kleine.size >= min_size:
@@ -473,6 +476,63 @@ def verdeel_judokas(
                     logging.debug(f"    Soft placement: orphan J{orphan.id}({orphan.gewicht}kg) naar poule (overshoot {beste_overshoot:.1f}kg)")
 
         # Verwijder lege poules
+        poules = [p for p in poules if p.size > 0]
+
+    # STAP 4b: Consolideer overgebleven orphans — merge + steal
+    # Na soft placement kunnen nieuwe orphans van size 1 ontstaan (door break-apart).
+    # Probeer die samen te voegen en dan een judoka te stelen om min_size te bereiken.
+    orphan_poules = [p for p in poules if 0 < p.size < min_grootte]
+    if len(orphan_poules) >= 2:
+        logging.debug(f"Stap 4b: consolideer {len(orphan_poules)} orphan poules")
+        # Merge compatibele orphans
+        merged_any = True
+        while merged_any:
+            merged_any = False
+            orphan_poules = [p for p in poules if 0 < p.size < min_grootte]
+            for i, p1 in enumerate(orphan_poules):
+                if p1 not in poules or p1.size == 0:
+                    continue
+                for p2 in orphan_poules[i+1:]:
+                    if p2 not in poules or p2.size == 0:
+                        continue
+                    if p1.size + p2.size > max_grootte:
+                        continue
+                    alle_ok = True
+                    for j1 in p1.judokas:
+                        for j2 in p2.judokas:
+                            if abs(j1.gewicht - j2.gewicht) > max_kg or abs(j1.leeftijd - j2.leeftijd) > max_lft:
+                                alle_ok = False
+                                break
+                            if max_band > 0 and abs(j1.band - j2.band) > max_band:
+                                alle_ok = False
+                                break
+                        if not alle_ok:
+                            break
+                    if alle_ok:
+                        p1.judokas.extend(p2.judokas)
+                        poules.remove(p2)
+                        merged_any = True
+                        logging.debug(f"    Consolidatie merge: {[j.id for j in p1.judokas]} (size {p1.size})")
+                        break
+                if merged_any:
+                    break
+
+        # Steal van normale poules (>= min_size+1) om gemergte orphans naar min_size te brengen
+        orphan_poules = [p for p in poules if 0 < p.size < min_grootte]
+        for kleine in orphan_poules:
+            if kleine.size >= min_grootte:
+                continue
+            donors = [p for p in poules if p is not kleine and p.size > min_grootte]
+            for donor in donors:
+                for judoka in donor.judokas:
+                    if past_in_poule(judoka, kleine, max_kg, max_lft, max_band):
+                        donor.judokas.remove(judoka)
+                        kleine.judokas.append(judoka)
+                        logging.debug(f"    Consolidatie steal: J{judoka.id} naar orphan poule (nu {kleine.size})")
+                        break
+                if kleine.size >= min_grootte:
+                    break
+
         poules = [p for p in poules if p.size > 0]
 
     # STAP 5: Split volle poules om orphans te plaatsen
