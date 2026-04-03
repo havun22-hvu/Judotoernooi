@@ -163,12 +163,23 @@
                 </div>
                 @else
                 <div class="pt-2 mt-1 border-t border-gray-100">
-                    <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST">
+                    <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST"
+                        @if($statistieken['totaal_poules'] > 0)
+                            onsubmit="return confirm('{{ __('Let op: er zijn al :poules poules met :wedstrijden wedstrijden. Bij opnieuw genereren gaat de huidige indeling verloren. Weet je het zeker?', ['poules' => $statistieken['totaal_poules'], 'wedstrijden' => $statistieken['totaal_wedstrijden']]) }}')"
+                        @endif
+                    >
                         @csrf
+                        @if($statistieken['totaal_poules'] > 0)
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-600 text-sm transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            {{ __('Opnieuw genereren') }}
+                        </button>
+                        @else
                         <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 hover:bg-blue-600 hover:text-white text-sm font-semibold transition-all">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             {{ __('Genereer Poule-indeling') }}
                         </button>
+                        @endif
                     </form>
                 </div>
                 @endif
