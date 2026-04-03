@@ -5,9 +5,14 @@
 
 ---
 
-## Laatste Sessie: 3 april 2026
+## Laatste Sessie: 3-4 april 2026
 
 ### Wat is gedaan:
+
+**0. Dashboard UI professionalisering — deployed naar staging**
+- Organisator dashboard: outline knoppen (3x grijs, 1x blauw), emoji's → SVG iconen
+- Toernooi dashboard: donkerblauwe sectie-headers (bg-blue-800) met stap-nummering (1,2,3), SVG iconen met blauwe hover, stat cards met icon badges, dunnere progress bar
+- Design regels besloten: professioneel met karakter, één accentkleur (blauw), geen decoratieve roze/lichtblauw, functionele kleuren (rood/geel/groen) OK, rest van app is goed genoeg
 
 **1. Dashboard "Genereer Pouleindeling" knop verbeterd**
 - Als er al poules bestaan: subtielere outline knop ("Opnieuw genereren") + `confirm()` dialoog
@@ -42,7 +47,9 @@
 - TODO: fix mapping of DB opslag
 
 ### Openstaande items:
+- [ ] **Deploy naar production** (dashboard UI + eerdere fixes)
 - [ ] **bandNaarNummer bug** — integers→strings mapping in DynamischeIndelingService
+- [ ] Mollie knop in edit.blade.php: roze (bg-pink-500) → blauw
 - [ ] Magic link als primaire login methode
 - [ ] 5+ pending migraties op production (backup eerst!)
 - [ ] Coverage naar 60% target (nu 15.5%)
