@@ -85,7 +85,7 @@ app/
 
 | Document | Beschrijving |
 |----------|--------------|
-| [Gebruikershandleiding](./docs/1-GETTING-STARTED/GEBRUIKERSHANDLEIDING.md) | Voor eindgebruikers |
+| [Gebruikershandleiding](./docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md) | Voor eindgebruikers |
 | [API Documentatie](./docs/3-TECHNICAL/API.md) | REST API reference |
 | [Code Standaarden](./docs/3-DEVELOPMENT/CODE-STANDAARDEN.md) | Development guidelines |
 | [Betalingen](./docs/2-FEATURES/BETALINGEN.md) | Mollie integratie |

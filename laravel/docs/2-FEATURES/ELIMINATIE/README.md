@@ -307,4 +307,4 @@ Double-click op eliminatie potje → zelfde 3-kleuren systeem als poules:
 
 ## Changelog
 
-Zie [../../CHANGELOG.md](../../CHANGELOG.md) voor wijzigingsgeschiedenis.
+Zie [CHANGELOG.md](../../../CHANGELOG.md) voor wijzigingsgeschiedenis.
