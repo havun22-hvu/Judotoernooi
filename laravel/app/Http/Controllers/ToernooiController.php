@@ -149,16 +149,34 @@ class ToernooiController extends Controller
             ->with('success', 'Toernooi succesvol aangemaakt');
     }
 
-    public function show(Organisator $organisator, Toernooi $toernooi): View
+    public function show(Request $request, Organisator $organisator, Toernooi $toernooi): View|RedirectResponse
     {
         // Switch to toernooi's saved locale, or fall back to organisator's locale
         $locale = $toernooi->locale ?? $organisator->locale ?? config('app.locale');
         session()->put('locale', $locale);
         app()->setLocale($locale);
 
+        // Auto-redirect smartphones to mobile view (unless user explicitly chose desktop)
+        if (!$request->has('desktop') && $this->isSmartphone($request)) {
+            return redirect()->route('toernooi.wedstrijddag.mobiel', $toernooi->routeParams());
+        }
+
         $statistieken = $this->toernooiService->getStatistieken($toernooi);
 
         return view('pages.toernooi.show', compact('toernooi', 'statistieken'));
+    }
+
+    /**
+     * Detect if request comes from a smartphone (not tablet, not desktop).
+     */
+    protected function isSmartphone(Request $request): bool
+    {
+        $ua = $request->userAgent() ?? '';
+
+        // Must contain 'Mobile' — this covers iPhone, Android phones, etc.
+        // Tablets (iPad, Android tablets) typically don't have 'Mobile' in UA
+        return (bool) preg_match('/Mobile/i', $ua)
+            && !preg_match('/iPad|Tablet/i', $ua);
     }
 
     public function edit(Organisator $organisator, Toernooi $toernooi): View

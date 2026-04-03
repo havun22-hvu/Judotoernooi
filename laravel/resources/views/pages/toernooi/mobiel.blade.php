@@ -12,9 +12,9 @@
                 <h1 class="text-xl font-bold text-gray-800">{{ $toernooi->naam }}</h1>
                 <p class="text-sm text-gray-500">{{ $toernooi->datum->format('d-m-Y') }}</p>
             </div>
-            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}"
+            <a href="{{ route('toernooi.show', array_merge($toernooi->routeParams(), ['desktop' => 1])) }}"
                class="text-sm text-blue-600 hover:text-blue-800">
-                {{ __('Dashboard') }} &rarr;
+                {{ __('Desktop') }} &rarr;
             </a>
         </div>
 
