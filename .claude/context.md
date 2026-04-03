@@ -113,6 +113,26 @@ Voorwaarden • Privacy • Cookies • Contact
   3. Het noodplan uit te printen vóór het toernooi (offline pakket)
 - Platform wordt aangeboden "as is" zonder uptime-garantie
 
+## LCD Scoreboard Display (`scoreboard-live.blade.php`)
+
+Publiek display voor TV/monitor via HDMI. Gespiegeld t.o.v. bediening (IJF standaard).
+
+**Route:** `/tv/{4-teken code}` → redirect naar `/{org}/{toernooi}/mat/scoreboard-live/{mat}`
+**Bestand:** `resources/views/pages/mat/scoreboard-live.blade.php`
+**Real-time:** Pusher/Reverb op `scoreboard-display.{toernooiId}.{matId}` channel
+
+### LCD Layout (landscape, altijd 16:9)
+- Rij-structuur (geen geneste kolommen)
+- Scores Y/W/I **horizontaal naast elkaar** per kant (zelfde als Android landscape)
+- Blauw links, wit rechts (gespiegeld t.o.v. bediening) — tenzij `mat_voorkeuren.blauw_rechts`
+- Osaekomi timer in donker middenvak
+- CSS flexbox/grid, `flex-direction: row` voor scores
+
+### Visuele consistentie met Android app
+- LCD layout volgt dezelfde zone-volgorde als Android landscape
+- Scores horizontaal in beide (niet verticaal)
+- Kleuren, fonts en verhoudingen zoveel mogelijk gelijk
+
 ## Gerelateerde Docs
 
 - `laravel/docs/` - Project documentatie
