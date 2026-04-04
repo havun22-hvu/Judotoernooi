@@ -9,6 +9,14 @@
 
 ### Wat is gedaan:
 
+**0. UI professionalisering app-breed + LCD scorebord (4-5 apr)**
+- 7 view bestanden: emoji's → SVG iconen, regenboog knoppen → uniform blauw
+- Afsluiten pagina: roze "Meisjes" → neutraal grijs
+- Scorebord instelling: checkbox → radio buttons (Blauw links/rechts)
+- Publieke app: positienummers → bandkleur-bolletje
+- LCD scorebord: Y/W/I halverwege timer, shido's gecentreerd onder-helft
+- Reverb-staging herstart (zombie proces poort 8081)
+
 **1. Production deploy (alle fixes van 3-4 april)**
 - Dashboard UI professionalisering, poule solver, mat real-time updates, eliminatie broadcast fix
 - Alle 5 pending migraties bleken al gedraaid (batch 74-75)
