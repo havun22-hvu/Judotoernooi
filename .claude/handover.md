@@ -32,16 +32,24 @@
 - CLASSIFICATIE.md: wachtruimte OBSOLEET → beschrijvend
 - MEMORY.md: stale entries opgeschoond
 
-**6. Test coverage opgeschaald (19→46 tests, alle groen)**
+**6. Test coverage opgeschaald (19→71+ tests)**
 - `ToernooiModelTest.php` (19 tests): slug, codes, relationships, status, casts
 - `PaymentResultTest.php` (8 tests): DTO status methods, fromMollie, constructor
 - `OrganisatorAuthTest.php` (12 tests): GET pages, MagicLinkToken model tests, factory states
 - `ToernooiControllerTest.php` (7 tests): dashboard auth/permissions, page loads
-- POST-based feature tests verwijderd: staging env mismatch (MySQL + middleware)
+- `ClubModelTest.php` (11 tests): relationships, portal code/pincode, portal URL, findOrCreate
+- `MatModelTest.php` (4 tests): relationships, label, nummer
+- `BlokModelTest.php` (9 tests): relationships, casts, attributes, factory states, sluitWeging
+
+**7. migrate:fresh safeguard gebouwd**
+- `AppServiceProvider`: MigrationsStarted listener blokkeert migrate:fresh op server
+- `SafeMigrateFresh` command: backup → fresh → restore (veilig alternatief)
+- `BackupService`: `isServerEnvironment()` + `restoreFromBackup()` toegevoegd
+- Aanleiding: staging DB gewist door RefreshDatabase in tests (4 apr incident)
 
 ### Openstaande items:
 - [x] ~~Magic link~~ — volledig geïmplementeerd
-- [ ] Coverage naar 60% target (nu ~20-25%) — 46 tests, meer nodig
+- [ ] Coverage naar 60% target (nu ~30%) — 71+ tests, meer nodig
 - [ ] POST feature tests fixen (staging draait tests tegen MySQL, niet SQLite in-memory)
 - [ ] Lokaal: composer install --dev faalt door Avast SSL
 
