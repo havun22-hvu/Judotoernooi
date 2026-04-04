@@ -87,6 +87,13 @@ cd D:\GitHub\JudoToernooi && git pull
 
 ## Rules (ALWAYS follow)
 
+### ⛔ NOOIT `php artisan test` OP STAGING/PRODUCTION
+`RefreshDatabase` draait `migrate:fresh` → **WIST ALLE DATA**.
+Server `.env` overschrijft `phpunit.xml` SQLite instelling → tests draaien tegen ECHTE MySQL.
+- Tests ALLEEN lokaal draaien
+- Bij lokale problemen: tests SCHRIJVEN en COMMITTEN, niet op server draaien
+- **Incident 4 apr 2026:** Staging DB compleet gewist door tests, hersteld uit backup
+
 ### DENK ALS SAAS-BOUWER, NIET ALS PROBLEEMOPLOSSER
 Je bouwt een **SaaS product** dat door betalende klanten wordt gebruikt. Denk bij elke beslissing:
 - **Werkt dit voor ALLE organisatoren?** Niet alleen voor Henk's test-scenario
