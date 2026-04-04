@@ -13,6 +13,15 @@ class BackupService
     private string $backupDir = '/var/backups/havun/milestones';
 
     /**
+     * Check if running on a server with MySQL (staging/production).
+     * Returns false on local dev (SQLite/Windows).
+     */
+    public static function isServerEnvironment(): bool
+    {
+        return config('database.default') === 'mysql' && PHP_OS_FAMILY !== 'Windows';
+    }
+
+    /**
      * Create a labeled backup before a destructive operation.
      *
      * @param string $label  Short identifier, e.g. 'voor-verdeling-matten'
@@ -20,8 +29,7 @@ class BackupService
      */
     public function maakMilestoneBackup(string $label): ?string
     {
-        // Only on production/staging (MySQL on Linux)
-        if (config('database.default') !== 'mysql' || PHP_OS_FAMILY === 'Windows') {
+        if (!static::isServerEnvironment()) {
             return null;
         }
 
@@ -50,6 +58,24 @@ class BackupService
 
         Log::error("Milestone backup failed for: {$label}");
         return null;
+    }
+
+    /**
+     * Restore database from a gzipped backup file.
+     */
+    public function restoreFromBackup(string $backupFile): bool
+    {
+        $database = config('database.connections.mysql.database');
+        $dbArg = escapeshellarg($database);
+        $fileArg = escapeshellarg($backupFile);
+        $command = "gunzip -c {$fileArg} | mysql -u root {$dbArg} 2>&1";
+        exec($command, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            Log::error("Backup restore failed: " . implode("\n", $output));
+        }
+
+        return $returnCode === 0;
     }
 
     private function cleanupOudeBackups(int $keep): void

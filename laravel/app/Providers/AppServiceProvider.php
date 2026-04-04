@@ -35,25 +35,26 @@ class AppServiceProvider extends ServiceProvider
 
         // PROTECT staging/production: block migrate:fresh, auto-backup before migrations
         Event::listen(MigrationsStarted::class, function () {
-            $isMySQL = config('database.default') === 'mysql';
-            $isServer = PHP_OS_FAMILY !== 'Windows';
-
-            if ($isMySQL && $isServer) {
-                // Check if this is a migrate:fresh (tables are being dropped)
-                // If called from RefreshDatabase or direct migrate:fresh, block it
-                $isSafeFresh = app()->bound('migrate:safe-fresh-running');
-
-                if (!$isSafeFresh && $this->isMigrateFreshRunning()) {
-                    $db = config('database.connections.mysql.database');
-                    throw new \RuntimeException(
-                        "⛔ migrate:fresh is BLOCKED on server (database: {$db}). "
-                        . "Use: php artisan migrate:safe-fresh"
-                    );
-                }
-
-                // Normal migrate: just backup
-                app(BackupService::class)->maakMilestoneBackup('voor-migratie');
+            if (!BackupService::isServerEnvironment()) {
+                return;
             }
+
+            // Skip if SafeMigrateFresh is running (it handles its own backup)
+            if (app()->bound('migrate:safe-fresh-running')) {
+                return;
+            }
+
+            // Block migrate:fresh on server (RefreshDatabase, direct CLI call)
+            if ($this->isMigrateFreshCall()) {
+                $db = config('database.connections.mysql.database');
+                throw new \RuntimeException(
+                    "⛔ migrate:fresh is BLOCKED on server (database: {$db}). "
+                    . "Use: php artisan migrate:safe-fresh"
+                );
+            }
+
+            // Normal migrate: auto-backup
+            app(BackupService::class)->maakMilestoneBackup('voor-migratie');
         });
 
         // Configure rate limiters
@@ -62,28 +63,18 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Detect if migrate:fresh is running (vs normal migrate).
-     * Checks: direct CLI call, Artisan::call from RefreshDatabase, or test runner.
+     * Only checks CLI args — does NOT block based on APP_ENV to avoid false positives.
      */
-    private function isMigrateFreshRunning(): bool
+    private function isMigrateFreshCall(): bool
     {
-        // Check CLI args (direct: php artisan migrate:fresh)
         $argv = $_SERVER['argv'] ?? [];
         foreach ($argv as $arg) {
-            if (str_contains($arg, 'migrate:fresh')) {
+            if (str_contains($arg, 'migrate:fresh')
+                || str_contains($arg, 'phpunit')
+                || str_contains($arg, 'pest')
+                || str_contains($arg, '--testsuite')) {
                 return true;
             }
-        }
-
-        // Check if running via test suite (RefreshDatabase calls migrate:fresh internally)
-        foreach ($argv as $arg) {
-            if (str_contains($arg, 'phpunit') || str_contains($arg, '--testsuite') || str_contains($arg, 'pest')) {
-                return true;
-            }
-        }
-
-        // Check if APP_ENV=testing (tests running)
-        if (app()->environment('testing')) {
-            return true;
         }
 
         return false;
