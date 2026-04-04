@@ -74,11 +74,14 @@ class ChatController extends Controller
             'bericht' => $validated['bericht'],
         ]);
 
-        // Broadcast the message (graceful — chat still saved if Reverb is down)
+        // Broadcast to others (SafelyBroadcasts circuit breaker protects against Reverb down)
         try {
-            broadcast(new NewChatMessage($message))->toOthers();
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::debug('Chat broadcast skipped (Reverb down)');
+            $breaker = new \App\Support\CircuitBreaker('reverb', 3, 30);
+            if ($breaker->isAvailable()) {
+                $breaker->call(fn () => broadcast(new NewChatMessage($message))->toOthers());
+            }
+        } catch (\Throwable) {
+            // Chat is saved to DB — broadcast is best-effort
         }
 
         return response()->json([

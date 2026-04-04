@@ -105,9 +105,12 @@ class ToernooiHeartbeat extends Command
                     ];
                 });
 
-            broadcast(new \App\Events\MatHeartbeat($toernooi->id, $matten->toArray()));
+            $breaker = new \App\Support\CircuitBreaker('reverb', 3, 30);
+            if ($breaker->isAvailable()) {
+                $breaker->call(fn () => broadcast(new \App\Events\MatHeartbeat($toernooi->id, $matten->toArray())));
+            }
         } catch (\Exception $e) {
-            Log::debug('Heartbeat broadcast skipped (Reverb down)');
+            // Heartbeat is best-effort — circuit breaker handles repeated failures
         }
     }
 }
