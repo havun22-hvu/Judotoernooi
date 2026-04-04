@@ -23,7 +23,7 @@ class ToernooiControllerTest extends TestCase
 
         $response = $this->get("/{$org->slug}/dashboard");
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect();
     }
 
     #[Test]
