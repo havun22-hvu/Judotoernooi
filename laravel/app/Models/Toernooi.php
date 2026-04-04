@@ -488,6 +488,29 @@ class Toernooi extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Match Duration
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get match duration in seconds. Default 180 (3 min, judo standaard).
+     * Reads from wedstrijdtijd column if it exists, otherwise default.
+     */
+    public function getMatchDuration(): int
+    {
+        return $this->wedstrijdtijd ?? 180;
+    }
+
+    /**
+     * Get finale match duration in seconds. Default 240 (4 min).
+     */
+    public function getMatchDurationFinale(): int
+    {
+        return $this->wedstrijdtijd_finale ?? 240;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Wachtwoord Methods
     |--------------------------------------------------------------------------
     */

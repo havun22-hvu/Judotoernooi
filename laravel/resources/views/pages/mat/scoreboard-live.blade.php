@@ -349,7 +349,7 @@
                 <div class="timer-side half-{{ $blauwRechts ? 'blauw' : 'wit' }}"></div>
                 <div class="timer-center">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                    <div class="timer" id="timer-display">4:00</div>
+                    <div class="timer" id="timer-display">{{ floor(($toernooi->getMatchDuration()) / 60) }}:00</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
                 </div>
                 <div class="timer-side half-{{ $blauwRechts ? 'wit' : 'blauw' }}"></div>
@@ -439,7 +439,7 @@
         const initialMatch = @js($currentMatch ?? null);
 
         // State
-        let matchDuration = 240;
+        let matchDuration = @js($toernooi->getMatchDuration());
         let timeRemaining = matchDuration;
         let isRunning = false;
         let isGoldenScore = false;
@@ -475,7 +475,7 @@
             document.getElementById('wit-club').textContent = initialMatch.judoka_wit?.club || '';
             document.getElementById('blauw-naam').textContent = initialMatch.judoka_blauw?.naam || 'BLAUW';
             document.getElementById('blauw-club').textContent = initialMatch.judoka_blauw?.club || '';
-            matchDuration = initialMatch.match_duration || 240;
+            matchDuration = initialMatch.match_duration || @js($toernooi->getMatchDuration());
             timeRemaining = matchDuration;
         }
 
@@ -608,7 +608,7 @@
                     document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
                     document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
 
-                    matchDuration = data.match_duration || 240;
+                    matchDuration = data.match_duration || @js($toernooi->getMatchDuration());
                     timeRemaining = matchDuration;
                     isRunning = false;
                     isGoldenScore = false;
@@ -643,7 +643,7 @@
                     isRunning = false;
                     isGoldenScore = false;
                     if (timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
-                    matchDuration = data.duration || 240;
+                    matchDuration = data.duration || @js($toernooi->getMatchDuration());
                     timeRemaining = matchDuration;
                     osaekomiActive = false;
                     clearOsaekomiState();
@@ -711,7 +711,7 @@
                     document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
                     document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
                     document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
-                    matchDuration = data.match_duration || 240;
+                    matchDuration = data.match_duration || @js($toernooi->getMatchDuration());
                     timeRemaining = matchDuration;
                     isRunning = false;
                     isGoldenScore = false;
@@ -741,7 +741,7 @@
                     document.getElementById('wit-club').textContent = '';
                     document.getElementById('blauw-naam').textContent = 'BLAUW';
                     document.getElementById('blauw-club').textContent = '';
-                    matchDuration = 240;
+                    matchDuration = @js($toernooi->getMatchDuration());
                     timeRemaining = matchDuration;
                     updateScores({
                         wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },

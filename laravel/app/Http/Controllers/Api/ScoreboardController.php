@@ -322,7 +322,7 @@ class ScoreboardController extends Controller
             'poule_naam' => $wedstrijd->poule?->titel ?? "Poule {$wedstrijd->poule?->nummer}",
             'ronde' => $wedstrijd->ronde,
             'groep' => $wedstrijd->groep,
-            'match_duration' => 240, // Default 4 minutes, can be configured per toernooi later
+            'match_duration' => $wedstrijd->poule?->toernooi?->getMatchDuration() ?? 180,
             'updated_at' => $wedstrijd->updated_at?->toISOString(),
         ];
     }
