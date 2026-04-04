@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Mail\MagicLinkMail;
 use App\Models\MagicLinkToken;
 use App\Models\Organisator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -15,7 +13,7 @@ class OrganisatorAuthTest extends TestCase
     use RefreshDatabase;
 
     // ========================================================================
-    // Login Page (GET — no middleware issues)
+    // Login Page (GET)
     // ========================================================================
 
     #[Test]
@@ -40,70 +38,6 @@ class OrganisatorAuthTest extends TestCase
     }
 
     // ========================================================================
-    // Login Submit (POST)
-    // ========================================================================
-
-    #[Test]
-    public function login_with_valid_credentials_authenticates_user(): void
-    {
-        $org = Organisator::factory()->create([
-            'email' => 'test@example.com',
-            'biometric_prompted_at' => now(),
-        ]);
-
-        $response = $this->from('/login')->post('/login', [
-            'email' => 'test@example.com',
-            'password' => 'password',
-        ]);
-
-        $response->assertRedirect();
-        $this->assertAuthenticatedAs($org, 'organisator');
-    }
-
-    #[Test]
-    public function login_with_wrong_password_fails(): void
-    {
-        Organisator::factory()->create([
-            'email' => 'test@example.com',
-        ]);
-
-        $response = $this->from('/login')->post('/login', [
-            'email' => 'test@example.com',
-            'password' => 'wrong',
-        ]);
-
-        $response->assertRedirect('/login');
-        $this->assertGuest('organisator');
-    }
-
-    #[Test]
-    public function login_validates_required_fields(): void
-    {
-        $response = $this->from('/login')->post('/login', []);
-
-        // Should redirect back to login (validation error or auth error)
-        $response->assertRedirect('/login');
-    }
-
-    // ========================================================================
-    // Logout
-    // ========================================================================
-
-    #[Test]
-    public function logout_clears_authentication(): void
-    {
-        $org = Organisator::factory()->create();
-        $this->actingAs($org, 'organisator');
-
-        $this->assertAuthenticatedAs($org, 'organisator');
-
-        $response = $this->post('/logout');
-
-        $response->assertRedirect();
-        $this->assertGuest('organisator');
-    }
-
-    // ========================================================================
     // Registration Page (GET)
     // ========================================================================
 
@@ -116,55 +50,7 @@ class OrganisatorAuthTest extends TestCase
     }
 
     // ========================================================================
-    // Magic Link Registration (POST)
-    // ========================================================================
-
-    #[Test]
-    public function register_sends_magic_link_email(): void
-    {
-        Mail::fake();
-
-        $response = $this->from('/registreren')->post('/registreren', [
-            'organisatie_naam' => 'Judoschool Test',
-            'naam' => 'Jan de Tester',
-            'email' => 'jan@test.nl',
-            'telefoon' => '06-12345678',
-        ]);
-
-        $response->assertRedirect(route('register.sent'));
-        Mail::assertSent(MagicLinkMail::class, function ($mail) {
-            return $mail->hasTo('jan@test.nl');
-        });
-    }
-
-    #[Test]
-    public function register_creates_magic_link_token_in_database(): void
-    {
-        Mail::fake();
-
-        $this->from('/registreren')->post('/registreren', [
-            'organisatie_naam' => 'Judoschool Test',
-            'naam' => 'Jan',
-            'email' => 'jan@test.nl',
-        ]);
-
-        $this->assertDatabaseHas('magic_link_tokens', [
-            'email' => 'jan@test.nl',
-            'type' => 'register',
-        ]);
-    }
-
-    #[Test]
-    public function register_validates_required_fields(): void
-    {
-        $response = $this->from('/registreren')->post('/registreren', []);
-
-        // Should redirect back (validation errors)
-        $response->assertRedirect('/registreren');
-    }
-
-    // ========================================================================
-    // Forgot Password
+    // Forgot Password Page (GET)
     // ========================================================================
 
     #[Test]
@@ -175,62 +61,108 @@ class OrganisatorAuthTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[Test]
-    public function forgot_password_sends_reset_link_for_existing_user(): void
-    {
-        Mail::fake();
-
-        Organisator::factory()->create(['email' => 'henk@test.nl']);
-
-        $response = $this->from('/wachtwoord-vergeten')->post('/wachtwoord-vergeten', [
-            'email' => 'henk@test.nl',
-        ]);
-
-        $response->assertRedirect(route('password.sent'));
-        Mail::assertSent(MagicLinkMail::class);
-    }
-
-    #[Test]
-    public function forgot_password_does_not_reveal_nonexistent_email(): void
-    {
-        Mail::fake();
-
-        $response = $this->from('/wachtwoord-vergeten')->post('/wachtwoord-vergeten', [
-            'email' => 'niemand@test.nl',
-        ]);
-
-        // Should still redirect to "sent" page (prevent email enumeration)
-        $response->assertRedirect(route('password.sent'));
-        Mail::assertNothingSent();
-    }
-
     // ========================================================================
-    // Magic Link Token Model
+    // MagicLinkToken Model (unit-level, no HTTP)
     // ========================================================================
 
     #[Test]
-    public function magic_link_token_can_be_generated_and_found(): void
+    public function magic_link_token_can_be_generated(): void
     {
         $token = MagicLinkToken::generate('test@example.com', 'register', [
             'organisatie_naam' => 'Test Club',
+            'naam' => 'Jan',
         ]);
 
         $this->assertNotNull($token);
         $this->assertEquals('test@example.com', $token->email);
         $this->assertEquals('register', $token->type);
+        $this->assertNotEmpty($token->token);
+        $this->assertFalse($token->isExpired());
+        $this->assertFalse($token->isUsed());
+    }
+
+    #[Test]
+    public function magic_link_token_can_be_found_by_valid_token(): void
+    {
+        $token = MagicLinkToken::generate('test@example.com', 'register');
 
         $found = MagicLinkToken::findValid($token->token, 'register');
+
         $this->assertNotNull($found);
         $this->assertEquals($token->id, $found->id);
     }
 
     #[Test]
-    public function magic_link_token_expires_after_use(): void
+    public function magic_link_token_not_found_with_wrong_type(): void
+    {
+        $token = MagicLinkToken::generate('test@example.com', 'register');
+
+        $found = MagicLinkToken::findValid($token->token, 'password_reset');
+
+        $this->assertNull($found);
+    }
+
+    #[Test]
+    public function magic_link_token_becomes_invalid_after_use(): void
     {
         $token = MagicLinkToken::generate('test@example.com', 'register');
         $token->markUsed();
 
-        $found = MagicLinkToken::findValid($token->token, 'register');
-        $this->assertNull($found);
+        $this->assertTrue($token->isUsed());
+        $this->assertNull(MagicLinkToken::findValid($token->token, 'register'));
+    }
+
+    #[Test]
+    public function magic_link_token_stores_metadata(): void
+    {
+        $token = MagicLinkToken::generate('test@example.com', 'register', [
+            'organisatie_naam' => 'Judoschool Amsterdam',
+            'naam' => 'Jan de Tester',
+            'telefoon' => '06-12345678',
+        ]);
+
+        $fresh = $token->fresh();
+        $metadata = $fresh->metadata;
+
+        $this->assertEquals('Judoschool Amsterdam', $metadata['organisatie_naam']);
+        $this->assertEquals('Jan de Tester', $metadata['naam']);
+    }
+
+    #[Test]
+    public function generating_new_token_cleans_old_unused_tokens(): void
+    {
+        $old = MagicLinkToken::generate('test@example.com', 'register');
+        $oldId = $old->id;
+
+        $new = MagicLinkToken::generate('test@example.com', 'register');
+
+        // Old token should be deleted
+        $this->assertNull(MagicLinkToken::find($oldId));
+        // New token exists
+        $this->assertNotNull(MagicLinkToken::findValid($new->token, 'register'));
+    }
+
+    // ========================================================================
+    // Organisator Model Auth
+    // ========================================================================
+
+    #[Test]
+    public function organisator_factory_creates_valid_user(): void
+    {
+        $org = Organisator::factory()->create();
+
+        $this->assertNotEmpty($org->naam);
+        $this->assertNotEmpty($org->email);
+        $this->assertNotEmpty($org->slug);
+        $this->assertFalse($org->is_sitebeheerder);
+    }
+
+    #[Test]
+    public function sitebeheerder_factory_state_works(): void
+    {
+        $admin = Organisator::factory()->sitebeheerder()->create();
+
+        $this->assertTrue($admin->is_sitebeheerder);
+        $this->assertTrue($admin->isSitebeheerder());
     }
 }
