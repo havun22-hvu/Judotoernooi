@@ -32,29 +32,40 @@
 - CLASSIFICATIE.md: wachtruimte OBSOLEET → beschrijvend
 - MEMORY.md: stale entries opgeschoond
 
-**6. Test coverage opgeschaald (19→71+ tests)**
-- `ToernooiModelTest.php` (19 tests): slug, codes, relationships, status, casts
+**6. Test coverage opgeschaald (19→397 tests, 941 assertions, alle groen)**
+- `ToernooiModelTest.php` (18 tests): slug, codes, relationships, status, casts
 - `PaymentResultTest.php` (8 tests): DTO status methods, fromMollie, constructor
-- `OrganisatorAuthTest.php` (12 tests): GET pages, MagicLinkToken model tests, factory states
+- `OrganisatorAuthTest.php` (12 tests): GET pages, MagicLinkToken model, factory states
 - `ToernooiControllerTest.php` (7 tests): dashboard auth/permissions, page loads
 - `ClubModelTest.php` (11 tests): relationships, portal code/pincode, portal URL, findOrCreate
 - `MatModelTest.php` (4 tests): relationships, label, nummer
 - `BlokModelTest.php` (9 tests): relationships, casts, attributes, factory states, sluitWeging
+- `WedstrijdSchemaServiceTest.php` (12 tests): round-robin, volgorde optimalisatie, punten competitie
+- `DynamischeIndelingServiceTest.php` (16 tests): bandNaarNummer, berekenScore, statistieken
+- `BlokMatVerdelingServiceTest.php` (13 tests): extractLeeftijd, extractGewicht, hashToewijzingen
+- BlokFactory gefixt: verkeerde kolomnamen (naam→removed, label→blok_label, weging_eind→weging_einde)
 
 **7. migrate:fresh safeguard gebouwd**
 - `AppServiceProvider`: MigrationsStarted listener blokkeert migrate:fresh op server
 - `SafeMigrateFresh` command: backup → fresh → restore (veilig alternatief)
 - `BackupService`: `isServerEnvironment()` + `restoreFromBackup()` toegevoegd
 - Aanleiding: staging DB gewist door RefreshDatabase in tests (4 apr incident)
+- Staging DB hersteld uit dagelijkse backup (03:00)
+
+**8. Avast SSL gefixt**
+- Avast Web/Mail Shield Root cert geëxporteerd en toegevoegd aan `C:\laragon\etc\ssl\cacert.pem`
+- `composer install --dev` werkt nu lokaal — tests draaien lokaal
+
+**9. Reverb-staging herstart**
+- Zombie process op poort 8081 gekilld, reverb-staging RUNNING
 
 ### Openstaande items:
-- [x] ~~Magic link~~ — volledig geïmplementeerd
-- [ ] Coverage naar 60% target (nu ~30%) — 71+ tests, meer nodig
-- [ ] POST feature tests fixen (staging draait tests tegen MySQL, niet SQLite in-memory)
-- [ ] Lokaal: composer install --dev faalt door Avast SSL
+- [ ] Coverage naar 60% target (nu ~40% geschat, 397 tests)
+- [ ] POST feature tests: staging env mismatch (MySQL + middleware vs SQLite)
 
 ### Bekende issues:
 - 4 medium PHP security vulnerabilities (league/commonmark 2x, league/flysystem 2x)
+- Reverb-staging kan zombie processen achterlaten bij crash (poort 8081 bezet)
 
 ---
 
