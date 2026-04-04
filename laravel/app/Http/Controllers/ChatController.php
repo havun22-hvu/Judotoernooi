@@ -74,8 +74,12 @@ class ChatController extends Controller
             'bericht' => $validated['bericht'],
         ]);
 
-        // Broadcast the message
-        broadcast(new NewChatMessage($message))->toOthers();
+        // Broadcast the message (graceful — chat still saved if Reverb is down)
+        try {
+            broadcast(new NewChatMessage($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Chat broadcast skipped (Reverb down)');
+        }
 
         return response()->json([
             'success' => true,

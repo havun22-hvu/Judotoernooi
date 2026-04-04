@@ -107,10 +107,7 @@ class ToernooiHeartbeat extends Command
 
             broadcast(new \App\Events\MatHeartbeat($toernooi->id, $matten->toArray()));
         } catch (\Exception $e) {
-            Log::error('Heartbeat broadcast failed', [
-                'toernooi_id' => $toernooi->id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::debug('Heartbeat broadcast skipped (Reverb down)');
         }
     }
 }

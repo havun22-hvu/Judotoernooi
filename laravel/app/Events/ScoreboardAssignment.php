@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 class ScoreboardAssignment implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Concerns\SafelyBroadcasts;
 
     public function __construct(
         public int $toernooiId,

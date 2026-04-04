@@ -580,18 +580,18 @@ class MatController extends Controller
                 ];
 
                 // Notify scoreboard app
-                ScoreboardAssignment::dispatch($toernooiId, $mat->id, $matchData);
+                ScoreboardAssignment::safeBroadcast($toernooiId, $mat->id, $matchData);
 
                 // Notify LCD display directly (no app relay needed)
-                ScoreboardEvent::dispatch($toernooiId, $mat->id, [
+                ScoreboardEvent::safeBroadcast($toernooiId, $mat->id, [
                     'event' => 'match.assign',
                     ...$matchData,
                 ]);
             }
         } else {
             // Active match cleared — notify app and LCD to reset
-            ScoreboardAssignment::dispatch($toernooiId, $mat->id, []);
-            ScoreboardEvent::dispatch($toernooiId, $mat->id, [
+            ScoreboardAssignment::safeBroadcast($toernooiId, $mat->id, []);
+            ScoreboardEvent::safeBroadcast($toernooiId, $mat->id, [
                 'event' => 'match.unassign',
             ]);
         }

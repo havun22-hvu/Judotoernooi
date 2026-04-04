@@ -13,6 +13,7 @@ use Illuminate\Queue\SerializesModels;
 class NewChatMessage implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+    use \App\Events\Concerns\SafelyBroadcasts;
 
     public ChatMessage $message;
 

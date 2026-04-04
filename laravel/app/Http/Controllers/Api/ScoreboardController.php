@@ -275,7 +275,7 @@ class ScoreboardController extends Controller
             return response()->json(['message' => 'Mat niet gevonden.'], 404);
         }
 
-        ScoreboardEvent::dispatch($toegang->toernooi_id, $mat->id, $eventData);
+        ScoreboardEvent::safeBroadcast($toegang->toernooi_id, $mat->id, $eventData);
 
         return response()->json(['success' => true]);
     }
