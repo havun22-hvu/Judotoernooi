@@ -845,9 +845,8 @@
                                                  'bg-blue-50': judoka.is_gereedmaken && !judoka.is_volgende && !judoka.is_aan_de_beurt && judoka.id !== activeFavoriet
                                              }">
                                             <div class="flex items-center gap-2">
-                                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
-                                                      :class="judoka.is_aan_de_beurt ? 'bg-green-500 text-white' : (judoka.is_volgende ? 'bg-yellow-400 text-yellow-900' : (judoka.is_gereedmaken ? 'bg-blue-400 text-white' : (index === 0 ? 'bg-yellow-400 text-yellow-900' : (index === 1 ? 'bg-gray-300' : (index === 2 ? 'bg-orange-300' : 'bg-gray-200')))))"
-                                                      x-text="judoka.is_aan_de_beurt ? '🥋' : (judoka.is_volgende ? '⏳' : (judoka.is_gereedmaken ? '📋' : (judoka.eindpositie || (index + 1))))"></span>
+                                                <span class="w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                                                      :style="judoka.band_kleur ? 'background-color: ' + judoka.band_kleur : 'background-color: #e5e7eb'"></span>
                                                 <div>
                                                     <span class="font-medium text-sm" :class="judoka.id === activeFavoriet ? 'text-green-800' : 'text-gray-800'" x-text="judoka.naam"></span>
                                                     <span class="text-xs text-gray-500 block" x-text="judoka.club"></span>
@@ -857,7 +856,7 @@
                                                 {{-- Status badges verwijderd: achtergrondkleur + banners bovenaan zijn voldoende --}}
                                                 <span x-show="judoka.leeftijd" class="text-gray-400" x-text="judoka.leeftijd + 'j'"></span>
                                                 <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
-                                                <span x-show="judoka.band_kleur" class="w-3 h-3 rounded-full border border-gray-300" :style="'background-color: ' + judoka.band_kleur"></span>
+                                                {{-- Band kleur staat nu links als icoon --}}
                                                 <span x-show="judoka.wp > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.wp + 'WP ' + judoka.jp + 'JP'"></span>
                                             </div>
                                         </div>
