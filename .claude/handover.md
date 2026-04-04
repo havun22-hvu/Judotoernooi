@@ -27,13 +27,11 @@
 - `bandNaarNummer()` werkt correct — handover was incorrect
 
 ### Openstaande items:
-- [ ] Magic link als primaire login methode (grote feature)
-- [ ] Coverage naar 60% target (nu 15.5%)
+- [x] ~~Magic link~~ — volledig geïmplementeerd (controller, model, views, routes, mail)
+- [ ] Coverage naar 60% target (nu 15.5%) — bezig met opschalen
 - [ ] Lokaal: composer install --dev faalt door Avast SSL
 
 ### Bekende issues:
-- Mat 59 in URL `/mat/59` bestaat niet in DB (gap 55→66). Mogelijk oude test URL.
-- P#1 Wimpeltoernooi: wedstrijden 2-9 `is_gespeeld=true` maar geen winnaar/scores (test data)
 - 4 medium PHP security vulnerabilities (league/commonmark 2x, league/flysystem 2x)
 
 ---
@@ -47,12 +45,5 @@
 ### 31 maart 2026
 - Biometrische login redirect + post-merge hooks
 
-### Pending migraties (production):
-```
-2026_03_21_200000_add_scoreboard_to_device_toegangen
-2026_03_26_084039_add_toernooi_type_to_toernooien_table
-2026_03_26_230142_add_is_gearchiveerd_to_toernooien_table
-2026_03_28_192607_create_club_aanmeldingen_table
-2026_03_28_204336_add_zichtbaar_op_agenda_to_toernooien_table
-2026_03_31_233238_add_biometric_prompted_at_to_organisators_table (DONE)
-```
+### Migraties (production):
+Alle migraties gedraaid t/m batch 75 (4 april 2026).

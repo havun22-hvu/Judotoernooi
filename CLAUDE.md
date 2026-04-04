@@ -53,8 +53,9 @@ Nieuw → Voorbereiding → Wedstrijddag → Afgesloten
 ```
 
 ### Registratie & Login
-- `/registreren` - Nieuwe organisator aanmelden (guest only)
-- `/login` - Inloggen (email + wachtwoord)
+- `/registreren` - Nieuwe organisator aanmelden via magic link (email verificatie)
+- `/login` - Inloggen (email + wachtwoord, passkeys/biometrisch)
+- `/wachtwoord-vergeten` - Wachtwoord reset via magic link
 - Organisator dashboard: `/{slug}/dashboard`
 
 ### Sitebeheerder Dashboard

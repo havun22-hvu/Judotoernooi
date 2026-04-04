@@ -1089,7 +1089,7 @@ Een poule is rood als grootte NIET in `poule_grootte_voorkeur`:
 │ BEIDE:                                                              │
 │    - Tools: Drag & drop + 🔍 Zoek Match                            │
 │    - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info       │
-│    - Geen wachtruimte (OBSOLEET sinds feb 2026)                    │
+│    - Judoka's direct in/uit poule plaatsen (drag & drop)           │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -1200,7 +1200,7 @@ Response:
 │   - Tools: Drag & drop + 🔍 Zoek Match                             │
 │   - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info        │
 │   - Weegkaart + publieke pagina's updaten automatisch              │
-│   - ⛔ GEEN wachtruimte (OBSOLEET sinds feb 2026)                  │
+│   - Judoka's direct in/uit poule plaatsen (drag & drop)            │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```

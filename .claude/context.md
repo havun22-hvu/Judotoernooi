@@ -41,7 +41,9 @@ php artisan serve --port=8007
 - **Poule Indeling** - Automatisch algoritme
 - **Mat Interface** - Wedstrijden en uitslagen
 - **Eliminatie** - Double elimination
+- **Betalingen** - Mollie + Stripe (Connect + Platform mode)
 - **Real-time Sync** - Reverb WebSockets voor chat en score updates
+- **Auth** - Magic link registratie, wachtwoord, passkeys/biometrisch
 
 ## Belangrijke Regels
 
