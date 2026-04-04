@@ -2460,7 +2460,7 @@
                             </form>
                             @else
                             <a href="{{ route('toernooi.mollie.authorize', $toernooi->routeParams()) }}" target="_blank"
-                               class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
+                               class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
                                 <span>{{ __('Koppel Mollie') }}</span>
                             </a>
                             @endif
