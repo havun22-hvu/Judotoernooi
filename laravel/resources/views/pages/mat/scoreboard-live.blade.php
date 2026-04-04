@@ -126,7 +126,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 1vh;
+            padding-top: 0;
         }
         .side-col-wit { background: #F3F4F6; }
         .side-col-blauw { background: #1E3A8A; }
