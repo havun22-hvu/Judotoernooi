@@ -17,6 +17,19 @@ class MatUpdate implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * Dispatch event, silently ignoring broadcast failures (Reverb down).
+     * The mat update is saved to DB regardless — broadcast is best-effort.
+     */
+    public static function safeBroadcast(int $toernooiId, int $matId, string $type, array $data): void
+    {
+        try {
+            static::dispatch($toernooiId, $matId, $type, $data);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("MatUpdate broadcast failed (Reverb down?): {$e->getMessage()}");
+        }
+    }
+
     public int $toernooiId;
     public int $matId;
     public string $type;

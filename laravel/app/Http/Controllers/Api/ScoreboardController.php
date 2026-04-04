@@ -207,7 +207,7 @@ class ScoreboardController extends Controller
         $wedstrijd->load('poule.blok');
         if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
             $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
-            MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+            MatUpdate::safeBroadcast($toernooiId, $wedstrijd->poule->mat_id, 'score', [
                 'wedstrijd_id' => $wedstrijd->id,
                 'poule_id' => $wedstrijd->poule_id,
                 'winnaar_id' => $validated['winnaar_id'],
@@ -232,7 +232,7 @@ class ScoreboardController extends Controller
             ]);
 
             $mat->refresh();
-            MatUpdate::dispatch(
+            MatUpdate::safeBroadcast(
                 $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id,
                 $mat->id,
                 'beurt',

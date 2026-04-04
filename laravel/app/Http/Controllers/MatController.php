@@ -190,7 +190,7 @@ class MatController extends Controller
             $wedstrijd->load('poule.blok');
             if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
                 $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
-                MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+                MatUpdate::safeBroadcast($toernooiId, $wedstrijd->poule->mat_id, 'score', [
                     'wedstrijd_id' => $wedstrijd->id,
                     'poule_id' => $wedstrijd->poule_id,
                     'winnaar_id' => $validated['winnaar_id'],
@@ -238,7 +238,7 @@ class MatController extends Controller
         $wedstrijd->load('poule.blok');
         if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
             $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
-            MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+            MatUpdate::safeBroadcast($toernooiId, $wedstrijd->poule->mat_id, 'score', [
                 'wedstrijd_id' => $wedstrijd->id,
                 'poule_id' => $wedstrijd->poule_id,
                 'winnaar_id' => $validated['winnaar_id'],
@@ -378,7 +378,7 @@ class MatController extends Controller
 
             // Broadcast poule klaar to spreker
             if ($originelePoule->mat_id) {
-                MatUpdate::dispatch($toernooiId, $originelePoule->mat_id, 'poule_klaar', [
+                MatUpdate::safeBroadcast($toernooiId, $originelePoule->mat_id, 'poule_klaar', [
                     'poule_id' => $originelePoule->id,
                     'poule_nummer' => $originelePoule->nummer,
                     'barrage' => true,
@@ -433,13 +433,13 @@ class MatController extends Controller
 
         // Broadcast poule klaar to spreker (both mats if B-groep on separate mat)
         if ($poule->mat_id) {
-            MatUpdate::dispatch($toernooiId, $poule->mat_id, 'poule_klaar', [
+            MatUpdate::safeBroadcast($toernooiId, $poule->mat_id, 'poule_klaar', [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
             ]);
         }
         if ($poule->b_mat_id && $poule->b_mat_id != $poule->mat_id) {
-            MatUpdate::dispatch($toernooiId, $poule->b_mat_id, 'poule_klaar', [
+            MatUpdate::safeBroadcast($toernooiId, $poule->b_mat_id, 'poule_klaar', [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
             ]);
@@ -548,7 +548,7 @@ class MatController extends Controller
         $mat->refresh();
 
         // Broadcast beurt update to all listeners (jurytafel, publiek, spreker)
-        MatUpdate::dispatch($toernooiId, $mat->id, 'beurt', [
+        MatUpdate::safeBroadcast($toernooiId, $mat->id, 'beurt', [
             'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
             'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
             'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
@@ -896,7 +896,7 @@ class MatController extends Controller
         // Broadcast bracket update
         $wedstrijd->load('poule.blok');
         if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
-            MatUpdate::dispatch($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
+            MatUpdate::safeBroadcast($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
                 'poule_id' => $wedstrijd->poule_id,
                 'wedstrijd_id' => $wedstrijd->id,
                 'actie' => 'plaats_judoka',
@@ -969,7 +969,7 @@ class MatController extends Controller
         // Broadcast bracket update
         $poule = Poule::find($pouleId);
         if ($toernooi && $poule && $poule->mat_id) {
-            MatUpdate::dispatch($toernooi->id, $poule->mat_id, 'bracket', [
+            MatUpdate::safeBroadcast($toernooi->id, $poule->mat_id, 'bracket', [
                 'poule_id' => $pouleId,
                 'actie' => 'advance_byes',
             ]);
@@ -1149,7 +1149,7 @@ class MatController extends Controller
         // Broadcast bracket update
         $wedstrijd->load('poule.blok');
         if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
-            MatUpdate::dispatch($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
+            MatUpdate::safeBroadcast($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
                 'poule_id' => $wedstrijd->poule_id,
                 'wedstrijd_id' => $wedstrijd->id,
                 'actie' => 'verwijder_judoka',
