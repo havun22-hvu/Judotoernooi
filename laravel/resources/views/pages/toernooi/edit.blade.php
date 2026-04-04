@@ -1451,27 +1451,28 @@
                                    title="0 = categorie limiet, 1-2 = max jaren verschil in poule"
                                    onchange="checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item')); updateJsonInput()">
                         </div>
-                        <div class="flex items-center gap-2 bg-blue-50 rounded px-2 py-1" title="Wedstrijdinstellingen">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">⏱</label>
+                        <div class="flex items-center gap-2 bg-blue-50 rounded px-2 py-1" title="{{ __('Wedstrijdregels per categorie') }}">
+                            <label class="text-gray-600 text-sm whitespace-nowrap" title="{{ __('Shiai-tijd (wedstrijdduur)') }}">⏱</label>
                             <select name="gewichtsklassen_shiai_time[${key}]"
                                     class="shiai-time-select border rounded px-1 py-1 text-sm bg-white"
+                                    title="{{ __('Wedstrijdtijd') }}"
                                     onchange="updateJsonInput()">
                                 <option value="120" ${shiaiTime == 120 ? 'selected' : ''}>2:00</option>
                                 <option value="180" ${shiaiTime == 180 ? 'selected' : ''}>3:00</option>
                                 <option value="240" ${shiaiTime == 240 ? 'selected' : ''}>4:00</option>
                                 <option value="300" ${shiaiTime == 300 ? 'selected' : ''}>5:00</option>
                             </select>
-                            <label class="text-gray-500 text-xs flex items-center gap-1">
+                            <label class="text-gray-500 text-xs flex items-center gap-1" title="{{ __('Shime waza — wurging toegestaan') }}">
                                 <input type="checkbox" name="gewichtsklassen_shime_waza[${key}]"
                                        class="shime-waza-checkbox" ${shimeWaza ? 'checked' : ''}
                                        onchange="updateJsonInput()">
-                                Shime
+                                {{ __('Shime') }}
                             </label>
-                            <label class="text-gray-500 text-xs flex items-center gap-1">
+                            <label class="text-gray-500 text-xs flex items-center gap-1" title="{{ __('Kansetsu waza — armklem toegestaan') }}">
                                 <input type="checkbox" name="gewichtsklassen_kansetsu_waza[${key}]"
                                        class="kansetsu-waza-checkbox" ${kansetsuWaza ? 'checked' : ''}
                                        onchange="updateJsonInput()">
-                                Kansetsu
+                                {{ __('Kansetsu') }}
                             </label>
                         </div>
                         <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
