@@ -250,7 +250,7 @@
 
             <div class="mt-4 pt-4 border-t">
                 <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ __('Scorebord weergave') }}</h3>
-                <p class="text-sm text-gray-500 mb-3">{{ __('Positie van blauw op het LCD scorebord') }}</p>
+                <p class="text-sm text-gray-500 mb-3">{{ __('Positie van blauw op het LCD scorebord. Wijziging geldt vanaf de volgende wedstrijd.') }}</p>
                 <div class="flex items-center gap-6">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="mat_voorkeuren[blauw_rechts]" value="0"
