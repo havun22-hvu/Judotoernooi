@@ -166,6 +166,11 @@ Hoe verder de app vordert, hoe belangrijker het is dat werkende code niet onbedo
 - Verwijder NOOIT UI-elementen die je niet begrijpt — lees eerst de docs
 - Na een fix: controleer dat bestaande functionaliteit nog intact is
 
+### Broadcast Events: ALTIJD SafelyBroadcasts trait
+Bij NIEUW broadcast event ALTIJD `use \App\Events\Concerns\SafelyBroadcasts;` toevoegen.
+De trait overschrijft `dispatch()` met circuit breaker + try-catch + log throttling.
+Zie `laravel/docs/3-DEVELOPMENT/STABILITY.md` → "Reverb/Broadcast Bescherming".
+
 ### Workflow: Local → GitHub → Server
 ```
 ALTIJD: Edit lokaal → Push naar GitHub → Deploy naar staging/production

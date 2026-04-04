@@ -56,8 +56,12 @@
 - Avast Web/Mail Shield Root cert geëxporteerd en toegevoegd aan `C:\laragon\etc\ssl\cacert.pem`
 - `composer install --dev` werkt nu lokaal — tests draaien lokaal
 
-**9. Reverb-staging herstart**
-- Zombie process op poort 8081 gekilld, reverb-staging RUNNING
+**9. Broadcast bescherming structureel opgelost**
+- `SafelyBroadcasts` trait overschrijft `dispatch()` met circuit breaker + try-catch + log throttle
+- Alle 5 broadcast events beschermd: MatUpdate, ScoreboardEvent, ScoreboardAssignment, NewChatMessage, MatHeartbeat
+- Reverb down → geen 500 errors, geen log spam, data altijd in DB
+- Supervisor wrapper scripts ruimen zombie processen automatisch op bij herstart
+- Docs: STABILITY.md, CLAUDE.md, MEMORY.md bijgewerkt
 
 ### Openstaande items:
 - [ ] Coverage naar 60% target (nu ~40% geschat, 397 tests)
@@ -65,7 +69,6 @@
 
 ### Bekende issues:
 - 4 medium PHP security vulnerabilities (league/commonmark 2x, league/flysystem 2x)
-- Reverb-staging kan zombie processen achterlaten bij crash (poort 8081 bezet)
 
 ---
 

@@ -11,6 +11,8 @@
 |---------|---------|------|
 | Custom Exceptions | `app/Exceptions/` | Gestructureerde error categorisatie |
 | Circuit Breaker | `app/Support/CircuitBreaker.php` | Voorkom cascade failures externe services |
+| SafelyBroadcasts | `app/Events/Concerns/SafelyBroadcasts.php` | Broadcast nooit crasht app (Reverb down) |
+| migrate:fresh blokkade | `AppServiceProvider.php` | Voorkom data verlies op server |
 | Result Object | `app/Support/Result.php` | Clean error handling zonder exceptions |
 | Guard Clauses | Controllers/Services | Early return bij ongeldige input |
 | Error Notifications | `app/Services/ErrorNotificationService.php` | Real-time alerts naar HavunCore |
@@ -154,12 +156,58 @@ class MollieService
 }
 ```
 
+### Reverb/Broadcast Bescherming
+
+Alle broadcast events gebruiken de `SafelyBroadcasts` trait die `dispatch()` overschrijft met 3 lagen bescherming:
+
+```
+Laag 1: Circuit Breaker  → Na 3 failures: skip broadcasts 30s (fail-fast, geen timeout)
+Laag 2: Try-catch         → Onverwachte exceptions worden stilletjes opgevangen
+Laag 3: Log throttling    → Max 1 logmelding per minuut per event type (geen spam)
+```
+
+**Hoe het werkt:**
+
+```php
+// In elk broadcast event:
+class MatUpdate implements ShouldBroadcastNow
+{
+    use SafelyBroadcasts; // ← Overschrijft dispatch() automatisch
+
+    // Normale code — geen speciale aanroep nodig
+}
+
+// In controllers — gewoon dispatch() gebruiken:
+MatUpdate::dispatch($toernooiId, $matId, 'score', $data);
+// ^ Automatisch beschermd. Data is altijd in DB, broadcast is best-effort.
+```
+
+**Beschermde events:**
+- `MatUpdate` — score, beurt, poule updates
+- `ScoreboardEvent` — scorebord sync
+- `ScoreboardAssignment` — wedstrijd toewijzing aan scorebord
+- `NewChatMessage` — chat berichten
+- `MatHeartbeat` — periodieke mat status (via `broadcast()` helper + eigen try-catch)
+
+**Trait locatie:** `app/Events/Concerns/SafelyBroadcasts.php`
+
+**Belangrijk:** Bij het aanmaken van een nieuw broadcast event ALTIJD `use SafelyBroadcasts;` toevoegen. De trait overschrijft `dispatch()` zodat het automatisch werkt — geen speciale method nodig.
+
+### Reverb Infrastructuur
+
+Supervisor wrapper scripts op de server ruimen automatisch zombie processen op bij (her)start:
+- `/usr/local/bin/reverb-prod-start.sh` — killt poort 8080 zombies, start Reverb
+- `/usr/local/bin/reverb-staging-start.sh` — killt poort 8081 zombies, start Reverb
+
 ### Configuratie
 
 ```php
-// In CircuitBreaker.php
-private const FAILURE_THRESHOLD = 3;  // Open after 3 failures
-private const RECOVERY_TIMEOUT = 30;  // Seconds before trying again
+// Circuit Breaker defaults voor Reverb
+new CircuitBreaker(
+    service: 'reverb',
+    failureThreshold: 3,   // Open na 3 failures
+    recoveryTimeout: 30,   // 30 sec wachten voor retry
+);
 ```
 
 ---
