@@ -1,11 +1,11 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 4 april 2026
+> **Laatste update:** 5 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 4 april 2026
+## Laatste Sessie: 4-5 april 2026
 
 ### Wat is gedaan:
 
@@ -67,10 +67,16 @@
 - Hardcoded 240s (4 min) → `Toernooi::getMatchDuration()` default 180s (3 min)
 - Gefixt in: ScoreboardController, MatController (2x), scoreboard-live.blade.php (6x)
 
+**11. Per-categorie wedstrijdinstellingen (shiai_time, shime/kansetsu waza)**
+- 3 velden per categorie in `gewichtsklassen` JSON (geen migratie)
+- Edit form: select (2:00/3:00/4:00/5:00) + 2 checkboxes met Nederlandse tooltips
+- `Toernooi::getMatchDurationForCategorie()` + `getMatchRulesForCategorie()`
+- MatController + ScoreboardController sturen categorie-specifieke duration + regels mee
+- Deployed naar staging, production nog niet
+
 ### Openstaande items:
-- [ ] **Wedstrijdinstellingen per categorie** — `shiai_time`, `shime_waza`, `kansetsu_waza` per categorie
-      Plan: `laravel/docs/5-PLANNING/CATEGORIE-WEDSTRIJD-INSTELLINGEN.md`
 - [ ] **LCD timer/JP/osaekomi** — timer loopt niet, JP niet zichtbaar. Afhankelijk van scoreboard app events.
+- [ ] **Deploy production** — categorie wedstrijdinstellingen + broadcast safeguards
 - [ ] Coverage naar 60% target (nu ~40% geschat, 397 tests)
 - [ ] POST feature tests: staging env mismatch (MySQL + middleware vs SQLite)
 
