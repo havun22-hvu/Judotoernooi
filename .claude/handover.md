@@ -63,7 +63,14 @@
 - Supervisor wrapper scripts ruimen zombie processen automatisch op bij herstart
 - Docs: STABILITY.md, CLAUDE.md, MEMORY.md bijgewerkt
 
+**10. LCD match_duration fix**
+- Hardcoded 240s (4 min) → `Toernooi::getMatchDuration()` default 180s (3 min)
+- Gefixt in: ScoreboardController, MatController (2x), scoreboard-live.blade.php (6x)
+
 ### Openstaande items:
+- [ ] **Wedstrijdinstellingen per categorie** — `shiai_time`, `shime_waza`, `kansetsu_waza` per categorie
+      Plan: `laravel/docs/5-PLANNING/CATEGORIE-WEDSTRIJD-INSTELLINGEN.md`
+- [ ] **LCD timer/JP/osaekomi** — timer loopt niet, JP niet zichtbaar. Afhankelijk van scoreboard app events.
 - [ ] Coverage naar 60% target (nu ~40% geschat, 397 tests)
 - [ ] POST feature tests: staging env mismatch (MySQL + middleware vs SQLite)
 
