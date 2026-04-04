@@ -126,7 +126,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin-top: -8vh;
+            margin-top: -4vh;
         }
         .side-col-wit { background: #F3F4F6; }
         .side-col-blauw { background: #1E3A8A; }
@@ -144,6 +144,14 @@
             flex-direction: row;
             align-items: center;
             gap: 1vw;
+            border-bottom: 1px solid rgba(156,163,175,0.3);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        .score-box:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
         .score-label {
             font-size: clamp(16px, 3vh, 36px);
