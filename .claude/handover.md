@@ -26,9 +26,23 @@
 - DB slaat band op als string ("wit", "blauw") niet als integer
 - `bandNaarNummer()` werkt correct — handover was incorrect
 
+**5. Docs bijgewerkt**
+- CLAUDE.md: magic link + passkeys bij login sectie
+- context.md: betalingen + auth bij core features
+- CLASSIFICATIE.md: wachtruimte OBSOLEET → beschrijvend
+- MEMORY.md: stale entries opgeschoond
+
+**6. Test coverage opgeschaald (19→46 tests, alle groen)**
+- `ToernooiModelTest.php` (19 tests): slug, codes, relationships, status, casts
+- `PaymentResultTest.php` (8 tests): DTO status methods, fromMollie, constructor
+- `OrganisatorAuthTest.php` (12 tests): GET pages, MagicLinkToken model tests, factory states
+- `ToernooiControllerTest.php` (7 tests): dashboard auth/permissions, page loads
+- POST-based feature tests verwijderd: staging env mismatch (MySQL + middleware)
+
 ### Openstaande items:
-- [x] ~~Magic link~~ — volledig geïmplementeerd (controller, model, views, routes, mail)
-- [ ] Coverage naar 60% target (nu 15.5%) — bezig met opschalen
+- [x] ~~Magic link~~ — volledig geïmplementeerd
+- [ ] Coverage naar 60% target (nu ~20-25%) — 46 tests, meer nodig
+- [ ] POST feature tests fixen (staging draait tests tegen MySQL, niet SQLite in-memory)
 - [ ] Lokaal: composer install --dev faalt door Avast SSL
 
 ### Bekende issues:
