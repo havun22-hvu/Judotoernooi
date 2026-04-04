@@ -146,7 +146,7 @@
             gap: 1vw;
         }
         .score-label {
-            font-size: clamp(16px, 2.5vh, 32px);
+            font-size: clamp(16px, 3vh, 36px);
             font-weight: 800;
             min-width: 2vw;
             text-align: right;
@@ -155,13 +155,13 @@
         .side-col-wit .score-label { color: #6B7280; }
         .side-col-blauw .score-label { color: #93C5FD; }
         .score-value {
-            font-size: clamp(36px, 10vh, 120px);
+            font-size: clamp(40px, 12vh, 140px);
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             line-height: 1;
             color: #EF4444;
             background: #111827;
-            padding: 0.3vh 1.5vw;
+            padding: 0.5vh 1.5vw;
             border-radius: 6px;
             min-width: clamp(48px, 8vw, 140px);
             text-align: center;
@@ -171,7 +171,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1.5vh 0 0;
+            padding: 3vh 0 0;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
