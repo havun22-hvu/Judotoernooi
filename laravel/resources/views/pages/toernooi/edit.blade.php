@@ -1119,7 +1119,7 @@
                     const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
                     const bandGrens = item.querySelector('.band-grens-select')?.value || '';
                     const bandVerschil1 = parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1;
-                    const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
+                    const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem, shiai_time: parseInt(item.querySelector('.shiai-time-select')?.value) || 180, shime_waza: item.querySelector('.shime-waza-checkbox')?.checked || false, kansetsu_waza: item.querySelector('.kansetsu-waza-checkbox')?.checked || false };
                     if (systeem === 'punten_competitie') {
                         entry.punten_competitie_wedstrijden = pcAantal;
                     }
@@ -1347,6 +1347,9 @@
                 const maxBand = item.max_band_verschil || 0;
                 const bandGrens = item.band_grens || '';
                 const bandVerschil1 = item.band_verschil_beginners ?? 1;
+                const shiaiTime = item.shiai_time || 180;
+                const shimeWaza = item.shime_waza || false;
+                const kansetsuWaza = item.kansetsu_waza || false;
 
                 // Support both old band_tot and new band_filter
                 let bandFilter = item.band_filter || item.band_tot || '';
@@ -1447,6 +1450,29 @@
                                    min="0" max="5" step="1"
                                    title="0 = categorie limiet, 1-2 = max jaren verschil in poule"
                                    onchange="checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item')); updateJsonInput()">
+                        </div>
+                        <div class="flex items-center gap-2 bg-blue-50 rounded px-2 py-1" title="Wedstrijdinstellingen">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">⏱</label>
+                            <select name="gewichtsklassen_shiai_time[${key}]"
+                                    class="shiai-time-select border rounded px-1 py-1 text-sm bg-white"
+                                    onchange="updateJsonInput()">
+                                <option value="120" ${shiaiTime == 120 ? 'selected' : ''}>2:00</option>
+                                <option value="180" ${shiaiTime == 180 ? 'selected' : ''}>3:00</option>
+                                <option value="240" ${shiaiTime == 240 ? 'selected' : ''}>4:00</option>
+                                <option value="300" ${shiaiTime == 300 ? 'selected' : ''}>5:00</option>
+                            </select>
+                            <label class="text-gray-500 text-xs flex items-center gap-1">
+                                <input type="checkbox" name="gewichtsklassen_shime_waza[${key}]"
+                                       class="shime-waza-checkbox" ${shimeWaza ? 'checked' : ''}
+                                       onchange="updateJsonInput()">
+                                Shime
+                            </label>
+                            <label class="text-gray-500 text-xs flex items-center gap-1">
+                                <input type="checkbox" name="gewichtsklassen_kansetsu_waza[${key}]"
+                                       class="kansetsu-waza-checkbox" ${kansetsuWaza ? 'checked' : ''}
+                                       onchange="updateJsonInput()">
+                                Kansetsu
+                            </label>
                         </div>
                         <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
                             <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
@@ -1661,6 +1687,9 @@
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                         wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',
                         punten_competitie_wedstrijden: parseInt(item.querySelector('.pc-aantal-select')?.value) || 4,
+                        shiai_time: parseInt(item.querySelector('.shiai-time-select')?.value) || 180,
+                        shime_waza: item.querySelector('.shime-waza-checkbox')?.checked || false,
+                        kansetsu_waza: item.querySelector('.kansetsu-waza-checkbox')?.checked || false,
                     };
                 });
                 return configuratie;
@@ -1839,7 +1868,10 @@
                     band_verschil_beginners: 1,
                     band_filter: '',
                     gewichten: [],
-                    toon_label_in_titel: true
+                    toon_label_in_titel: true,
+                    shiai_time: 180,
+                    shime_waza: false,
+                    kansetsu_waza: false
                 };
                 container.appendChild(createCategorieElement(newKey, newItem));
                 updateJsonInput();

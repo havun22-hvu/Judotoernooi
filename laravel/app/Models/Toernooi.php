@@ -509,6 +509,30 @@ class Toernooi extends Model
         return $this->wedstrijdtijd_finale ?? 240;
     }
 
+    /**
+     * Get match duration for a specific category. Falls back to global default.
+     */
+    public function getMatchDurationForCategorie(?string $categorieKey): int
+    {
+        if ($categorieKey && !empty($this->gewichtsklassen[$categorieKey]['shiai_time'])) {
+            return (int) $this->gewichtsklassen[$categorieKey]['shiai_time'];
+        }
+        return $this->getMatchDuration();
+    }
+
+    /**
+     * Get match rules for a category (shime_waza, kansetsu_waza).
+     */
+    public function getMatchRulesForCategorie(?string $categorieKey): array
+    {
+        $klassen = $this->gewichtsklassen ?? [];
+        $cat = $klassen[$categorieKey] ?? [];
+        return [
+            'shime_waza' => $cat['shime_waza'] ?? false,
+            'kansetsu_waza' => $cat['kansetsu_waza'] ?? false,
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Wachtwoord Methods

@@ -322,7 +322,8 @@ class ScoreboardController extends Controller
             'poule_naam' => $wedstrijd->poule?->titel ?? "Poule {$wedstrijd->poule?->nummer}",
             'ronde' => $wedstrijd->ronde,
             'groep' => $wedstrijd->groep,
-            'match_duration' => $wedstrijd->poule?->toernooi?->getMatchDuration() ?? 180,
+            'match_duration' => $wedstrijd->poule?->toernooi?->getMatchDurationForCategorie($wedstrijd->poule?->categorie_key) ?? 180,
+            ...($wedstrijd->poule?->toernooi?->getMatchRulesForCategorie($wedstrijd->poule?->categorie_key) ?? []),
             'updated_at' => $wedstrijd->updated_at?->toISOString(),
         ];
     }

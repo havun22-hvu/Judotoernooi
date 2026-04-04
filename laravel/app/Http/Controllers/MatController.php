@@ -575,7 +575,8 @@ class MatController extends Controller
                     'poule_naam' => $actieveWedstrijd->poule?->titel ?? "Poule {$actieveWedstrijd->poule?->nummer}",
                     'ronde' => $actieveWedstrijd->ronde,
                     'groep' => $actieveWedstrijd->groep,
-                    'match_duration' => $actieveWedstrijd->poule?->toernooi?->getMatchDuration() ?? 180,
+                    'match_duration' => $actieveWedstrijd->poule?->toernooi?->getMatchDurationForCategorie($actieveWedstrijd->poule?->categorie_key) ?? 180,
+                    ...($actieveWedstrijd->poule?->toernooi?->getMatchRulesForCategorie($actieveWedstrijd->poule?->categorie_key) ?? []),
                     'updated_at' => $actieveWedstrijd->updated_at?->toISOString(),
                 ];
 
@@ -1187,7 +1188,8 @@ class MatController extends Controller
                     'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
                     'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
                     'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
-                    'match_duration' => $toernooi->getMatchDuration(),
+                    'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
+                    ...$toernooi->getMatchRulesForCategorie($w->poule?->categorie_key),
                 ];
             }
         }
