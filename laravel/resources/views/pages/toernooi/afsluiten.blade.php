@@ -206,8 +206,8 @@
                         <div class="text-2xl font-bold text-blue-600">{{ $statistieken['jongens'] }}</div>
                         <div class="text-xs text-gray-600">{{ __('Jongens') }}</div>
                     </div>
-                    <div class="flex-1 bg-pink-50 rounded-lg p-3 text-center">
-                        <div class="text-2xl font-bold text-pink-600">{{ $statistieken['meisjes'] }}</div>
+                    <div class="flex-1 bg-gray-50 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-gray-800">{{ $statistieken['meisjes'] }}</div>
                         <div class="text-xs text-gray-600">{{ __('Meisjes') }}</div>
                     </div>
                 </div>

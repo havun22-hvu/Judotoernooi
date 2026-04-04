@@ -129,9 +129,7 @@
                     <div class="relative" x-data="{ open: false, showAbout: false }">
                         <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
-                                👑
-                            @else
-                                📋
+                                <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
                             {{ Auth::guard('organisator')->user()->naam }}
                             <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,9 +143,9 @@
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
-                            <button type="button" id="qr-scan-menu-btn" onclick="openQrScanner()" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">📷 {{ __('QR Login Scanner') }}</button>
+                            <button type="button" id="qr-scan-menu-btn" onclick="openQrScanner()" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('QR Login Scanner') }}</button>
                             <hr class="my-1">
-                            <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">🔄 {{ __('Forceer Update') }}</button>
+                            <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
                             <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -199,11 +197,11 @@
                     @php $rol = session("toernooi_{$toernooi->id}_rol"); @endphp
                     <span class="text-blue-200 text-sm">
                         @switch($rol)
-                            @case('admin') 👑 Admin @break
-                            @case('jury') ⚖️ Jury @break
-                            @case('weging') ⚖️ Weging @break
-                            @case('mat') 🥋 Mat {{ session("toernooi_{$toernooi->id}_mat") }} @break
-                            @case('spreker') 🎙️ Spreker @break
+                            @case('admin') Admin @break
+                            @case('jury') Jury @break
+                            @case('weging') Weging @break
+                            @case('mat') Mat {{ session("toernooi_{$toernooi->id}_mat") }} @break
+                            @case('spreker') Spreker @break
                         @endswitch
                     </span>
                     <form action="{{ route('toernooi.auth.logout', $toernooi->routeParams()) }}" method="POST" class="inline">

@@ -941,7 +941,7 @@
                         {{ __('Opslaan') }}
                     </button>
                     <button type="button" id="btn-delete-preset" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm" title="{{ __('Geselecteerde preset verwijderen') }}">
-                        🗑️
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </div>
             </div>
@@ -2619,7 +2619,7 @@
     <!-- TOERNOOI AFRONDEN -->
     <div class="bg-green-50 border-2 border-green-300 rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
-            <span class="text-2xl">🏆</span> {{ __('Toernooi Afronden') }}
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> {{ __('Toernooi Afronden') }}
         </h2>
         @if($toernooi->isAfgesloten())
         <p class="text-green-700 mb-4">
@@ -2703,7 +2703,7 @@
     @if($toernooi->blokken->isNotEmpty())
     <div class="bg-orange-50 border-2 border-orange-300 rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-orange-800 mb-2 flex items-center gap-2">
-            <span class="text-2xl">🔄</span> {{ __('Noodknop: Reset Blok naar Eind Voorbereiding') }}
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> {{ __('Noodknop: Reset Blok naar Eind Voorbereiding') }}
         </h2>
         <p class="text-orange-700 mb-4">
             {{ __('Reset een blok naar de status aan het einde van de voorbereiding. Handig als er iets mis is gegaan tijdens de wedstrijddag.') }}
@@ -2751,7 +2751,7 @@
     <!-- ==================== VOORBEREIDING ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📋</span> {{ __('VOORBEREIDING') }}
+            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> {{ __('VOORBEREIDING') }}
         </h2>
 
         <!-- Printen -->
@@ -2861,7 +2861,7 @@
     <!-- ==================== WEDSTRIJDDAG ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🏆</span> {{ __('WEDSTRIJDDAG') }}
+            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> {{ __('WEDSTRIJDDAG') }}
         </h2>
 
         <h3 class="font-semibold text-gray-700 mb-3">{{ __('Printen') }}</h3>

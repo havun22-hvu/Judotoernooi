@@ -236,7 +236,7 @@
         {{-- Variabele categorieën: simpele verdeling --}}
         <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
-            <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
                 {{ __('Verdeel variabel') }}
             </button>
         </form>
@@ -252,7 +252,7 @@
                        oninput="updateBalansSlider(this.value)">
                 <span class="text-gray-600 whitespace-nowrap">{{ __('Aansluiting') }}</span>
             </div>
-            <button type="submit" id="bereken-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded min-w-[160px]">
+            <button type="submit" id="bereken-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded min-w-[160px]">
                 <span id="bereken-tekst">{{ __('(her)Bereken') }}</span>
                 <span id="bereken-loading" style="display: none;">
                     <svg class="animate-spin inline-block w-4 h-4 align-middle" fill="none" viewBox="0 0 24 24">
@@ -266,7 +266,7 @@
         @endif
         <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi->routeParams()) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="{{ __('Verdeel poules over matten en ga naar zaaloverzicht') }}">
+            <button type="submit" class="border-2 border-blue-600 text-blue-700 hover:bg-blue-600 hover:text-white font-medium py-2 px-4 rounded transition-all" title="{{ __('Verdeel poules over matten en ga naar zaaloverzicht') }}">
                 {{ __('Verdeel over matten') }} →
             </button>
         </form>
