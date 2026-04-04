@@ -183,7 +183,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 3vh 0 0;
+            margin-top: auto;
+            padding-bottom: 2vh;
             gap: clamp(6px, 1vw, 16px);
         }
         .shido-card {
