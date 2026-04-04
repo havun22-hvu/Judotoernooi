@@ -1,60 +1,35 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 3 april 2026
+> **Laatste update:** 4 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 3-4 april 2026
+## Laatste Sessie: 4 april 2026
 
 ### Wat is gedaan:
 
-**0. Dashboard UI professionalisering — deployed naar staging**
-- Organisator dashboard: outline knoppen (3x grijs, 1x blauw), emoji's → SVG iconen
-- Toernooi dashboard: donkerblauwe sectie-headers (bg-blue-800) met stap-nummering (1,2,3), SVG iconen met blauwe hover, stat cards met icon badges, dunnere progress bar
-- Design regels besloten: professioneel met karakter, één accentkleur (blauw), geen decoratieve roze/lichtblauw, functionele kleuren (rood/geel/groen) OK, rest van app is goed genoeg
+**1. Production deploy (alle fixes van 3-4 april)**
+- Dashboard UI professionalisering, poule solver, mat real-time updates, eliminatie broadcast fix
+- Alle 5 pending migraties bleken al gedraaid (batch 74-75)
+- Backup gemaakt: `voor-deploy-04apr_2026-04-04_09-42-06.sql.gz`
 
-**1. Dashboard "Genereer Pouleindeling" knop verbeterd**
-- Als er al poules bestaan: subtielere outline knop ("Opnieuw genereren") + `confirm()` dialoog
-- Toont aantal bestaande poules en wedstrijden in waarschuwing
-- Als geen poules: prominente blauwe knop (ongewijzigd)
-- Bestand: `dashboard.blade.php` regels 164-183
+**2. Mollie knop roze → blauw**
+- `edit.blade.php` regel 2463: `bg-pink-500` → `bg-blue-600`
 
-**2. Poule solver significant verbeterd (Python)**
-- Root cause: greedy koppelde judoka's aan incompatibele partners (bv. 51.5+53.3kg), waarna betere matches onbereikbaar werden
-- 3 nieuwe strategieën toegevoegd:
-  - **Strategy 5 (break-apart):** Splitst size-2 "doodlopende" poules, herplaatst individueel
-  - **Strategy 2 verbeterd:** Soepeler steal threshold voor orphans (>min_size ipv >ideale_size)
-  - **Step 4b (consolidatie):** Merge + steal pass na soft placement voor nieuwe orphans
-- Testresultaat (190 judokas, max_kg=3, max_lft=1): score 1025→620, singleton poules 5→0
-- Bestand: `scripts/poule_solver.py`
+**3. laravel-worker supervisor gefixt**
+- Root cause: config wees naar `/var/www/production/artisan` (bestond niet)
+- Gefixt naar `/var/www/judotoernooi/laravel/artisan` (prod) en `/var/www/judotoernooi/staging/artisan` (staging)
+- Beide workers draaien nu RUNNING
 
-**3. Mat show pagina real-time updates**
-- `show.blade.php` was volledig statisch — geen WebSocket, geen auto-refresh
-- Pusher/Reverb listener + auto-reload (500ms debounce) bij score/beurt/poule updates
-- Bestand: `pages/mat/show.blade.php`
-
-**4. Eliminatie MatUpdate broadcast bug gefixt**
-- `MatController::doRegistreerUitslag()` had `return` in eliminatie branch VOOR de `MatUpdate::dispatch()`
-- Eliminatie score wijzigingen broadcastten niet naar mat/publiek interfaces
-- Nu: dispatch vóór return, met type='eliminatie'
-- Bestand: `MatController.php` regels 187-200
-
-**5. bandNaarNummer bug ontdekt (niet gefixt)**
-- `DynamischeIndelingService::bandNaarNummer()` verwacht strings ("wit","blauw") maar DB slaat integers op (0-6)
-- Alle judoka's krijgen band=0 in solver input → band-sortering werkt niet
-- Impact: sorteervolgorde suboptimaal, maar compatibiliteitscheck ongewijzigd (max_band=0)
-- TODO: fix mapping of DB opslag
+**4. bandNaarNummer "bug" — GEEN BUG**
+- DB slaat band op als string ("wit", "blauw") niet als integer
+- `bandNaarNummer()` werkt correct — handover was incorrect
 
 ### Openstaande items:
-- [ ] **Deploy naar production** (dashboard UI + eerdere fixes)
-- [ ] **bandNaarNummer bug** — integers→strings mapping in DynamischeIndelingService
-- [ ] Mollie knop in edit.blade.php: roze (bg-pink-500) → blauw
-- [ ] Magic link als primaire login methode
-- [ ] 5+ pending migraties op production (backup eerst!)
+- [ ] Magic link als primaire login methode (grote feature)
 - [ ] Coverage naar 60% target (nu 15.5%)
 - [ ] Lokaal: composer install --dev faalt door Avast SSL
-- [ ] `laravel-worker` en `laravel-worker-staging` supervisor FATAL
 
 ### Bekende issues:
 - Mat 59 in URL `/mat/59` bestaat niet in DB (gap 55→66). Mogelijk oude test URL.
