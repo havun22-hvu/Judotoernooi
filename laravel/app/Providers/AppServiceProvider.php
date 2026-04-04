@@ -33,13 +33,60 @@ class AppServiceProvider extends ServiceProvider
         Wedstrijd::observe(SyncQueueObserver::class);
         Judoka::observe(SyncQueueObserver::class);
 
-        // Auto-backup before migrations (staging/production only)
+        // PROTECT staging/production: block migrate:fresh, auto-backup before migrations
         Event::listen(MigrationsStarted::class, function () {
-            app(BackupService::class)->maakMilestoneBackup('voor-migratie');
+            $isMySQL = config('database.default') === 'mysql';
+            $isServer = PHP_OS_FAMILY !== 'Windows';
+
+            if ($isMySQL && $isServer) {
+                // Check if this is a migrate:fresh (tables are being dropped)
+                // If called from RefreshDatabase or direct migrate:fresh, block it
+                $isSafeFresh = app()->bound('migrate:safe-fresh-running');
+
+                if (!$isSafeFresh && $this->isMigrateFreshRunning()) {
+                    $db = config('database.connections.mysql.database');
+                    throw new \RuntimeException(
+                        "⛔ migrate:fresh is BLOCKED on server (database: {$db}). "
+                        . "Use: php artisan migrate:safe-fresh"
+                    );
+                }
+
+                // Normal migrate: just backup
+                app(BackupService::class)->maakMilestoneBackup('voor-migratie');
+            }
         });
 
         // Configure rate limiters
         $this->configureRateLimiting();
+    }
+
+    /**
+     * Detect if migrate:fresh is running (vs normal migrate).
+     * Checks: direct CLI call, Artisan::call from RefreshDatabase, or test runner.
+     */
+    private function isMigrateFreshRunning(): bool
+    {
+        // Check CLI args (direct: php artisan migrate:fresh)
+        $argv = $_SERVER['argv'] ?? [];
+        foreach ($argv as $arg) {
+            if (str_contains($arg, 'migrate:fresh')) {
+                return true;
+            }
+        }
+
+        // Check if running via test suite (RefreshDatabase calls migrate:fresh internally)
+        foreach ($argv as $arg) {
+            if (str_contains($arg, 'phpunit') || str_contains($arg, '--testsuite') || str_contains($arg, 'pest')) {
+                return true;
+            }
+        }
+
+        // Check if APP_ENV=testing (tests running)
+        if (app()->environment('testing')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
