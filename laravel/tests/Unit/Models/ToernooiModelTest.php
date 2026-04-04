@@ -24,7 +24,7 @@ class ToernooiModelTest extends TestCase
     #[Test]
     public function it_generates_slug_on_create(): void
     {
-        $toernooi = Toernooi::factory()->create(['naam' => 'Herfsttoernooi 2026']);
+        $toernooi = Toernooi::factory()->create(['naam' => 'Herfsttoernooi 2026', 'slug' => null]);
 
         $this->assertEquals('herfsttoernooi-2026', $toernooi->slug);
     }
@@ -37,10 +37,12 @@ class ToernooiModelTest extends TestCase
         $t1 = Toernooi::factory()->create([
             'organisator_id' => $organisator->id,
             'naam' => 'Open Toernooi',
+            'slug' => null,
         ]);
         $t2 = Toernooi::factory()->create([
             'organisator_id' => $organisator->id,
             'naam' => 'Open Toernooi',
+            'slug' => null,
         ]);
 
         $this->assertEquals('open-toernooi', $t1->slug);
@@ -56,10 +58,12 @@ class ToernooiModelTest extends TestCase
         $t1 = Toernooi::factory()->create([
             'organisator_id' => $org1->id,
             'naam' => 'Jeugdtoernooi',
+            'slug' => null,
         ]);
         $t2 = Toernooi::factory()->create([
             'organisator_id' => $org2->id,
             'naam' => 'Jeugdtoernooi',
+            'slug' => null,
         ]);
 
         $this->assertEquals('jeugdtoernooi', $t1->slug);
@@ -69,7 +73,7 @@ class ToernooiModelTest extends TestCase
     #[Test]
     public function slug_updates_when_name_changes(): void
     {
-        $toernooi = Toernooi::factory()->create(['naam' => 'Oud Toernooi']);
+        $toernooi = Toernooi::factory()->create(['naam' => 'Oud Toernooi', 'slug' => null]);
         $this->assertEquals('oud-toernooi', $toernooi->slug);
 
         $toernooi->update(['naam' => 'Nieuw Toernooi']);
