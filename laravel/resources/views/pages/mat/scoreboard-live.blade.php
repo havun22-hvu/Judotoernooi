@@ -72,6 +72,8 @@
             background: #111827;
             padding: 2.5vh 5vw;
             text-align: center;
+            position: relative;
+            z-index: 2;
         }
         .timer {
             font-size: clamp(72px, 22vh, 240px);
@@ -127,6 +129,8 @@
             align-items: center;
             justify-content: flex-start;
             margin-top: -4vh;
+            position: relative;
+            z-index: 1;
         }
         .side-col-wit { background: #F3F4F6; }
         .side-col-blauw { background: #1E3A8A; }
