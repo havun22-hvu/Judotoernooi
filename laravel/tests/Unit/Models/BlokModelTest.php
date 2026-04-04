@@ -119,7 +119,7 @@ class BlokModelTest extends TestCase
     {
         [$toernooi, $blok] = $this->maakToernooiMetBlok();
 
-        $this->assertFalse($blok->weging_gesloten);
+        $this->assertEmpty($blok->weging_gesloten);
 
         $blok->sluitWeging();
 

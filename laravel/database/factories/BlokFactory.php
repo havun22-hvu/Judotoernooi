@@ -20,10 +20,9 @@ class BlokFactory extends Factory
         return [
             'toernooi_id' => Toernooi::factory(),
             'nummer' => $nummer++,
-            'naam' => 'Blok ' . $nummer,
-            'label' => fake()->optional()->randomElement(['Ochtend', 'Middag', 'Avond']),
+            'blok_label' => fake()->optional()->randomElement(['Ochtend', 'Middag', 'Avond']),
             'weging_start' => '08:00',
-            'weging_eind' => '09:00',
+            'weging_einde' => '09:00',
             'gewenst_wedstrijden' => null,
         ];
     }
@@ -34,9 +33,9 @@ class BlokFactory extends Factory
     public function ochtend(): static
     {
         return $this->state(fn (array $attributes) => [
-            'label' => 'Ochtend',
+            'blok_label' => 'Ochtend',
             'weging_start' => '08:00',
-            'weging_eind' => '09:00',
+            'weging_einde' => '09:00',
         ]);
     }
 
@@ -46,9 +45,9 @@ class BlokFactory extends Factory
     public function middag(): static
     {
         return $this->state(fn (array $attributes) => [
-            'label' => 'Middag',
+            'blok_label' => 'Middag',
             'weging_start' => '12:00',
-            'weging_eind' => '13:00',
+            'weging_einde' => '13:00',
         ]);
     }
 }

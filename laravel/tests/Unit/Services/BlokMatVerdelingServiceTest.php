@@ -14,7 +14,7 @@ class BlokMatVerdelingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BlokMatVerdelingService();
+        $this->service = app(BlokMatVerdelingService::class);
     }
 
     private function callPrivate(string $method, array $args): mixed
