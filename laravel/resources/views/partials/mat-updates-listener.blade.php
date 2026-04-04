@@ -43,7 +43,20 @@
             forceTLS: matUpdateConfig.reverbScheme === 'https',
             enabledTransports: ['ws', 'wss'],
             disableStats: true,
-            cluster: 'mt1'
+            cluster: 'mt1',
+            activityTimeout: 120000,
+            pongTimeout: 30000,
+        });
+
+        // Connection state monitoring — Pusher auto-reconnects, we just log state
+        pusher.connection.bind('state_change', function(states) {
+            if (states.current === 'connected') {
+                console.log('[WebSocket] Connected');
+                window.dispatchEvent(new CustomEvent('ws-connected'));
+            } else if (states.current === 'unavailable' || states.current === 'failed') {
+                console.warn('[WebSocket] Disconnected — auto-reconnecting...');
+                window.dispatchEvent(new CustomEvent('ws-disconnected'));
+            }
         });
 
         // Subscribe to toernooi-wide channel (for publiek/spreker)
