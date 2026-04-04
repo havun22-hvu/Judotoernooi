@@ -128,7 +128,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin-top: -4vh;
+            margin-top: -12vh;
             position: relative;
             z-index: 1;
         }
