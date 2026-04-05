@@ -69,83 +69,50 @@
                                     <span class="font-mono font-bold text-lg" x-text="toegang.pincode"></span>
                                 </div>
                             </div>
-                            <div class="flex flex-col gap-2">
-                                {{-- Rij 1: Interface knoppen --}}
-                                <div class="flex items-center gap-2">
-                                    {{-- Niet-mat rollen: WhatsApp, Email --}}
-                                    <a x-show="rol.key !== 'mat' && toegang.telefoon"
-                                       :href="getWhatsAppUrl(toegang)"
-                                       target="_blank"
-                                       class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm"
-                                       title="{{ __('Stuur via WhatsApp') }}">
-                                        <span>📱 WhatsApp</span>
-                                    </a>
-                                    <a x-show="rol.key !== 'mat' && toegang.email"
-                                       :href="getEmailUrl(toegang)"
-                                       class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded text-sm"
-                                       title="{{ __('Stuur via Email') }}">
-                                        <span>Email</span>
-                                    </a>
-                                    {{-- Copy URL --}}
-                                    <button type="button"
-                                            @click="copyUrl(toegang)"
-                                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">
-                                        <span x-show="copiedId !== 'url_' + toegang.id">URL</span>
-                                        <span x-show="copiedId === 'url_' + toegang.id" x-cloak>✓</span>
-                                    </button>
-                                    {{-- Copy PIN --}}
-                                    <button type="button"
-                                            @click="copyPin(toegang)"
-                                            class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
-                                        <span x-show="copiedId !== 'pin_' + toegang.id">PIN</span>
-                                        <span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
-                                    </button>
-                                    {{-- QR --}}
-                                    <button type="button"
-                                            @click="showQr = showQr === 'mat_' + toegang.id ? null : 'mat_' + toegang.id; qrUrl = toegang.url"
-                                            class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm"
-                                            title="{{ __('QR code') }}">
-                                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                                        QR
-                                    </button>
-                                    {{-- Reset --}}
-                                    <button type="button"
-                                            @click="resetToegang(toegang)"
-                                            x-show="toegang.is_gebonden"
-                                            class="text-orange-600 hover:text-orange-800 text-sm px-2" title="{{ __('Reset device binding') }}">
-                                        {{ __('Reset') }}
-                                    </button>
-                                    {{-- Niet-mat rollen: Test, Delete --}}
-                                    <a x-show="rol.key !== 'mat'" :href="toegang.url" target="_blank"
-                                       class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm" title="{{ __('Test') }}">
-                                        {{ __('Test') }}
-                                    </a>
-                                    <button type="button" x-show="rol.key !== 'mat'"
-                                            @click="deleteToegang(toegang)"
-                                            class="text-red-400 hover:text-red-600 text-lg px-1" title="{{ __('Verwijder') }}">
-                                        &times;
-                                    </button>
-                                </div>
-                                {{-- Rij 2: LCD (alleen voor mat) --}}
-                                <div x-show="rol.key === 'mat'" class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 w-8">LCD</span>
-                                    <button type="button"
-                                            @click="copyLcdUrl(toegang)"
-                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
-                                            title="{{ __('Kopieer LCD scorebord URL') }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                        <span x-show="copiedId !== 'lcd_' + toegang.id">URL</span>
-                                        <span x-show="copiedId === 'lcd_' + toegang.id" x-cloak>✓</span>
-                                    </button>
-                                    <button type="button"
-                                            @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = getLcdUrl(toegang)"
-                                            class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm"
-                                            title="{{ __('QR code LCD scorebord') }}">
-                                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                                        QR
-                                    </button>
-                                </div>
-                            </div>
+                            <table class="text-sm">
+                                <tbody>
+                                    {{-- Rij 1: Interface --}}
+                                    <tr>
+                                        <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap" x-text="rol.key === 'mat' ? '{{ __('Interface') }}' : ''"></td>
+                                        <td class="py-1">
+                                            <div class="flex items-center gap-1.5">
+                                                <a x-show="rol.key !== 'mat' && toegang.telefoon" :href="getWhatsAppUrl(toegang)" target="_blank"
+                                                   class="bg-green-500 hover:bg-green-600 text-white px-2.5 py-1 rounded text-xs">WhatsApp</a>
+                                                <a x-show="rol.key !== 'mat' && toegang.email" :href="getEmailUrl(toegang)"
+                                                   class="bg-blue-500 hover:bg-blue-600 text-white px-2.5 py-1 rounded text-xs">Email</a>
+                                                <button type="button" @click="copyUrl(toegang)" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">
+                                                    <span x-show="copiedId !== 'url_' + toegang.id">URL</span><span x-show="copiedId === 'url_' + toegang.id" x-cloak>✓</span>
+                                                </button>
+                                                <button type="button" @click="copyPin(toegang)" class="bg-gray-500 hover:bg-gray-600 text-white px-2.5 py-1 rounded text-xs">
+                                                    <span x-show="copiedId !== 'pin_' + toegang.id">PIN</span><span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
+                                                </button>
+                                                <button type="button" @click="showQr = showQr === 'mat_' + toegang.id ? null : 'mat_' + toegang.id; qrUrl = toegang.url"
+                                                        class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs" title="{{ __('QR code') }}">QR</button>
+                                                <button type="button" @click="resetToegang(toegang)" x-show="toegang.is_gebonden"
+                                                        class="text-orange-600 hover:text-orange-800 text-xs px-1">{{ __('Reset') }}</button>
+                                                <a x-show="rol.key !== 'mat'" :href="toegang.url" target="_blank"
+                                                   class="text-gray-500 hover:text-gray-700 text-xs px-1">{{ __('Test') }}</a>
+                                                <button type="button" x-show="rol.key !== 'mat'" @click="deleteToegang(toegang)"
+                                                        class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {{-- Rij 2: LCD (alleen voor mat) --}}
+                                    <tr x-show="rol.key === 'mat'">
+                                        <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap">{{ __('LCD') }}</td>
+                                        <td class="py-1">
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" @click="copyLcdUrl(toegang)" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                    <span x-show="copiedId !== 'lcd_' + toegang.id">URL</span><span x-show="copiedId === 'lcd_' + toegang.id" x-cloak>✓</span>
+                                                </button>
+                                                <button type="button" @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = getLcdUrl(toegang)"
+                                                        class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs" title="{{ __('QR code LCD') }}">QR</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                             {{-- QR popup --}}
                             <div x-show="showQr === 'mat_' + toegang.id || showQr === 'lcd_' + toegang.id" x-cloak
                                  class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
