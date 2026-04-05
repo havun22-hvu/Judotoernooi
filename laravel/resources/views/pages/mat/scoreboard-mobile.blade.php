@@ -51,30 +51,37 @@
         .scores-row {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-top: 4px;
+            gap: 8px;
+            margin-top: 6px;
         }
         .score-item {
             display: flex;
+            flex: 1;
             align-items: center;
-            gap: 3px;
+            gap: 6px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 6px 8px;
         }
+        .judoka-blauw .score-item { background: rgba(0,0,0,0.25); }
         .score-lbl {
-            font-size: clamp(10px, 2.5vw, 14px);
+            font-size: clamp(14px, 4vw, 22px);
             font-weight: 800;
+            min-width: 20px;
+            text-align: center;
         }
-        .judoka-wit .score-lbl { color: #9CA3AF; }
+        .judoka-wit .score-lbl { color: #6B7280; }
         .judoka-blauw .score-lbl { color: #93C5FD; }
 
         .score-val {
-            font-size: clamp(20px, 6vw, 40px);
+            font-size: clamp(28px, 8vw, 52px);
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             color: #EF4444;
             background: #111827;
-            padding: 2px 8px;
-            border-radius: 4px;
-            min-width: 32px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            min-width: 48px;
             text-align: center;
             line-height: 1.1;
         }
@@ -82,17 +89,17 @@
         /* Shido cards */
         .shido-row {
             display: flex;
-            gap: 4px;
-            margin-top: 4px;
+            gap: 6px;
+            margin-top: 6px;
         }
         .shido {
-            width: 16px;
-            height: 22px;
-            border-radius: 2px;
-            border: 1px dashed rgba(156,163,175,0.5);
+            width: 24px;
+            height: 34px;
+            border-radius: 3px;
+            border: 1.5px dashed rgba(156,163,175,0.5);
             background: rgba(156,163,175,0.2);
         }
-        .shido.active { background: #FACC15; border: 1px solid #EAB308; }
+        .shido.active { background: #FACC15; border: 1.5px solid #EAB308; }
 
         /* Timer center */
         .timer-section {
@@ -225,8 +232,9 @@
             .judoka-naam { font-size: clamp(14px, 3vh, 28px); }
             .judoka-club { font-size: clamp(9px, 1.5vh, 14px); }
 
-            .score-val { font-size: clamp(16px, 5vh, 36px); padding: 1px 6px; min-width: 28px; }
-            .score-lbl { font-size: clamp(8px, 1.5vh, 12px); }
+            .score-val { font-size: clamp(20px, 5vh, 40px); padding: 2px 8px; min-width: 36px; }
+            .score-lbl { font-size: clamp(10px, 2vh, 16px); }
+            .score-item { padding: 4px 6px; gap: 4px; }
 
             .timer-section {
                 flex: 0.6;
