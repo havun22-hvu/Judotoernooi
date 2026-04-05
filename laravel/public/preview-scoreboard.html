@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Scorebord Preview - Mat 2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; background: #111827; font-family: 'Arial Black', 'Helvetica Neue', sans-serif; -webkit-user-select: none; user-select: none; }
+
+        .scoreboard { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+        /* Header */
+        .header {
+            background: #111827;
+            padding: 6px 12px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .header-mat { color: #6B7280; font-size: 12px; font-weight: 600; }
+        .header-poule { color: #FFF; font-size: 16px; font-weight: 800; }
+
+        /* Judoka card */
+        .judoka-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 8px 12px;
+            min-height: 0;
+        }
+        .judoka-wit { background: #F3F4F6; }
+        .judoka-blauw { background: #1E3A8A; }
+
+        .judoka-naam {
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: clamp(18px, 5vw, 36px);
+        }
+        .judoka-wit .judoka-naam { color: #1F2937; }
+        .judoka-blauw .judoka-naam { color: #FFF; }
+
+        .judoka-club { font-size: clamp(10px, 2.5vw, 16px); font-weight: 500; }
+        .judoka-wit .judoka-club { color: #6B7280; }
+        .judoka-blauw .judoka-club { color: #93C5FD; }
+
+        /* Scores row */
+        .scores-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .score-item {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 6px 8px;
+        }
+        .judoka-blauw .score-item { background: rgba(0,0,0,0.25); }
+        .score-lbl {
+            font-size: clamp(14px, 4vw, 22px);
+            font-weight: 800;
+            min-width: 20px;
+            text-align: center;
+        }
+        .judoka-wit .score-lbl { color: #6B7280; }
+        .judoka-blauw .score-lbl { color: #93C5FD; }
+
+        .score-val {
+            font-size: clamp(28px, 8vw, 52px);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: #EF4444;
+            background: #111827;
+            padding: 4px 12px;
+            border-radius: 6px;
+            min-width: 48px;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        /* Shido cards */
+        .shido-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .shido {
+            width: 24px;
+            height: 34px;
+            border-radius: 3px;
+            border: 1.5px dashed rgba(156,163,175,0.5);
+            background: rgba(156,163,175,0.2);
+        }
+        .shido.active { background: #FACC15; border: 1.5px solid #EAB308; }
+
+        /* Timer center */
+        .timer-section {
+            background: #111827;
+            text-align: center;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #374151;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .progress-fill { height: 100%; background: #22C55E; border-radius: 2px; width: 100%; }
+
+        .timer {
+            font-size: clamp(40px, 14vw, 80px);
+            font-weight: 900;
+            color: #EF4444;
+            font-family: 'Courier New', monospace;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        /* Osaekomi */
+        .osaekomi-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+        .osae-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #374151;
+        }
+        .osae-time {
+            font-size: clamp(24px, 8vw, 48px);
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            color: #374151;
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard">
+        <div class="header">
+            <div class="header-mat">Mat 2</div>
+            <div class="header-poule">Standaard / 11-12j / 44.1-47.1kg</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
+            <!-- Wit judoka -->
+            <div class="judoka-card judoka-wit">
+                <div class="judoka-naam">ZAKARIA SANDERS</div>
+                <div class="judoka-club">Budovereniging Amstelveen</div>
+                <div class="scores-row">
+                    <div class="score-item"><span class="score-lbl">Y</span><span class="score-val">0</span></div>
+                    <div class="score-item"><span class="score-lbl">W</span><span class="score-val">0</span></div>
+                    <div class="score-item"><span class="score-lbl">I</span><span class="score-val">0</span></div>
+                </div>
+                <div class="shido-row">
+                    <div class="shido"></div>
+                    <div class="shido"></div>
+                    <div class="shido"></div>
+                </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-section">
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+                <div class="timer">3:00</div>
+                <div class="osaekomi-section">
+                    <div class="osae-dot"></div>
+                    <div class="osae-time">00</div>
+                    <div class="osae-dot"></div>
+                </div>
+            </div>
+
+            <!-- Blauw judoka -->
+            <div class="judoka-card judoka-blauw">
+                <div class="judoka-naam">KOEN DE BOER</div>
+                <div class="judoka-club">JC De Waard</div>
+                <div class="scores-row">
+                    <div class="score-item"><span class="score-lbl">Y</span><span class="score-val">0</span></div>
+                    <div class="score-item"><span class="score-lbl">W</span><span class="score-val">0</span></div>
+                    <div class="score-item"><span class="score-lbl">I</span><span class="score-val">0</span></div>
+                </div>
+                <div class="shido-row">
+                    <div class="shido"></div>
+                    <div class="shido"></div>
+                    <div class="shido"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

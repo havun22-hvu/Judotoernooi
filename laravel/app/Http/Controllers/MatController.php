@@ -1206,41 +1206,7 @@ class MatController extends Controller
     }
 
     /**
-     * Mobile-friendly public scoreboard view.
-     */
-    public function scoreboardMobile(Organisator $organisator, Toernooi $toernooi, $mat): View
-    {
-        $matModel = $toernooi->matten()->where('nummer', $mat)->first();
-        $matId = $matModel ? $matModel->id : $mat;
-
-        $currentMatch = null;
-        if ($matModel) {
-            $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
-            if ($matModel->actieveWedstrijd) {
-                $w = $matModel->actieveWedstrijd;
-                $currentMatch = [
-                    'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
-                    'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
-                    'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
-                    'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
-                    ...$toernooi->getMatchRulesForCategorie($w->poule?->categorie_key),
-                ];
-            }
-        }
-
-        $blauwRechts = (bool) ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false);
-
-        return view('pages.mat.scoreboard-mobile', [
-            'toernooi' => $toernooi,
-            'matId' => $matId,
-            'matNummer' => $matModel?->nummer ?? $mat,
-            'currentMatch' => $currentMatch,
-            'blauwRechts' => $blauwRechts,
-        ]);
-    }
-
-    /**
-     * JSON endpoint for current match state (used by inline scoreboard).
+     * JSON endpoint for current match state (used by inline scoreboard tab).
      */
     public function scoreboardState(Organisator $organisator, Toernooi $toernooi, $mat): JsonResponse
     {
