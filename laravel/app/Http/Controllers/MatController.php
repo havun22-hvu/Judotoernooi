@@ -1172,28 +1172,30 @@ class MatController extends Controller
      * Scoreboard live display — web-based display for TV/LCD
      * Listens to Reverb events from the Android bediening app
      */
-    public function scoreboardLive(Organisator $organisator, Toernooi $toernooi, $mat): View
+    private function getFormattedCurrentMatch(Mat $matModel, Toernooi $toernooi): ?array
     {
-        // Look up mat by nummer to get the actual ID for Reverb channel
-        $matModel = $toernooi->matten()->where('nummer', $mat)->first();
-        $matId = $matModel ? $matModel->id : $mat;
+        $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
 
-        // Load current active match so LCD has data on page load
-        $currentMatch = null;
-        if ($matModel) {
-            $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
-            if ($matModel->actieveWedstrijd) {
-                $w = $matModel->actieveWedstrijd;
-                $currentMatch = [
-                    'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
-                    'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
-                    'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
-                    'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
-                    ...$toernooi->getMatchRulesForCategorie($w->poule?->categorie_key),
-                ];
-            }
+        if (!$matModel->actieveWedstrijd) {
+            return null;
         }
 
+        $w = $matModel->actieveWedstrijd;
+
+        return [
+            'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
+            'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
+            'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
+            'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
+            ...$toernooi->getMatchRulesForCategorie($w->poule?->categorie_key),
+        ];
+    }
+
+    public function scoreboardLive(Organisator $organisator, Toernooi $toernooi, $mat): View
+    {
+        $matModel = $toernooi->matten()->where('nummer', $mat)->first();
+        $matId = $matModel ? $matModel->id : $mat;
+        $currentMatch = $matModel ? $this->getFormattedCurrentMatch($matModel, $toernooi) : null;
         $blauwRechts = (bool) ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false);
 
         return view('pages.mat.scoreboard-live', [
@@ -1216,21 +1218,12 @@ class MatController extends Controller
             return response()->json(null);
         }
 
-        $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
+        $currentMatch = $this->getFormattedCurrentMatch($matModel, $toernooi);
 
-        if (!$matModel->actieveWedstrijd) {
-            return response()->json(['mat_id' => $matModel->id]);
-        }
-
-        $w = $matModel->actieveWedstrijd;
-
-        return response()->json([
-            'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
-            'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
-            'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
-            'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
-            'mat_id' => $matModel->id,
-        ]);
+        return response()->json($currentMatch
+            ? [...$currentMatch, 'mat_id' => $matModel->id]
+            : ['mat_id' => $matModel->id]
+        );
     }
 
     /**

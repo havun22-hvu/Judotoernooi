@@ -1166,9 +1166,6 @@
                 liveMatten: [],
                 selectedMatId: null,
                 scorebordMatNummer: null,
-                scorebordState: null, // { wit: {yuko,wazaari,ippon,shido}, blauw: {...}, timer, isRunning, ... }
-                scorebordChannel: null,
-                scorebordPusher: null,
                 notificatiesAan: false,
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
                 isConnected: false, // WebSocket verbinding status
@@ -1554,6 +1551,7 @@
                 _sbChannel: null,
                 _sbTimerAF: null,
                 _sbOsaeAF: null,
+                _sbDom: null,
 
                 openScorebord(matNummer) {
                     // Disconnect previous channel
@@ -1578,13 +1576,30 @@
                         hasMatch: false,
                     };
 
+                    // Cache DOM refs
+                    this._sbDom = {
+                        headerPoule: document.getElementById('sb-header-poule'),
+                        witNaam: document.getElementById('sb-wit-naam'),
+                        witClub: document.getElementById('sb-wit-club'),
+                        blauwNaam: document.getElementById('sb-blauw-naam'),
+                        blauwClub: document.getElementById('sb-blauw-club'),
+                        timer: document.getElementById('sb-timer'),
+                        progress: document.getElementById('sb-progress'),
+                        gsBadge: document.getElementById('sb-gs-badge'),
+                        osaeTime: document.getElementById('sb-osae-time'),
+                        osaeZone: document.getElementById('sb-osae-zone'),
+                        standby: document.getElementById('sb-standby'),
+                        match: document.getElementById('sb-match'),
+                        winner: document.getElementById('sb-winner'),
+                    };
+
                     // Reset DOM to standby
                     this._sbShowStandby();
-                    document.getElementById('sb-header-poule').textContent = '';
-                    document.getElementById('sb-wit-naam').textContent = 'WIT';
-                    document.getElementById('sb-wit-club').textContent = '';
-                    document.getElementById('sb-blauw-naam').textContent = 'BLAUW';
-                    document.getElementById('sb-blauw-club').textContent = '';
+                    this._sbDom.headerPoule.textContent = '';
+                    this._sbDom.witNaam.textContent = 'WIT';
+                    this._sbDom.witClub.textContent = '';
+                    this._sbDom.blauwNaam.textContent = 'BLAUW';
+                    this._sbDom.blauwClub.textContent = '';
                     this._sbUpdateScores({ wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 }, blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 } });
                     this._sbClearOsaekomi();
                     this._sbUpdateTimer();
@@ -1623,83 +1638,66 @@
                     if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
                     this.scorebordMatNummer = null;
                     this._sbState = null;
-                    document.getElementById('sb-winner')?.classList.add('hidden');
+                    this._sbDom?.winner?.classList.add('hidden');
+                    this._sbDom = null;
+                },
+
+                _sbSubscribeChannel(matId) {
+                    if (!window._sbPusher || !matId) return;
+                    const channelName = `scoreboard-display.{{ $toernooi->id }}.${matId}`;
+                    this._sbChannel = window._sbPusher.subscribe(channelName);
+                    this._sbChannel.bind('scoreboard.event', (payload) => {
+                        this._sbHandleEvent(payload.data || payload);
+                    });
                 },
 
                 async _sbFetchCurrentMatch(matNummer) {
+                    // Fallback mat_id from liveMatten
+                    const fallbackMatId = this.liveMatten.find(m => m.nummer == matNummer)?.id;
+
                     try {
                         const response = await fetch(`{{ url($toernooi->organisator->slug . '/' . $toernooi->slug) }}/live/scorebord/${matNummer}/state`);
                         if (response.ok) {
                             const data = await response.json();
-                            // Subscribe to WebSocket channel using mat_id from API
-                            if (data && data.mat_id && window._sbPusher) {
-                                const channelName = `scoreboard-display.{{ $toernooi->id }}.${data.mat_id}`;
-                                this._sbChannel = window._sbPusher.subscribe(channelName);
-                                this._sbChannel.bind('scoreboard.event', (payload) => {
-                                    this._sbHandleEvent(payload.data || payload);
-                                });
-                            }
+                            this._sbSubscribeChannel(data?.mat_id || fallbackMatId);
                             if (data && data.judoka_wit) {
                                 this._sbShowMatch();
-                                document.getElementById('sb-header-poule').textContent = data.poule_naam || '';
-                                document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
-                                document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
-                                document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
-                                document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                                this._sbDom.headerPoule.textContent = data.poule_naam || '';
+                                this._sbDom.witNaam.textContent = data.judoka_wit?.naam || 'WIT';
+                                this._sbDom.witClub.textContent = data.judoka_wit?.club || '';
+                                this._sbDom.blauwNaam.textContent = data.judoka_blauw?.naam || 'BLAUW';
+                                this._sbDom.blauwClub.textContent = data.judoka_blauw?.club || '';
                                 if (data.match_duration) {
                                     this._sbState.matchDuration = data.match_duration;
                                     this._sbState.timeRemaining = data.match_duration;
                                 }
                                 this._sbUpdateTimer();
-                            } else if (!data) {
-                                // No active match but still need channel — get mat_id from liveMatten
-                                const mat = this.liveMatten.find(m => m.nummer == matNummer);
-                                if (mat && window._sbPusher) {
-                                    const channelName = `scoreboard-display.{{ $toernooi->id }}.${mat.id}`;
-                                    this._sbChannel = window._sbPusher.subscribe(channelName);
-                                    this._sbChannel.bind('scoreboard.event', (payload) => {
-                                        this._sbHandleEvent(payload.data || payload);
-                                    });
-                                }
                             }
                         }
                     } catch (e) {
-                        // Fallback: use mat.id from liveMatten
-                        const mat = this.liveMatten.find(m => m.nummer == matNummer);
-                        if (mat && window._sbPusher) {
-                            const channelName = `scoreboard-display.{{ $toernooi->id }}.${mat.id}`;
-                            this._sbChannel = window._sbPusher.subscribe(channelName);
-                            this._sbChannel.bind('scoreboard.event', (payload) => {
-                                this._sbHandleEvent(payload.data || payload);
-                            });
-                        }
+                        this._sbSubscribeChannel(fallbackMatId);
                     }
                 },
 
                 _sbShowMatch() {
-                    const standby = document.getElementById('sb-standby');
-                    const match = document.getElementById('sb-match');
-                    if (standby) standby.style.display = 'none';
-                    if (match) match.style.display = 'block';
+                    if (this._sbDom?.standby) this._sbDom.standby.style.display = 'none';
+                    if (this._sbDom?.match) this._sbDom.match.style.display = 'block';
                     if (this._sbState) this._sbState.hasMatch = true;
                 },
 
                 _sbShowStandby() {
-                    const standby = document.getElementById('sb-standby');
-                    const match = document.getElementById('sb-match');
-                    const winner = document.getElementById('sb-winner');
-                    if (standby) standby.style.display = 'block';
-                    if (match) match.style.display = 'none';
-                    if (winner) winner.classList.add('hidden');
+                    if (this._sbDom?.standby) this._sbDom.standby.style.display = 'block';
+                    if (this._sbDom?.match) this._sbDom.match.style.display = 'none';
+                    if (this._sbDom?.winner) this._sbDom.winner.classList.add('hidden');
                     if (this._sbState) this._sbState.hasMatch = false;
                 },
 
                 _sbUpdateTimer() {
-                    if (!this._sbState) return;
+                    if (!this._sbState || !this._sbDom) return;
                     const s = this._sbState;
-                    const el = document.getElementById('sb-timer');
-                    const prog = document.getElementById('sb-progress');
-                    const badge = document.getElementById('sb-gs-badge');
+                    const el = this._sbDom.timer;
+                    const prog = this._sbDom.progress;
+                    const badge = this._sbDom.gsBadge;
                     if (!el) return;
 
                     const mins = Math.floor(s.timeRemaining / 60);
@@ -1728,8 +1726,8 @@
                 _sbTickOsaekomi() {
                     if (!this._sbState || !this._sbState.osaekomiActive) return;
                     const elapsed = Math.floor((performance.now() - this._sbState.osaekomiStartedAt) / 1000);
-                    const el = document.getElementById('sb-osae-time');
-                    const zone = document.getElementById('sb-osae-zone');
+                    const el = this._sbDom?.osaeTime;
+                    const zone = this._sbDom?.osaeZone;
                     if (el) { el.textContent = elapsed.toString().padStart(2, '0'); el.className = 'font-black text-2xl font-mono tabular-nums text-red-500'; }
                     if (zone) { zone.textContent = elapsed >= 20 ? 'IPPON' : elapsed >= 10 ? 'WAZA-ARI' : elapsed >= 5 ? 'YUKO' : ''; }
                     this._sbOsaeAF = requestAnimationFrame(() => this._sbTickOsaekomi());
@@ -1760,8 +1758,8 @@
                         const dot = document.getElementById('sb-' + side + '-osae-dot');
                         if (dot) { dot.style.background = '#374151'; }
                     });
-                    const el = document.getElementById('sb-osae-time');
-                    const zone = document.getElementById('sb-osae-zone');
+                    const el = this._sbDom?.osaeTime;
+                    const zone = this._sbDom?.osaeZone;
                     if (el) { el.textContent = '00'; el.className = 'font-black text-2xl font-mono tabular-nums text-gray-700'; }
                     if (zone) zone.textContent = '';
                 },
@@ -1771,15 +1769,16 @@
                     const s = this._sbState;
                     const zero = { wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 }, blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 } };
 
+                    const d = this._sbDom;
                     switch (data.event) {
                         case 'match.start':
                             this._sbShowMatch();
-                            document.getElementById('sb-winner')?.classList.add('hidden');
-                            document.getElementById('sb-header-poule').textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
-                            document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
-                            document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
-                            document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
-                            document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                            d?.winner?.classList.add('hidden');
+                            if (d?.headerPoule) d.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+                            if (d?.witNaam) d.witNaam.textContent = data.judoka_wit?.naam || 'WIT';
+                            if (d?.witClub) d.witClub.textContent = data.judoka_wit?.club || '';
+                            if (d?.blauwNaam) d.blauwNaam.textContent = data.judoka_blauw?.naam || 'BLAUW';
+                            if (d?.blauwClub) d.blauwClub.textContent = data.judoka_blauw?.club || '';
                             s.matchDuration = data.match_duration || s.matchDuration;
                             s.timeRemaining = s.matchDuration;
                             s.isRunning = false; s.isGoldenScore = false; s.osaekomiActive = false;
@@ -1811,7 +1810,7 @@
                             s.timeRemaining = s.matchDuration;
                             s.osaekomiActive = false;
                             this._sbClearOsaekomi();
-                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            d?.winner?.classList.add('hidden');
                             this._sbUpdateTimer();
                             break;
 
@@ -1823,8 +1822,8 @@
                             this._sbClearOsaekomi();
                             s.osaekomiActive = true;
                             s.osaekomiStartedAt = performance.now();
-                            const dot = document.getElementById('sb-' + data.judoka + '-osae-dot');
-                            if (dot) dot.style.background = '#22C55E';
+                            const oDot = document.getElementById('sb-' + data.judoka + '-osae-dot');
+                            if (oDot) oDot.style.background = '#22C55E';
                             this._sbTickOsaekomi();
                             break;
 
@@ -1840,47 +1839,46 @@
                             s.osaekomiActive = false;
                             if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
                             this._sbClearOsaekomi();
-                            const winEl = document.getElementById('sb-winner');
-                            const nameEl = document.getElementById('sb-winner-name');
-                            const typeEl = document.getElementById('sb-winner-type');
+                            const winnerNameEl = document.getElementById('sb-winner-name');
+                            const winnerTypeEl = document.getElementById('sb-winner-type');
                             const srcName = document.getElementById('sb-' + data.winner + '-naam');
-                            if (nameEl) { nameEl.textContent = srcName?.textContent || data.winner.toUpperCase(); nameEl.className = 'font-black text-3xl uppercase ' + (data.winner === 'blauw' ? 'text-blue-500' : 'text-white'); }
-                            if (typeEl) typeEl.textContent = (data.uitslag_type || '').toUpperCase();
-                            if (winEl) winEl.classList.remove('hidden');
+                            if (winnerNameEl) { winnerNameEl.textContent = srcName?.textContent || data.winner.toUpperCase(); winnerNameEl.className = 'font-black text-3xl uppercase ' + (data.winner === 'blauw' ? 'text-blue-500' : 'text-white'); }
+                            if (winnerTypeEl) winnerTypeEl.textContent = (data.uitslag_type || '').toUpperCase();
+                            if (d?.winner) d.winner.classList.remove('hidden');
                             break;
 
                         case 'match.assign':
                             this._sbShowMatch();
-                            document.getElementById('sb-header-poule').textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
-                            document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
-                            document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
-                            document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
-                            document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                            if (d?.headerPoule) d.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+                            if (d?.witNaam) d.witNaam.textContent = data.judoka_wit?.naam || 'WIT';
+                            if (d?.witClub) d.witClub.textContent = data.judoka_wit?.club || '';
+                            if (d?.blauwNaam) d.blauwNaam.textContent = data.judoka_blauw?.naam || 'BLAUW';
+                            if (d?.blauwClub) d.blauwClub.textContent = data.judoka_blauw?.club || '';
                             s.matchDuration = data.match_duration || s.matchDuration;
                             s.timeRemaining = s.matchDuration;
                             s.isRunning = false; s.isGoldenScore = false; s.osaekomiActive = false;
                             this._sbClearOsaekomi();
                             this._sbUpdateScores(zero);
                             this._sbUpdateTimer();
-                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            d?.winner?.classList.add('hidden');
                             break;
 
                         case 'match.unassign':
                             this._sbShowStandby();
-                            document.getElementById('sb-header-poule').textContent = '';
+                            if (d?.headerPoule) d.headerPoule.textContent = '';
                             s.isRunning = false; s.isGoldenScore = false;
                             if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
                             s.osaekomiActive = false;
                             if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
                             this._sbClearOsaekomi();
-                            document.getElementById('sb-wit-naam').textContent = 'WIT';
-                            document.getElementById('sb-wit-club').textContent = '';
-                            document.getElementById('sb-blauw-naam').textContent = 'BLAUW';
-                            document.getElementById('sb-blauw-club').textContent = '';
+                            if (d?.witNaam) d.witNaam.textContent = 'WIT';
+                            if (d?.witClub) d.witClub.textContent = '';
+                            if (d?.blauwNaam) d.blauwNaam.textContent = 'BLAUW';
+                            if (d?.blauwClub) d.blauwClub.textContent = '';
                             s.timeRemaining = s.matchDuration;
                             this._sbUpdateScores(zero);
                             this._sbUpdateTimer();
-                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            d?.winner?.classList.add('hidden');
                             break;
                     }
                 },
