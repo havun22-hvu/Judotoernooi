@@ -1557,7 +1557,13 @@
 
                 openScorebord(matNummer) {
                     // Disconnect previous channel
-                    this.closeScorebord();
+                    if (this._sbChannel && window._sbPusher) {
+                        window._sbPusher.unsubscribe(this._sbChannel.name);
+                        this._sbChannel = null;
+                    }
+                    if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                    if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
+
                     this.scorebordMatNummer = matNummer;
 
                     this._sbState = {
@@ -1571,6 +1577,17 @@
                         osaekomiStartedAt: null,
                         hasMatch: false,
                     };
+
+                    // Reset DOM to standby
+                    this._sbShowStandby();
+                    document.getElementById('sb-header-poule').textContent = '';
+                    document.getElementById('sb-wit-naam').textContent = 'WIT';
+                    document.getElementById('sb-wit-club').textContent = '';
+                    document.getElementById('sb-blauw-naam').textContent = 'BLAUW';
+                    document.getElementById('sb-blauw-club').textContent = '';
+                    this._sbUpdateScores({ wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 }, blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 } });
+                    this._sbClearOsaekomi();
+                    this._sbUpdateTimer();
 
                     @php
                         $appUrl = config('app.url', 'https://localhost');
@@ -1606,6 +1623,7 @@
                     if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
                     this.scorebordMatNummer = null;
                     this._sbState = null;
+                    document.getElementById('sb-winner')?.classList.add('hidden');
                 },
 
                 async _sbFetchCurrentMatch(matNummer) {
