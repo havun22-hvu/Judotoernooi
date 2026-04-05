@@ -5,7 +5,36 @@
 
 ---
 
-## Laatste Sessie: 5 april 2026 (middag)
+## Laatste Sessie: 5 april 2026 (avond)
+
+### Wat is gedaan:
+
+**UI professionalisering app-breed**
+- 7 views: emoji's → SVG iconen, regenboog knoppen → uniform blauw
+- Afsluiten: roze "Meisjes" → neutraal grijs
+- Scorebord instelling: checkbox → radio buttons + hint "geldt vanaf volgende wedstrijd"
+- Publieke app: positienummers (1-5) → bandkleur-bolletje
+
+**LCD scorebord layout**
+- Y/W/I scores halverwege timer hoogte (margin-top: -12vh, z-index layering)
+- Shido's gecentreerd tussen scores en onderkant (margin-top/bottom: auto)
+- Horizontale lijnen tussen Y/W/I score-boxen
+
+**QR codes device-toegangen**
+- QR knoppen per mat voor zowel Interface als LCD
+- Server-side QR generatie via simplesoftwareio/simple-qrcode (was externe API)
+- Strakke tabel-layout voor knoppen (Interface/LCD rijen)
+
+**Reverb-staging herstart** — zombie proces op poort 8081
+
+### Openstaande items:
+- [ ] QR codes testen op staging (net gedeployed)
+- [ ] Deploy naar production na goedkeuring QR functie
+- [ ] Device-toegangen layout mogelijk nog fine-tunen
+
+---
+
+## Vorige Sessie: 5 april 2026 (middag)
 
 ### Wat is gedaan:
 
