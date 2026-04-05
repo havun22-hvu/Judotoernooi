@@ -83,21 +83,29 @@
                                    :href="getEmailUrl(toegang)"
                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded text-sm"
                                    title="{{ __('Stuur via Email') }}">
-                                    <span>📧 Email</span>
+                                    <span>Email</span>
                                 </a>
                                 {{-- Copy URL --}}
                                 <button type="button"
                                         @click="copyUrl(toegang)"
                                         class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">
-                                    <span x-show="copiedId !== 'url_' + toegang.id">📋 URL</span>
+                                    <span x-show="copiedId !== 'url_' + toegang.id">URL</span>
                                     <span x-show="copiedId === 'url_' + toegang.id" x-cloak>✓</span>
                                 </button>
                                 {{-- Copy PIN --}}
                                 <button type="button"
                                         @click="copyPin(toegang)"
                                         class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
-                                    <span x-show="copiedId !== 'pin_' + toegang.id">📋 PIN</span>
+                                    <span x-show="copiedId !== 'pin_' + toegang.id">PIN</span>
                                     <span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
+                                </button>
+                                {{-- QR Mat Interface --}}
+                                <button type="button"
+                                        @click="showQr = showQr === 'mat_' + toegang.id ? null : 'mat_' + toegang.id; qrUrl = toegang.url"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm"
+                                        title="{{ __('QR code mat interface') }}">
+                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                    QR
                                 </button>
                                 {{-- LCD Display (alleen voor mat) --}}
                                 <a x-show="rol.key === 'mat'"
@@ -105,8 +113,17 @@
                                    target="_blank"
                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm"
                                    title="{{ __('Scorebord openen op TV/LCD') }}">
-                                    📺 LCD
+                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    LCD
                                 </a>
+                                {{-- QR LCD (alleen voor mat) --}}
+                                <button type="button" x-show="rol.key === 'mat'"
+                                        @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = '{{ url($toernooi->organisator->slug . '/' . $toernooi->slug . '/mat/scoreboard-live') }}/' + toegang.mat_nummer"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm"
+                                        title="{{ __('QR code LCD scorebord') }}">
+                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                    QR
+                                </button>
                                 {{-- Test link --}}
                                 <a :href="toegang.url" target="_blank"
                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm" title="{{ __('Test') }}">
@@ -125,6 +142,21 @@
                                         class="text-red-400 hover:text-red-600 text-lg px-1" title="{{ __('Verwijder') }}">
                                     &times;
                                 </button>
+                            </div>
+                            {{-- QR popup --}}
+                            <div x-show="showQr === 'mat_' + toegang.id || showQr === 'lcd_' + toegang.id" x-cloak
+                                 class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
+                                <p class="text-sm font-medium text-gray-700 mb-2" x-text="showQr && showQr.startsWith('lcd_') ? '{{ __('LCD Scorebord') }}' : '{{ __('Mat Interface') }}'"></p>
+                                <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl)" class="w-36 h-36 mx-auto rounded mb-2">
+                                <div class="flex items-center gap-2 bg-white rounded p-2 text-xs">
+                                    <input type="text" :value="qrUrl" readonly class="flex-1 bg-transparent text-gray-600 border-0 outline-none truncate text-xs">
+                                    <button @click="navigator.clipboard.writeText(qrUrl); copiedId = 'qr_' + toegang.id; setTimeout(() => copiedId = null, 2000)"
+                                            class="text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
+                                        <span x-show="copiedId !== 'qr_' + toegang.id">{{ __('Kopieer') }}</span>
+                                        <span x-show="copiedId === 'qr_' + toegang.id" x-cloak>✓</span>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">{{ __('Scan met telefoon of open op de TV browser') }}</p>
                             </div>
                         </div>
                     </div>
@@ -239,6 +271,8 @@ function deviceToegangen() {
         activeRol: 'mat',
         copiedId: null,
         savedId: null,
+        showQr: null,
+        qrUrl: '',
         toegangen: [],
         vrijwilligers: [],
         showVrijwilligersModal: false,
