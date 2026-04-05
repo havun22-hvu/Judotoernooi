@@ -572,7 +572,8 @@
             ['wit', 'blauw'].forEach(side => {
                 const col = document.getElementById(side + '-osaekomi-times');
                 col.innerHTML = '';
-                osaekomiTimes[side].forEach(time => {
+                const unique = [...new Set(osaekomiTimes[side])];
+                unique.forEach(time => {
                     const zone = getOsaekomiZone(time);
                     const el = document.createElement('div');
                     el.className = 'osaekomi-time-entry';
