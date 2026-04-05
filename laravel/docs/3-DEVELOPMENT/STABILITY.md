@@ -162,17 +162,19 @@ Alle broadcast events gebruiken de `SafelyBroadcasts` trait die `dispatch()` ove
 
 ```
 Laag 1: Circuit Breaker  → Na 3 failures: skip broadcasts 30s (fail-fast, geen timeout)
-Laag 2: Try-catch         → Onverwachte exceptions worden stilletjes opgevangen
+Laag 2: Try-catch         → Exceptions worden gelogd op WARNING niveau met error message
 Laag 3: Log throttling    → Max 1 logmelding per minuut per event type (geen spam)
 ```
 
 **Hoe het werkt:**
 
 ```php
-// In elk broadcast event:
+// In elk broadcast event — LET OP: insteadof is VERPLICHT!
 class MatUpdate implements ShouldBroadcastNow
 {
-    use SafelyBroadcasts; // ← Overschrijft dispatch() automatisch
+    use Dispatchable, InteractsWithSockets, SerializesModels, Concerns\SafelyBroadcasts {
+        Concerns\SafelyBroadcasts::dispatch insteadof Dispatchable;
+    }
 
     // Normale code — geen speciale aanroep nodig
 }
@@ -181,6 +183,12 @@ class MatUpdate implements ShouldBroadcastNow
 MatUpdate::dispatch($toernooiId, $matId, 'score', $data);
 // ^ Automatisch beschermd. Data is altijd in DB, broadcast is best-effort.
 ```
+
+> **⚠️ KRITIEK: `insteadof` is VERPLICHT!**
+> Zonder `insteadof` botst `SafelyBroadcasts::dispatch()` met `Dispatchable::dispatch()`
+> → FatalError → ALLE broadcasts voor dit event crashen stilletjes.
+> **Incident 3-5 apr 2026:** LCD scoreboard volledig kapot door deze collision.
+> Zie `docs/postmortem/` voor het volledige verslag.
 
 **Beschermde events:**
 - `MatUpdate` — score, beurt, poule updates
@@ -191,7 +199,18 @@ MatUpdate::dispatch($toernooiId, $matId, 'score', $data);
 
 **Trait locatie:** `app/Events/Concerns/SafelyBroadcasts.php`
 
-**Belangrijk:** Bij het aanmaken van een nieuw broadcast event ALTIJD `use SafelyBroadcasts;` toevoegen. De trait overschrijft `dispatch()` zodat het automatisch werkt — geen speciale method nodig.
+**Belangrijk:** Bij het aanmaken van een nieuw broadcast event ALTIJD `use SafelyBroadcasts;` toevoegen met de `insteadof` syntax hierboven. De trait overschrijft `dispatch()` zodat het automatisch werkt — geen speciale method nodig.
+
+### Reverb Config Regels
+
+| Regel | Waarom |
+|-------|--------|
+| `allowed_origins` in `config/reverb.php` MOET een **array** zijn | Reverb v1.7.0 verwacht array → TypeError bij string |
+| NOOIT `env()` in Blade views | Na `config:cache` retourneert `env()` NULL → gebruik `config()` |
+| `BroadcastConfigValidator` checkt types bij boot | Logt CRITICAL bij foute config types |
+| `php artisan reverb:health` na elke deploy | Test config + server + broadcast + circuit breaker reset |
+
+**Tests:** `ReverbConfigTest` (9 tests) + `ReverbHealthCheckTest` (4 tests) bewaken deze regels.
 
 ### Reverb Infrastructuur
 
