@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Cache;
  */
 class MatUpdate implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-    use \App\Events\Concerns\SafelyBroadcasts;
+    use Dispatchable, InteractsWithSockets, SerializesModels, \App\Events\Concerns\SafelyBroadcasts {
+        \App\Events\Concerns\SafelyBroadcasts::dispatch insteadof Dispatchable;
+    }
 
     public int $toernooiId;
     public int $matId;

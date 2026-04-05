@@ -14,8 +14,9 @@ use Illuminate\Queue\SerializesModels;
  */
 class MatHeartbeat implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-    use Concerns\SafelyBroadcasts;
+    use Dispatchable, InteractsWithSockets, SerializesModels, Concerns\SafelyBroadcasts {
+        Concerns\SafelyBroadcasts::dispatch insteadof Dispatchable;
+    }
 
     public int $toernooiId;
     public array $matten;

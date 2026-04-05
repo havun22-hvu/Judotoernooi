@@ -12,8 +12,9 @@ use Illuminate\Queue\SerializesModels;
 
 class NewChatMessage implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-    use \App\Events\Concerns\SafelyBroadcasts;
+    use Dispatchable, InteractsWithSockets, SerializesModels, \App\Events\Concerns\SafelyBroadcasts {
+        \App\Events\Concerns\SafelyBroadcasts::dispatch insteadof Dispatchable;
+    }
 
     public ChatMessage $message;
 
