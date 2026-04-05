@@ -394,6 +394,12 @@
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white" :class="selectedMatId === mat.id ? 'px-6 py-4' : 'px-4 py-3'">
                             <div class="flex justify-between items-center">
                                 <span :class="selectedMatId === mat.id ? 'text-3xl' : 'text-2xl'" class="font-bold" x-text="'{{ __('Mat') }} ' + mat.nummer"></span>
+                                <!-- Scorebord link -->
+                                <a :href="'{{ url($toernooi->organisator->slug . '/' . $toernooi->slug) }}/live/scorebord/' + mat.nummer"
+                                   target="_blank"
+                                   class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-sm font-medium transition">
+                                    {{ __('Scorebord') }}
+                                </a>
                                 <!-- Expand/Collapse button -->
                                 <button @click="selectedMatId = selectedMatId === mat.id ? null : mat.id"
                                         class="text-white/80 hover:text-white p-1 transition" :title="selectedMatId === mat.id ? 'Alle matten tonen' : 'Mat vergroten'">

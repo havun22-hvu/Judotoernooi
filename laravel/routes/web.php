@@ -692,6 +692,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 // Scoreboard live display — public, no auth needed (shown on TV/LCD next to mat)
 Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController::class, 'scoreboardLive'])->name('mat.scoreboard-live');
 
+// Mobile scoreboard — public, for spectators on their phones
+Route::get('{organisator}/{toernooi}/live/scorebord/{mat}', [MatController::class, 'scoreboardMobile'])->name('publiek.scorebord');
+
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
 Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');
 
