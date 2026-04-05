@@ -193,13 +193,12 @@ class ToernooiService
 
     /**
      * Create default device toegangen for tournament
-     * Creates: 1x Hoofdjury, 1x Mat, 1x Weging, 1x Spreker, 1x Dojo
+     * Creates: 1x Hoofdjury, 1x per Mat, 1x Weging, 1x Spreker, 1x Dojo
      */
     private function maakStandaardToegangen(Toernooi $toernooi): void
     {
         $rollen = [
             ['rol' => 'hoofdjury', 'mat_nummer' => null],
-            ['rol' => 'mat', 'mat_nummer' => 1],
             ['rol' => 'weging', 'mat_nummer' => null],
             ['rol' => 'spreker', 'mat_nummer' => null],
             ['rol' => 'dojo', 'mat_nummer' => null],
@@ -210,6 +209,15 @@ class ToernooiService
                 'toernooi_id' => $toernooi->id,
                 'rol' => $rolData['rol'],
                 'mat_nummer' => $rolData['mat_nummer'],
+            ]);
+        }
+
+        $aantalMatten = $toernooi->aantal_matten ?? 7;
+        for ($i = 1; $i <= $aantalMatten; $i++) {
+            DeviceToegang::create([
+                'toernooi_id' => $toernooi->id,
+                'rol' => 'mat',
+                'mat_nummer' => $i,
             ]);
         }
     }
