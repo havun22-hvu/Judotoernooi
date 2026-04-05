@@ -457,6 +457,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('{toegang}/regenerate-pin', [DeviceToegangBeheerController::class, 'regeneratePin'])->name('regenerate-pin');
         Route::delete('{toegang}', [DeviceToegangBeheerController::class, 'destroy'])->name('destroy');
         Route::post('reset-all', [DeviceToegangBeheerController::class, 'resetAll'])->name('reset-all');
+        Route::get('qr', [DeviceToegangBeheerController::class, 'qrCode'])->name('qr');
     });
 
     // Vrijwilligers API routes (per organisator, via toernooi context)

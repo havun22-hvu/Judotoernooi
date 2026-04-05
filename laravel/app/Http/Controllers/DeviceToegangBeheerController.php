@@ -206,4 +206,22 @@ class DeviceToegangBeheerController extends Controller
             'message' => 'Alle device bindings gereset',
         ]);
     }
+
+    /**
+     * Generate QR code SVG for a given URL.
+     */
+    public function qrCode(Organisator $organisator, Toernooi $toernooi, Request $request)
+    {
+        $url = $request->query('url');
+        if (!$url) {
+            return response('Missing url parameter', 400);
+        }
+
+        $svg = \QrCode::format('svg')->size(200)->generate($url);
+
+        return response($svg, 200, [
+            'Content-Type' => 'image/svg+xml',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
 }

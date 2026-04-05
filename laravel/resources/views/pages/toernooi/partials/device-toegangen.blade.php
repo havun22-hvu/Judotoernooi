@@ -117,7 +117,7 @@
                             <div x-show="showQr === 'mat_' + toegang.id || showQr === 'lcd_' + toegang.id" x-cloak
                                  class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
                                 <p class="text-sm font-medium text-gray-700 mb-2" x-text="showQr && showQr.startsWith('lcd_') ? '{{ __('LCD Scorebord') }}' : '{{ __('Mat Interface') }}'"></p>
-                                <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl)" class="w-36 h-36 mx-auto rounded mb-2">
+                                <img :src="'{{ route('toernooi.device-toegang.qr', $toernooi->routeParams()) }}?url=' + encodeURIComponent(qrUrl)" class="w-36 h-36 mx-auto rounded mb-2">
                                 <div class="flex items-center gap-2 bg-white rounded p-2 text-xs">
                                     <input type="text" :value="qrUrl" readonly class="flex-1 bg-transparent text-gray-600 border-0 outline-none truncate text-xs">
                                     <button @click="navigator.clipboard.writeText(qrUrl); copiedId = 'qr_' + toegang.id; setTimeout(() => copiedId = null, 2000)"
