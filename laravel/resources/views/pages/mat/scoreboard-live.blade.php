@@ -440,10 +440,12 @@
 
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     @php
-        $reverbHost = env('VITE_REVERB_HOST', parse_url(config('app.url'), PHP_URL_HOST));
-        $reverbPort = (int) env('VITE_REVERB_PORT', 443);
-        $reverbKey = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY');
-        $reverbScheme = env('VITE_REVERB_SCHEME', 'https');
+        // Use config() not env() — env() returns null after config:cache
+        $appUrl = config('app.url', 'https://localhost');
+        $reverbHost = parse_url($appUrl, PHP_URL_HOST);
+        $reverbPort = parse_url($appUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80;
+        $reverbKey = config('broadcasting.connections.reverb.key');
+        $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME) ?: 'https';
     @endphp
     <script>
     document.addEventListener('DOMContentLoaded', function() {
