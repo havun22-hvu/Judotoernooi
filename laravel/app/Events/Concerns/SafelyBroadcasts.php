@@ -36,7 +36,9 @@ trait SafelyBroadcasts
                 event(new static(...$args));
             });
         } catch (\Throwable $e) {
-            static::logThrottled('Broadcast failed: ' . class_basename(static::class));
+            static::logThrottled(
+                'Broadcast failed: ' . class_basename(static::class) . ' — ' . $e->getMessage()
+            );
         }
     }
 
@@ -52,6 +54,6 @@ trait SafelyBroadcasts
         }
 
         cache()->put($key, true, 60);
-        Log::debug($message);
+        Log::warning($message);
     }
 }
