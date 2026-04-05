@@ -694,6 +694,7 @@ Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController:
 
 // Mobile scoreboard — public, for spectators on their phones
 Route::get('{organisator}/{toernooi}/live/scorebord/{mat}', [MatController::class, 'scoreboardMobile'])->name('publiek.scorebord');
+Route::get('{organisator}/{toernooi}/live/scorebord/{mat}/state', [MatController::class, 'scoreboardState'])->name('publiek.scorebord.state');
 
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
 Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');

@@ -1240,6 +1240,34 @@ class MatController extends Controller
     }
 
     /**
+     * JSON endpoint for current match state (used by inline scoreboard).
+     */
+    public function scoreboardState(Organisator $organisator, Toernooi $toernooi, $mat): JsonResponse
+    {
+        $matModel = $toernooi->matten()->where('nummer', $mat)->first();
+
+        if (!$matModel) {
+            return response()->json(null);
+        }
+
+        $matModel->load(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule']);
+
+        if (!$matModel->actieveWedstrijd) {
+            return response()->json(['mat_id' => $matModel->id]);
+        }
+
+        $w = $matModel->actieveWedstrijd;
+
+        return response()->json([
+            'judoka_wit' => ['naam' => $w->judokaWit?->naam ?? 'WIT', 'club' => $w->judokaWit?->club?->naam ?? ''],
+            'judoka_blauw' => ['naam' => $w->judokaBlauw?->naam ?? 'BLAUW', 'club' => $w->judokaBlauw?->club?->naam ?? ''],
+            'poule_naam' => $w->poule?->titel ?? "Poule {$w->poule?->nummer}",
+            'match_duration' => $toernooi->getMatchDurationForCategorie($w->poule?->categorie_key),
+            'mat_id' => $matModel->id,
+        ]);
+    }
+
+    /**
      * Short TV URL: /tv/{4-char code} → redirect to scoreboard-live
      */
     public function tvRedirect(string $code)

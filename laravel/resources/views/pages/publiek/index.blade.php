@@ -154,6 +154,11 @@
                         class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
                     <span class="hidden sm:inline">{{ __('Live') }} </span>{{ __('Matten') }}
                 </button>
+                <button @click="activeTab = 'scorebord'"
+                        :class="activeTab === 'scorebord' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
+                    {{ __('Scorebord') }}
+                </button>
                 @endif
                 @if(count($uitslagen) > 0)
                 <button @click="activeTab = 'uitslagen'"
@@ -394,12 +399,11 @@
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white" :class="selectedMatId === mat.id ? 'px-6 py-4' : 'px-4 py-3'">
                             <div class="flex justify-between items-center">
                                 <span :class="selectedMatId === mat.id ? 'text-3xl' : 'text-2xl'" class="font-bold" x-text="'{{ __('Mat') }} ' + mat.nummer"></span>
-                                <!-- Scorebord link -->
-                                <a :href="'{{ url($toernooi->organisator->slug . '/' . $toernooi->slug) }}/live/scorebord/' + mat.nummer"
-                                   target="_blank"
+                                <!-- Scorebord knop — opent scorebord tab voor deze mat -->
+                                <button @click="scorebordMatNummer = mat.nummer; activeTab = 'scorebord'"
                                    class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-sm font-medium transition">
                                     {{ __('Scorebord') }}
-                                </a>
+                                </button>
                                 <!-- Expand/Collapse button -->
                                 <button @click="selectedMatId = selectedMatId === mat.id ? null : mat.id"
                                         class="text-white/80 hover:text-white p-1 transition" :title="selectedMatId === mat.id ? 'Alle matten tonen' : 'Mat vergroten'">
@@ -882,6 +886,125 @@
             </template>
         </div>
 
+        <!-- Scorebord Tab -->
+        @if($poulesGegenereerd)
+        <div x-show="activeTab === 'scorebord'" x-cloak>
+            {{-- Mat keuze --}}
+            <div x-show="!scorebordMatNummer" class="space-y-3">
+                <h2 class="text-lg font-bold text-gray-800 mb-3">{{ __('Kies een mat') }}</h2>
+                <template x-if="liveMatten.length === 0">
+                    <p class="text-gray-500 text-center py-8">{{ __('Geen actieve matten') }}</p>
+                </template>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <template x-for="mat in liveMatten" :key="mat.id">
+                        <button @click="openScorebord(mat.nummer)"
+                                class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 text-center hover:from-blue-700 hover:to-blue-800 transition">
+                            <div class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></div>
+                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="mat.groen?.wit?.naam + ' vs ' + mat.groen?.blauw?.naam"></div>
+                            <div x-show="!mat.groen" class="text-blue-300 text-xs mt-1">{{ __('Wacht op wedstrijd') }}</div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            {{-- Scorebord view --}}
+            <div x-show="scorebordMatNummer" id="scorebord-container">
+                {{-- Header met mat keuze --}}
+                <div class="flex items-center justify-between mb-3">
+                    <button @click="closeScorebord()" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
+                        ← {{ __('Andere mat') }}
+                    </button>
+                    <div class="flex gap-2">
+                        <template x-for="mat in liveMatten" :key="mat.id">
+                            <button @click="openScorebord(mat.nummer)"
+                                    :class="scorebordMatNummer == mat.nummer ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                                    class="px-3 py-1 rounded text-sm font-bold transition"
+                                    x-text="mat.nummer"></button>
+                        </template>
+                    </div>
+                </div>
+
+                {{-- Scorebord display --}}
+                <div class="rounded-lg overflow-hidden shadow-lg" style="background:#111827;">
+                    {{-- Header --}}
+                    <div class="text-center py-2">
+                        <div class="text-gray-500 text-xs" x-text="'Mat ' + scorebordMatNummer"></div>
+                        <div class="text-white font-bold text-sm" id="sb-header-poule"></div>
+                    </div>
+
+                    {{-- Standby --}}
+                    <div id="sb-standby" class="text-center py-12 text-gray-500 font-medium">
+                        {{ __('Wacht op wedstrijd...') }}
+                    </div>
+
+                    {{-- Match content --}}
+                    <div id="sb-match" style="display:none;">
+                        {{-- Wit --}}
+                        <div class="bg-gray-100 px-4 py-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400 flex-shrink-0"></span>
+                                <span class="font-black text-gray-900 text-lg uppercase truncate" id="sb-wit-naam">WIT</span>
+                            </div>
+                            <div class="text-gray-500 text-xs ml-6 mb-2" id="sb-wit-club"></div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1"><span class="text-gray-400 text-xs font-bold">Y</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-wit-yuko">0</span></div>
+                                <div class="flex items-center gap-1"><span class="text-gray-400 text-xs font-bold">W</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-wit-wazaari">0</span></div>
+                                <div class="flex items-center gap-1"><span class="text-gray-400 text-xs font-bold">I</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-wit-ippon">0</span></div>
+                                <div class="flex gap-1 ml-2">
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-gray-300 bg-gray-200" id="sb-wit-shido-1"></div>
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-gray-300 bg-gray-200" id="sb-wit-shido-2"></div>
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-gray-300 bg-gray-200" id="sb-wit-shido-3"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Timer --}}
+                        <div class="text-center py-3" style="background:#111827;">
+                            <div class="h-1 bg-gray-700 rounded mx-4 mb-2 overflow-hidden"><div class="h-full bg-green-500 rounded transition-all" id="sb-progress" style="width:100%"></div></div>
+                            <div class="text-red-500 font-black text-5xl font-mono tabular-nums" id="sb-timer">0:00</div>
+                            <div class="hidden bg-yellow-500 text-black font-black text-xs px-3 py-0.5 rounded-full mt-1 inline-block" id="sb-gs-badge">GOLDEN SCORE</div>
+                            {{-- Osaekomi --}}
+                            <div class="flex items-center justify-center gap-3 mt-2">
+                                <div class="w-3 h-3 rounded-full bg-gray-700" id="sb-wit-osae-dot"></div>
+                                <div>
+                                    <div class="text-gray-700 font-black text-2xl font-mono tabular-nums" id="sb-osae-time">00</div>
+                                    <div class="text-orange-500 text-xs font-bold" id="sb-osae-zone"></div>
+                                </div>
+                                <div class="w-3 h-3 rounded-full bg-gray-700" id="sb-blauw-osae-dot"></div>
+                            </div>
+                        </div>
+
+                        {{-- Blauw --}}
+                        <div class="px-4 py-3" style="background:#1E3A8A;">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                <span class="font-black text-white text-lg uppercase truncate" id="sb-blauw-naam">BLAUW</span>
+                            </div>
+                            <div class="text-blue-300 text-xs ml-6 mb-2" id="sb-blauw-club"></div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1"><span class="text-blue-300 text-xs font-bold">Y</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-blauw-yuko">0</span></div>
+                                <div class="flex items-center gap-1"><span class="text-blue-300 text-xs font-bold">W</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-blauw-wazaari">0</span></div>
+                                <div class="flex items-center gap-1"><span class="text-blue-300 text-xs font-bold">I</span><span class="bg-gray-900 text-red-500 font-black text-xl px-2 py-0.5 rounded min-w-[28px] text-center" id="sb-blauw-ippon">0</span></div>
+                                <div class="flex gap-1 ml-2">
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-blue-400/50 bg-blue-400/20" id="sb-blauw-shido-1"></div>
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-blue-400/50 bg-blue-400/20" id="sb-blauw-shido-2"></div>
+                                    <div class="w-4 h-5 rounded-sm border border-dashed border-blue-400/50 bg-blue-400/20" id="sb-blauw-shido-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Winner overlay --}}
+                    <div id="sb-winner" class="hidden text-center py-8" style="background:rgba(0,0,0,0.9);">
+                        <div class="font-black text-3xl uppercase" id="sb-winner-name"></div>
+                        <div class="text-yellow-400 font-black text-xl mt-1">WINNAAR</div>
+                        <div class="text-gray-400 text-sm mt-1" id="sb-winner-type"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Uitslagen Tab -->
         @if(count($uitslagen) > 0)
         <div x-show="activeTab === 'uitslagen'" x-cloak>
@@ -1042,6 +1165,10 @@
                 liveLoading: false,
                 liveMatten: [],
                 selectedMatId: null,
+                scorebordMatNummer: null,
+                scorebordState: null, // { wit: {yuko,wazaari,ippon,shido}, blauw: {...}, timer, isRunning, ... }
+                scorebordChannel: null,
+                scorebordPusher: null,
                 notificatiesAan: false,
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
                 isConnected: false, // WebSocket verbinding status
@@ -1420,6 +1547,324 @@
                         console.error('Error loading matten:', e);
                     }
                     this.liveLoading = false;
+                },
+
+                // --- Scorebord ---
+                _sbState: null,
+                _sbChannel: null,
+                _sbTimerAF: null,
+                _sbOsaeAF: null,
+
+                openScorebord(matNummer) {
+                    // Disconnect previous channel
+                    this.closeScorebord();
+                    this.scorebordMatNummer = matNummer;
+
+                    this._sbState = {
+                        matchDuration: {{ $toernooi->getMatchDuration() }},
+                        timeRemaining: {{ $toernooi->getMatchDuration() }},
+                        isRunning: false,
+                        isGoldenScore: false,
+                        timerStartedAt: null,
+                        timerRemainingAtStart: 0,
+                        osaekomiActive: false,
+                        osaekomiStartedAt: null,
+                        hasMatch: false,
+                    };
+
+                    @php
+                        $appUrl = config('app.url', 'https://localhost');
+                        $sbReverbHost = parse_url($appUrl, PHP_URL_HOST);
+                        $sbReverbPort = parse_url($appUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80;
+                        $sbReverbKey = config('broadcasting.connections.reverb.key');
+                        $sbReverbScheme = parse_url($appUrl, PHP_URL_SCHEME) ?: 'https';
+                    @endphp
+
+                    // Create Pusher instance for scoreboard channel
+                    if (!window._sbPusher) {
+                        window._sbPusher = new Pusher('{{ $sbReverbKey }}', {
+                            wsHost: '{{ $sbReverbHost }}',
+                            wsPort: {{ $sbReverbPort }},
+                            wssPort: {{ $sbReverbPort }},
+                            forceTLS: {{ $sbReverbScheme === 'https' ? 'true' : 'false' }},
+                            enabledTransports: ['ws', 'wss'],
+                            disableStats: true,
+                            cluster: 'mt1'
+                        });
+                    }
+
+                    // Fetch current match + get mat_id for channel subscription
+                    this._sbFetchCurrentMatch(matNummer);
+                },
+
+                closeScorebord() {
+                    if (this._sbChannel && window._sbPusher) {
+                        window._sbPusher.unsubscribe(this._sbChannel.name);
+                        this._sbChannel = null;
+                    }
+                    if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                    if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
+                    this.scorebordMatNummer = null;
+                    this._sbState = null;
+                },
+
+                async _sbFetchCurrentMatch(matNummer) {
+                    try {
+                        const response = await fetch(`{{ url($toernooi->organisator->slug . '/' . $toernooi->slug) }}/live/scorebord/${matNummer}/state`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Subscribe to WebSocket channel using mat_id from API
+                            if (data && data.mat_id && window._sbPusher) {
+                                const channelName = `scoreboard-display.{{ $toernooi->id }}.${data.mat_id}`;
+                                this._sbChannel = window._sbPusher.subscribe(channelName);
+                                this._sbChannel.bind('scoreboard.event', (payload) => {
+                                    this._sbHandleEvent(payload.data || payload);
+                                });
+                            }
+                            if (data && data.judoka_wit) {
+                                this._sbShowMatch();
+                                document.getElementById('sb-header-poule').textContent = data.poule_naam || '';
+                                document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
+                                document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
+                                document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
+                                document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                                if (data.match_duration) {
+                                    this._sbState.matchDuration = data.match_duration;
+                                    this._sbState.timeRemaining = data.match_duration;
+                                }
+                                this._sbUpdateTimer();
+                            } else if (!data) {
+                                // No active match but still need channel — get mat_id from liveMatten
+                                const mat = this.liveMatten.find(m => m.nummer == matNummer);
+                                if (mat && window._sbPusher) {
+                                    const channelName = `scoreboard-display.{{ $toernooi->id }}.${mat.id}`;
+                                    this._sbChannel = window._sbPusher.subscribe(channelName);
+                                    this._sbChannel.bind('scoreboard.event', (payload) => {
+                                        this._sbHandleEvent(payload.data || payload);
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback: use mat.id from liveMatten
+                        const mat = this.liveMatten.find(m => m.nummer == matNummer);
+                        if (mat && window._sbPusher) {
+                            const channelName = `scoreboard-display.{{ $toernooi->id }}.${mat.id}`;
+                            this._sbChannel = window._sbPusher.subscribe(channelName);
+                            this._sbChannel.bind('scoreboard.event', (payload) => {
+                                this._sbHandleEvent(payload.data || payload);
+                            });
+                        }
+                    }
+                },
+
+                _sbShowMatch() {
+                    const standby = document.getElementById('sb-standby');
+                    const match = document.getElementById('sb-match');
+                    if (standby) standby.style.display = 'none';
+                    if (match) match.style.display = 'block';
+                    if (this._sbState) this._sbState.hasMatch = true;
+                },
+
+                _sbShowStandby() {
+                    const standby = document.getElementById('sb-standby');
+                    const match = document.getElementById('sb-match');
+                    const winner = document.getElementById('sb-winner');
+                    if (standby) standby.style.display = 'block';
+                    if (match) match.style.display = 'none';
+                    if (winner) winner.classList.add('hidden');
+                    if (this._sbState) this._sbState.hasMatch = false;
+                },
+
+                _sbUpdateTimer() {
+                    if (!this._sbState) return;
+                    const s = this._sbState;
+                    const el = document.getElementById('sb-timer');
+                    const prog = document.getElementById('sb-progress');
+                    const badge = document.getElementById('sb-gs-badge');
+                    if (!el) return;
+
+                    const mins = Math.floor(s.timeRemaining / 60);
+                    const secs = Math.floor(s.timeRemaining % 60);
+                    const tenths = Math.floor((s.timeRemaining % 1) * 10);
+                    el.textContent = s.timeRemaining < 10 ? `${mins}:${secs.toString().padStart(2,'0')}.${tenths}` : `${mins}:${secs.toString().padStart(2,'0')}`;
+                    el.className = 'text-5xl font-black font-mono tabular-nums ' + (s.isGoldenScore ? 'text-yellow-500' : (s.timeRemaining <= 30 ? 'text-red-500' : 'text-red-500'));
+
+                    if (prog) {
+                        const pct = s.isGoldenScore ? 0 : (s.timeRemaining / s.matchDuration) * 100;
+                        prog.style.width = pct + '%';
+                        prog.className = 'h-full rounded transition-all ' + (s.timeRemaining <= 30 ? 'bg-red-500' : 'bg-green-500');
+                    }
+                    if (badge) badge.className = s.isGoldenScore ? 'bg-yellow-500 text-black font-black text-xs px-3 py-0.5 rounded-full mt-1 inline-block' : 'hidden';
+                },
+
+                _sbTickTimer() {
+                    if (!this._sbState || !this._sbState.isRunning) return;
+                    const s = this._sbState;
+                    const elapsed = (performance.now() - s.timerStartedAt) / 1000;
+                    s.timeRemaining = s.isGoldenScore ? s.timerRemainingAtStart + elapsed : Math.max(0, s.timerRemainingAtStart - elapsed);
+                    this._sbUpdateTimer();
+                    this._sbTimerAF = requestAnimationFrame(() => this._sbTickTimer());
+                },
+
+                _sbTickOsaekomi() {
+                    if (!this._sbState || !this._sbState.osaekomiActive) return;
+                    const elapsed = Math.floor((performance.now() - this._sbState.osaekomiStartedAt) / 1000);
+                    const el = document.getElementById('sb-osae-time');
+                    const zone = document.getElementById('sb-osae-zone');
+                    if (el) { el.textContent = elapsed.toString().padStart(2, '0'); el.className = 'font-black text-2xl font-mono tabular-nums text-red-500'; }
+                    if (zone) { zone.textContent = elapsed >= 20 ? 'IPPON' : elapsed >= 10 ? 'WAZA-ARI' : elapsed >= 5 ? 'YUKO' : ''; }
+                    this._sbOsaeAF = requestAnimationFrame(() => this._sbTickOsaekomi());
+                },
+
+                _sbUpdateScores(scores) {
+                    ['wit', 'blauw'].forEach(side => {
+                        const sc = scores[side];
+                        const pre = 'sb-' + side + '-';
+                        const yEl = document.getElementById(pre + 'yuko');
+                        const wEl = document.getElementById(pre + 'wazaari');
+                        const iEl = document.getElementById(pre + 'ippon');
+                        if (yEl) yEl.textContent = sc.yuko;
+                        if (wEl) wEl.textContent = sc.wazaari;
+                        if (iEl) iEl.textContent = sc.ippon ? '1' : '0';
+                        for (let i = 1; i <= 3; i++) {
+                            const sh = document.getElementById(pre + 'shido-' + i);
+                            if (sh) {
+                                if (i <= sc.shido) { sh.style.background = '#FACC15'; sh.style.borderColor = '#EAB308'; sh.style.borderStyle = 'solid'; }
+                                else { sh.style.background = ''; sh.style.borderColor = ''; sh.style.borderStyle = 'dashed'; }
+                            }
+                        }
+                    });
+                },
+
+                _sbClearOsaekomi() {
+                    ['wit', 'blauw'].forEach(side => {
+                        const dot = document.getElementById('sb-' + side + '-osae-dot');
+                        if (dot) { dot.style.background = '#374151'; }
+                    });
+                    const el = document.getElementById('sb-osae-time');
+                    const zone = document.getElementById('sb-osae-zone');
+                    if (el) { el.textContent = '00'; el.className = 'font-black text-2xl font-mono tabular-nums text-gray-700'; }
+                    if (zone) zone.textContent = '';
+                },
+
+                _sbHandleEvent(data) {
+                    if (!this._sbState) return;
+                    const s = this._sbState;
+                    const zero = { wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 }, blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 } };
+
+                    switch (data.event) {
+                        case 'match.start':
+                            this._sbShowMatch();
+                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            document.getElementById('sb-header-poule').textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+                            document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
+                            document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
+                            document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
+                            document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                            s.matchDuration = data.match_duration || s.matchDuration;
+                            s.timeRemaining = s.matchDuration;
+                            s.isRunning = false; s.isGoldenScore = false; s.osaekomiActive = false;
+                            this._sbClearOsaekomi();
+                            this._sbUpdateScores(zero);
+                            this._sbUpdateTimer();
+                            break;
+
+                        case 'timer.start':
+                            s.isRunning = true;
+                            s.isGoldenScore = data.golden_score || false;
+                            s.timerRemainingAtStart = data.remaining;
+                            s.timeRemaining = data.remaining;
+                            s.timerStartedAt = performance.now();
+                            this._sbTickTimer();
+                            break;
+
+                        case 'timer.stop':
+                            s.isRunning = false;
+                            if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                            s.timeRemaining = data.remaining;
+                            this._sbUpdateTimer();
+                            break;
+
+                        case 'timer.reset':
+                            s.isRunning = false; s.isGoldenScore = false;
+                            if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                            s.matchDuration = data.duration || s.matchDuration;
+                            s.timeRemaining = s.matchDuration;
+                            s.osaekomiActive = false;
+                            this._sbClearOsaekomi();
+                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            this._sbUpdateTimer();
+                            break;
+
+                        case 'score.update':
+                            this._sbUpdateScores(data.scores);
+                            break;
+
+                        case 'osaekomi.start':
+                            this._sbClearOsaekomi();
+                            s.osaekomiActive = true;
+                            s.osaekomiStartedAt = performance.now();
+                            const dot = document.getElementById('sb-' + data.judoka + '-osae-dot');
+                            if (dot) dot.style.background = '#22C55E';
+                            this._sbTickOsaekomi();
+                            break;
+
+                        case 'osaekomi.stop':
+                            s.osaekomiActive = false;
+                            if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
+                            this._sbClearOsaekomi();
+                            break;
+
+                        case 'match.end':
+                            s.isRunning = false;
+                            if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                            s.osaekomiActive = false;
+                            if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
+                            this._sbClearOsaekomi();
+                            const winEl = document.getElementById('sb-winner');
+                            const nameEl = document.getElementById('sb-winner-name');
+                            const typeEl = document.getElementById('sb-winner-type');
+                            const srcName = document.getElementById('sb-' + data.winner + '-naam');
+                            if (nameEl) { nameEl.textContent = srcName?.textContent || data.winner.toUpperCase(); nameEl.className = 'font-black text-3xl uppercase ' + (data.winner === 'blauw' ? 'text-blue-500' : 'text-white'); }
+                            if (typeEl) typeEl.textContent = (data.uitslag_type || '').toUpperCase();
+                            if (winEl) winEl.classList.remove('hidden');
+                            break;
+
+                        case 'match.assign':
+                            this._sbShowMatch();
+                            document.getElementById('sb-header-poule').textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+                            document.getElementById('sb-wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
+                            document.getElementById('sb-wit-club').textContent = data.judoka_wit?.club || '';
+                            document.getElementById('sb-blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
+                            document.getElementById('sb-blauw-club').textContent = data.judoka_blauw?.club || '';
+                            s.matchDuration = data.match_duration || s.matchDuration;
+                            s.timeRemaining = s.matchDuration;
+                            s.isRunning = false; s.isGoldenScore = false; s.osaekomiActive = false;
+                            this._sbClearOsaekomi();
+                            this._sbUpdateScores(zero);
+                            this._sbUpdateTimer();
+                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            break;
+
+                        case 'match.unassign':
+                            this._sbShowStandby();
+                            document.getElementById('sb-header-poule').textContent = '';
+                            s.isRunning = false; s.isGoldenScore = false;
+                            if (this._sbTimerAF) cancelAnimationFrame(this._sbTimerAF);
+                            s.osaekomiActive = false;
+                            if (this._sbOsaeAF) cancelAnimationFrame(this._sbOsaeAF);
+                            this._sbClearOsaekomi();
+                            document.getElementById('sb-wit-naam').textContent = 'WIT';
+                            document.getElementById('sb-wit-club').textContent = '';
+                            document.getElementById('sb-blauw-naam').textContent = 'BLAUW';
+                            document.getElementById('sb-blauw-club').textContent = '';
+                            s.timeRemaining = s.matchDuration;
+                            this._sbUpdateScores(zero);
+                            this._sbUpdateTimer();
+                            document.getElementById('sb-winner')?.classList.add('hidden');
+                            break;
+                    }
                 },
 
                 async zoekJudokas() {
