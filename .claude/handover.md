@@ -1,51 +1,78 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 5 april 2026
+> **Laatste update:** 6 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 6 april 2026
+## Laatste Sessie: 6 april 2026 (avond)
 
 ### Wat is gedaan:
 
-**TV Koppelsysteem — werkend op staging**
-- TV opent `havun.nl/tv` (11 tekens) → toont 4-cijferige code
-- Organisator voert code in bij device-toegangen → TV redirect via Reverb naar LCD scorebord
-- TvKoppeling model, TvController, TvLinked broadcast event
-- `havun.nl/tv` nginx redirect naar `staging.judotournament.org/tv`
+**Judoka Self-Check feature ontwerp**
+- Feature-doc: `laravel/docs/2-FEATURES/JUDOKA-SELFCHECK.md`
+- Judoka's kunnen gewicht + geboortejaar wijzigen via weegkaart PWA
+- Organisator kiest bestemming: direct naar judokalijst of via coach portal (sync)
+- Alleen actief als coach portal aanstaat
+- Gewichtsmutatie deadline veld toegevoegd aan toernooi instellingen
 
-**Google Cast integratie — in progress**
-- Havun Google Cast Developer Console ($5, account havun22@gmail.com)
-- Application ID: C11C3563 (Custom Receiver, unpublished)
-- Test device: 26111HFDD5F9AN "Chromecast Henk"
-- Cast Receiver pagina: `/cast/receiver` (iframe die LCD URL laadt)
-- Cast knop op device-toegangen pagina (paars)
-- CSP fix: `www.gstatic.com` in script-src + connect-src
-- **Probleem:** `requestSession()` geeft "invalid_parameter" — waarschijnlijk moet test device registratie 24u propageren
-- **Morgen testen** of het werkt na 24u
+**Security & code review**
+- Auth + ownership check op TV link endpoint (was open voor iedereen)
+- XSS fix: `@js()` voor toernooinaam in device-toegangen
+- Dode poll endpoint verwijderd (Reverb handles dit)
+- Max-iterations guard op TV code generatie
+- LCD `match.start`/`match.assign` gededupliceerd naar `loadMatch()`
 
-**LCD scorebord**
-- Auto-fullscreen overlay toegevoegd voor TV browsers met toolbar
+**Publieke app Reverb fix**
+- mat-updates-listener gebruikte interne Reverb config (0.0.0.0:8081) i.p.v. app URL (443)
+- WebSocket verbinding werkt nu correct — favorieten krijgen real-time updates
 
-**Overige UI fixes**
-- Emoji's → SVG in nog meer views
-- Blokken: regenboog knoppen → uniform blauw
-- Scorebord instelling: radio buttons
-- Publieke app: positienummers → bandkleur
+**UI fixes**
+- LCD URL verborgen, alleen copy-knop (consistent met mat interface)
+- Weegkaarten toggle tooltip toegevoegd
+- Gewichtsmutatie deadline datumveld in toernooi instellingen
+
+**Nginx redirects**
+- `havun.nl/tv` → production (judotournament.org/tv)
+- `havun.nl/tvs` → staging (staging.judotournament.org/tv)
 
 ### Openstaande items:
 - [ ] Chromecast Cast testen (na 24u test device propagatie)
 - [ ] Als Cast niet werkt: app publishen in Google Console
-- [ ] `havun.nl/tv` redirect wijzigen naar production bij go-live
+- [ ] Judoka Self-Check feature bouwen (doc staat klaar)
+- [ ] LCD winnaar bug: opgelost in JudoScoreBoard app, verifiëren op staging
 - [ ] Docs: TV/LCD setup handleiding voor organisatoren
-- [ ] Deploy alles naar production na goedkeuring
 
 ### Belangrijke context:
-- Deco mesh: Smart DHCP was uitgeschakeld, check of netwerk nu goed werkt
+- Service worker op staging kan oude views cachen → hard refresh (Ctrl+Shift+R) nodig na deploy
 - Cast SDK werkt alleen in Chrome browser
-- TV code koppeling werkt via Reverb (geen polling!)
-- CLAUDE.md regel toegevoegd: NOOIT polling, ALTIJD Reverb
+- CLAUDE.md regel: NOOIT polling, ALTIJD Reverb
+- Gewichtsmutatie deadline validatie: moet >= inschrijving_deadline en <= toernooidatum
+
+---
+
+## Vorige Sessie: 6 april 2026 (middag)
+
+### Wat is gedaan:
+
+**TV Koppelsysteem — werkend op staging**
+- TV opent `havun.nl/tv` → toont 4-cijferige code
+- Organisator voert code in bij device-toegangen → TV redirect via Reverb naar LCD scorebord
+- TvKoppeling model, TvController, TvLinked broadcast event
+
+**Google Cast integratie — in progress**
+- Application ID: C11C3563 (unpublished)
+- Test device: 26111HFDD5F9AN "Chromecast Henk"
+- Cast Receiver pagina: `/cast/receiver`
+- **Probleem:** `requestSession()` geeft "invalid_parameter" — wacht op 24u propagatie
+
+**LCD scorebord**
+- Auto-fullscreen overlay voor TV browsers
+
+**Overige UI fixes**
+- Emoji's → SVG, regenboog knoppen → uniform blauw
+- Scorebord instelling: radio buttons
+- Publieke app: positienummers → bandkleur
 
 ---
 
