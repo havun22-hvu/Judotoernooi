@@ -1,16 +1,3 @@
-{{-- Google Cast SDK — moet vóór Alpine laden --}}
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-<script>
-window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (isAvailable) {
-        cast.framework.CastContext.getInstance().setOptions({
-            receiverApplicationId: 'C11C3563',
-            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-        });
-    }
-};
-</script>
-
 {{-- Device Toegangen Beheer --}}
 <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="deviceToegangen()">
     <div class="flex items-center justify-between mb-4 pb-2 border-b">
@@ -587,3 +574,17 @@ function deviceToegangen() {
 }
 </script>
 
+@push('scripts')
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script>
+window['__onGCastApiAvailable'] = function(isAvailable) {
+    if (isAvailable) {
+        cast.framework.CastContext.getInstance().setOptions({
+            receiverApplicationId: 'C11C3563',
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        });
+        console.log('[Cast] SDK geladen en geconfigureerd');
+    }
+};
+</script>
+@endpush
