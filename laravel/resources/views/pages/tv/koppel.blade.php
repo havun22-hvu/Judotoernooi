@@ -111,10 +111,11 @@
     </div>
 
     @php
-        $reverbHost = config('broadcasting.connections.reverb.options.host') ?? parse_url(config('app.url'), PHP_URL_HOST);
-        $reverbPort = (int) (config('broadcasting.connections.reverb.options.port') ?? 443);
-        $reverbKey = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY');
-        $reverbScheme = config('broadcasting.connections.reverb.options.scheme') ?? 'https';
+        $appUrl = config('app.url');
+        $reverbHost = parse_url($appUrl, PHP_URL_HOST);
+        $reverbPort = parse_url($appUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80;
+        $reverbKey = config('broadcasting.connections.reverb.key');
+        $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME);
     @endphp
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
