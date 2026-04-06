@@ -54,11 +54,6 @@
             margin-bottom: 2vh;
         }
 
-        .status.waiting { color: #6B7280; }
-        .status.linking { color: #FACC15; }
-        .status.linked { color: #22C55E; }
-        .status.expired { color: #EF4444; }
-
         .spinner {
             display: inline-block;
             width: 20px;
@@ -86,15 +81,10 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
+    <div class="container">
         <div class="logo">JudoToernooi</div>
 
         <div id="state-waiting">
@@ -102,45 +92,35 @@
             <div class="code-box">
                 <div class="code">{{ $code }}</div>
             </div>
-            <p class="status waiting"><span class="spinner"></span> Wachten op koppeling...</p>
+            <p class="status"><span class="spinner"></span> Wachten op koppeling...</p>
             <p class="hint">Ga op de laptop naar Instellingen → Organisatie → Device Toegangen → klik "Koppel TV" bij de juiste mat</p>
             <p class="countdown" id="countdown"></p>
-            <p class="hint" id="debug" style="margin-top: 2vh; color: #4B5563;"></p>
         </div>
 
         <div id="state-linked" style="display: none;">
-            <p class="status linked" style="font-size: clamp(24px, 4vh, 48px); font-weight: bold;">TV Gekoppeld!</p>
+            <p class="status" style="font-size: clamp(24px, 4vh, 48px); font-weight: bold; color: #22C55E;">TV Gekoppeld!</p>
             <p class="instruction" style="margin-top: 2vh;">Scorebord wordt geladen...</p>
         </div>
 
         <div id="state-expired" style="display: none;">
-            <p class="status expired" style="font-size: clamp(20px, 3vh, 36px);">Code verlopen</p>
+            <p class="status" style="font-size: clamp(20px, 3vh, 36px); color: #EF4444;">Code verlopen</p>
             <p class="instruction" style="margin-top: 2vh;">
                 <a href="{{ route('tv.koppel') }}" style="color: #3B82F6; text-decoration: underline;">Klik hier voor een nieuwe code</a>
             </p>
         </div>
     </div>
 
+    @php
+        $reverbHost = config('broadcasting.connections.reverb.options.host') ?? parse_url(config('app.url'), PHP_URL_HOST);
+        $reverbPort = (int) (config('broadcasting.connections.reverb.options.port') ?? 443);
+        $reverbKey = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY');
+        $reverbScheme = config('broadcasting.connections.reverb.options.scheme') ?? 'https';
+    @endphp
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
     (function() {
-        const koppelingId = {{ $koppelingId }};
-        const pollUrl = '{{ route('tv.poll', ['koppeling' => $koppelingId]) }}';
+        const code = '{{ $code }}';
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        let polling = true;
-        const dbg = document.getElementById('debug');
-        if (dbg) dbg.textContent = 'JS geladen. Poll URL: ' + pollUrl;
-
-        function updateCountdown() {
-            const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-            const mins = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            const el = document.getElementById('countdown');
-            if (el) el.textContent = 'Code verloopt over ' + mins + ':' + secs.toString().padStart(2, '0');
-            if (remaining <= 0 && polling) {
-                showState('expired');
-                polling = false;
-            }
-        }
 
         function showState(state) {
             document.getElementById('state-waiting').style.display = state === 'waiting' ? '' : 'none';
@@ -148,37 +128,43 @@
             document.getElementById('state-expired').style.display = state === 'expired' ? '' : 'none';
         }
 
-        async function poll() {
-            if (!polling) return;
-            const dbg = document.getElementById('debug');
-            try {
-                dbg.textContent = 'Polling: ' + pollUrl;
-                const resp = await fetch(pollUrl);
-                const data = await resp.json();
-                dbg.textContent = 'Response: ' + JSON.stringify(data);
-
-                if (data.status === 'linked' && data.redirect) {
-                    polling = false;
-                    showState('linked');
-                    setTimeout(() => window.location.href = data.redirect, 1500);
-                    return;
-                }
-
-                if (data.status === 'expired') {
-                    polling = false;
-                    showState('expired');
-                    return;
-                }
-            } catch (e) {
-                dbg.textContent = 'Error: ' + e.message;
+        function updateCountdown() {
+            const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            const el = document.getElementById('countdown');
+            if (el) el.textContent = 'Code verloopt over ' + mins + ':' + secs.toString().padStart(2, '0');
+            if (remaining <= 0) {
+                showState('expired');
             }
-
-            setTimeout(poll, 3000);
         }
+
+        // Connect to Reverb
+        const pusher = new Pusher('{{ $reverbKey }}', {
+            wsHost: '{{ $reverbHost }}',
+            wsPort: {{ $reverbPort }},
+            wssPort: {{ $reverbPort }},
+            forceTLS: {{ $reverbScheme === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true,
+            cluster: 'mt1'
+        });
+
+        const channel = pusher.subscribe('tv-koppeling.' + code);
+
+        channel.bind('tv.linked', function(data) {
+            if (data.redirect) {
+                showState('linked');
+                setTimeout(() => window.location.href = data.redirect, 1500);
+            }
+        });
+
+        pusher.connection.bind('error', function(err) {
+            console.error('[TV] Reverb error:', err);
+        });
 
         setInterval(updateCountdown, 1000);
         updateCountdown();
-        poll();
     })();
     </script>
 </body>

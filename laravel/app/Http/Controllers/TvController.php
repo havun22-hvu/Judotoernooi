@@ -84,6 +84,15 @@ class TvController extends Controller
             'linked_at' => now(),
         ]);
 
+        $toernooi = $koppeling->toernooi;
+        $redirectUrl = route('mat.scoreboard-live', [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'mat' => $request->mat_nummer,
+        ]);
+
+        \App\Events\TvLinked::dispatch($koppeling->code, $redirectUrl);
+
         return response()->json([
             'success' => true,
             'message' => __('TV gekoppeld aan Mat') . ' ' . $request->mat_nummer,

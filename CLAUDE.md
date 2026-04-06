@@ -166,6 +166,9 @@ Hoe verder de app vordert, hoe belangrijker het is dat werkende code niet onbedo
 - Verwijder NOOIT UI-elementen die je niet begrijpt — lees eerst de docs
 - Na een fix: controleer dat bestaande functionaliteit nog intact is
 
+### NOOIT polling — ALTIJD Reverb/WebSockets
+Deze app gebruikt Reverb voor alle real-time communicatie. NOOIT polling (setInterval/setTimeout fetch loops) bouwen. Altijd een Reverb broadcast event gebruiken.
+
 ### Broadcast Events: ALTIJD SafelyBroadcasts trait
 Bij NIEUW broadcast event ALTIJD `use \App\Events\Concerns\SafelyBroadcasts;` toevoegen.
 De trait overschrijft `dispatch()` met circuit breaker + try-catch + log throttling.
