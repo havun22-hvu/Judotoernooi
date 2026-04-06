@@ -102,12 +102,13 @@
                                         <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap">{{ __('LCD') }}</td>
                                         <td class="py-1">
                                             <div class="flex items-center gap-1.5">
-                                                <button type="button" @click="copyLcdUrl(toegang)" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs flex items-center gap-1">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                                    <span x-show="copiedId !== 'lcd_' + toegang.id">URL</span><span x-show="copiedId === 'lcd_' + toegang.id" x-cloak>✓</span>
+                                                <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded select-all" x-text="'{{ url('/tv') }}/' + (toegang.code ? toegang.code.substring(0, 4) : '')"></span>
+                                                <button type="button" @click="navigator.clipboard.writeText('{{ url('/tv') }}/' + (toegang.code ? toegang.code.substring(0, 4) : '')); copiedId = 'tv_' + toegang.id; setTimeout(() => copiedId = null, 2000)"
+                                                        class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs">
+                                                    <span x-show="copiedId !== 'tv_' + toegang.id">{{ __('Kopieer') }}</span><span x-show="copiedId === 'tv_' + toegang.id" x-cloak>✓</span>
                                                 </button>
-                                                <button type="button" @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = getLcdUrl(toegang)"
-                                                        class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs" title="{{ __('QR code LCD') }}">QR</button>
+                                                <button type="button" @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = '{{ url('/tv') }}/' + (toegang.code ? toegang.code.substring(0, 4) : '')"
+                                                        class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
                                             </div>
                                         </td>
                                     </tr>
