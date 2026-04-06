@@ -45,6 +45,7 @@ class ToernooiRequest extends FormRequest
             'organisatie' => 'nullable|string|max:255',
             'datum' => 'required|date',
             'inschrijving_deadline' => 'nullable|date|before_or_equal:datum',
+            'gewichtsmutatie_deadline' => 'nullable|date|after_or_equal:inschrijving_deadline|before_or_equal:datum',
             'max_judokas' => 'nullable|integer|min:1',
             'locatie' => 'nullable|string|max:255',
             'verwacht_aantal_judokas' => 'nullable|integer|min:10|max:2000',

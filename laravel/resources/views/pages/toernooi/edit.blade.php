@@ -188,13 +188,21 @@
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Inschrijving') }}</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="inschrijving_deadline" class="block text-gray-700 font-medium mb-1">{{ __('Inschrijving Deadline') }}</label>
                     <input type="date" name="inschrijving_deadline" id="inschrijving_deadline"
                            value="{{ old('inschrijving_deadline', $toernooi->inschrijving_deadline?->format('Y-m-d')) }}"
                            class="w-full border rounded px-3 py-2">
                     <p class="text-gray-500 text-sm mt-1">{{ __('Tot wanneer kunnen clubs judoka\'s opgeven?') }}</p>
+                </div>
+
+                <div>
+                    <label for="gewichtsmutatie_deadline" class="block text-gray-700 font-medium mb-1">{{ __('Gewichtsmutatie Deadline') }}</label>
+                    <input type="date" name="gewichtsmutatie_deadline" id="gewichtsmutatie_deadline"
+                           value="{{ old('gewichtsmutatie_deadline', $toernooi->gewichtsmutatie_deadline?->format('Y-m-d')) }}"
+                           class="w-full border rounded px-3 py-2">
+                    <p class="text-gray-500 text-sm mt-1">{{ __('Tot wanneer mogen gewicht en geboortejaar gewijzigd worden?') }}</p>
                 </div>
 
                 <div>

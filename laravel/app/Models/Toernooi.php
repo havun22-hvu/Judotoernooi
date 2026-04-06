@@ -126,6 +126,7 @@ class Toernooi extends Model
         'organisatie',
         'datum',
         'inschrijving_deadline',
+        'gewichtsmutatie_deadline',
         'max_judokas',
         'locatie',
         'verwacht_aantal_judokas',
@@ -227,6 +228,7 @@ class Toernooi extends Model
     protected $casts = [
         'datum' => 'date',
         'inschrijving_deadline' => 'date',
+        'gewichtsmutatie_deadline' => 'date',
         'is_actief' => 'boolean',
         'is_gearchiveerd' => 'boolean',
         'dubbel_bij_2_judokas' => 'boolean',
