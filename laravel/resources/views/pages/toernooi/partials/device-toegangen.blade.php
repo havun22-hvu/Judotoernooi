@@ -270,7 +270,7 @@ function deviceToegangen() {
         vrijwilligers: [],
         showVrijwilligersModal: false,
         newVrijwilliger: { voornaam: '', telefoonnummer: '', email: '', functie: 'mat' },
-        toernooiNaam: '{{ $toernooi->naam }}',
+        toernooiNaam: @js($toernooi->naam),
         rollen: [
             { key: 'hoofdjury', naam: '{{ __('Hoofdjury') }}', icon: '⚖️' },
             { key: 'mat', naam: '{{ __('Mat') }}', icon: '🥋' },

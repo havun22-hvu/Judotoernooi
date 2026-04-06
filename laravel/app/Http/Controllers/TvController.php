@@ -28,34 +28,6 @@ class TvController extends Controller
     }
 
     /**
-     * Poll endpoint — TV checkt of de code gekoppeld is.
-     */
-    public function poll(TvKoppeling $koppeling)
-    {
-        if ($koppeling->isExpired()) {
-            return response()->json(['status' => 'expired']);
-        }
-
-        if ($koppeling->isLinked()) {
-            $toernooi = $koppeling->toernooi;
-            $organisator = $toernooi->organisator;
-
-            $redirectUrl = route('mat.scoreboard-live', [
-                'organisator' => $organisator->slug,
-                'toernooi' => $toernooi->slug,
-                'mat' => $koppeling->mat_nummer,
-            ]);
-
-            return response()->json([
-                'status' => 'linked',
-                'redirect' => $redirectUrl,
-            ]);
-        }
-
-        return response()->json(['status' => 'waiting']);
-    }
-
-    /**
      * Link endpoint — organisator koppelt code aan mat.
      */
     public function link(Request $request)
@@ -65,6 +37,17 @@ class TvController extends Controller
             'toernooi_id' => 'required|exists:toernooien,id',
             'mat_nummer' => 'required|integer|min:1',
         ]);
+
+        // Authorization: user must own this toernooi
+        $toernooi = \App\Models\Toernooi::with('organisator')->findOrFail($request->toernooi_id);
+        $user = $request->user();
+
+        if (!$user || (!$user->is_sitebeheerder && $toernooi->organisator_id !== $user->organisator_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Geen toegang tot dit toernooi'),
+            ], 403);
+        }
 
         $koppeling = TvKoppeling::where('code', $request->code)
             ->where('expires_at', '>', now())
@@ -84,7 +67,6 @@ class TvController extends Controller
             'linked_at' => now(),
         ]);
 
-        $toernooi = $koppeling->toernooi;
         $toegang = $toernooi->deviceToegangen()
             ->where('rol', 'mat')
             ->where('mat_nummer', $request->mat_nummer)

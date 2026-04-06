@@ -641,30 +641,34 @@
         pusher.connection.bind('connected', () => console.log('[LCD] Reverb verbonden op kanaal:', channelName));
         pusher.connection.bind('error', (err) => console.error('[LCD] Reverb fout:', err));
 
+        function loadMatch(data, removeWinnerOverlay) {
+            if (removeWinnerOverlay) els.winnerOverlay.classList.remove('active');
+            els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+
+            document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
+            document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
+            document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
+            document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
+
+            matchDuration = data.match_duration || @js($toernooi->getMatchDuration());
+            timeRemaining = matchDuration;
+            isRunning = false;
+            isGoldenScore = false;
+            osaekomiActive = false;
+            osaekomiTimes = { wit: [], blauw: [] };
+            clearOsaekomiState();
+            renderOsaekomiTimes();
+            updateScores({
+                wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+                blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
+            });
+            updateTimerDisplay();
+        }
+
         function handleEvent(data) {
             switch (data.event) {
                 case 'match.start':
-                    els.winnerOverlay.classList.remove('active');
-                    els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
-
-                    document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
-                    document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
-                    document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
-                    document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
-
-                    matchDuration = data.match_duration || @js($toernooi->getMatchDuration());
-                    timeRemaining = matchDuration;
-                    isRunning = false;
-                    isGoldenScore = false;
-                    osaekomiActive = false;
-                    osaekomiTimes = { wit: [], blauw: [] };
-                    clearOsaekomiState();
-                    renderOsaekomiTimes();
-                    updateScores({
-                        wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
-                        blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
-                    });
-                    updateTimerDisplay();
+                    loadMatch(data, true);
                     break;
 
                 case 'timer.start':
@@ -750,24 +754,7 @@
                 case 'match.assign':
                     // Match assigned to mat (groen gezet) — prepare next match behind overlay
                     // Do NOT remove winner overlay here — it stays until match.start
-                    els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
-                    document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
-                    document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
-                    document.getElementById('blauw-naam').textContent = data.judoka_blauw?.naam || 'BLAUW';
-                    document.getElementById('blauw-club').textContent = data.judoka_blauw?.club || '';
-                    matchDuration = data.match_duration || @js($toernooi->getMatchDuration());
-                    timeRemaining = matchDuration;
-                    isRunning = false;
-                    isGoldenScore = false;
-                    osaekomiActive = false;
-                    osaekomiTimes = { wit: [], blauw: [] };
-                    clearOsaekomiState();
-                    renderOsaekomiTimes();
-                    updateScores({
-                        wit: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
-                        blauw: { yuko: 0, wazaari: 0, ippon: false, shido: 0 },
-                    });
-                    updateTimerDisplay();
+                    loadMatch(data, false);
                     break;
 
                 case 'match.unassign':

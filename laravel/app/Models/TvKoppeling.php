@@ -23,8 +23,19 @@ class TvKoppeling extends Model
 
     public static function generateCode(): string
     {
+        $attempts = 0;
+
         do {
             $code = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+
+            if (++$attempts > 50) {
+                // Clean up expired codes to free up space, then retry once
+                self::where('expires_at', '<', now())->delete();
+
+                if ($attempts > 100) {
+                    throw new \RuntimeException('Kan geen unieke TV-code genereren');
+                }
+            }
         } while (self::where('code', $code)->where('expires_at', '>', now())->exists());
 
         return $code;

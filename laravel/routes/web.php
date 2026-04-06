@@ -700,8 +700,7 @@ Route::get('cast/receiver', fn() => view('pages.cast.receiver'))->name('cast.rec
 
 // TV koppel systeem
 Route::get('tv', [\App\Http\Controllers\TvController::class, 'index'])->name('tv.koppel');
-Route::get('tv/poll/{koppeling}', [\App\Http\Controllers\TvController::class, 'poll'])->name('tv.poll');
-Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->name('tv.link');
+Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->middleware('auth')->name('tv.link');
 
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
 Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');
