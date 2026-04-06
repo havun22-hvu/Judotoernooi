@@ -136,12 +136,12 @@
                                  class="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <p class="text-sm font-medium text-gray-700 mb-2">{{ __('Koppel TV aan Mat') }} <span x-text="toegang.mat_nummer"></span></p>
                                 <p class="text-xs text-gray-500 mb-3">{{ __('Open') }} <strong>{{ url('/tv') }}</strong> {{ __('op de TV. Voer de code in die op het TV-scherm verschijnt:') }}</p>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2" x-data="{ tvCode: '' }">
                                     <input type="text" maxlength="4" placeholder="0000"
-                                           x-ref="tvcode"
+                                           x-model="tvCode"
                                            class="font-mono text-lg font-bold text-center w-24 border border-gray-300 rounded px-2 py-1.5 tracking-widest"
-                                           @keyup.enter="linkTv(toegang, $refs.tvcode.value)">
-                                    <button type="button" @click="linkTv(toegang, $refs.tvcode.value)"
+                                           @keyup.enter="linkTv(toegang, tvCode)">
+                                    <button type="button" @click="linkTv(toegang, tvCode)"
                                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium">{{ __('Koppel') }}</button>
                                     <span x-show="tvLinkStatus === 'success'" x-cloak class="text-green-600 text-sm font-medium">{{ __('Gekoppeld!') }}</span>
                                     <span x-show="tvLinkStatus === 'error'" x-cloak class="text-red-600 text-sm font-medium" x-text="tvLinkError"></span>
