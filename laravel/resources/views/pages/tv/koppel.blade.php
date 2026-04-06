@@ -105,6 +105,7 @@
             <p class="status waiting"><span class="spinner"></span> Wachten op koppeling...</p>
             <p class="hint">Ga op de laptop naar Instellingen → Organisatie → Device Toegangen → klik "Koppel TV" bij de juiste mat</p>
             <p class="countdown" id="countdown"></p>
+            <p class="hint" id="debug" style="margin-top: 2vh; color: #4B5563;"></p>
         </div>
 
         <div id="state-linked" style="display: none;">
@@ -147,9 +148,12 @@
 
         async function poll() {
             if (!polling) return;
+            const dbg = document.getElementById('debug');
             try {
+                dbg.textContent = 'Polling: ' + pollUrl;
                 const resp = await fetch(pollUrl);
                 const data = await resp.json();
+                dbg.textContent = 'Response: ' + JSON.stringify(data);
 
                 if (data.status === 'linked' && data.redirect) {
                     polling = false;
@@ -164,7 +168,7 @@
                     return;
                 }
             } catch (e) {
-                // Network error — keep polling
+                dbg.textContent = 'Error: ' + e.message;
             }
 
             setTimeout(poll, 3000);
