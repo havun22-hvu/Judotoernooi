@@ -1,3 +1,16 @@
+{{-- Google Cast SDK — moet vóór Alpine laden --}}
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script>
+window['__onGCastApiAvailable'] = function(isAvailable) {
+    if (isAvailable) {
+        cast.framework.CastContext.getInstance().setOptions({
+            receiverApplicationId: 'C11C3563',
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        });
+    }
+};
+</script>
+
 {{-- Device Toegangen Beheer --}}
 <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="deviceToegangen()">
     <div class="flex items-center justify-between mb-4 pb-2 border-b">
@@ -552,47 +565,25 @@ function deviceToegangen() {
         },
 
         castToTv(toegang) {
-            if (!window.castSession) {
-                // Start cast session
-                const castContext = cast.framework.CastContext.getInstance();
-                castContext.requestSession().then(() => {
-                    this.sendCastUrl(toegang);
-                }).catch((e) => {
-                    console.error('Cast session error:', e);
-                    alert('{{ __('Kon geen Chromecast vinden. Zorg dat de Chromecast op hetzelfde netwerk zit.') }}');
-                });
-            } else {
-                this.sendCastUrl(toegang);
+            if (typeof cast === 'undefined' || !cast.framework) {
+                alert('{{ __('Cast SDK nog niet geladen. Wacht even en probeer opnieuw.') }}');
+                return;
             }
-        },
-
-        sendCastUrl(toegang) {
-            const session = cast.framework.CastContext.getInstance().getCurrentSession();
-            if (!session) return;
-            window.castSession = session;
-
-            const lcdUrl = this.getLcdUrl(toegang);
-            const ns = 'urn:x-cast:judotoernooi';
-            session.sendMessage(ns, { url: lcdUrl }).then(() => {
-                this.copiedId = 'cast_' + toegang.id;
-                setTimeout(() => this.copiedId = null, 3000);
+            const castContext = cast.framework.CastContext.getInstance();
+            castContext.requestSession().then(() => {
+                const session = castContext.getCurrentSession();
+                if (!session) return;
+                const lcdUrl = this.getLcdUrl(toegang);
+                session.sendMessage('urn:x-cast:judotoernooi', { url: lcdUrl }).then(() => {
+                    this.copiedId = 'cast_' + toegang.id;
+                    setTimeout(() => this.copiedId = null, 3000);
+                }).catch((e) => console.error('Cast message error:', e));
             }).catch((e) => {
-                console.error('Cast message error:', e);
+                console.error('Cast session error:', e);
+                alert('{{ __('Kon geen Chromecast vinden. Zorg dat de Chromecast op hetzelfde netwerk zit.') }}');
             });
         },
     };
 }
 </script>
 
-{{-- Google Cast SDK --}}
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-<script>
-window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (isAvailable) {
-        cast.framework.CastContext.getInstance().setOptions({
-            receiverApplicationId: 'C11C3563',
-            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-        });
-    }
-};
-</script>
