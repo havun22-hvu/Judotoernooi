@@ -430,6 +430,13 @@
             </div>
         </div>
 
+        {{-- Fullscreen overlay — shown on load if not already fullscreen --}}
+        <div id="fullscreen-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; cursor:pointer; align-items:center; justify-content:center; flex-direction:column;"
+             onclick="goFullscreen()">
+            <div style="font-size:clamp(24px,5vh,48px); font-weight:800; color:#fff; margin-bottom:2vh;">JudoToernooi</div>
+            <div style="font-size:clamp(16px,3vh,32px); color:#9CA3AF;">{{ __('Klik voor volledig scherm') }}</div>
+        </div>
+
         {{-- Winner overlay --}}
         <div class="winner-overlay" id="winner-overlay">
             <div class="winner-name" id="winner-name"></div>
@@ -438,6 +445,27 @@
         </div>
     </div>
 
+    <script>
+    function goFullscreen() {
+        var el = document.documentElement;
+        var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (rfs) {
+            rfs.call(el).then(function() {
+                document.getElementById('fullscreen-overlay').style.display = 'none';
+            }).catch(function() {
+                // Fullscreen not supported — hide overlay anyway
+                document.getElementById('fullscreen-overlay').style.display = 'none';
+            });
+        } else {
+            document.getElementById('fullscreen-overlay').style.display = 'none';
+        }
+    }
+    // Show overlay only if not already fullscreen
+    if (!document.fullscreenElement && !window.navigator.standalone) {
+        var overlay = document.getElementById('fullscreen-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+    </script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     @php
         // Use config() not env() — env() returns null after config:cache
