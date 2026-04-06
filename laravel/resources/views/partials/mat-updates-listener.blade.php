@@ -8,10 +8,11 @@
 --}}
 
 @php
-    $reverbHost = config('reverb.apps.apps.0.options.host') ?? config('app.url');
-    $reverbPort = config('reverb.apps.apps.0.options.port') ?? 443;
-    $reverbKey = config('reverb.apps.apps.0.key') ?? env('REVERB_APP_KEY');
-    $reverbScheme = config('reverb.apps.apps.0.options.scheme') ?? 'https';
+    $appUrl = config('app.url', 'https://localhost');
+    $reverbHost = parse_url($appUrl, PHP_URL_HOST);
+    $reverbPort = parse_url($appUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80;
+    $reverbKey = config('reverb.apps.apps.0.key') ?? config('broadcasting.connections.reverb.key');
+    $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME) ?: 'https';
 @endphp
 
 <script>
