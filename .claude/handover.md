@@ -5,7 +5,51 @@
 
 ---
 
-## Laatste Sessie: 5 april 2026 (avond)
+## Laatste Sessie: 6 april 2026
+
+### Wat is gedaan:
+
+**TV Koppelsysteem — werkend op staging**
+- TV opent `havun.nl/tv` (11 tekens) → toont 4-cijferige code
+- Organisator voert code in bij device-toegangen → TV redirect via Reverb naar LCD scorebord
+- TvKoppeling model, TvController, TvLinked broadcast event
+- `havun.nl/tv` nginx redirect naar `staging.judotournament.org/tv`
+
+**Google Cast integratie — in progress**
+- Havun Google Cast Developer Console ($5, account havun22@gmail.com)
+- Application ID: C11C3563 (Custom Receiver, unpublished)
+- Test device: 26111HFDD5F9AN "Chromecast Henk"
+- Cast Receiver pagina: `/cast/receiver` (iframe die LCD URL laadt)
+- Cast knop op device-toegangen pagina (paars)
+- CSP fix: `www.gstatic.com` in script-src + connect-src
+- **Probleem:** `requestSession()` geeft "invalid_parameter" — waarschijnlijk moet test device registratie 24u propageren
+- **Morgen testen** of het werkt na 24u
+
+**LCD scorebord**
+- Auto-fullscreen overlay toegevoegd voor TV browsers met toolbar
+
+**Overige UI fixes**
+- Emoji's → SVG in nog meer views
+- Blokken: regenboog knoppen → uniform blauw
+- Scorebord instelling: radio buttons
+- Publieke app: positienummers → bandkleur
+
+### Openstaande items:
+- [ ] Chromecast Cast testen (na 24u test device propagatie)
+- [ ] Als Cast niet werkt: app publishen in Google Console
+- [ ] `havun.nl/tv` redirect wijzigen naar production bij go-live
+- [ ] Docs: TV/LCD setup handleiding voor organisatoren
+- [ ] Deploy alles naar production na goedkeuring
+
+### Belangrijke context:
+- Deco mesh: Smart DHCP was uitgeschakeld, check of netwerk nu goed werkt
+- Cast SDK werkt alleen in Chrome browser
+- TV code koppeling werkt via Reverb (geen polling!)
+- CLAUDE.md regel toegevoegd: NOOIT polling, ALTIJD Reverb
+
+---
+
+## Vorige Sessie: 5 april 2026 (avond)
 
 ### Wat is gedaan:
 
