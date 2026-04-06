@@ -127,6 +127,8 @@
         const pollUrl = '{{ route('tv.poll', ['koppeling' => $koppelingId]) }}';
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
         let polling = true;
+        const dbg = document.getElementById('debug');
+        if (dbg) dbg.textContent = 'JS geladen. Poll URL: ' + pollUrl;
 
         function updateCountdown() {
             const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
