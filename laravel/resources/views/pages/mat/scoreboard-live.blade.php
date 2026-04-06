@@ -302,7 +302,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.95);
             z-index: 50;
             align-items: center;
             justify-content: center;
