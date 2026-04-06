@@ -111,6 +111,8 @@
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
                                                 <button type="button" @click="showTvLink = showTvLink === toegang.id ? null : toegang.id"
                                                         class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">{{ __('Koppel TV') }}</button>
+                                                <button type="button" @click="castToTv(toegang)"
+                                                        class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-xs" id="castBtn">{{ __('Cast') }}</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -548,6 +550,49 @@ function deviceToegangen() {
                 this.tvLinkError = '{{ __('Netwerkfout') }}';
             }
         },
+
+        castToTv(toegang) {
+            if (!window.castSession) {
+                // Start cast session
+                const castContext = cast.framework.CastContext.getInstance();
+                castContext.requestSession().then(() => {
+                    this.sendCastUrl(toegang);
+                }).catch((e) => {
+                    console.error('Cast session error:', e);
+                    alert('{{ __('Kon geen Chromecast vinden. Zorg dat de Chromecast op hetzelfde netwerk zit.') }}');
+                });
+            } else {
+                this.sendCastUrl(toegang);
+            }
+        },
+
+        sendCastUrl(toegang) {
+            const session = cast.framework.CastContext.getInstance().getCurrentSession();
+            if (!session) return;
+            window.castSession = session;
+
+            const lcdUrl = this.getLcdUrl(toegang);
+            const ns = 'urn:x-cast:judotoernooi';
+            session.sendMessage(ns, { url: lcdUrl }).then(() => {
+                this.copiedId = 'cast_' + toegang.id;
+                setTimeout(() => this.copiedId = null, 3000);
+            }).catch((e) => {
+                console.error('Cast message error:', e);
+            });
+        },
     };
 }
+</script>
+
+{{-- Google Cast SDK --}}
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script>
+window['__onGCastApiAvailable'] = function(isAvailable) {
+    if (isAvailable) {
+        cast.framework.CastContext.getInstance().setOptions({
+            receiverApplicationId: 'C11C3563',
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        });
+    }
+};
 </script>
