@@ -109,6 +109,8 @@
                                                 </button>
                                                 <button type="button" @click="showQr = showQr === 'lcd_' + toegang.id ? null : 'lcd_' + toegang.id; qrUrl = '{{ url('/tv') }}/' + (toegang.code ? toegang.code.substring(0, 4) : '')"
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
+                                                <button type="button" @click="showTvLink = showTvLink === toegang.id ? null : toegang.id"
+                                                        class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">{{ __('Koppel TV') }}</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -128,6 +130,22 @@
                                     </button>
                                 </div>
                                 <p class="text-xs text-gray-400 mt-2">{{ __('Scan met telefoon of open op de TV browser') }}</p>
+                            </div>
+                            {{-- TV Koppel popup --}}
+                            <div x-show="showTvLink === toegang.id" x-cloak
+                                 class="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm font-medium text-gray-700 mb-2">{{ __('Koppel TV aan Mat') }} <span x-text="toegang.mat_nummer"></span></p>
+                                <p class="text-xs text-gray-500 mb-3">{{ __('Open') }} <strong>{{ url('/tv') }}</strong> {{ __('op de TV. Voer de code in die op het TV-scherm verschijnt:') }}</p>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" maxlength="4" placeholder="0000"
+                                           x-ref="tvcode"
+                                           class="font-mono text-lg font-bold text-center w-24 border border-gray-300 rounded px-2 py-1.5 tracking-widest"
+                                           @keyup.enter="linkTv(toegang, $refs.tvcode.value)">
+                                    <button type="button" @click="linkTv(toegang, $refs.tvcode.value)"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium">{{ __('Koppel') }}</button>
+                                    <span x-show="tvLinkStatus === 'success'" x-cloak class="text-green-600 text-sm font-medium">{{ __('Gekoppeld!') }}</span>
+                                    <span x-show="tvLinkStatus === 'error'" x-cloak class="text-red-600 text-sm font-medium" x-text="tvLinkError"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -244,6 +262,9 @@ function deviceToegangen() {
         savedId: null,
         showQr: null,
         qrUrl: '',
+        showTvLink: null,
+        tvLinkStatus: null,
+        tvLinkError: '',
         toegangen: [],
         vrijwilligers: [],
         showVrijwilligersModal: false,
@@ -489,6 +510,43 @@ function deviceToegangen() {
             navigator.clipboard.writeText(toegang.pincode);
             this.copiedId = 'pin_' + toegang.id;
             setTimeout(() => this.copiedId = null, 2000);
+        },
+
+        async linkTv(toegang, code) {
+            if (!code || code.length !== 4) {
+                this.tvLinkStatus = 'error';
+                this.tvLinkError = '{{ __('Voer een 4-cijferige code in') }}';
+                return;
+            }
+            this.tvLinkStatus = null;
+            this.tvLinkError = '';
+            try {
+                const response = await fetch('{{ route('tv.link') }}', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        toernooi_id: {{ $toernooi->id }},
+                        mat_nummer: toegang.mat_nummer,
+                    }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.tvLinkStatus = 'success';
+                    setTimeout(() => { this.showTvLink = null; this.tvLinkStatus = null; }, 3000);
+                } else {
+                    this.tvLinkStatus = 'error';
+                    this.tvLinkError = data.message || '{{ __('Koppeling mislukt') }}';
+                }
+            } catch (e) {
+                this.tvLinkStatus = 'error';
+                this.tvLinkError = '{{ __('Netwerkfout') }}';
+            }
         },
     };
 }

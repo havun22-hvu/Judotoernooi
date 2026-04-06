@@ -695,6 +695,11 @@ Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController:
 // Scoreboard state API — used by inline scoreboard tab in public app
 Route::get('{organisator}/{toernooi}/live/scorebord/{mat}/state', [MatController::class, 'scoreboardState'])->name('publiek.scorebord.state');
 
+// TV koppel systeem
+Route::get('tv', [\App\Http\Controllers\TvController::class, 'index'])->name('tv.koppel');
+Route::get('tv/poll/{koppeling}', [\App\Http\Controllers\TvController::class, 'poll'])->name('tv.poll');
+Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->name('tv.link');
+
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
 Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');
 
