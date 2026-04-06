@@ -85,11 +85,18 @@ class TvController extends Controller
         ]);
 
         $toernooi = $koppeling->toernooi;
-        $redirectUrl = route('mat.scoreboard-live', [
-            'organisator' => $toernooi->organisator->slug,
-            'toernooi' => $toernooi->slug,
-            'mat' => $request->mat_nummer,
-        ]);
+        $toegang = $toernooi->deviceToegangen()
+            ->where('rol', 'mat')
+            ->where('mat_nummer', $request->mat_nummer)
+            ->first();
+
+        $redirectUrl = $toegang
+            ? url('/tv/' . substr($toegang->code, 0, 4))
+            : route('mat.scoreboard-live', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'mat' => $request->mat_nummer,
+            ]);
 
         \App\Events\TvLinked::dispatch($koppeling->code, $redirectUrl);
 
