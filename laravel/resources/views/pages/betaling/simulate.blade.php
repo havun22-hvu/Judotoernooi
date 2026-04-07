@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Betaling Simulatie') }} - iDEAL</title>
+    <title>{{ __('Betaling Simulatie') }} - iDEAL | Wero</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
@@ -12,7 +12,7 @@
             <!-- iDEAL-achtige header -->
             <div class="bg-gradient-to-r from-pink-500 to-pink-600 p-6 text-white">
                 <div class="flex items-center justify-between">
-                    <div class="text-2xl font-bold">iDEAL</div>
+                    <div class="text-2xl font-bold">iDEAL | Wero</div>
                     <div class="text-sm opacity-75">{{ __('Simulatie') }}</div>
                 </div>
             </div>

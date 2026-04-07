@@ -207,7 +207,7 @@
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Betaling (optioneel)') }}</h4>
                 <p>{!! __('Koppel je eigen <strong>Mollie account</strong> bij Toernooi Bewerken. Betalingen gaan direct naar jouw rekening.') !!}</p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>{{ __('Betaling via iDEAL, creditcard, etc.') }}</li>
+                    <li>{{ __('Betaling via iDEAL | Wero, creditcard, etc.') }}</li>
                     <li>{{ __('Automatische bevestigingsmail naar coach') }}</li>
                     <li>{{ __('Inschrijfgeld per judoka instelbaar') }}</li>
                 </ul>
