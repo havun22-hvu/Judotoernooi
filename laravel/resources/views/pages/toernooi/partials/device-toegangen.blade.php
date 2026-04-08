@@ -556,7 +556,10 @@ function deviceToegangen() {
             if (this._castInitialized) return true;
             if (typeof cast === 'undefined' || !cast.framework) return false;
             try {
-                cast.framework.CastContext.getInstance().setOptions(window._castOptions);
+                cast.framework.CastContext.getInstance().setOptions({
+                    receiverApplicationId: window._castAppId,
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+                });
                 this._castInitialized = true;
                 return true;
             } catch (e) {
@@ -594,15 +597,15 @@ function deviceToegangen() {
 @push('scripts')
 <script>
 // Shared Cast config — used by both __onGCastApiAvailable callback and _initCast() fallback
-window._castOptions = {
-    receiverApplicationId: 'C11C3563',
-    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-};
+window._castAppId = 'C11C3563';
 // Define callback BEFORE loading Cast SDK to avoid race condition
 window['__onGCastApiAvailable'] = function(isAvailable) {
     if (isAvailable) {
         try {
-            cast.framework.CastContext.getInstance().setOptions(window._castOptions);
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: window._castAppId,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+            });
         } catch (e) {
             console.error('[Cast] Callback init error:', e);
         }
