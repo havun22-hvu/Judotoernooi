@@ -550,22 +550,47 @@ function deviceToegangen() {
             }
         },
 
+        _castInitialized: false,
+
+        _initCast() {
+            if (this._castInitialized) return true;
+            if (typeof cast === 'undefined' || !cast.framework) return false;
+            try {
+                cast.framework.CastContext.getInstance().setOptions({
+                    receiverApplicationId: 'C11C3563',
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+                });
+                this._castInitialized = true;
+                console.log('[Cast] SDK geconfigureerd met app ID C11C3563');
+                return true;
+            } catch (e) {
+                console.error('[Cast] Init error:', e);
+                return false;
+            }
+        },
+
         castToTv(toegang) {
-            if (typeof cast === 'undefined' || !cast.framework) {
+            if (!this._initCast()) {
                 alert('{{ __('Cast SDK nog niet geladen. Wacht even en probeer opnieuw.') }}');
                 return;
             }
             const castContext = cast.framework.CastContext.getInstance();
+            console.log('[Cast] requestSession starten...');
             castContext.requestSession().then(() => {
                 const session = castContext.getCurrentSession();
-                if (!session) return;
+                if (!session) {
+                    console.error('[Cast] Geen sessie na requestSession');
+                    return;
+                }
                 const lcdUrl = this.getLcdUrl(toegang);
+                console.log('[Cast] Stuur URL naar receiver:', lcdUrl);
                 session.sendMessage('urn:x-cast:judotoernooi', { url: lcdUrl }).then(() => {
+                    console.log('[Cast] URL succesvol verstuurd');
                     this.copiedId = 'cast_' + toegang.id;
                     setTimeout(() => this.copiedId = null, 3000);
-                }).catch((e) => console.error('Cast message error:', e));
+                }).catch((e) => console.error('[Cast] Message error:', e));
             }).catch((e) => {
-                console.error('Cast session error:', e);
+                console.error('[Cast] Session error:', e);
                 alert('{{ __('Kon geen Chromecast vinden. Zorg dat de Chromecast op hetzelfde netwerk zit.') }}');
             });
         },
@@ -574,16 +599,22 @@ function deviceToegangen() {
 </script>
 
 @push('scripts')
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 <script>
+// Define callback BEFORE loading Cast SDK to avoid race condition
 window['__onGCastApiAvailable'] = function(isAvailable) {
+    console.log('[Cast] __onGCastApiAvailable called, isAvailable:', isAvailable);
     if (isAvailable) {
-        cast.framework.CastContext.getInstance().setOptions({
-            receiverApplicationId: 'C11C3563',
-            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-        });
-        console.log('[Cast] SDK geladen en geconfigureerd');
+        try {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: 'C11C3563',
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+            });
+            console.log('[Cast] SDK geladen en geconfigureerd via callback');
+        } catch (e) {
+            console.error('[Cast] Callback init error:', e);
+        }
     }
 };
 </script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 @endpush
