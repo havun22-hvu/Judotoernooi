@@ -102,6 +102,7 @@ return new class extends Migration
 
                     // Betaling
                     $table->foreignId('betaling_id')->nullable()->constrained('betalingen')->nullOnDelete();
+                    $table->timestamp('betaald_op')->nullable();
 
                     // Overpouled
                     $table->foreignId('overpouled_van_poule_id')->nullable();

@@ -16,11 +16,11 @@ class OrganisatorFactory extends Factory
 
     public function definition(): array
     {
-        $naam = fake()->company();
+        $naam = fake()->unique()->company();
 
         return [
             'naam' => $naam,
-            'slug' => Str::slug($naam),
+            'slug' => Str::slug($naam) . '-' . Str::random(5),
             'email' => fake()->unique()->safeEmail(),
             'telefoon' => fake()->phoneNumber(),
             'password' => Hash::make('password'),

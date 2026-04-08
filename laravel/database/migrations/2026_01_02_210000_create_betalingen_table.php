@@ -31,7 +31,10 @@ return new class extends Migration
         Schema::table('judokas', function (Blueprint $table) {
             $table->foreignId('betaling_id')->nullable()->after('synced_at')
                 ->constrained('betalingen')->nullOnDelete();
-            $table->timestamp('betaald_op')->nullable()->after('betaling_id');
+        });
+
+        Schema::table('judokas', function (Blueprint $table) {
+            $table->timestamp('betaald_op')->nullable();
         });
     }
 

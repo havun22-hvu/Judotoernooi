@@ -23,11 +23,12 @@ class ToernooiFactory extends Factory
             'Open Toernooi',
             'Jeugdtoernooi',
         ]) . ' ' . fake()->year();
+        $slug = Str::slug($naam) . '-' . fake()->unique()->randomNumber(5);
 
         return [
             'organisator_id' => Organisator::factory(),
             'naam' => $naam,
-            'slug' => Str::slug($naam),
+            'slug' => $slug,
             'organisatie' => fake()->company(),
             'datum' => fake()->dateTimeBetween('+1 week', '+3 months'),
             'locatie' => fake()->city() . ' Sporthal',
