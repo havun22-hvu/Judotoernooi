@@ -5,7 +5,19 @@
 
 ---
 
-## Laatste Sessie: 8-9 april 2026
+## Laatste Sessie: 9 april 2026
+
+### Wat is gedaan:
+
+**AutoFix emails uitgeschakeld**
+- 4 notification methods (success, failure, dry-run, notify-only) sturen geen emails meer
+- Alleen logging naar Laravel log, proposals zichtbaar in admin panel `/admin/autofix`
+- Ongebruikte Mail import verwijderd uit AutoFixService
+- Deployed naar staging + production
+
+---
+
+## Vorige Sessie: 8-9 april 2026
 
 ### Wat is gedaan:
 
