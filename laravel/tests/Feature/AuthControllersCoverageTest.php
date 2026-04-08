@@ -20,8 +20,8 @@ class AuthControllersCoverageTest extends TestCase
     use RefreshDatabase;
 
     private const TEST_PASSWORD = 'TestPassword123!';
-    private const TEST_NEW_PW = self::TEST_NEW_PW;
-    private const TEST_RESET_PW = self::TEST_RESET_PW;
+    private const TEST_NEW_PW = 'test-new-pw';
+    private const TEST_RESET_PW = 'test-reset-pw';
     private const FINGERPRINT = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
     private Organisator $organisator;
