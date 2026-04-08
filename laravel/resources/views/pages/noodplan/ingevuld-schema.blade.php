@@ -236,6 +236,7 @@
 
 @php
 // Helper functie voor slimme club afkorting
+if (!function_exists('abbreviateClubName')) {
 function abbreviateClubName($name, $maxLength = 15) {
     if (!$name || strlen($name) <= $maxLength) {
         return $name ?? '-';
@@ -259,6 +260,7 @@ function abbreviateClubName($name, $maxLength = 15) {
     }
     return $abbreviated;
 }
+} // end function_exists check
 @endphp
 
 @php

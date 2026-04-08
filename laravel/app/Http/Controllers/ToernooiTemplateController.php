@@ -13,7 +13,7 @@ class ToernooiTemplateController extends Controller
     /**
      * List all templates for the logged-in organisator
      */
-    public function index(): JsonResponse
+    public function index(Organisator $organisator): JsonResponse
     {
         $organisator = auth('organisator')->user();
 
@@ -124,7 +124,7 @@ class ToernooiTemplateController extends Controller
     /**
      * Delete a template
      */
-    public function destroy(ToernooiTemplate $template): JsonResponse
+    public function destroy(Organisator $organisator, ToernooiTemplate $template): JsonResponse
     {
         $organisator = auth('organisator')->user();
 
@@ -144,7 +144,7 @@ class ToernooiTemplateController extends Controller
     /**
      * Get a single template
      */
-    public function show(ToernooiTemplate $template): JsonResponse
+    public function show(Organisator $organisator, ToernooiTemplate $template): JsonResponse
     {
         $organisator = auth('organisator')->user();
 

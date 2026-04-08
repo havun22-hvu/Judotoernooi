@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GewichtsklassenPreset;
+use App\Models\Organisator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,7 @@ class GewichtsklassenPresetController extends Controller
     /**
      * Get all presets for the authenticated organisator.
      */
-    public function index(): JsonResponse
+    public function index(Organisator $organisator): JsonResponse
     {
         $presets = GewichtsklassenPreset::where('organisator_id', Auth::guard('organisator')->id())
             ->orderBy('naam')
@@ -24,7 +25,7 @@ class GewichtsklassenPresetController extends Controller
     /**
      * Store a new preset.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Organisator $organisator, Request $request): JsonResponse
     {
         $validated = $request->validate([
             'naam' => 'required|string|max:100',
@@ -69,7 +70,7 @@ class GewichtsklassenPresetController extends Controller
     /**
      * Delete a preset.
      */
-    public function destroy(GewichtsklassenPreset $preset): JsonResponse
+    public function destroy(Organisator $organisator, GewichtsklassenPreset $preset): JsonResponse
     {
         // Check ownership
         if ($preset->organisator_id !== Auth::guard('organisator')->id()) {
