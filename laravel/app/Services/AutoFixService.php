@@ -2,12 +2,10 @@
 
 namespace App\Services;
 
-use App\Mail\AutoFixProposalMail;
 use App\Models\AutofixProposal;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -571,86 +569,28 @@ class AutoFixService
     }
 
     /**
-     * Send success notification email after fix applied.
+     * Log success notification (visible in admin panel via autofix_proposals table).
      */
     protected function sendSuccessNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal, int $attempt): void
     {
-        $email = config('autofix.email');
-        if (!$email) {
-            return;
-        }
-
-        try {
-            $body = "[AutoFix OK] Fix automatisch toegepast (poging {$attempt})\n\n"
-                . "Exception: " . get_class($e) . "\n"
-                . "Message: " . $e->getMessage() . "\n"
-                . "File: {$file}:{$line}\n"
-                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
-                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
-                . "--- Claude's analyse ---\n"
-                . Str::limit($proposal->claude_analysis, 500) . "\n\n"
-                . "Backup: {$file}.autofix-backup." . date('YmdHis');
-
-            Mail::raw($body, function ($message) use ($email, $e) {
-                $message->to($email)
-                    ->subject('[AutoFix OK] ' . class_basename(get_class($e)) . ' - fix toegepast');
-            });
-
-            $proposal->update(['email_sent_at' => now()]);
-
-        } catch (Throwable $mailError) {
-            Log::warning('AutoFix: Success notification email failed', [
-                'error' => $mailError->getMessage(),
-            ]);
-        }
+        Log::info('AutoFix: Fix toegepast', [
+            'exception' => get_class($e),
+            'file' => "{$file}:{$line}",
+            'attempt' => $attempt,
+            'proposal_id' => $proposal->id,
+        ]);
     }
 
     /**
-     * Send failure notification email after all attempts exhausted.
+     * Log failure notification (visible in admin panel via autofix_proposals table).
      */
     protected function sendFailureNotification(Throwable $e, string $file, int $line): void
     {
-        $email = config('autofix.email');
-        if (!$email) {
-            return;
-        }
-
-        // Get the most recent proposals for this error
-        $proposals = AutofixProposal::where('exception_class', get_class($e))
-            ->where('file', $file)
-            ->where('line', $line)
-            ->where('status', 'failed')
-            ->latest()
-            ->take(self::MAX_ATTEMPTS)
-            ->get();
-
-        try {
-            if ($proposals->isNotEmpty()) {
-                Mail::to($email)->send(new AutoFixProposalMail($proposals->first(), $proposals));
-
-                foreach ($proposals as $proposal) {
-                    $proposal->update(['email_sent_at' => now()]);
-                }
-            } else {
-                // No proposals created (Claude API unreachable) - send plain text notification
-                $body = "[AutoFix] Could not analyze error - AI Proxy unreachable\n\n"
-                    . "Exception: " . get_class($e) . "\n"
-                    . "Message: " . $e->getMessage() . "\n"
-                    . "File: {$file}:{$line}\n"
-                    . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
-                    . "Time: " . now()->format('d-m-Y H:i:s');
-
-                Mail::raw($body, function ($message) use ($email, $e) {
-                    $message->to($email)
-                        ->subject('[AutoFix] AI Proxy onbereikbaar - ' . class_basename(get_class($e)));
-                });
-            }
-
-        } catch (Throwable $mailError) {
-            Log::warning('AutoFix: Failure notification email failed', [
-                'error' => $mailError->getMessage(),
-            ]);
-        }
+        Log::warning('AutoFix: Fix gefaald na alle pogingen', [
+            'exception' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => "{$file}:{$line}",
+        ]);
     }
 
     /**
@@ -668,51 +608,17 @@ class AutoFixService
     }
 
     /**
-     * Send notification for dry-run (risk too high for auto-fix).
+     * Log dry-run notification (visible in admin panel via autofix_proposals table).
      */
     protected function sendDryRunNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal): void
     {
-        $email = config('autofix.email');
-        if (!$email) {
-            return;
-        }
-
-        try {
-            $risk = $this->extractRisk($proposal->claude_analysis);
-            $analysisText = $proposal->claude_analysis;
-            if (preg_match('/ANALYSIS:\s*(.+?)(?:\n\n|$)/s', $analysisText, $match)) {
-                $analysisText = trim($match[1]);
-            }
-
-            $reviewUrl = config('app.url') . '/autofix/' . $proposal->approval_token;
-
-            $body = "[AutoFix] DRY-RUN - Risk '{$risk}' te hoog voor auto-fix\n\n"
-                . "Exception: " . get_class($e) . "\n"
-                . "Message: " . $e->getMessage() . "\n"
-                . "File: {$file}:{$line}\n"
-                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
-                . "Risk: {$risk}\n"
-                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
-                . "--- Claude's analyse ---\n"
-                . $analysisText . "\n\n"
-                . "--- Voorgestelde fix ---\n"
-                . Str::limit($proposal->claude_analysis, 1000) . "\n\n"
-                . "Review: {$reviewUrl}\n\n"
-                . "Deze fix is NIET automatisch toegepast vanwege het risico-niveau. "
-                . "Bekijk de fix en pas handmatig toe als correct.";
-
-            Mail::raw($body, function ($message) use ($email, $e, $risk) {
-                $message->to($email)
-                    ->subject("[AutoFix DRY-RUN] Risk: {$risk} - " . class_basename(get_class($e)));
-            });
-
-            $proposal->update(['email_sent_at' => now()]);
-
-        } catch (Throwable $mailError) {
-            Log::warning('AutoFix: Dry-run notification email failed', [
-                'error' => $mailError->getMessage(),
-            ]);
-        }
+        Log::warning('AutoFix: DRY-RUN — risico te hoog voor auto-fix', [
+            'exception' => get_class($e),
+            'file' => "{$file}:{$line}",
+            'risk' => $this->extractRisk($proposal->claude_analysis),
+            'proposal_id' => $proposal->id,
+            'review_url' => config('app.url') . '/autofix/' . $proposal->approval_token,
+        ]);
     }
 
     /**
@@ -724,45 +630,16 @@ class AutoFixService
     }
 
     /**
-     * Send notification email when Claude determines no code fix is possible.
+     * Log notify-only notification (visible in admin panel via autofix_proposals table).
      */
     protected function sendNotifyOnlyNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal): void
     {
-        $email = config('autofix.email');
-        if (!$email) {
-            return;
-        }
-
-        try {
-            // Extract analysis from Claude's response
-            $analysisText = $proposal->claude_analysis;
-            if (preg_match('/ANALYSIS:\s*(.+?)(?:\n\n|$)/s', $analysisText, $match)) {
-                $analysisText = trim($match[1]);
-            }
-
-            $body = "[AutoFix] Handmatige actie nodig - geen code fix mogelijk\n\n"
-                . "Exception: " . get_class($e) . "\n"
-                . "Message: " . $e->getMessage() . "\n"
-                . "File: {$file}:{$line}\n"
-                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
-                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
-                . "--- Claude's analyse ---\n"
-                . $analysisText . "\n\n"
-                . "Dit probleem kan niet automatisch opgelost worden. "
-                . "Waarschijnlijk is een migration, schema wijziging, of handmatige interventie nodig.";
-
-            Mail::raw($body, function ($message) use ($email, $e) {
-                $message->to($email)
-                    ->subject('[AutoFix] Handmatige actie nodig - ' . class_basename(get_class($e)));
-            });
-
-            $proposal->update(['email_sent_at' => now()]);
-
-        } catch (Throwable $mailError) {
-            Log::warning('AutoFix: NOTIFY_ONLY email failed', [
-                'error' => $mailError->getMessage(),
-            ]);
-        }
+        Log::warning('AutoFix: Handmatige actie nodig — geen code fix mogelijk', [
+            'exception' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => "{$file}:{$line}",
+            'proposal_id' => $proposal->id,
+        ]);
     }
 
     /**
