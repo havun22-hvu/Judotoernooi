@@ -80,8 +80,6 @@ class SimpleModelsCoverageTest extends TestCase
     #[Test]
     public function activity_log_get_actie_naam_attribute_known_actions(): void
     {
-        $toernooi = Toernooi::factory()->create();
-
         $knownActions = [
             'verplaats_judoka' => 'Verplaats judoka',
             'nieuwe_judoka' => 'Nieuwe judoka',
@@ -109,11 +107,7 @@ class SimpleModelsCoverageTest extends TestCase
         ];
 
         foreach ($knownActions as $actie => $expected) {
-            $log = ActivityLog::create([
-                'toernooi_id' => $toernooi->id,
-                'actie' => $actie,
-                'beschrijving' => 'Test',
-            ]);
+            $log = new ActivityLog(['actie' => $actie]);
             $this->assertEquals($expected, $log->actie_naam, "Failed for action: $actie");
         }
     }

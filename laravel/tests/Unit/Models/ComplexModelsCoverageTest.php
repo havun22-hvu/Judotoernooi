@@ -276,9 +276,10 @@ class ComplexModelsCoverageTest extends TestCase
         $token = QrLoginToken::generate(['browser' => 'Chrome']);
         $token->approve($approver);
 
-        $this->assertInstanceOf(Organisator::class, $token->fresh()->organisator);
-        $this->assertInstanceOf(Organisator::class, $token->fresh()->approvedBy);
-        $this->assertEquals($approver->id, $token->fresh()->approvedBy->id);
+        $fresh = $token->fresh();
+        $this->assertInstanceOf(Organisator::class, $fresh->organisator);
+        $this->assertInstanceOf(Organisator::class, $fresh->approvedBy);
+        $this->assertEquals($approver->id, $fresh->approvedBy->id);
     }
 
     #[Test]
