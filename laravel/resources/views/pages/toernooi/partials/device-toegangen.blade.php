@@ -556,12 +556,8 @@ function deviceToegangen() {
             if (this._castInitialized) return true;
             if (typeof cast === 'undefined' || !cast.framework) return false;
             try {
-                cast.framework.CastContext.getInstance().setOptions({
-                    receiverApplicationId: 'C11C3563',
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-                });
+                cast.framework.CastContext.getInstance().setOptions(window._castOptions);
                 this._castInitialized = true;
-                console.log('[Cast] SDK geconfigureerd met app ID C11C3563');
                 return true;
             } catch (e) {
                 console.error('[Cast] Init error:', e);
@@ -575,7 +571,6 @@ function deviceToegangen() {
                 return;
             }
             const castContext = cast.framework.CastContext.getInstance();
-            console.log('[Cast] requestSession starten...');
             castContext.requestSession().then(() => {
                 const session = castContext.getCurrentSession();
                 if (!session) {
@@ -583,9 +578,7 @@ function deviceToegangen() {
                     return;
                 }
                 const lcdUrl = this.getLcdUrl(toegang);
-                console.log('[Cast] Stuur URL naar receiver:', lcdUrl);
                 session.sendMessage('urn:x-cast:judotoernooi', { url: lcdUrl }).then(() => {
-                    console.log('[Cast] URL succesvol verstuurd');
                     this.copiedId = 'cast_' + toegang.id;
                     setTimeout(() => this.copiedId = null, 3000);
                 }).catch((e) => console.error('[Cast] Message error:', e));
@@ -600,16 +593,16 @@ function deviceToegangen() {
 
 @push('scripts')
 <script>
+// Shared Cast config — used by both __onGCastApiAvailable callback and _initCast() fallback
+window._castOptions = {
+    receiverApplicationId: 'C11C3563',
+    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+};
 // Define callback BEFORE loading Cast SDK to avoid race condition
 window['__onGCastApiAvailable'] = function(isAvailable) {
-    console.log('[Cast] __onGCastApiAvailable called, isAvailable:', isAvailable);
     if (isAvailable) {
         try {
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: 'C11C3563',
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-            });
-            console.log('[Cast] SDK geladen en geconfigureerd via callback');
+            cast.framework.CastContext.getInstance().setOptions(window._castOptions);
         } catch (e) {
             console.error('[Cast] Callback init error:', e);
         }
