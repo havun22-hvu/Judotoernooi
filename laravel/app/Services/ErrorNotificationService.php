@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 /**
@@ -33,13 +32,8 @@ class ErrorNotificationService
 
         $data = $this->formatExceptionData($e, $context);
 
-        // Log critical errors
+        // Log critical errors (visible in Laravel log + admin panel)
         Log::error('Critical exception notification', $data);
-
-        // Optional: Send email notification
-        if ($this->adminEmail && config('app.env') === 'production') {
-            $this->sendEmailNotification($e, $data);
-        }
     }
 
     /**
@@ -80,36 +74,4 @@ class ErrorNotificationService
         ];
     }
 
-    protected function sendEmailNotification(Throwable $e, array $data): void
-    {
-        try {
-            Mail::raw(
-                $this->formatEmailBody($e, $data),
-                function ($message) use ($e) {
-                    $message->to($this->adminEmail)
-                        ->subject('[JudoToernooi] Critical Error: ' . substr($e->getMessage(), 0, 50));
-                }
-            );
-        } catch (Throwable $mailError) {
-            // Don't let mail failures break error handling
-            Log::warning('Failed to send error notification email', [
-                'error' => $mailError->getMessage(),
-            ]);
-        }
-    }
-
-    protected function formatEmailBody(Throwable $e, array $data): string
-    {
-        return implode("\n", [
-            'Exception: ' . get_class($e),
-            'Message: ' . $e->getMessage(),
-            'File: ' . $e->getFile() . ':' . $e->getLine(),
-            '',
-            'Context:',
-            json_encode($data['context'] ?? [], JSON_PRETTY_PRINT),
-            '',
-            'Timestamp: ' . $data['timestamp'],
-            'Environment: ' . $data['environment'],
-        ]);
-    }
 }
