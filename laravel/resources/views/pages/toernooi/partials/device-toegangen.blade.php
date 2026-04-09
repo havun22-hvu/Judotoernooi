@@ -605,7 +605,7 @@ function deviceToegangen() {
 
 @push('scripts')
 <script>
-window._castAppId = 'C11C3563';
+window._castAppId = '47CF3728';
 window._castAvailable = false;
 
 window['__onGCastApiAvailable'] = function(isAvailable) {
