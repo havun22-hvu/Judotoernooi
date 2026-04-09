@@ -1,40 +1,45 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 9 april 2026
+> **Laatste update:** 10 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
-## Laatste Sessie: 9 april 2026 (avond)
+## Laatste Sessie: 9-10 april 2026
 
 ### Wat is gedaan:
 
 **Security patches**
 - 5 PHP kwetsbaarheden gepatcht: league/commonmark, symfony/process, phpunit, psysh
 
-**ErrorNotificationService → admin panel**
-- Email verwijderd (Brevo credits op, was enige SMTP provider)
-- Errors worden nu opgeslagen in `autofix_proposals` tabel met status `error`
-- Zichtbaar op `/admin/autofix` met oranje badge naast AutoFix proposals
+**Email notificaties → admin panel**
+- AutoFixService: 4 notification methods sturen geen emails meer, alleen logging
+- ErrorNotificationService: email verwijderd, errors nu opgeslagen in `autofix_proposals` tabel met status `error`
+- Zichtbaar op `/admin/autofix` met oranje badge
 - Migratie: `error`, `notify_only`, `dry_run` statussen toegevoegd aan enum
 
-**AutoFix emails uitgeschakeld (eerdere sessie vandaag)**
-- 4 notification methods sturen geen emails meer, alleen logging
+**Chromecast debugging**
+- Root cause gevonden: account mismatch (Developer Console havun22, device henkvu)
+- Nieuwe Developer Console aangemaakt op **henkvu@gmail.com**
+- **Nieuw App ID: `47CF3728`** (was `C11C3563` op havun22)
+- Cast diagnostiek logs toegevoegd (CastState listener, error details)
+- Deployed naar staging
 
 ### Openstaande items:
-- [ ] **Chromecast Cast** — `session_error` debuggen (geparkeerd tot weekend 12-13 apr)
+- [ ] **Chromecast Cast** — device + receiver URL registreren in nieuwe henkvu console, testen
 - [ ] Judoka Self-Check feature bouwen (doc staat klaar)
 - [ ] LCD winnaar bug: verifiëren op staging
 - [ ] Docs: TV/LCD setup handleiding voor organisatoren
 - [ ] Coverage naar 60% target
+- [ ] Production deployen (Cast App ID update)
 
 ### Bekende issues:
-- Cast SDK: `session_error` bij custom receiver (tab-cast werkt wel)
 - `staging_judo_toernooi.jobs` tabel ontbreekt op staging
 - Brevo SMTP credits op — alle emails uitgeschakeld, admin panel is nu de enige notificatie
+- Production `.env` heeft dubbele `MAIL_MAILER` entry (opruimen)
 
 ### Belangrijke context:
-- Production SMTP: Brevo (`smtp-relay.brevo.com`) — credits op, `MAIL_MAILER` staat dubbel in `.env`
+- **Cast: ALLES op henkvu@gmail.com** — Chrome, Google Home, Developer Console
 - ErrorNotificationService + AutoFixService draaien beide in `bootstrap/app.php` exception handler
 - Oude AutoFix proposals (feb 2026: WimpelController, ScoreboardEvent) zijn al opgelost
 
