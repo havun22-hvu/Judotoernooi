@@ -570,10 +570,18 @@ function deviceToegangen() {
 
         castToTv(toegang) {
             if (!this._initCast()) {
-                alert('{{ __('Cast SDK nog niet geladen. Wacht even en probeer opnieuw.') }}');
+                alert('Cast SDK nog niet geladen. Wacht even en probeer opnieuw.');
                 return;
             }
             const castContext = cast.framework.CastContext.getInstance();
+            const state = castContext.getCastState();
+            console.log('[Cast] requestSession, state:', state, 'available:', window._castAvailable);
+
+            if (state === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+                alert('Geen Chromecast gevonden op dit netwerk.\n\nCheck:\n1. Chromecast aan en op zelfde WiFi\n2. Chrome ingelogd op havun22@gmail.com\n3. Console: chrome://cast voor diagnostiek');
+                return;
+            }
+
             castContext.requestSession().then(() => {
                 const session = castContext.getCurrentSession();
                 if (!session) {
@@ -581,13 +589,14 @@ function deviceToegangen() {
                     return;
                 }
                 const lcdUrl = this.getLcdUrl(toegang);
+                console.log('[Cast] Sending URL:', lcdUrl);
                 session.sendMessage('urn:x-cast:judotoernooi', { url: lcdUrl }).then(() => {
                     this.copiedId = 'cast_' + toegang.id;
                     setTimeout(() => this.copiedId = null, 3000);
                 }).catch((e) => console.error('[Cast] Message error:', e));
             }).catch((e) => {
-                console.error('[Cast] Session error:', e);
-                alert('{{ __('Kon geen Chromecast vinden. Zorg dat de Chromecast op hetzelfde netwerk zit.') }}');
+                console.error('[Cast] Session error:', e.code, e.description, e);
+                alert('Cast mislukt: ' + (e.description || e.code || 'onbekend') + '\n\nZie console (F12) voor details.');
             });
         },
     };
@@ -596,19 +605,30 @@ function deviceToegangen() {
 
 @push('scripts')
 <script>
-// Shared Cast config — used by both __onGCastApiAvailable callback and _initCast() fallback
 window._castAppId = 'C11C3563';
-// Define callback BEFORE loading Cast SDK to avoid race condition
+window._castAvailable = false;
+
 window['__onGCastApiAvailable'] = function(isAvailable) {
-    if (isAvailable) {
-        try {
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: window._castAppId,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-            });
-        } catch (e) {
-            console.error('[Cast] Callback init error:', e);
-        }
+    console.log('[Cast] API available:', isAvailable);
+    if (!isAvailable) return;
+
+    try {
+        const ctx = cast.framework.CastContext.getInstance();
+        ctx.setOptions({
+            receiverApplicationId: window._castAppId,
+            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        });
+
+        // Listen for device availability changes
+        ctx.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(e) {
+            console.log('[Cast] State changed:', e.castState);
+            window._castAvailable = (e.castState !== cast.framework.CastState.NO_DEVICES_AVAILABLE);
+        });
+
+        console.log('[Cast] Init OK, appId:', window._castAppId);
+        console.log('[Cast] Current state:', ctx.getCastState());
+    } catch (e) {
+        console.error('[Cast] Init error:', e);
     }
 };
 </script>
