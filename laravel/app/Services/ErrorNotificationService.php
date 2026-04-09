@@ -2,27 +2,28 @@
 
 namespace App\Services;
 
+use App\Models\AutofixProposal;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Service for sending error notifications to administrators.
+ * Service for logging critical errors to the admin panel.
  *
- * Used for critical production errors that require immediate attention.
+ * Errors are stored in the autofix_proposals table with status 'error'
+ * and visible at /admin/autofix alongside AutoFix proposals.
  */
 class ErrorNotificationService
 {
-    protected ?string $adminEmail;
     protected bool $enabled;
 
     public function __construct()
     {
-        $this->adminEmail = config('mail.admin_email');
         $this->enabled = config('app.error_notifications', false);
     }
 
     /**
-     * Notify admin about an exception.
+     * Log an exception to the admin panel.
      */
     public function notifyException(Throwable $e, array $context = []): void
     {
@@ -30,14 +31,17 @@ class ErrorNotificationService
             return;
         }
 
-        $data = $this->formatExceptionData($e, $context);
+        Log::error('Critical exception notification', [
+            'exception' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => $e->getFile() . ':' . $e->getLine(),
+        ]);
 
-        // Log critical errors (visible in Laravel log + admin panel)
-        Log::error('Critical exception notification', $data);
+        $this->storeError($e, $context);
     }
 
     /**
-     * Notify about a critical event (not necessarily an exception).
+     * Log a critical event (not necessarily an exception).
      */
     public function notifyCritical(string $message, array $context = []): void
     {
@@ -46,6 +50,8 @@ class ErrorNotificationService
         }
 
         Log::critical($message, $context);
+
+        $this->storeCritical($message, $context);
     }
 
     protected function shouldNotify(): bool
@@ -53,25 +59,66 @@ class ErrorNotificationService
         return $this->enabled || app()->environment('production');
     }
 
-    protected function formatExceptionData(Throwable $e, array $context): array
+    protected function storeError(Throwable $e, array $context): void
     {
-        return [
-            'exception' => get_class($e),
-            'message' => $e->getMessage(),
-            'code' => $e->getCode(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => collect($e->getTrace())->take(5)->map(function ($frame) {
-                return [
-                    'file' => $frame['file'] ?? 'unknown',
-                    'line' => $frame['line'] ?? 0,
-                    'function' => ($frame['class'] ?? '') . ($frame['type'] ?? '') . ($frame['function'] ?? ''),
-                ];
-            })->toArray(),
-            'context' => $context,
-            'timestamp' => now()->toIso8601String(),
-            'environment' => app()->environment(),
-        ];
+        try {
+            // Rate limit: don't store duplicate errors within 10 minutes
+            if (AutofixProposal::recentlyAnalyzed(get_class($e), $e->getFile(), $e->getLine())) {
+                return;
+            }
+
+            $trace = collect($e->getTrace())->take(10)->map(function ($frame) {
+                $file = $frame['file'] ?? 'unknown';
+                $line = $frame['line'] ?? 0;
+                $func = ($frame['class'] ?? '') . ($frame['type'] ?? '') . ($frame['function'] ?? '');
+                return "{$file}:{$line} {$func}";
+            })->implode("\n");
+
+            AutofixProposal::create([
+                'exception_class' => get_class($e),
+                'exception_message' => Str::limit($e->getMessage(), 1000),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'stack_trace' => $trace,
+                'code_context' => json_encode($context, JSON_PRETTY_PRINT),
+                'approval_token' => Str::random(64),
+                'status' => 'error',
+                'url' => request()->fullUrl() ?? null,
+                'http_method' => request()->method() ?? null,
+                'route_name' => request()->route()?->getName(),
+                'organisator_id' => auth('organisator')->id() ?? null,
+                'organisator_naam' => auth('organisator')->user()?->naam ?? null,
+                'toernooi_id' => $context['toernooi_id'] ?? null,
+                'toernooi_naam' => $context['toernooi_naam'] ?? null,
+            ]);
+        } catch (Throwable $storeError) {
+            // Don't let storage failures break error handling
+            Log::warning('Failed to store error notification', [
+                'error' => $storeError->getMessage(),
+            ]);
+        }
     }
 
+    protected function storeCritical(string $message, array $context): void
+    {
+        try {
+            AutofixProposal::create([
+                'exception_class' => 'CriticalEvent',
+                'exception_message' => Str::limit($message, 1000),
+                'file' => $context['file'] ?? 'unknown',
+                'line' => $context['line'] ?? 0,
+                'stack_trace' => '',
+                'code_context' => json_encode($context, JSON_PRETTY_PRINT),
+                'approval_token' => Str::random(64),
+                'status' => 'error',
+                'url' => request()->fullUrl() ?? null,
+                'http_method' => request()->method() ?? null,
+                'route_name' => request()->route()?->getName(),
+            ]);
+        } catch (Throwable $storeError) {
+            Log::warning('Failed to store critical notification', [
+                'error' => $storeError->getMessage(),
+            ]);
+        }
+    }
 }

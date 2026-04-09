@@ -14,7 +14,7 @@
 </div>
 
 {{-- Stats --}}
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
     <div class="bg-white rounded-lg shadow p-4">
         <div class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</div>
         <div class="text-sm text-gray-500">Totaal</div>
@@ -31,6 +31,10 @@
         <div class="text-2xl font-bold text-yellow-600">{{ $stats['pending'] }}</div>
         <div class="text-sm text-gray-500">In behandeling</div>
     </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-2xl font-bold text-orange-600">{{ $stats['errors'] }}</div>
+        <div class="text-sm text-gray-500">Errors</div>
+    </div>
 </div>
 
 {{-- Proposals --}}
@@ -41,12 +45,18 @@
                 'applied' => 'green',
                 'failed' => 'red',
                 'pending' => 'yellow',
+                'error' => 'orange',
+                'notify_only' => 'purple',
+                'dry_run' => 'blue',
                 default => 'gray',
             };
             $statusLabel = match($proposal->status) {
                 'applied' => 'Toegepast',
                 'failed' => 'Mislukt',
                 'pending' => 'In behandeling',
+                'error' => 'Error',
+                'notify_only' => 'Alleen melding',
+                'dry_run' => 'Dry run',
                 default => $proposal->status,
             };
             // Extract just the filename from the path

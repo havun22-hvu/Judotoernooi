@@ -142,6 +142,7 @@ class AdminController extends Controller
             'applied' => AutofixProposal::where('status', 'applied')->count(),
             'failed' => AutofixProposal::where('status', 'failed')->count(),
             'pending' => AutofixProposal::where('status', 'pending')->count(),
+            'errors' => AutofixProposal::where('status', 'error')->count(),
         ];
 
         return view('pages.admin.autofix', compact('proposals', 'stats'));
