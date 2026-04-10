@@ -554,54 +554,13 @@ class AlmostEightyCoverageTest extends TestCase
     #[Test]
     public function error_notification_sends_email_in_production(): void
     {
-        // Cover lines 40-41 and 86-90: sendEmailNotification
-        config(['app.error_notifications' => true]);
-        config(['app.env' => 'production']);
-        config(['mail.admin_email' => 'admin@test.com']);
-
-        // Use log driver to prevent actual sending but still exercise the code path
-        // We verify the code runs without error and the Log::error is called
-        Log::shouldReceive('error')->once();
-        // Mail::raw will attempt to send - we catch via shouldReceive
-        Mail::shouldReceive('raw')->once()->andReturnUsing(function ($body, $callback) {
-            // Verify the callback configures the message correctly
-            $message = new class {
-                public string $toAddress = '';
-                public string $subjectLine = '';
-                public function to($address) { $this->toAddress = $address; return $this; }
-                public function subject($subject) { $this->subjectLine = $subject; return $this; }
-            };
-            $callback($message);
-            \PHPUnit\Framework\Assert::assertEquals('admin@test.com', $message->toAddress);
-            \PHPUnit\Framework\Assert::assertStringContainsString('Critical Error', $message->subjectLine);
-        });
-
-        $service = new ErrorNotificationService();
-        $exception = new \RuntimeException('Test critical error');
-
-        $service->notifyException($exception, ['key' => 'value']);
+        $this->markTestSkipped('Service refactored - no longer sends email, stores to AutofixProposal');
     }
 
     #[Test]
     public function error_notification_handles_mail_failure(): void
     {
-        // Cover lines 93-97: mail sending fails gracefully
-        config(['app.error_notifications' => true]);
-        config(['app.env' => 'production']);
-        config(['mail.admin_email' => 'admin@test.com']);
-
-        // Make Mail::raw throw an exception
-        Mail::shouldReceive('raw')
-            ->andThrow(new \RuntimeException('SMTP connection failed'));
-
-        Log::shouldReceive('error')->once(); // Critical exception notification
-        Log::shouldReceive('warning')->once(); // Failed to send email
-
-        $service = new ErrorNotificationService();
-        $exception = new \RuntimeException('Test error');
-
-        // Should not throw - catches mail error gracefully
-        $service->notifyException($exception, []);
+        $this->markTestSkipped('Service refactored - no longer sends email, stores to AutofixProposal');
     }
 
     #[Test]
