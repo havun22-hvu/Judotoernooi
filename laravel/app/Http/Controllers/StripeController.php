@@ -9,6 +9,7 @@ use App\Models\ToernooiBetaling;
 use App\Services\Payments\StripePaymentProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class StripeController extends Controller
@@ -114,6 +115,16 @@ class StripeController extends Controller
 
     /**
      * Handle Stripe webhook for coach payment status updates.
+     *
+     * Security:
+     * - Stripe signs every webhook. We verify the Stripe-Signature header
+     *   via the SDK before trusting any event payload. Invalid signature
+     *   returns 400 and the event is dropped.
+     * - Idempotency is enforced via payment_processed_at on Betaling so
+     *   the same event (retried by Stripe) never produces duplicate
+     *   side-effects.
+     * - All status mutations run inside a DB transaction.
+     * - Unexpected exceptions bubble as 500 so Stripe retries with backoff.
      */
     public function webhook(Request $request): \Illuminate\Http\Response
     {
@@ -131,32 +142,73 @@ class StripeController extends Controller
             return response('Invalid signature', 400);
         }
 
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $betaling = Betaling::where('stripe_payment_id', $session->id)->first();
-
-            if ($betaling) {
-                $this->updateBetalingStatus($betaling, 'paid');
-
-                Log::info('Stripe webhook processed (coach payment)', [
-                    'session_id' => $session->id,
-                    'status' => 'paid',
-                ]);
-            }
-        } elseif ($event->type === 'checkout.session.expired') {
-            $session = $event->data->object;
-            $betaling = Betaling::where('stripe_payment_id', $session->id)->first();
-
-            if ($betaling) {
-                $this->updateBetalingStatus($betaling, 'expired');
-            }
+        try {
+            return $this->handleStripeEvent($event);
+        } catch (\Exception $e) {
+            Log::error('Unexpected Stripe webhook error', [
+                'event_id' => $event->id ?? null,
+                'event_type' => $event->type ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Return 500 so Stripe retries with exponential backoff.
+            return response('Error', 500);
         }
+    }
+
+    /**
+     * Dispatch a verified Stripe coach-payment event.
+     *
+     * Kept separate so the exception handler wraps everything cleanly.
+     */
+    private function handleStripeEvent(\Stripe\Event $event): \Illuminate\Http\Response
+    {
+        $statusMap = [
+            'checkout.session.completed' => 'paid',
+            'checkout.session.expired' => 'expired',
+        ];
+
+        if (!isset($statusMap[$event->type])) {
+            // Unhandled event type — acknowledge so Stripe stops retrying.
+            return response('OK', 200);
+        }
+
+        $session = $event->data->object;
+        $betaling = Betaling::where('stripe_payment_id', $session->id)->first();
+
+        if (!$betaling) {
+            return response('OK', 200);
+        }
+
+        // Idempotency — already finalized, do not re-process.
+        if ($betaling->payment_processed_at !== null) {
+            Log::info('Stripe webhook ignored (already processed)', [
+                'session_id' => $session->id,
+                'betaling_id' => $betaling->id,
+            ]);
+            return response('Already processed', 200);
+        }
+
+        $status = $statusMap[$event->type];
+
+        DB::transaction(function () use ($betaling, $status) {
+            $this->updateBetalingStatus($betaling, $status);
+        });
+
+        Log::info('Stripe webhook processed (coach payment)', [
+            'session_id' => $session->id,
+            'status' => $status,
+        ]);
 
         return response('OK', 200);
     }
 
     /**
      * Handle Stripe webhook for toernooi upgrade payments.
+     *
+     * Same security model as webhook(): verified signature, idempotency
+     * via payment_processed_at, DB transaction, and 500 on unexpected
+     * errors so Stripe retries.
      */
     public function webhookToernooi(Request $request): \Illuminate\Http\Response
     {
@@ -174,26 +226,58 @@ class StripeController extends Controller
             return response('Invalid signature', 400);
         }
 
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $betaling = ToernooiBetaling::where('stripe_payment_id', $session->id)->first();
-
-            if ($betaling) {
-                $this->updateToernooiBetalingStatus($betaling, 'paid');
-
-                Log::info('Stripe webhook processed (toernooi upgrade)', [
-                    'session_id' => $session->id,
-                    'status' => 'paid',
-                ]);
-            }
-        } elseif ($event->type === 'checkout.session.expired') {
-            $session = $event->data->object;
-            $betaling = ToernooiBetaling::where('stripe_payment_id', $session->id)->first();
-
-            if ($betaling) {
-                $this->updateToernooiBetalingStatus($betaling, 'expired');
-            }
+        try {
+            return $this->handleStripeToernooiEvent($event);
+        } catch (\Exception $e) {
+            Log::error('Unexpected Stripe toernooi webhook error', [
+                'event_id' => $event->id ?? null,
+                'event_type' => $event->type ?? null,
+                'error' => $e->getMessage(),
+            ]);
+            return response('Error', 500);
         }
+    }
+
+    /**
+     * Dispatch a verified Stripe toernooi-upgrade event.
+     */
+    private function handleStripeToernooiEvent(\Stripe\Event $event): \Illuminate\Http\Response
+    {
+        $statusMap = [
+            'checkout.session.completed' => 'paid',
+            'checkout.session.expired' => 'expired',
+        ];
+
+        if (!isset($statusMap[$event->type])) {
+            return response('OK', 200);
+        }
+
+        $session = $event->data->object;
+        $betaling = ToernooiBetaling::where('stripe_payment_id', $session->id)->first();
+
+        if (!$betaling) {
+            return response('OK', 200);
+        }
+
+        // Idempotency — already finalized, do not re-process.
+        if ($betaling->payment_processed_at !== null) {
+            Log::info('Stripe toernooi webhook ignored (already processed)', [
+                'session_id' => $session->id,
+                'toernooi_betaling_id' => $betaling->id,
+            ]);
+            return response('Already processed', 200);
+        }
+
+        $status = $statusMap[$event->type];
+
+        DB::transaction(function () use ($betaling, $status) {
+            $this->updateToernooiBetalingStatus($betaling, $status);
+        });
+
+        Log::info('Stripe webhook processed (toernooi upgrade)', [
+            'session_id' => $session->id,
+            'status' => $status,
+        ]);
 
         return response('OK', 200);
     }
@@ -203,6 +287,12 @@ class StripeController extends Controller
     | Status Update Helpers
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * Final statuses that should flip the idempotency marker so the same
+     * webhook cannot be re-processed (and cause duplicate side-effects).
+     */
+    private const FINAL_STATUSES = ['paid', 'failed', 'expired', 'canceled'];
 
     private function updateBetalingStatus(Betaling $betaling, string $status): void
     {
@@ -219,6 +309,11 @@ class StripeController extends Controller
 
         if ($newStatus === Betaling::STATUS_PAID && !$betaling->betaald_op) {
             $betaling->markeerAlsBetaald();
+        }
+
+        // Mark as processed on final statuses to enforce webhook idempotency.
+        if (in_array($status, self::FINAL_STATUSES, true)) {
+            $betaling->forceFill(['payment_processed_at' => now()])->save();
         }
     }
 
@@ -237,6 +332,11 @@ class StripeController extends Controller
 
         if ($newStatus === ToernooiBetaling::STATUS_PAID && !$betaling->betaald_op) {
             $betaling->markeerAlsBetaald();
+        }
+
+        // Mark as processed on final statuses to enforce webhook idempotency.
+        if (in_array($status, self::FINAL_STATUSES, true)) {
+            $betaling->forceFill(['payment_processed_at' => now()])->save();
         }
     }
 }

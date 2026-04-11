@@ -28,12 +28,14 @@ class ToernooiBetaling extends Model
         'status',
         'betaald_op',
         'factuurnummer',
+        'payment_processed_at',
     ];
 
     protected $casts = [
         'bedrag' => 'decimal:2',
         'max_judokas' => 'integer',
         'betaald_op' => 'datetime',
+        'payment_processed_at' => 'datetime',
     ];
 
     public function toernooi(): BelongsTo

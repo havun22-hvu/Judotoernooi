@@ -20,11 +20,13 @@ class Betaling extends Model
         'aantal_judokas',
         'status',
         'betaald_op',
+        'payment_processed_at',
     ];
 
     protected $casts = [
         'bedrag' => 'decimal:2',
         'betaald_op' => 'datetime',
+        'payment_processed_at' => 'datetime',
     ];
 
     // Statuses

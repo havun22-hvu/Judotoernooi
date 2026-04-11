@@ -161,6 +161,82 @@ class PaymentControllersCoverageTest extends TestCase
     }
 
     #[Test]
+    public function mollie_webhook_is_idempotent_when_already_processed(): void
+    {
+        // Betaling was already finalized earlier — second webhook must
+        // never re-trigger status updates or API calls.
+        $betaling = $this->createBetaling([
+            'mollie_payment_id' => 'tr_idem123',
+            'status' => Betaling::STATUS_PAID,
+            'payment_processed_at' => now()->subMinute(),
+        ]);
+
+        // MollieService must NOT be called — idempotency guard kicks in first.
+        $mockService = $this->mock(MollieService::class);
+        $mockService->shouldNotReceive('ensureValidToken');
+        $mockService->shouldNotReceive('getPayment');
+
+        $response = $this->postJson('mollie/webhook', ['id' => 'tr_idem123']);
+
+        $response->assertStatus(200);
+        // payment_processed_at must remain unchanged (no re-processing).
+        $this->assertEquals(
+            $betaling->payment_processed_at->toDateTimeString(),
+            $betaling->fresh()->payment_processed_at->toDateTimeString()
+        );
+    }
+
+    #[Test]
+    public function mollie_webhook_sets_payment_processed_at_on_paid_status(): void
+    {
+        $betaling = $this->createBetaling(['mollie_payment_id' => 'tr_marker123']);
+
+        $mockService = $this->mock(MollieService::class);
+        $mockService->shouldReceive('ensureValidToken')->once();
+        $mockService->shouldReceive('getPayment')->once()
+            ->andReturn((object) ['status' => 'paid']);
+
+        $response = $this->postJson('mollie/webhook', ['id' => 'tr_marker123']);
+
+        $response->assertStatus(200);
+        $this->assertNotNull($betaling->fresh()->payment_processed_at);
+    }
+
+    #[Test]
+    public function mollie_webhook_returns_500_on_mollie_exception_for_retry(): void
+    {
+        // MollieException used to silently swallow → 200. Now we return 500
+        // so Mollie retries with its standard backoff schedule.
+        $this->createBetaling(['mollie_payment_id' => 'tr_mollieerr']);
+
+        $mockService = $this->mock(MollieService::class);
+        $mockService->shouldReceive('ensureValidToken')->once()
+            ->andThrow(new \App\Exceptions\MollieException('API down'));
+
+        $response = $this->postJson('mollie/webhook', ['id' => 'tr_mollieerr']);
+
+        $response->assertStatus(500);
+    }
+
+    #[Test]
+    public function mollie_toernooi_webhook_is_idempotent_when_already_processed(): void
+    {
+        $betaling = $this->createToernooiBetaling([
+            'mollie_payment_id' => 'tr_toeridem',
+            'status' => ToernooiBetaling::STATUS_PAID,
+            'payment_processed_at' => now()->subMinute(),
+        ]);
+
+        // No Mollie API calls should happen.
+        $mockService = $this->mock(MollieService::class);
+        $mockService->shouldNotReceive('getPlatformApiKey');
+
+        $response = $this->postJson('mollie/webhook/toernooi', ['id' => 'tr_toeridem']);
+
+        $response->assertStatus(200);
+    }
+
+    #[Test]
     public function mollie_toernooi_webhook_returns_400_without_payment_id(): void
     {
         $response = $this->postJson('mollie/webhook/toernooi', []);
@@ -425,6 +501,121 @@ class PaymentControllersCoverageTest extends TestCase
             'id' => $betaling->id,
             'status' => Betaling::STATUS_EXPIRED,
         ]);
+    }
+
+    #[Test]
+    public function stripe_webhook_is_idempotent_when_already_processed(): void
+    {
+        // Betaling already finalized — signature still valid but
+        // update helper MUST NOT run and no duplicate side-effects allowed.
+        $betaling = $this->createBetaling([
+            'stripe_payment_id' => 'cs_idem_123',
+            'status' => Betaling::STATUS_PAID,
+            'payment_processed_at' => now()->subMinute(),
+        ]);
+
+        $event = $this->createStripeEvent('checkout.session.completed', 'cs_idem_123');
+
+        $mockProvider = $this->mock(StripePaymentProvider::class);
+        $mockProvider->shouldReceive('verifyWebhookSignature')
+            ->once()
+            ->andReturn($event);
+
+        $before = $betaling->payment_processed_at->toDateTimeString();
+
+        $response = $this->postJson('stripe/webhook', [], [
+            'Stripe-Signature' => 'valid_sig',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertEquals($before, $betaling->fresh()->payment_processed_at->toDateTimeString());
+    }
+
+    #[Test]
+    public function stripe_webhook_sets_payment_processed_at_on_paid(): void
+    {
+        $betaling = $this->createBetaling(['stripe_payment_id' => 'cs_marker']);
+
+        $event = $this->createStripeEvent('checkout.session.completed', 'cs_marker');
+
+        $mockProvider = $this->mock(StripePaymentProvider::class);
+        $mockProvider->shouldReceive('verifyWebhookSignature')
+            ->once()
+            ->andReturn($event);
+
+        $response = $this->postJson('stripe/webhook', [], [
+            'Stripe-Signature' => 'valid_sig',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertNotNull($betaling->fresh()->payment_processed_at);
+    }
+
+    #[Test]
+    public function stripe_webhook_returns_500_on_unexpected_exception(): void
+    {
+        // Unexpected exception during processing must bubble as 500 so
+        // Stripe retries with exponential backoff. We force an exception
+        // by building an Event whose data.object is null — the controller
+        // attempts to read $session->id and throws.
+        $badEvent = \Stripe\Event::constructFrom([
+            'id' => 'evt_bad',
+            'object' => 'event',
+            'type' => 'checkout.session.completed',
+            'data' => ['object' => null],
+        ]);
+
+        $mockProvider = $this->mock(StripePaymentProvider::class);
+        $mockProvider->shouldReceive('verifyWebhookSignature')
+            ->once()
+            ->andReturn($badEvent);
+
+        $response = $this->postJson('stripe/webhook', [], [
+            'Stripe-Signature' => 'valid_sig',
+        ]);
+
+        $response->assertStatus(500);
+    }
+
+    #[Test]
+    public function stripe_webhook_ignores_unhandled_event_types(): void
+    {
+        $event = $this->createStripeEvent('payment_intent.succeeded', 'pi_test');
+
+        $mockProvider = $this->mock(StripePaymentProvider::class);
+        $mockProvider->shouldReceive('verifyWebhookSignature')
+            ->once()
+            ->andReturn($event);
+
+        $response = $this->postJson('stripe/webhook', [], [
+            'Stripe-Signature' => 'valid_sig',
+        ]);
+
+        // Unhandled event types are acknowledged so Stripe stops retrying.
+        $response->assertStatus(200);
+    }
+
+    #[Test]
+    public function stripe_toernooi_webhook_is_idempotent_when_already_processed(): void
+    {
+        $betaling = $this->createToernooiBetaling([
+            'stripe_payment_id' => 'cs_toernooi_idem',
+            'status' => ToernooiBetaling::STATUS_PAID,
+            'payment_processed_at' => now()->subMinute(),
+        ]);
+
+        $event = $this->createStripeEvent('checkout.session.completed', 'cs_toernooi_idem');
+
+        $mockProvider = $this->mock(StripePaymentProvider::class);
+        $mockProvider->shouldReceive('verifyWebhookSignature')
+            ->once()
+            ->andReturn($event);
+
+        $response = $this->postJson('stripe/webhook/toernooi', [], [
+            'Stripe-Signature' => 'valid_sig',
+        ]);
+
+        $response->assertStatus(200);
     }
 
     #[Test]

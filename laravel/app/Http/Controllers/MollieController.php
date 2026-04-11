@@ -11,6 +11,7 @@ use App\Models\ToernooiBetaling;
 use App\Services\MollieService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -104,7 +105,18 @@ class MollieController extends Controller
     */
 
     /**
-     * Handle Mollie webhook for payment status updates
+     * Handle Mollie webhook for payment status updates.
+     *
+     * Security:
+     * - Mollie does not sign webhooks. We verify authenticity by re-fetching
+     *   the payment directly from the Mollie API — the webhook body itself
+     *   (besides the payment ID) is never trusted.
+     * - Idempotency is enforced via payment_processed_at: once a betaling
+     *   has been finalized as "paid", subsequent webhook calls are ignored
+     *   to prevent double-processing (double invoice, double mark paid).
+     * - Payment finalization runs inside a DB transaction so partial state
+     *   is impossible on failure.
+     * - On unexpected errors we return 500 so Mollie retries later.
      */
     public function webhook(Request $request): \Illuminate\Http\Response
     {
@@ -122,13 +134,25 @@ class MollieController extends Controller
             return response('OK', 200);
         }
 
+        // Idempotency check — already finalized, do not re-process.
+        if ($betaling->payment_processed_at !== null) {
+            Log::info('Mollie webhook ignored (already processed)', [
+                'payment_id' => $paymentId,
+                'betaling_id' => $betaling->id,
+            ]);
+            return response('Already processed', 200);
+        }
+
         try {
             $toernooi = $betaling->toernooi;
             $this->mollieService->ensureValidToken($toernooi);
 
+            // Never trust webhook payload — re-fetch directly from Mollie.
             $payment = $this->mollieService->getPayment($toernooi, $paymentId);
 
-            $this->updateBetalingStatus($betaling, $payment->status);
+            DB::transaction(function () use ($betaling, $payment) {
+                $this->updateBetalingStatus($betaling, $payment->status);
+            });
 
             Log::info('Mollie webhook processed', [
                 'payment_id' => $paymentId,
@@ -138,8 +162,9 @@ class MollieController extends Controller
             return response('OK', 200);
         } catch (MollieException $e) {
             $e->log();
-            // Return 200 to Mollie to prevent retries for known errors
-            return response('OK', 200);
+            // Return 500 so Mollie retries — transient API/auth issues
+            // should not silently swallow the webhook.
+            return response('Error', 500);
         } catch (\Exception $e) {
             Log::error('Unexpected Mollie webhook error', [
                 'payment_id' => $paymentId,
@@ -151,7 +176,11 @@ class MollieController extends Controller
     }
 
     /**
-     * Handle Mollie webhook for toernooi upgrade payments
+     * Handle Mollie webhook for toernooi upgrade payments.
+     *
+     * Same security model as webhook(): re-fetch from Mollie API, enforce
+     * idempotency, wrap in a transaction, and return 500 so Mollie retries
+     * on transient errors.
      */
     public function webhookToernooi(Request $request): \Illuminate\Http\Response
     {
@@ -169,9 +198,19 @@ class MollieController extends Controller
             return response('OK', 200);
         }
 
+        // Idempotency check — already finalized, do not re-process.
+        if ($betaling->payment_processed_at !== null) {
+            Log::info('Mollie toernooi webhook ignored (already processed)', [
+                'payment_id' => $paymentId,
+                'toernooi_betaling_id' => $betaling->id,
+            ]);
+            return response('Already processed', 200);
+        }
+
         try {
             $apiKey = $this->mollieService->getPlatformApiKey();
 
+            // Never trust webhook payload — re-fetch directly from Mollie.
             $response = \Illuminate\Support\Facades\Http::timeout(15)
                 ->connectTimeout(5)
                 ->withHeaders([
@@ -184,7 +223,9 @@ class MollieController extends Controller
 
             $payment = $response->object();
 
-            $this->updateToernooiBetalingStatus($betaling, $payment->status);
+            DB::transaction(function () use ($betaling, $payment) {
+                $this->updateToernooiBetalingStatus($betaling, $payment->status);
+            });
 
             Log::info('Mollie toernooi webhook processed', [
                 'payment_id' => $paymentId,
@@ -194,7 +235,8 @@ class MollieController extends Controller
             return response('OK', 200);
         } catch (MollieException $e) {
             $e->log();
-            return response('OK', 200); // Prevent retries
+            // Return 500 so Mollie retries on transient API errors.
+            return response('Error', 500);
         } catch (\Exception $e) {
             Log::error('Unexpected Mollie toernooi webhook error', [
                 'payment_id' => $paymentId,
@@ -205,7 +247,16 @@ class MollieController extends Controller
     }
 
     /**
-     * Update toernooi betaling status based on Mollie status
+     * Final statuses that should flip the idempotency marker so the same
+     * webhook cannot be re-processed (and cause duplicate side-effects).
+     */
+    private const FINAL_STATUSES = ['paid', 'failed', 'expired', 'canceled'];
+
+    /**
+     * Update toernooi betaling status based on Mollie status.
+     *
+     * Sets payment_processed_at on final statuses so repeated webhook
+     * deliveries become no-ops (see idempotency guard in webhook()).
      */
     private function updateToernooiBetalingStatus(ToernooiBetaling $betaling, string $status): void
     {
@@ -221,14 +272,22 @@ class MollieController extends Controller
 
         $betaling->update(['status' => $newStatus]);
 
-        // If paid, activate the paid plan
+        // If paid, activate the paid plan (invoices + updates plan)
         if ($newStatus === ToernooiBetaling::STATUS_PAID && !$betaling->betaald_op) {
             $betaling->markeerAlsBetaald();
+        }
+
+        // Mark as processed on final statuses to enforce webhook idempotency.
+        if (in_array($status, self::FINAL_STATUSES, true)) {
+            $betaling->forceFill(['payment_processed_at' => now()])->save();
         }
     }
 
     /**
-     * Update betaling status based on Mollie status
+     * Update betaling status based on Mollie status.
+     *
+     * Sets payment_processed_at on final statuses so repeated webhook
+     * deliveries become no-ops (see idempotency guard in webhook()).
      */
     private function updateBetalingStatus(Betaling $betaling, string $status): void
     {
@@ -248,6 +307,11 @@ class MollieController extends Controller
         // If paid, mark judokas as paid
         if ($newStatus === Betaling::STATUS_PAID && !$betaling->betaald_op) {
             $betaling->markeerAlsBetaald();
+        }
+
+        // Mark as processed on final statuses to enforce webhook idempotency.
+        if (in_array($status, self::FINAL_STATUSES, true)) {
+            $betaling->forceFill(['payment_processed_at' => now()])->save();
         }
     }
 
