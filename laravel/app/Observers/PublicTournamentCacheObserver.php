@@ -8,14 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Invalidates the public tournament cache whenever data that is rendered
- * on the public page changes. Used for PubliekController's uitslagen cache.
- *
- * Keep the model -> toernooi_id resolution minimal to avoid extra queries
- * during save events. Non-destructive: only forgets cache keys.
+ * Invalidates the public tournament cache when rendered data changes.
+ * Used by PubliekController's uitslagen cache.
  */
 class PublicTournamentCacheObserver
 {
+    /**
+     * Per-request memo for poule_id -> toernooi_id lookups so we do not
+     * hit the DB on every Wedstrijd score save during live scoring.
+     *
+     * @var array<int, int|null>
+     */
+    private static array $pouleToernooiMap = [];
+
     public function saved(Model $model): void
     {
         $this->forgetFor($model);
@@ -38,20 +43,28 @@ class PublicTournamentCacheObserver
 
     private function resolveToernooiId(Model $model): ?int
     {
-        // Direct column on Poule
-        if (isset($model->toernooi_id)) {
-            return (int) $model->toernooi_id;
+        // Poule carries toernooi_id directly.
+        $direct = $model->getAttribute('toernooi_id');
+        if ($direct !== null) {
+            return (int) $direct;
         }
 
-        // Wedstrijd has no toernooi_id — walk via poule relation.
-        // Use getAttribute to avoid touching unloaded relations when not needed.
+        // Wedstrijd has no toernooi_id — walk via poule. Cached per-request
+        // because poule -> toernooi mapping is immutable.
         if ($model instanceof Wedstrijd) {
-            $pouleId = $model->poule_id ?? null;
+            $pouleId = $model->getAttribute('poule_id');
             if ($pouleId === null) {
                 return null;
             }
-            $poule = Poule::query()->select('toernooi_id')->find($pouleId);
-            return $poule?->toernooi_id ? (int) $poule->toernooi_id : null;
+
+            if (!array_key_exists($pouleId, self::$pouleToernooiMap)) {
+                self::$pouleToernooiMap[$pouleId] = Poule::query()
+                    ->whereKey($pouleId)
+                    ->value('toernooi_id');
+            }
+
+            $toernooiId = self::$pouleToernooiMap[$pouleId];
+            return $toernooiId !== null ? (int) $toernooiId : null;
         }
 
         return null;

@@ -125,9 +125,8 @@ class WedstrijddagController extends Controller
             ->map(fn() => true)
             ->toArray();
 
-        // Detecteer problematische poules na weging (gewichtsrange > max_kg_verschil)
-        // Eager load all poules.judokas + poules.toernooi upfront to prevent N+1
-        // (previously: 2 queries per blok via Blok::getProblematischePoules())
+        // Detecteer problematische poules na weging (gewichtsrange > max_kg_verschil).
+        // poules.judokas + poules.toernooi zijn eager-loaded om N+1 te vermijden.
         $problematischeGewichtsPoules = collect();
         $geslotenBlokken = $toernooi->blokken()
             ->where('weging_gesloten', true)
@@ -136,10 +135,11 @@ class WedstrijddagController extends Controller
         foreach ($geslotenBlokken as $blok) {
             foreach ($blok->poules as $poule) {
                 $probleem = $poule->isProblematischNaWeging();
-                if ($probleem !== null) {
-                    $poule->probleem = $probleem;
-                    $problematischeGewichtsPoules->put($poule->id, $probleem);
+                if ($probleem === null) {
+                    continue;
                 }
+                $poule->probleem = $probleem;
+                $problematischeGewichtsPoules->put($poule->id, $probleem);
             }
         }
 

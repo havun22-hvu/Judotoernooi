@@ -126,9 +126,9 @@ class PubliekController extends Controller
         // Check if poules are generated (tournament started)
         $poulesGegenereerd = $toernooi->poules()->exists();
 
-        // Get mat info with current poule, wedstrijden and standings
-        // Groen/geel/blauw komt nu van MAT niveau (niet poule niveau)
-        // Eager load poules.toernooi to prevent N+1 from Poule accessors (isPuntenCompetitie etc.)
+        // Get mat info with current poule, wedstrijden and standings.
+        // Groen/geel/blauw komt van MAT niveau (niet poule niveau).
+        // poules.toernooi is eager-loaded to avoid N+1 via Poule accessors.
         $matten = [];
         if ($poulesGegenereerd) {
             $matten = $toernooi->matten()
@@ -227,13 +227,12 @@ class PubliekController extends Controller
                 });
         }
 
-        // Get completed poules (afgeroepen) with standings for results.
-        // Cached 30s — afgeroepen poules zijn statisch, cache wordt geleegd via
-        // PouleObserver + WedstrijdObserver zodra data verandert.
-        $cacheKey = "public.toernooi.{$toernooi->id}.uitslagen";
-        $uitslagen = Cache::remember($cacheKey, 30, function () use ($toernooi) {
-            return $this->getUitslagen($toernooi);
-        });
+        // Cached 30s; invalidated by PublicTournamentCacheObserver when Poule/Wedstrijd changes.
+        $uitslagen = Cache::remember(
+            "public.toernooi.{$toernooi->id}.uitslagen",
+            30,
+            fn () => $this->getUitslagen($toernooi),
+        );
 
         return view('pages.publiek.index', [
             'toernooi' => $toernooi,
@@ -254,7 +253,6 @@ class PubliekController extends Controller
         // Get sort order from preset config
         $leeftijdVolgorde = $toernooi->getCategorieVolgorde();
 
-        // Eager load toernooi to prevent N+1 when calling isPuntenCompetitie() per poule
         $poules = $toernooi->poules()
             ->whereNotNull('afgeroepen_at')
             ->with(['judokas.club', 'wedstrijden', 'toernooi'])
@@ -336,7 +334,6 @@ class PubliekController extends Controller
     {
         $matten = $toernooi->matten()
             // Load ALL poules (including afgeroepen) for wedstrijd lookup
-            // Eager load toernooi to prevent N+1 from Poule model accessors
             ->with(['poules' => function ($q) {
                 $q->with(['judokas.club', 'wedstrijden', 'toernooi'])
                   ->orderBy('nummer');
