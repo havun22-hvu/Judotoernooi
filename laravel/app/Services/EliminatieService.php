@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Poule;
 use App\Models\Wedstrijd;
+use App\Services\Eliminatie\BracketCalculator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -33,33 +34,21 @@ use Illuminate\Support\Facades\Log;
  */
 class EliminatieService
 {
+    private BracketCalculator $calculator;
+
+    public function __construct(?BracketCalculator $calculator = null)
+    {
+        $this->calculator = $calculator ?? new BracketCalculator();
+    }
+
     /**
-     * Bereken locatie_wit en locatie_blauw op basis van bracket_positie
+     * Bereken locatie_wit en locatie_blauw op basis van bracket_positie.
      *
-     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
-     *
-     * SLOT FORMULES (wedstrijd N):
-     * - slot_wit = 2N - 1 (oneven)
-     * - slot_blauw = 2N (even)
-     *
-     * Slots worden ALTIJD van boven naar beneden genummerd, ZONDER spiegeling!
-     *
-     * Voorbeeld 1/8 finale (8 wedstrijden, 16 slots):
-     * - Wedstrijd 1: slot 1 (wit), slot 2 (blauw)
-     * - Wedstrijd 2: slot 3 (wit), slot 4 (blauw)
-     * - Wedstrijd 8: slot 15 (wit), slot 16 (blauw)
-     *
-     * DOORSCHUIF FORMULE:
-     * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
-     * - Oneven doel-slot → wit positie, even doel-slot → blauw positie
+     * @see BracketCalculator::berekenLocaties
      */
     private function berekenLocaties(int $bracketPositie): array
     {
-        // Formule: slot_wit = 2N-1, slot_blauw = 2N (waar N = bracket_positie)
-        return [
-            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,   // = 2N - 1 (oneven)
-            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2, // = 2N (even)
-        ];
+        return $this->calculator->berekenLocaties($bracketPositie);
     }
 
     /**
@@ -259,32 +248,13 @@ class EliminatieService
     }
 
     /**
-     * Bepaal ronde naam op basis van aantal judoka's of deelnemers
+     * Bepaal ronde naam op basis van aantal judoka's of deelnemers.
      *
-     * @param int $n Aantal judoka's (bepaalt eerste ronde) of deelnemers in ronde
-     * @param bool $voorAantal True = deelnemers in ronde, False = totaal judoka's
+     * @see BracketCalculator::getRondeNaam
      */
     private function getRondeNaam(int $n, bool $voorAantal = false): string
     {
-        if ($voorAantal) {
-            // Aantal deelnemers IN die ronde
-            return match ($n) {
-                32 => 'zestiende_finale',
-                16 => 'achtste_finale',
-                8 => 'kwartfinale',
-                4 => 'halve_finale',
-                2 => 'finale',
-                default => 'achtste_finale',
-            };
-        }
-
-        // Totaal aantal judoka's -> eerste ronde naam
-        if ($n > 32) return 'tweeendertigste_finale';
-        if ($n > 16) return 'zestiende_finale';
-        if ($n > 8) return 'achtste_finale';
-        if ($n > 4) return 'kwartfinale';
-        if ($n > 2) return 'halve_finale';
-        return 'finale';
+        return $this->calculator->getRondeNaam($n, $voorAantal);
     }
 
     /**
@@ -550,17 +520,13 @@ class EliminatieService
     }
 
     /**
-     * Get B-ronde naam voor aantal wedstrijden
+     * Get B-ronde naam voor aantal wedstrijden.
+     *
+     * @see BracketCalculator::getBRondeNaam
      */
     private function getBRondeNaam(int $wedstrijden): string
     {
-        return match ($wedstrijden) {
-            16 => 'b_zestiende_finale',
-            8 => 'b_achtste_finale',
-            4 => 'b_kwartfinale',
-            2 => 'b_halve_finale',
-            default => 'b_kwartfinale',
-        };
+        return $this->calculator->getBRondeNaam($wedstrijden);
     }
 
     /**
@@ -958,91 +924,43 @@ class EliminatieService
     // =========================================================================
 
     /**
-     * Bereken alle bracket parameters in één keer
+     * Bereken alle bracket parameters in één keer.
      *
-     * @return array [d, v1, a1Verliezers, a2Verliezers, eersteGolf, dubbelRondes]
+     * @see BracketCalculator::berekenBracketParams
      */
     private function berekenBracketParams(int $n): array
     {
-        $d = $this->berekenDoel($n);
-        $v1 = $n - $d;
-
-        if ($v1 > 0) {
-            // Niet-exacte macht van 2 (N=12,24,etc.)
-            // Eerste ronde heeft V1 echte wedstrijden + byes
-            // Tweede ronde = eerste VOLLE ronde met D/2 wedstrijden
-            $a1Verliezers = $v1;
-            $a2Verliezers = (int)($d / 2);
-        } else {
-            // Exacte macht van 2 (N=8,16,32)
-            // Alle wedstrijden in eerste ronde zijn echt
-            // Eerste ronde = D/2 wedstrijden, tweede ronde = D/4 wedstrijden
-            $a1Verliezers = (int)($d / 2);
-            $a2Verliezers = (int)($d / 4);
-        }
-
-        return [
-            'd' => $d,
-            'v1' => $v1,
-            'a1Verliezers' => $a1Verliezers,
-            'a2Verliezers' => $a2Verliezers,
-            'eersteGolf' => $a1Verliezers + $a2Verliezers,
-            'dubbelRondes' => $a1Verliezers > $a2Verliezers,
-        ];
+        return $this->calculator->berekenBracketParams($n);
     }
 
     /**
-     * Bereken doel (grootste macht van 2 <= n)
+     * Bereken doel (grootste macht van 2 <= n).
+     *
+     * @see BracketCalculator::berekenDoel
      */
     private function berekenDoel(int $n): int
     {
-        if ($n <= 0) return 0;
-        if ($n == 1) return 1;
-        return pow(2, floor(log($n, 2)));
+        return $this->calculator->berekenDoel($n);
     }
 
     /**
-     * Bereken minimale B-wedstrijden voor gegeven aantal verliezers
+     * Bereken minimale B-wedstrijden voor gegeven aantal verliezers.
+     *
+     * @see BracketCalculator::berekenMinimaleBWedstrijden
      */
     private function berekenMinimaleBWedstrijden(int $verliezers): int
     {
-        if ($verliezers <= 4) return 2;
-        if ($verliezers <= 8) return 4;
-        if ($verliezers <= 16) return 8;
-        if ($verliezers <= 32) return 16;
-        return 32;
+        return $this->calculator->berekenMinimaleBWedstrijden($verliezers);
     }
 
     /**
-     * Bereken statistieken voor bracket
+     * Bereken statistieken voor bracket.
+     *
+     * @see BracketCalculator::berekenStatistieken
      */
     public function berekenStatistieken(int $n, string $type = 'dubbel'): array
     {
-        $params = $this->berekenBracketParams($n);
-        $bStartWedstrijden = $params['a2Verliezers'];
-        $bCapaciteit = 2 * $bStartWedstrijden;
-
-        $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);
-        $totaalWedstrijden = ($type === 'ijf') ? ($n - 1 + 4) : max(0, 2 * $n - 5);
-
-        return [
-            'judokas' => $n,
-            'type' => $type,
-            'doel' => $params['d'],
-            'v1' => $params['v1'],
-            'a1_verliezers' => $params['a1Verliezers'],
-            'a2_verliezers' => $params['a2Verliezers'],
-            'eerste_golf' => $params['eersteGolf'],
-            'b_start_wedstrijden' => $bStartWedstrijden,
-            'a_wedstrijden' => $n - 1,
-            'b_wedstrijden' => $bWedstrijden,
-            'totaal_wedstrijden' => $totaalWedstrijden,
-            'eerste_ronde' => $this->getRondeNaam($n),
-            'eerste_ronde_wedstrijden' => $params['a1Verliezers'],
-            'a_byes' => max(0, 2 * $params['d'] - $n),
-            'b_byes' => max(0, $bCapaciteit - $params['eersteGolf']),
-            'dubbel_rondes' => $params['dubbelRondes'],
-        ];
+        return $this->calculator->berekenStatistieken($n, $type);
     }
 
     // =========================================================================
