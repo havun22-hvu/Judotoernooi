@@ -14,6 +14,15 @@ use Illuminate\Support\Facades\Log;
 
 class StripeController extends Controller
 {
+    /**
+     * Stripe event types we act on, mapped to internal status strings.
+     * Unlisted event types are acknowledged (200) without side-effects.
+     */
+    private const STRIPE_EVENT_STATUS_MAP = [
+        'checkout.session.completed' => 'paid',
+        'checkout.session.expired' => 'expired',
+    ];
+
     public function __construct(
         private StripePaymentProvider $stripeProvider
     ) {}
@@ -155,15 +164,6 @@ class StripeController extends Controller
             return response('Error', 500);
         }
     }
-
-    /**
-     * Stripe event types we act on, mapped to internal status strings.
-     * Unlisted event types are acknowledged (200) without side-effects.
-     */
-    private const STRIPE_EVENT_STATUS_MAP = [
-        'checkout.session.completed' => 'paid',
-        'checkout.session.expired' => 'expired',
-    ];
 
     /**
      * Dispatch a verified Stripe coach-payment event.
