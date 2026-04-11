@@ -12,6 +12,7 @@ use App\Models\SyncConflict;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -119,21 +120,12 @@ class SyncApiController extends Controller
                 }
 
                 $localPayload = $item['payload'];
-                $cloudData = $record->toArray();
 
-                // Real conflict detection: BOTH sides modified since last sync.
-                // Only available when the local sync client tells us its
-                // last successful sync timestamp. Without that we cannot
-                // distinguish "stale resend" from "concurrent edit", so we
-                // fall back to the legacy last-write-wins behaviour below.
-                if ($lastSyncedAt && $this->detectConflict($localPayload, $cloudData, $lastSyncedAt)) {
-                    $winner = $this->resolveConflict(
-                        $localPayload,
-                        $cloudData,
-                        $item['table'],
-                        $item['record_id'],
-                        $record
-                    );
+                // Without last_synced_at we cannot distinguish "stale resend"
+                // from "concurrent edit", so older clients fall through to
+                // the legacy last-write-wins path below.
+                if ($lastSyncedAt && $this->detectConflict($localPayload, $record->toArray(), $lastSyncedAt)) {
+                    $winner = $this->resolveConflict($localPayload, $item['table'], $record);
 
                     Log::warning("Sync conflict detected", [
                         'table' => $item['table'],
@@ -182,7 +174,7 @@ class SyncApiController extends Controller
                 return 'applied';
         }
 
-        return 'applied';
+        return 'applied'; // unreachable: action is validated to one of the cases above
     }
 
     /**
@@ -217,30 +209,22 @@ class SyncApiController extends Controller
      * — overruling it from the cloud loses points that were just awarded.
      * Config-style data (judoka, poule setup) belongs to the cloud, where
      * organisators edit names and weights between rounds.
-     *
-     * @return string winner ('local' or 'cloud')
      */
-    protected function resolveConflict(
-        array $localRecord,
-        array $cloudRecord,
-        string $table,
-        int $recordId,
-        $eloquentRecord
-    ): string {
+    protected function resolveConflict(array $localRecord, string $table, Model $cloudRecord): string
+    {
         $winner = SyncConflict::winnerFor($table);
 
         SyncConflict::create([
             'table_name' => $table,
-            'record_id' => $recordId,
+            'record_id' => $cloudRecord->getKey(),
             'local_data' => $localRecord,
-            'cloud_data' => $cloudRecord,
+            'cloud_data' => $cloudRecord->toArray(),
             'applied_winner' => $winner,
         ]);
 
         if ($winner === SyncConflict::WINNER_LOCAL) {
-            $eloquentRecord->update($localRecord);
+            $cloudRecord->update($localRecord);
         }
-        // Cloud winner = leave the existing record alone.
 
         return $winner;
     }
