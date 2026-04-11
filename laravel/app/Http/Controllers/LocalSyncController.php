@@ -222,52 +222,34 @@ class LocalSyncController extends Controller
     private function updateEnvFile(array $values): void
     {
         $envPath = base_path('.env');
-
-        if (!File::exists($envPath)) {
-            throw new \RuntimeException('.env file not found at ' . $envPath);
-        }
-
         $envContent = File::get($envPath);
 
-        // Backup current .env before we touch it
         $backupDir = storage_path('app/env-backups');
-        if (!File::isDirectory($backupDir)) {
-            File::makeDirectory($backupDir, 0755, true);
-        }
-        $backupFile = $backupDir . DIRECTORY_SEPARATOR . 'env-' . date('YmdHis') . '.bak';
-        File::copy($envPath, $backupFile);
+        File::ensureDirectoryExists($backupDir);
+        File::copy($envPath, $backupDir . '/env-' . date('YmdHis') . '.bak');
 
         foreach ($values as $key => $value) {
-            // 1) Whitelist key
             if (!in_array($key, self::ALLOWED_ENV_KEYS, true)) {
                 throw new \InvalidArgumentException("Env key not allowed: {$key}");
             }
 
             $value = (string) $value;
 
-            // 2) Reject dangerous characters in value
             if (preg_match('/[\r\n"\'\\\\$`]/', $value)) {
                 throw new \InvalidArgumentException("Invalid characters in value: {$key}");
             }
 
-            // 3) Escape values that contain spaces by wrapping in double quotes
             $escaped = str_contains($value, ' ') ? '"' . $value . '"' : $value;
-
-            // 4) Use preg_quote on the KEY (not the value) when building the regex
             $quotedKey = preg_quote($key, '/');
 
             if (preg_match('/^' . $quotedKey . '=/m', $envContent)) {
-                $envContent = preg_replace(
-                    '/^' . $quotedKey . '=.*/m',
-                    $key . '=' . $escaped,
-                    $envContent
-                );
+                $envContent = preg_replace('/^' . $quotedKey . '=.*/m', $key . '=' . $escaped, $envContent);
             } else {
                 $envContent .= "\n" . $key . '=' . $escaped;
             }
         }
 
-        // 5) Atomic write with exclusive lock
+        // file_put_contents used directly because File::put does not expose LOCK_EX
         file_put_contents($envPath, $envContent, LOCK_EX);
     }
 

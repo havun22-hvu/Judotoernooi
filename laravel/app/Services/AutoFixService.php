@@ -666,12 +666,20 @@ class AutoFixService
     }
 
     /**
-     * Determine if we're running in a test or local environment.
-     * Used to sandbox git operations so tests don't create real branches/commits.
+     * Sandbox guard: in testing/local we never touch real git unless the
+     * caller explicitly opts in via autofix.force_git_in_tests. Returns
+     * true when the current call should be skipped.
      */
-    protected function isTestOrLocalEnv(): bool
+    protected function shouldSkipGit(string $caller, array $context = []): bool
     {
-        return app()->environment(['testing', 'local']);
+        if (!app()->environment(['testing', 'local'])) {
+            return false;
+        }
+        if (config('autofix.force_git_in_tests', false)) {
+            return false;
+        }
+        Log::info("AutoFix: {$caller} skipped (test/local env)", $context);
+        return true;
     }
 
     /**
@@ -679,11 +687,7 @@ class AutoFixService
      */
     public function gitCommitAndPush(AutofixProposal $proposal): void
     {
-        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
-            Log::info('AutoFix: git operations skipped (test/local env)', [
-                'proposal_id' => $proposal->id,
-                'file' => $proposal->file,
-            ]);
+        if ($this->shouldSkipGit('gitCommitAndPush', ['proposal_id' => $proposal->id, 'file' => $proposal->file])) {
             return;
         }
 
@@ -731,8 +735,7 @@ class AutoFixService
      */
     protected function gitBranchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
     {
-        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
-            Log::info('AutoFix: gitBranchAndPR skipped (test/local env)', ['file' => $file]);
+        if ($this->shouldSkipGit('gitBranchAndPR', ['file' => $file])) {
             return;
         }
 
@@ -779,8 +782,7 @@ class AutoFixService
      */
     protected function gitDirectPush(string $basePath, string $file, string $message): void
     {
-        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
-            Log::info('AutoFix: gitDirectPush skipped (test/local env)', ['file' => $file]);
+        if ($this->shouldSkipGit('gitDirectPush', ['file' => $file])) {
             return;
         }
 
