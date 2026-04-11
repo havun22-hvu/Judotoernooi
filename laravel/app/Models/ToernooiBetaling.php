@@ -16,6 +16,22 @@ class ToernooiBetaling extends Model
     public const STATUS_EXPIRED = 'expired';
     public const STATUS_CANCELED = 'canceled';
 
+    /**
+     * Terminal statuses — once set, the payment will not change state again
+     * and webhook idempotency should kick in.
+     */
+    public const FINAL_STATUSES = [
+        self::STATUS_PAID,
+        self::STATUS_FAILED,
+        self::STATUS_EXPIRED,
+        self::STATUS_CANCELED,
+    ];
+
+    public static function isFinalStatus(string $status): bool
+    {
+        return in_array($status, self::FINAL_STATUSES, true);
+    }
+
     protected $fillable = [
         'toernooi_id',
         'organisator_id',

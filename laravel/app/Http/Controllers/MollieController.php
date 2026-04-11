@@ -126,15 +126,13 @@ class MollieController extends Controller
             return response('Missing payment ID', 400);
         }
 
-        // Find betaling by mollie_payment_id
         $betaling = Betaling::where('mollie_payment_id', $paymentId)->first();
 
+        // Simulated / unknown payment — acknowledge so Mollie stops retrying.
         if (!$betaling) {
-            // Could be a simulated payment or unknown
             return response('OK', 200);
         }
 
-        // Idempotency check — already finalized, do not re-process.
         if ($betaling->payment_processed_at !== null) {
             Log::info('Mollie webhook ignored (already processed)', [
                 'payment_id' => $paymentId,
@@ -146,8 +144,6 @@ class MollieController extends Controller
         try {
             $toernooi = $betaling->toernooi;
             $this->mollieService->ensureValidToken($toernooi);
-
-            // Never trust webhook payload — re-fetch directly from Mollie.
             $payment = $this->mollieService->getPayment($toernooi, $paymentId);
 
             DB::transaction(function () use ($betaling, $payment) {
@@ -190,15 +186,12 @@ class MollieController extends Controller
             return response('Missing payment ID', 400);
         }
 
-        // Find toernooi betaling by mollie_payment_id
         $betaling = ToernooiBetaling::where('mollie_payment_id', $paymentId)->first();
 
         if (!$betaling) {
-            // Could be a simulated payment or unknown
             return response('OK', 200);
         }
 
-        // Idempotency check — already finalized, do not re-process.
         if ($betaling->payment_processed_at !== null) {
             Log::info('Mollie toernooi webhook ignored (already processed)', [
                 'payment_id' => $paymentId,
@@ -210,7 +203,6 @@ class MollieController extends Controller
         try {
             $apiKey = $this->mollieService->getPlatformApiKey();
 
-            // Never trust webhook payload — re-fetch directly from Mollie.
             $response = \Illuminate\Support\Facades\Http::timeout(15)
                 ->connectTimeout(5)
                 ->withHeaders([
@@ -247,16 +239,7 @@ class MollieController extends Controller
     }
 
     /**
-     * Final statuses that should flip the idempotency marker so the same
-     * webhook cannot be re-processed (and cause duplicate side-effects).
-     */
-    private const FINAL_STATUSES = ['paid', 'failed', 'expired', 'canceled'];
-
-    /**
      * Update toernooi betaling status based on Mollie status.
-     *
-     * Sets payment_processed_at on final statuses so repeated webhook
-     * deliveries become no-ops (see idempotency guard in webhook()).
      */
     private function updateToernooiBetalingStatus(ToernooiBetaling $betaling, string $status): void
     {
@@ -269,25 +252,24 @@ class MollieController extends Controller
         ];
 
         $newStatus = $statusMapping[$status] ?? $betaling->status;
+        $attributes = ['status' => $newStatus];
 
-        $betaling->update(['status' => $newStatus]);
-
-        // If paid, activate the paid plan (invoices + updates plan)
-        if ($newStatus === ToernooiBetaling::STATUS_PAID && !$betaling->betaald_op) {
-            $betaling->markeerAlsBetaald();
+        // Flip idempotency marker on final states so repeated webhook
+        // deliveries become no-ops (see guard in webhook()).
+        if (ToernooiBetaling::isFinalStatus($newStatus)) {
+            $attributes['payment_processed_at'] = now();
         }
 
-        // Mark as processed on final statuses to enforce webhook idempotency.
-        if (in_array($status, self::FINAL_STATUSES, true)) {
-            $betaling->forceFill(['payment_processed_at' => now()])->save();
+        $betaling->update($attributes);
+
+        // Paid activates the paid plan (invoices + updates plan).
+        if ($newStatus === ToernooiBetaling::STATUS_PAID && !$betaling->betaald_op) {
+            $betaling->markeerAlsBetaald();
         }
     }
 
     /**
      * Update betaling status based on Mollie status.
-     *
-     * Sets payment_processed_at on final statuses so repeated webhook
-     * deliveries become no-ops (see idempotency guard in webhook()).
      */
     private function updateBetalingStatus(Betaling $betaling, string $status): void
     {
@@ -301,17 +283,18 @@ class MollieController extends Controller
         ];
 
         $newStatus = $statusMapping[$status] ?? $betaling->status;
+        $attributes = ['status' => $newStatus];
 
-        $betaling->update(['status' => $newStatus]);
-
-        // If paid, mark judokas as paid
-        if ($newStatus === Betaling::STATUS_PAID && !$betaling->betaald_op) {
-            $betaling->markeerAlsBetaald();
+        // Flip idempotency marker on final states so repeated webhook
+        // deliveries become no-ops (see guard in webhook()).
+        if (Betaling::isFinalStatus($newStatus)) {
+            $attributes['payment_processed_at'] = now();
         }
 
-        // Mark as processed on final statuses to enforce webhook idempotency.
-        if (in_array($status, self::FINAL_STATUSES, true)) {
-            $betaling->forceFill(['payment_processed_at' => now()])->save();
+        $betaling->update($attributes);
+
+        if ($newStatus === Betaling::STATUS_PAID && !$betaling->betaald_op) {
+            $betaling->markeerAlsBetaald();
         }
     }
 
