@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Judoka;
+use App\Models\Poule;
 use App\Models\Wedstrijd;
+use App\Observers\PublicTournamentCacheObserver;
 use App\Observers\SyncQueueObserver;
 use App\Services\BackupService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -32,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
         // Only observes score/weight changes to push to cloud
         Wedstrijd::observe(SyncQueueObserver::class);
         Judoka::observe(SyncQueueObserver::class);
+
+        // Invalidate public tournament cache on data changes
+        Poule::observe(PublicTournamentCacheObserver::class);
+        Wedstrijd::observe(PublicTournamentCacheObserver::class);
 
         // PROTECT staging/production: block migrate:fresh, auto-backup before migrations
         Event::listen(MigrationsStarted::class, function () {

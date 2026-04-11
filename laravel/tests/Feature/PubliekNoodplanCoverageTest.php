@@ -173,6 +173,25 @@ class PubliekNoodplanCoverageTest extends TestCase
     }
 
     #[Test]
+    public function publiek_index_query_count_stays_bounded_with_many_poules(): void
+    {
+        // N+1 regression test: query count should scale sub-linearly with poule count.
+        // With eager loading the public index must NOT issue one query per poule.
+        for ($i = 0; $i < 8; $i++) {
+            $this->createPouleWithJudokas(3, true, afgeroepen: true);
+        }
+
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $response = $this->get($this->publicUrl());
+        $queries = \Illuminate\Support\Facades\DB::getQueryLog();
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        $response->assertStatus(200);
+        // Generous upper bound — a real N+1 with 8 poules would blow past 60+ queries.
+        $this->assertLessThan(60, count($queries), 'Public index issued too many queries — possible N+1 regression');
+    }
+
+    #[Test]
     public function publiek_zoeken_returns_matching_judokas(): void
     {
         Judoka::factory()->create([
