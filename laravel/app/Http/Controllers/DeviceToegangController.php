@@ -25,19 +25,16 @@ class DeviceToegangController extends Controller
             return $this->vrijwilligerError('Deze link is niet meer actief. Vraag een nieuwe link bij de jurytafel.');
         }
 
-        // Check if already bound to this device
         $deviceToken = $request->cookie('device_token_' . $toegang->id);
 
         if ($deviceToken && $toegang->device_token === $deviceToken) {
-            // Already bound, redirect to interface
             return $this->redirectToInterface($toegang);
         }
 
-        // Not yet bound to any device OR bound to a different device:
-        // the role code itself is the secret, so we can bind directly.
         // If a different device is already bound, the organisator must
         // explicitly reset the binding from the beheer UI before a new
-        // device can take over.
+        // device can take over — the role code alone is not enough to
+        // override an existing binding.
         if ($toegang->isGebonden()) {
             return $this->vrijwilligerError('Deze toegang is al aan een ander apparaat gekoppeld. Vraag de organisator om de binding te resetten.');
         }
@@ -52,8 +49,8 @@ class DeviceToegangController extends Controller
             60 * 24 * 365, // 1 year
             '/',
             null,
-            true,
-            true
+            true, // secure
+            true  // httpOnly
         );
 
         return $this->redirectToInterface($toegang)->withCookie($cookie);

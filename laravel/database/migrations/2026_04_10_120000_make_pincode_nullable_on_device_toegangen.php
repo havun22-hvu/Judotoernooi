@@ -22,8 +22,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // doctrine/dbal is required for ->change() on older Laravel versions,
-        // but Laravel 11 supports ->change() natively.
         if (Schema::hasColumn('device_toegangen', 'pincode')) {
             Schema::table('device_toegangen', function (Blueprint $table) {
                 $table->string('pincode', 4)->nullable()->change();

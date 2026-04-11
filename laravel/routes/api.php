@@ -25,7 +25,8 @@ Route::get('/scoreboard/version', function () {
     ]);
 })->name('api.scoreboard.version');
 
-// Public: authenticate with code + pincode to receive Bearer token
+// Public: authenticate with the 12-character role code to receive a Bearer token.
+// The `throttle:login` middleware mitigates brute-force of the code itself.
 Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
     ->middleware('throttle:login')
     ->name('api.scoreboard.auth');
