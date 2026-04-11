@@ -80,4 +80,9 @@ return [
         'composer.json',
         'composer.lock',
     ],
+
+    // Force real git operations even when running in testing/local env.
+    // Default false: tests and local dev never create real hotfix branches.
+    // Set to true only when you intentionally want to exercise git plumbing.
+    'force_git_in_tests' => env('AUTOFIX_FORCE_GIT_IN_TESTS', false),
 ];

@@ -198,24 +198,77 @@ class LocalSyncController extends Controller
     }
 
     /**
-     * Update .env file with new values
+     * Whitelist of env keys that may be written by this controller.
+     */
+    private const ALLOWED_ENV_KEYS = [
+        'LOCAL_SERVER_ROLE',
+        'LOCAL_SERVER_IP',
+        'LOCAL_SERVER_DEVICE_NAME',
+        'LOCAL_SERVER_CONFIGURED_AT',
+    ];
+
+    /**
+     * Update .env file with new values.
+     *
+     * Safety measures:
+     *  - Whitelist: only known LOCAL_SERVER_* keys are permitted
+     *  - Value validation: rejects control chars, quotes, backslashes, $ and backticks
+     *  - Backup: copies current .env to storage/app/env-backups/ before write
+     *  - preg_quote on the KEY (not the value) to build the regex safely
+     *  - Atomic write via file_put_contents(..., LOCK_EX)
+     *
+     * @throws \InvalidArgumentException on invalid key or value
      */
     private function updateEnvFile(array $values): void
     {
         $envPath = base_path('.env');
+
+        if (!File::exists($envPath)) {
+            throw new \RuntimeException('.env file not found at ' . $envPath);
+        }
+
         $envContent = File::get($envPath);
 
-        foreach ($values as $key => $value) {
-            $value = str_contains($value, ' ') ? "\"$value\"" : $value;
+        // Backup current .env before we touch it
+        $backupDir = storage_path('app/env-backups');
+        if (!File::isDirectory($backupDir)) {
+            File::makeDirectory($backupDir, 0755, true);
+        }
+        $backupFile = $backupDir . DIRECTORY_SEPARATOR . 'env-' . date('YmdHis') . '.bak';
+        File::copy($envPath, $backupFile);
 
-            if (preg_match("/^{$key}=/m", $envContent)) {
-                $envContent = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $envContent);
+        foreach ($values as $key => $value) {
+            // 1) Whitelist key
+            if (!in_array($key, self::ALLOWED_ENV_KEYS, true)) {
+                throw new \InvalidArgumentException("Env key not allowed: {$key}");
+            }
+
+            $value = (string) $value;
+
+            // 2) Reject dangerous characters in value
+            if (preg_match('/[\r\n"\'\\\\$`]/', $value)) {
+                throw new \InvalidArgumentException("Invalid characters in value: {$key}");
+            }
+
+            // 3) Escape values that contain spaces by wrapping in double quotes
+            $escaped = str_contains($value, ' ') ? '"' . $value . '"' : $value;
+
+            // 4) Use preg_quote on the KEY (not the value) when building the regex
+            $quotedKey = preg_quote($key, '/');
+
+            if (preg_match('/^' . $quotedKey . '=/m', $envContent)) {
+                $envContent = preg_replace(
+                    '/^' . $quotedKey . '=.*/m',
+                    $key . '=' . $escaped,
+                    $envContent
+                );
             } else {
-                $envContent .= "\n{$key}={$value}";
+                $envContent .= "\n" . $key . '=' . $escaped;
             }
         }
 
-        File::put($envPath, $envContent);
+        // 5) Atomic write with exclusive lock
+        file_put_contents($envPath, $envContent, LOCK_EX);
     }
 
     /**

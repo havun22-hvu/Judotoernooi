@@ -666,10 +666,27 @@ class AutoFixService
     }
 
     /**
+     * Determine if we're running in a test or local environment.
+     * Used to sandbox git operations so tests don't create real branches/commits.
+     */
+    protected function isTestOrLocalEnv(): bool
+    {
+        return app()->environment(['testing', 'local']);
+    }
+
+    /**
      * Commit fix to a hotfix branch and create a PR, or push directly if branch model is disabled.
      */
     public function gitCommitAndPush(AutofixProposal $proposal): void
     {
+        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
+            Log::info('AutoFix: git operations skipped (test/local env)', [
+                'proposal_id' => $proposal->id,
+                'file' => $proposal->file,
+            ]);
+            return;
+        }
+
         try {
             $file = $proposal->file;
             $basePath = base_path();
@@ -714,6 +731,11 @@ class AutoFixService
      */
     protected function gitBranchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
     {
+        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
+            Log::info('AutoFix: gitBranchAndPR skipped (test/local env)', ['file' => $file]);
+            return;
+        }
+
         $branchPrefix = config('autofix.branch_prefix', 'hotfix/autofix-');
         $branch = $branchPrefix . date('Ymd-His');
 
@@ -757,6 +779,11 @@ class AutoFixService
      */
     protected function gitDirectPush(string $basePath, string $file, string $message): void
     {
+        if ($this->isTestOrLocalEnv() && !config('autofix.force_git_in_tests', false)) {
+            Log::info('AutoFix: gitDirectPush skipped (test/local env)', ['file' => $file]);
+            return;
+        }
+
         $commands = sprintf(
             'cd %s && git add %s && git commit -m %s && git push 2>&1',
             escapeshellarg($basePath),

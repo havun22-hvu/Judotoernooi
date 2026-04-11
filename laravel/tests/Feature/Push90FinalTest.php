@@ -549,6 +549,9 @@ class Push90FinalTest extends TestCase
     public function autofix_git_commit_does_not_throw_on_failure(): void
     {
         config(['autofix.branch_model' => false]);
+        // Opt-in: the spy subclass already blocks real git, so allow the
+        // top-level sandbox to be bypassed for this unit test.
+        config(['autofix.force_git_in_tests' => true]);
 
         // Anonymous subclass overrides git methods to avoid real shell exec
         $service = new class extends AutoFixService {
@@ -654,6 +657,9 @@ class Push90FinalTest extends TestCase
     public function autofix_git_commit_uses_branch_model_when_enabled(): void
     {
         config(['autofix.branch_model' => true]);
+        // Opt-in: the spy subclass already blocks real git, so allow the
+        // top-level sandbox to be bypassed for this unit test.
+        config(['autofix.force_git_in_tests' => true]);
 
         $service = new class extends AutoFixService {
             public array $gitCalls = [];
