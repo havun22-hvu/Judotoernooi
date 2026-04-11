@@ -454,7 +454,6 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('/', [DeviceToegangBeheerController::class, 'store'])->name('store');
         Route::put('{toegang}', [DeviceToegangBeheerController::class, 'update'])->name('update');
         Route::post('{toegang}/reset', [DeviceToegangBeheerController::class, 'reset'])->name('reset');
-        Route::post('{toegang}/regenerate-pin', [DeviceToegangBeheerController::class, 'regeneratePin'])->name('regenerate-pin');
         Route::delete('{toegang}', [DeviceToegangBeheerController::class, 'destroy'])->name('destroy');
         Route::post('reset-all', [DeviceToegangBeheerController::class, 'resetAll'])->name('reset-all');
         Route::get('qr', [DeviceToegangBeheerController::class, 'qrCode'])->name('qr');
@@ -752,8 +751,9 @@ Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
 // Device binding routes - NEW URL structure: /{org}/{toernooi}/toegang/{code}
 Route::prefix('{organisator}/{toernooi}')->group(function () {
     Route::prefix('toegang')->name('toegang.')->group(function () {
-        Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show');
-        Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify')->middleware('throttle:5,1');
+        // Automatic device binding — the 12-char code in the URL is the secret.
+        // Throttled to mitigate brute-force attempts against the code itself.
+        Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show')->middleware('throttle:30,1');
     });
 
     // Device-bound interfaces

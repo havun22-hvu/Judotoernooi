@@ -1368,28 +1368,23 @@ class MatController extends Controller
 
         $wachtwoord = $validated['wachtwoord'];
 
-        // Accept: device pincode, toernooi admin/jury pin (bcrypt), organisator password
+        // Accept: toernooi admin/jury pin (bcrypt), organisator password.
+        // Device PIN has been removed — device-bound routes already require
+        // an authenticated device binding via the 12-character role code.
         $geldig = false;
 
-        // 1. Any device pincode for this toernooi (plain text, 4 digits)
-        if (!$geldig) {
-            $geldig = $toernooi->deviceToegangen()
-                ->where('pincode', $wachtwoord)
-                ->exists();
-        }
-
-        // 2. Toernooi admin or jury pin (bcrypt)
+        // 1. Toernooi admin or jury pin (bcrypt)
         if (!$geldig) {
             $geldig = $toernooi->checkWachtwoord('admin', $wachtwoord)
                 || $toernooi->checkWachtwoord('jury', $wachtwoord);
         }
 
-        // 3. Organisator login password
+        // 2. Organisator login password
         if (!$geldig) {
             $geldig = Hash::check($wachtwoord, $toernooi->organisator->password ?? '');
         }
 
-        // 4. Logged-in user's password (e.g. sitebeheerder viewing another org's toernooi)
+        // 3. Logged-in user's password (e.g. sitebeheerder viewing another org's toernooi)
         if (!$geldig && auth('organisator')->check()) {
             $geldig = Hash::check($wachtwoord, auth('organisator')->user()->password ?? '');
         }

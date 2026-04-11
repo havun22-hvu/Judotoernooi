@@ -285,7 +285,6 @@ class OfflineExportService
                 rol TEXT NOT NULL,
                 mat_nummer INTEGER,
                 code TEXT,
-                pincode TEXT,
                 device_token TEXT,
                 device_info TEXT,
                 vrijwilliger_naam TEXT,
@@ -504,14 +503,14 @@ class OfflineExportService
     {
         $devices = $toernooi->deviceToegangen()->get();
         $stmt = $this->sqlite->prepare('
-            INSERT INTO device_toegangen (id, toernooi_id, rol, mat_nummer, code, pincode, device_token,
+            INSERT INTO device_toegangen (id, toernooi_id, rol, mat_nummer, code, device_token,
                 device_info, vrijwilliger_naam, vrijwilliger_email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
 
         foreach ($devices as $d) {
             $stmt->execute([
-                $d->id, $d->toernooi_id, $d->rol, $d->mat_nummer, $d->code, $d->pincode,
+                $d->id, $d->toernooi_id, $d->rol, $d->mat_nummer, $d->code,
                 $d->device_token, $d->device_info, $d->vrijwilliger_naam, $d->vrijwilliger_email,
             ]);
         }

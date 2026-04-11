@@ -46,7 +46,6 @@ class ApiControllersCoverageTest extends TestCase
         ]);
 
         $code = strtoupper('ABCDEF123456');
-        $pincode = '1234';
         $apiToken = bin2hex(random_bytes(32));
 
         $toegang = DeviceToegang::create([
@@ -54,12 +53,11 @@ class ApiControllersCoverageTest extends TestCase
             'rol' => 'mat',  // 'scoreboard' not in SQLite CHECK constraint; 'mat' accepted by middleware
             'mat_nummer' => 1,
             'code' => $code,
-            'pincode' => $pincode,
             'api_token' => $apiToken,
             'laatst_actief' => now(),
         ]);
 
-        return compact('org', 'toernooi', 'mat', 'toegang', 'apiToken', 'code', 'pincode');
+        return compact('org', 'toernooi', 'mat', 'toegang', 'apiToken', 'code');
     }
 
     // ========================================================================
@@ -67,13 +65,12 @@ class ApiControllersCoverageTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function scoreboard_auth_succeeds_with_valid_code_and_pincode(): void
+    public function scoreboard_auth_succeeds_with_valid_code(): void
     {
         $setup = $this->createScoreboardSetup();
 
         $response = $this->postJson('/api/scoreboard/auth', [
             'code' => $setup['code'],
-            'pincode' => $setup['pincode'],
         ]);
 
         $response->assertOk();
@@ -91,24 +88,10 @@ class ApiControllersCoverageTest extends TestCase
 
         $response = $this->postJson('/api/scoreboard/auth', [
             'code' => 'INVALIDCODE!',
-            'pincode' => '1234',
         ]);
 
         $response->assertStatus(401);
-        $response->assertJsonFragment(['message' => 'Ongeldige code of pincode.']);
-    }
-
-    #[Test]
-    public function scoreboard_auth_fails_with_wrong_pincode(): void
-    {
-        $setup = $this->createScoreboardSetup();
-
-        $response = $this->postJson('/api/scoreboard/auth', [
-            'code' => $setup['code'],
-            'pincode' => '9999',
-        ]);
-
-        $response->assertStatus(401);
+        $response->assertJsonFragment(['message' => 'Ongeldige code.']);
     }
 
     #[Test]
@@ -117,7 +100,7 @@ class ApiControllersCoverageTest extends TestCase
         $response = $this->postJson('/api/scoreboard/auth', []);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['code', 'pincode']);
+        $response->assertJsonValidationErrors(['code']);
     }
 
     // ========================================================================

@@ -53,7 +53,6 @@ class DeviceToegangBeheerController extends Controller
                 'mat_nummer' => $t->mat_nummer,
                 'label' => $t->getLabel(),
                 'code' => $t->code,
-                'pincode' => $t->pincode,
                 'url' => $t->getUrl(),
                 'is_gebonden' => $t->isGebonden(),
                 'device_info' => $t->device_info,
@@ -94,7 +93,6 @@ class DeviceToegangBeheerController extends Controller
             'mat_nummer' => $toegang->mat_nummer,
             'label' => $toegang->getLabel(),
             'code' => $toegang->code,
-            'pincode' => $toegang->pincode,
             'url' => $toegang->getUrl(),
             'is_gebonden' => false,
             'device_info' => null,
@@ -140,7 +138,6 @@ class DeviceToegangBeheerController extends Controller
             'mat_nummer' => $toegang->mat_nummer,
             'label' => $toegang->getLabel(),
             'code' => $toegang->code,
-            'pincode' => $toegang->pincode,
             'url' => $toegang->getUrl(),
             'is_gebonden' => $toegang->isGebonden(),
             'device_info' => $toegang->device_info,
@@ -158,22 +155,6 @@ class DeviceToegangBeheerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Device binding gereset',
-        ]);
-    }
-
-    /**
-     * Regenerate PIN.
-     */
-    public function regeneratePin(Organisator $organisator, Toernooi $toernooi, Request $request, DeviceToegang $toegang): JsonResponse
-    {
-        $toegang->update([
-            'pincode' => DeviceToegang::generatePincode(),
-        ]);
-        $toegang->reset(); // Also reset binding when PIN changes
-
-        return response()->json([
-            'success' => true,
-            'pincode' => $toegang->pincode,
         ]);
     }
 

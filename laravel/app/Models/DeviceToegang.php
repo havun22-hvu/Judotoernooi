@@ -18,7 +18,6 @@ class DeviceToegang extends Model
         'rol',
         'mat_nummer',
         'code',
-        'pincode',
         'device_token',
         'api_token',
         'device_info',
@@ -36,9 +35,6 @@ class DeviceToegang extends Model
         static::creating(function (DeviceToegang $toegang) {
             if (empty($toegang->code)) {
                 $toegang->code = self::generateCode();
-            }
-            if (empty($toegang->pincode)) {
-                $toegang->pincode = self::generatePincode();
             }
         });
     }
@@ -70,11 +66,6 @@ class DeviceToegang extends Model
     public static function findByDisplayCode(string $displayCode): ?self
     {
         return self::where('code', 'LIKE', strtoupper($displayCode) . '%')->first();
-    }
-
-    public static function generatePincode(): string
-    {
-        return str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     public function toernooi(): BelongsTo

@@ -10,8 +10,8 @@
         </button>
     </div>
     <p class="text-gray-600 mb-4">
-        {{ __('Maak toegangen aan voor vrijwilligers. Elke toegang heeft een unieke URL en PIN.') }}
-        <br><span class="text-sm text-gray-500">{{ __('Het device wordt gekoppeld bij eerste login - zo kunnen alleen geautoriseerde devices de interface gebruiken.') }}</span>
+        {{ __('Maak toegangen aan voor vrijwilligers. Elke toegang heeft een unieke 12-cijferige URL.') }}
+        <br><span class="text-sm text-gray-500">{{ __('Het device wordt automatisch gekoppeld bij de eerste keer dat de link wordt geopend — zo kunnen alleen geautoriseerde devices de interface gebruiken.') }}</span>
     </p>
 
     {{-- Tabs per rol --}}
@@ -63,11 +63,6 @@
                                     <span class="text-xs text-gray-500 block">Token</span>
                                     <span class="font-mono font-bold text-lg text-gray-400" x-text="toegang.code ? toegang.code.substring(0, 4) : ''"></span>
                                 </div>
-                                {{-- PIN --}}
-                                <div class="text-center">
-                                    <span class="text-xs text-gray-500 block">PIN</span>
-                                    <span class="font-mono font-bold text-lg" x-text="toegang.pincode"></span>
-                                </div>
                             </div>
                             <table class="text-sm">
                                 <tbody>
@@ -82,9 +77,6 @@
                                                    class="bg-blue-500 hover:bg-blue-600 text-white px-2.5 py-1 rounded text-xs">Email</a>
                                                 <button type="button" @click="copyUrl(toegang)" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">
                                                     <span x-show="copiedId !== 'url_' + toegang.id">URL</span><span x-show="copiedId === 'url_' + toegang.id" x-cloak>✓</span>
-                                                </button>
-                                                <button type="button" @click="copyPin(toegang)" class="bg-gray-500 hover:bg-gray-600 text-white px-2.5 py-1 rounded text-xs">
-                                                    <span x-show="copiedId !== 'pin_' + toegang.id">PIN</span><span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
                                                 </button>
                                                 <button type="button" @click="showQr = showQr === 'mat_' + toegang.id ? null : 'mat_' + toegang.id; qrUrl = toegang.url"
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs" title="{{ __('QR code') }}">QR</button>
@@ -177,8 +169,8 @@
     <div class="mt-6 p-4 bg-blue-50 rounded-lg" x-show="Object.values(toegangenPerRol).flat().length > 0">
         <h4 class="font-bold text-blue-800 mb-2">{{ __('Voorbeeld bericht voor WhatsApp:') }}</h4>
         <div class="bg-white p-3 rounded border text-sm text-gray-700">
-            {{ __('Hoi! Morgen is het toernooi. Klik op je link en voer de PIN in om in te loggen.') }}<br><br>
-            <em class="text-gray-500">{{ __('Stuur elke vrijwilliger zijn/haar eigen link + PIN!') }}</em>
+            {{ __('Hoi! Morgen is het toernooi. Klik op je link — het apparaat wordt automatisch gekoppeld.') }}<br><br>
+            <em class="text-gray-500">{{ __('Stuur elke vrijwilliger zijn/haar eigen link!') }}</em>
         </div>
     </div>
 
@@ -398,14 +390,14 @@ function deviceToegangen() {
             } else if (nummer.startsWith('0')) {
                 nummer = '+31' + nummer.substring(1);
             }
-            const bericht = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}! {{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\nPIN: ${toegang.pincode}`;
+            const bericht = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}! {{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}`;
             return 'https://wa.me/' + nummer.replace('+', '') + '?text=' + encodeURIComponent(bericht);
         },
 
         getEmailUrl(toegang) {
             if (!toegang.email) return '';
             const subject = `{{ __('Toegang') }} ${toegang.label} - ${this.toernooiNaam}`;
-            const body = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}!\n\n{{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\n\nPIN: ${toegang.pincode}\n\n{{ __('Klik op de link en voer de PIN in om in te loggen.') }}`;
+            const body = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}!\n\n{{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\n\n{{ __('Klik op de link om in te loggen — het apparaat wordt automatisch gekoppeld.') }}`;
             return 'mailto:' + encodeURIComponent(toegang.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
         },
 
@@ -441,7 +433,7 @@ function deviceToegangen() {
         },
 
         async resetToegang(toegang) {
-            if (!confirm('{{ __('Device binding resetten? Het device moet opnieuw de PIN invoeren.') }}')) return;
+            if (!confirm('{{ __('Device binding resetten? Het volgende apparaat dat de link opent wordt automatisch gekoppeld.') }}')) return;
             try {
                 const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}/reset`, {
                     method: 'POST',
@@ -504,12 +496,6 @@ function deviceToegangen() {
         copyLcdUrl(toegang) {
             navigator.clipboard.writeText(this.getLcdUrl(toegang));
             this.copiedId = 'lcd_' + toegang.id;
-            setTimeout(() => this.copiedId = null, 2000);
-        },
-
-        copyPin(toegang) {
-            navigator.clipboard.writeText(toegang.pincode);
-            this.copiedId = 'pin_' + toegang.id;
             setTimeout(() => this.copiedId = null, 2000);
         },
 

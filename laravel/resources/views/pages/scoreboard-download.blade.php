@@ -224,7 +224,7 @@
                 <li>Download de APK op je Android tablet/telefoon</li>
                 <li>Open het bestand en sta installatie toe</li>
                 <li>Open de app en kies "Gekoppeld" of "Standalone"</li>
-                <li>Voer de toegangscode en pincode in (bij gekoppeld)</li>
+                <li>Voer de toegangscode in (bij gekoppeld)</li>
             </ol>
         </div>
     </div>

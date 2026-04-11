@@ -45,15 +45,6 @@ class DeviceToegangTest extends TestCase
     }
 
     #[Test]
-    public function pincode_generated_on_create(): void
-    {
-        $toegang = $this->maakToegang();
-        $this->assertNotEmpty($toegang->pincode);
-        $this->assertEquals(4, strlen($toegang->pincode));
-        $this->assertMatchesRegularExpression('/^\d{4}$/', $toegang->pincode);
-    }
-
-    #[Test]
     public function codes_are_unique(): void
     {
         $t1 = $this->maakToegang();
@@ -71,14 +62,6 @@ class DeviceToegangTest extends TestCase
         $code = DeviceToegang::generateCode();
         $this->assertEquals(12, strlen($code));
         $this->assertEquals(strtoupper($code), $code);
-    }
-
-    #[Test]
-    public function generate_pincode_returns_4_digits(): void
-    {
-        $pin = DeviceToegang::generatePincode();
-        $this->assertEquals(4, strlen($pin));
-        $this->assertMatchesRegularExpression('/^\d{4}$/', $pin);
     }
 
     #[Test]

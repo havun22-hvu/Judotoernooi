@@ -871,22 +871,44 @@ class AuthControllersCoverageTest extends TestCase
     }
 
     // ========================================================================
-    // DeviceToegangController — show & verify
+    // DeviceToegangController — show (auto-bind)
     // ========================================================================
 
     #[Test]
-    public function device_toegang_show_with_valid_code(): void
+    public function device_toegang_show_auto_binds_first_device(): void
     {
         $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
         $toegang = DeviceToegang::create([
             'toernooi_id' => $toernooi->id,
-            'rol' => 'mat',
-            'mat_nummer' => 1,
+            'rol' => 'hoofdjury',
         ]);
 
         $response = $this->get("/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}");
 
-        $response->assertStatus(200);
+        // First visit: device is auto-bound and redirected to the interface.
+        $response->assertRedirect();
+        $toegang->refresh();
+        $this->assertTrue($toegang->isGebonden());
+    }
+
+    #[Test]
+    public function device_toegang_show_blocks_second_device(): void
+    {
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
+        $toegang = DeviceToegang::create([
+            'toernooi_id' => $toernooi->id,
+            'rol' => 'weging',
+            'device_token' => 'already-bound-token',
+            'device_info' => 'Other device',
+            'gebonden_op' => now(),
+        ]);
+
+        // A second, different device (no matching cookie) hits the URL.
+        $response = $this->get("/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}");
+
+        $response->assertStatus(404); // vrijwilligerError view
+        $toegang->refresh();
+        $this->assertEquals('already-bound-token', $toegang->device_token);
     }
 
     #[Test]
@@ -895,55 +917,6 @@ class AuthControllersCoverageTest extends TestCase
         $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
 
         $response = $this->get("/{$this->organisator->slug}/{$toernooi->slug}/toegang/INVALID_CODE");
-
-        $response->assertStatus(404);
-    }
-
-    #[Test]
-    public function device_toegang_verify_with_correct_pin(): void
-    {
-        $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
-        $toegang = DeviceToegang::create([
-            'toernooi_id' => $toernooi->id,
-            'rol' => 'hoofdjury',
-        ]);
-
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}/verify",
-            ['pincode' => $toegang->pincode]
-        );
-
-        $response->assertRedirect();
-        $toegang->refresh();
-        $this->assertTrue($toegang->isGebonden());
-    }
-
-    #[Test]
-    public function device_toegang_verify_with_wrong_pin(): void
-    {
-        $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
-        $toegang = DeviceToegang::create([
-            'toernooi_id' => $toernooi->id,
-            'rol' => 'weging',
-        ]);
-
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}/verify",
-            ['pincode' => '9999']
-        );
-
-        $response->assertSessionHasErrors('pincode');
-    }
-
-    #[Test]
-    public function device_toegang_verify_with_invalid_code(): void
-    {
-        $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
-
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/INVALID/verify",
-            ['pincode' => '1234']
-        );
 
         $response->assertStatus(404);
     }
@@ -1027,7 +1000,7 @@ class AuthControllersCoverageTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function device_toegang_verify_detects_device_info(): void
+    public function device_toegang_show_detects_device_info(): void
     {
         $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
         $toegang = DeviceToegang::create([
@@ -1036,9 +1009,8 @@ class AuthControllersCoverageTest extends TestCase
             'mat_nummer' => 1,
         ]);
 
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}/verify",
-            ['pincode' => $toegang->pincode],
+        $response = $this->get(
+            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}",
             ['HTTP_USER_AGENT' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1']
         );
 
@@ -1181,26 +1153,6 @@ class AuthControllersCoverageTest extends TestCase
         $response->assertJson(['success' => true]);
         $toegang->refresh();
         $this->assertNull($toegang->device_token);
-    }
-
-    #[Test]
-    public function device_beheer_regenerate_pin(): void
-    {
-        $toernooi = Toernooi::factory()->create(['organisator_id' => $this->sitebeheerder->id]);
-        $this->actingAs($this->sitebeheerder, 'organisator');
-
-        $toegang = DeviceToegang::create([
-            'toernooi_id' => $toernooi->id,
-            'rol' => 'weging',
-        ]);
-
-        $response = $this->postJson(
-            "/{$this->sitebeheerder->slug}/toernooi/{$toernooi->slug}/api/device-toegang/{$toegang->id}/regenerate-pin"
-        );
-
-        $response->assertOk();
-        $response->assertJson(['success' => true]);
-        $response->assertJsonStructure(['pincode']);
     }
 
     #[Test]
@@ -1447,11 +1399,11 @@ class AuthControllersCoverageTest extends TestCase
     }
 
     // ========================================================================
-    // DeviceToegangController — verify for different roles
+    // DeviceToegangController — auto-bind for different roles
     // ========================================================================
 
     #[Test]
-    public function device_toegang_verify_spreker_role(): void
+    public function device_toegang_show_spreker_role_auto_binds(): void
     {
         $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
         $toegang = DeviceToegang::create([
@@ -1459,16 +1411,17 @@ class AuthControllersCoverageTest extends TestCase
             'rol' => 'spreker',
         ]);
 
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}/verify",
-            ['pincode' => $toegang->pincode]
+        $response = $this->get(
+            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}"
         );
 
         $response->assertRedirect();
+        $toegang->refresh();
+        $this->assertTrue($toegang->isGebonden());
     }
 
     #[Test]
-    public function device_toegang_verify_dojo_role(): void
+    public function device_toegang_show_dojo_role_auto_binds(): void
     {
         $toernooi = Toernooi::factory()->create(['organisator_id' => $this->organisator->id]);
         $toegang = DeviceToegang::create([
@@ -1476,11 +1429,12 @@ class AuthControllersCoverageTest extends TestCase
             'rol' => 'dojo',
         ]);
 
-        $response = $this->post(
-            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}/verify",
-            ['pincode' => $toegang->pincode]
+        $response = $this->get(
+            "/{$this->organisator->slug}/{$toernooi->slug}/toegang/{$toegang->code}"
         );
 
         $response->assertRedirect();
+        $toegang->refresh();
+        $this->assertTrue($toegang->isGebonden());
     }
 }

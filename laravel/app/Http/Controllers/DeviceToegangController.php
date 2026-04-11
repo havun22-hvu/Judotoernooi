@@ -9,9 +9,15 @@ use Illuminate\Support\Facades\Cookie;
 class DeviceToegangController extends Controller
 {
     /**
-     * Show PIN input page for device binding.
+     * Show the access link and (auto-)bind the current device.
+     *
+     * Security model: the 12-character random code in the URL is the secret.
+     * If the device is already bound, redirect to the interface. Otherwise
+     * bind this device automatically (first-device-wins) and redirect.
+     * The old 4-digit PIN prompt has been removed — the 12-char code provides
+     * ~71 bits of entropy, which is the only factor needed here.
      */
-    public function show(string $organisator, string $toernooi, string $code)
+    public function show(Request $request, string $organisator, string $toernooi, string $code)
     {
         $toegang = DeviceToegang::where('code', $code)->first();
 
@@ -20,56 +26,34 @@ class DeviceToegangController extends Controller
         }
 
         // Check if already bound to this device
-        $deviceToken = request()->cookie('device_token_' . $toegang->id);
+        $deviceToken = $request->cookie('device_token_' . $toegang->id);
 
         if ($deviceToken && $toegang->device_token === $deviceToken) {
             // Already bound, redirect to interface
             return $this->redirectToInterface($toegang);
         }
 
-        return view('pages.toegang.pin', [
-            'toegang' => $toegang,
-            'toernooi' => $toegang->toernooi,
-        ]);
-    }
-
-    /**
-     * Verify PIN and bind device.
-     */
-    public function verify(Request $request, string $organisator, string $toernooi, string $code)
-    {
-        $toegang = DeviceToegang::where('code', $code)->first();
-
-        if (!$toegang) {
-            return $this->vrijwilligerError('Deze link is niet meer actief. Vraag een nieuwe link bij de jurytafel.');
+        // Not yet bound to any device OR bound to a different device:
+        // the role code itself is the secret, so we can bind directly.
+        // If a different device is already bound, the organisator must
+        // explicitly reset the binding from the beheer UI before a new
+        // device can take over.
+        if ($toegang->isGebonden()) {
+            return $this->vrijwilligerError('Deze toegang is al aan een ander apparaat gekoppeld. Vraag de organisator om de binding te resetten.');
         }
 
-        $request->validate([
-            'pincode' => 'required|digits:4',
-        ]);
-
-        if ($request->pincode !== $toegang->pincode) {
-            return back()->withErrors(['pincode' => 'Ongeldige pincode']);
-        }
-
-        // Generate device token
-        $deviceToken = DeviceToegang::generateDeviceToken();
-
-        // Get device info from user agent
+        $newToken = DeviceToegang::generateDeviceToken();
         $deviceInfo = $this->getDeviceInfo($request->userAgent());
+        $toegang->bind($newToken, $deviceInfo);
 
-        // Bind device
-        $toegang->bind($deviceToken, $deviceInfo);
-
-        // Set cookie (1 year expiry)
         $cookie = Cookie::make(
             'device_token_' . $toegang->id,
-            $deviceToken,
+            $newToken,
             60 * 24 * 365, // 1 year
             '/',
             null,
-            true, // secure
-            true  // httpOnly
+            true,
+            true
         );
 
         return $this->redirectToInterface($toegang)->withCookie($cookie);

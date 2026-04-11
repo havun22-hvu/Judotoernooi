@@ -25,22 +25,25 @@ class ScoreboardController extends Controller
     ) {}
 
     /**
-     * Authenticate scoreboard device with code + pincode.
+     * Authenticate scoreboard device with a 12-character role code.
      * Returns Bearer token + toernooi/mat config.
+     *
+     * Security model: the 12-character random code is the only secret required.
+     * The old 4-digit PIN was removed because it added no meaningful entropy
+     * on top of the role code (~71 bits).
      */
     public function auth(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'code' => 'required|string|size:12',
-            'pincode' => 'required|string|size:4',
         ]);
 
         $toegang = DeviceToegang::where('code', $validated['code'])
             ->whereIn('rol', ['scoreboard', 'mat'])
             ->first();
 
-        if (!$toegang || $toegang->pincode !== $validated['pincode']) {
-            return response()->json(['message' => 'Ongeldige code of pincode.'], 401);
+        if (!$toegang) {
+            return response()->json(['message' => 'Ongeldige code.'], 401);
         }
 
         // Generate API token

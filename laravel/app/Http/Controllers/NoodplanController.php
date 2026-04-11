@@ -526,7 +526,6 @@ class NoodplanController extends Controller
                     'mat_nummer' => $d->mat_nummer,
                     'label' => $d->getLabel(),
                     'code' => $d->code,
-                    'pincode' => $d->pincode,
                     'url' => $d->getUrl(),
                     'is_gebonden' => $d->isGebonden(),
                     'device_info' => $d->device_info,

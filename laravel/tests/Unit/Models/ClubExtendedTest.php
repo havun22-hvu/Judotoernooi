@@ -95,7 +95,7 @@ class ClubExtendedTest extends TestCase
     }
 
     // ========================================================================
-    // Pincode per toernooi
+    // Pincode per toernooi (coach portal login)
     // ========================================================================
 
     #[Test]

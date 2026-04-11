@@ -744,7 +744,7 @@ function renderVrijwilligers() {
     html += '<ul style="margin-top:6px;font-size:13px;color:#78350f;list-style:disc;padding-left:20px;">';
     html += '<li>Alle PWA\'s op tablets moeten <strong>gereset</strong> worden (cache wissen of opnieuw installeren)</li>';
     html += '<li>Nieuwe toegangs-URL\'s moeten worden uitgedeeld (de URL wijst dan naar het lokale IP i.p.v. cloud)</li>';
-    html += '<li>De codes en pincodes hieronder blijven wel geldig</li>';
+    html += '<li>De codes hieronder blijven wel geldig</li>';
     html += '</ul>';
     html += '</div></div></div>';
 
@@ -770,7 +770,7 @@ function renderVrijwilligers() {
         html += '<div class="card">';
         html += '<div class="card-header" style="background:' + kleur + ';color:white;">' + (rolLabels[rol] || rol) + ' <span style="opacity:0.7;font-size:13px">(' + items.length + ')</span></div>';
         html += '<div class="card-body"><table>';
-        html += '<thead><tr><th>Functie</th><th>Naam</th><th>Telefoon</th><th>Code</th><th>PIN</th><th>Status</th></tr></thead>';
+        html += '<thead><tr><th>Functie</th><th>Naam</th><th>Telefoon</th><th>Code</th><th>Status</th></tr></thead>';
         html += '<tbody>';
 
         items.forEach(t => {
@@ -779,7 +779,6 @@ function renderVrijwilligers() {
             html += '<td>' + esc(t.naam || '-') + '</td>';
             html += '<td class="text-sm">' + esc(t.telefoon || '-') + '</td>';
             html += '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px">' + esc(t.code) + '</code></td>';
-            html += '<td><strong style="font-size:16px;letter-spacing:2px">' + esc(t.pincode) + '</strong></td>';
             html += '<td>';
             if (t.is_gebonden) {
                 html += '<span class="badge badge-green">' + esc(t.device_info || 'Gebonden') + '</span>';

@@ -2317,21 +2317,6 @@ class Push825Test extends TestCase
         $this->assertContains($response->status(), [200, 302, 400, 403, 404, 422]);
     }
 
-    #[Test]
-    public function device_mat_check_admin_wachtwoord_accepts_device_pincode(): void
-    {
-        [$toegang, $token] = $this->createDeviceToegang('mat');
-        $pincode = $toegang->pincode;
-
-        $response = $this->withCookie("device_token_{$toegang->id}", $token)
-            ->postJson(
-                $this->deviceUrl($toegang, 'mat') . '/check-admin-wachtwoord',
-                ['wachtwoord' => $pincode]
-            );
-
-        $this->assertContains($response->status(), [200, 302, 400, 403, 404]);
-    }
-
     // ========================================================================
     // Organisator Dashboard & related
     // ========================================================================

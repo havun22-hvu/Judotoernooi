@@ -92,6 +92,10 @@ class Club extends Model
 
     /**
      * Get pincode for a specific tournament.
+     *
+     * Note: this is the 5-digit coach portal PIN stored on the club_toernooi
+     * pivot — it is NOT related to the removed DeviceToegang PIN. The coach
+     * portal still uses this PIN for club login (see CoachPortalController).
      */
     public function getPincodeForToernooi(Toernooi $toernooi): ?string
     {
