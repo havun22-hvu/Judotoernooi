@@ -99,6 +99,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->reportable(function (\Throwable $e) {
             if (config('observability.enabled', true)) {
+                // Skip infra errors
+                $skip = ['EADDRINUSE', 'ECONNREFUSED', 'disk full', 'sock permission'];
+                foreach ($skip as $pattern) {
+                    if (str_contains($e->getMessage(), $pattern)) {
+                        return;
+                    }
+                }
                 try {
                     \Illuminate\Support\Facades\DB::connection('havuncore')->table('error_logs')->insert([
                         'project' => config('observability.project', 'judotoernooi'),
