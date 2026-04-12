@@ -79,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Queue failure notifications — in-app alert instead of email
+        // Queue failure notifications
         Queue::failing(function (JobFailed $event) {
             Log::critical('Queue job failed', [
                 'job' => $event->job->getName(),

@@ -7,13 +7,11 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">System Alerts</h1>
         <div class="flex gap-3">
-            {{-- Filter buttons --}}
             <a href="{{ route('admin.alerts') }}" class="px-3 py-1 rounded text-sm {{ !request('type') && !request('unread') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">Alle</a>
             <a href="{{ route('admin.alerts', ['unread' => 1]) }}" class="px-3 py-1 rounded text-sm {{ request('unread') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">Ongelezen</a>
             <a href="{{ route('admin.alerts', ['type' => 'autofix']) }}" class="px-3 py-1 rounded text-sm {{ request('type') === 'autofix' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">AutoFix</a>
             <a href="{{ route('admin.alerts', ['type' => 'queue_failure']) }}" class="px-3 py-1 rounded text-sm {{ request('type') === 'queue_failure' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">Queue</a>
 
-            {{-- Mark all read --}}
             <form action="{{ route('admin.alerts.markAllRead') }}" method="POST" class="inline">
                 @csrf
                 <button type="submit" class="px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700">Alles gelezen</button>
@@ -32,8 +30,16 @@
     @else
         <div class="space-y-3">
             @foreach($alerts as $alert)
-                <div class="bg-white rounded-lg shadow p-4 flex items-start gap-4 {{ !$alert->is_read ? 'border-l-4 border-' . $alert->severity_color . '-500' : 'opacity-75' }}">
-                    {{-- Severity indicator --}}
+                @php
+                    $borderClass = match($alert->severity) {
+                        'critical' => 'border-red-500',
+                        'high' => 'border-orange-500',
+                        'medium' => 'border-yellow-500',
+                        'low' => 'border-blue-500',
+                        default => 'border-gray-500',
+                    };
+                @endphp
+                <div class="bg-white rounded-lg shadow p-4 flex items-start gap-4 {{ !$alert->is_read ? 'border-l-4 ' . $borderClass : 'opacity-75' }}">
                     <div class="flex-shrink-0 mt-1">
                         @switch($alert->severity)
                             @case('critical')
@@ -50,7 +56,6 @@
                         @endswitch
                     </div>
 
-                    {{-- Content --}}
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
                             <span class="inline-block px-2 py-0.5 text-xs rounded font-medium
@@ -71,7 +76,6 @@
                         @endif
                     </div>
 
-                    {{-- Actions --}}
                     <div class="flex-shrink-0">
                         @if(!$alert->is_read)
                             <form action="{{ route('admin.alerts.markRead', $alert) }}" method="POST">
