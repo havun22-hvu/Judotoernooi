@@ -553,18 +553,19 @@ class Push90FinalTest extends TestCase
         // top-level sandbox to be bypassed for this unit test.
         config(['autofix.force_git_in_tests' => true]);
 
-        // Anonymous subclass overrides git methods to avoid real shell exec
-        $service = new class extends AutoFixService {
+        // Anonymous subclass of GitOperations to avoid real shell exec
+        $gitOps = new class extends \App\Services\AutoFix\GitOperations {
             public array $gitCalls = [];
-            protected function gitDirectPush(string $basePath, string $file, string $message): void
+            protected function directPush(string $basePath, string $file, string $message): void
             {
                 $this->gitCalls[] = ['direct', $basePath, $file, $message];
             }
-            protected function gitBranchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
+            protected function branchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
             {
                 $this->gitCalls[] = ['branch', $basePath, $file, $message];
             }
         };
+        $service = new AutoFixService($gitOps);
 
         $proposal = AutofixProposal::create([
             'exception_class' => 'Foo',
@@ -580,8 +581,8 @@ class Push90FinalTest extends TestCase
         ]);
 
         $service->gitCommitAndPush($proposal);
-        $this->assertCount(1, $service->gitCalls);
-        $this->assertSame('direct', $service->gitCalls[0][0]);
+        $this->assertCount(1, $gitOps->gitCalls);
+        $this->assertSame('direct', $gitOps->gitCalls[0][0]);
     }
 
     // NOTE: gitDirectPush and gitBranchAndPR tests removed because they
@@ -594,7 +595,7 @@ class Push90FinalTest extends TestCase
     {
         config(['autofix.github_token' => null]);
 
-        $service = new AutoFixService();
+        $gitOps = new \App\Services\AutoFix\GitOperations();
         $proposal = AutofixProposal::create([
             'exception_class' => 'X',
             'exception_message' => 'm',
@@ -609,7 +610,7 @@ class Push90FinalTest extends TestCase
         ]);
 
         // No token → method returns early
-        $this->invokePrivate($service, 'createGitHubPR', [
+        $this->invokePrivate($gitOps, 'createGitHubPR', [
             sys_get_temp_dir(),
             'main',
             'hotfix/test',
@@ -628,7 +629,7 @@ class Push90FinalTest extends TestCase
             '*' => Http::response(['error' => 'bad request'], 400),
         ]);
 
-        $service = new AutoFixService();
+        $gitOps = new \App\Services\AutoFix\GitOperations();
         $proposal = AutofixProposal::create([
             'exception_class' => 'X',
             'exception_message' => 'm',
@@ -643,7 +644,7 @@ class Push90FinalTest extends TestCase
         ]);
 
         // Exec will fail to detect git remote but we still hit HTTP call indirectly
-        $this->invokePrivate($service, 'createGitHubPR', [
+        $this->invokePrivate($gitOps, 'createGitHubPR', [
             sys_get_temp_dir(),
             'main',
             'hotfix/test',
@@ -661,17 +662,18 @@ class Push90FinalTest extends TestCase
         // top-level sandbox to be bypassed for this unit test.
         config(['autofix.force_git_in_tests' => true]);
 
-        $service = new class extends AutoFixService {
+        $gitOps = new class extends \App\Services\AutoFix\GitOperations {
             public array $gitCalls = [];
-            protected function gitDirectPush(string $basePath, string $file, string $message): void
+            protected function directPush(string $basePath, string $file, string $message): void
             {
                 $this->gitCalls[] = ['direct'];
             }
-            protected function gitBranchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
+            protected function branchAndPR(string $basePath, string $file, string $message, AutofixProposal $proposal): void
             {
                 $this->gitCalls[] = ['branch'];
             }
         };
+        $service = new AutoFixService($gitOps);
 
         $proposal = AutofixProposal::create([
             'exception_class' => 'Foo',
@@ -687,8 +689,8 @@ class Push90FinalTest extends TestCase
         ]);
 
         $service->gitCommitAndPush($proposal);
-        $this->assertCount(1, $service->gitCalls);
-        $this->assertSame('branch', $service->gitCalls[0][0]);
+        $this->assertCount(1, $gitOps->gitCalls);
+        $this->assertSame('branch', $gitOps->gitCalls[0][0]);
     }
 
     #[Test]
