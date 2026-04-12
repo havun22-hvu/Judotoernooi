@@ -13,7 +13,7 @@ JudoToernooi ondersteunt twee **betaalproviders** en twee **betalingsmodi** per 
 
 | Provider | Dekking | Methodes | Kosten |
 |----------|---------|----------|--------|
-| **Mollie** (standaard) | Europa | iDEAL, Bancontact, creditcard | €0,29 + 0% |
+| **Mollie** (standaard) | Europa | iDEAL | Wero, Bancontact, creditcard | €0,29 + 0% |
 | **Stripe** | Wereldwijd | Creditcard, Google Pay, Apple Pay | 1,5% + €0,25 |
 
 Keuze per toernooi via `payment_provider` veld (`'mollie'` of `'stripe'`).
@@ -80,7 +80,7 @@ PaymentProviderFactory::forToernooi($toernooi) → juiste provider
 ├──────────────────────────────────────────────────────────────┤
 │ 1. Voeg judoka's toe in Coach Portal                        │
 │ 2. Klik "Afrekenen" (X judoka's × €Y = totaal)              │
-│ 3. Redirect naar Mollie (iDEAL, etc.)                       │
+│ 3. Redirect naar Mollie (iDEAL | Wero, etc.)                │
 │ 4. Betaal                                                    │
 │ 5. Teruggestuurd → Judoka's gemarkeerd als betaald          │
 └──────────────────────────────────────────────────────────────┘
@@ -175,7 +175,7 @@ mollie_organization_name  VARCHAR(255) NULL
    - [Platform mode: + €0,50 toeslag = €75,50]
 5. Klik "Betalen"
 6. Redirect naar Mollie
-7. Kies betaalmethode (iDEAL, creditcard, etc.)
+7. Kies betaalmethode (iDEAL | Wero, creditcard, etc.)
 8. Betaal
 9. Terug naar JudoToernooi
 10. Judoka's gemarkeerd als betaald

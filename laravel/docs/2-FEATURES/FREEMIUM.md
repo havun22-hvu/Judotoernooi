@@ -158,14 +158,14 @@ return $basis + (($staffels - 1) * $perExtra50);
 │ ● 150 judoka's - €30  ← geselecteerd                        │
 │ ○ 200 judoka's - €40                                        │
 │                                                              │
-│ [Betalen met iDEAL]                                         │
+│ [Betalen met iDEAL | Wero]                                  │
 └──────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ 3. MOLLIE BETALING                                           │
 ├──────────────────────────────────────────────────────────────┤
 │ - Platform mode (geld naar JudoToernooi)                    │
-│ - iDEAL, creditcard, etc.                                   │
+│ - iDEAL | Wero, creditcard, etc.                            │
 │ - Webhook bevestigt betaling                                │
 └──────────────────────────────────────────────────────────────┘
                               ↓
