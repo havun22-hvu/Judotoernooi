@@ -15,6 +15,7 @@ use App\Http\Controllers\OrganisatorAuthController;
 use App\Http\Controllers\Auth\PinAuthController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\PouleController;
+use App\Http\Controllers\PouleEliminatieController;
 use App\Http\Controllers\RoleToegang;
 use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
@@ -498,18 +499,18 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::get('poule', [PouleController::class, 'index'])->name('poule.index');
 
         // Eliminatie bracket
-        Route::get('poule/{poule}/eliminatie', [PouleController::class, 'eliminatie'])->name('poule.eliminatie');
-        Route::post('poule/{poule}/eliminatie/genereer', [PouleController::class, 'genereerEliminatie'])->name('poule.eliminatie.genereer');
-        Route::post('poule/{poule}/eliminatie/uitslag', [PouleController::class, 'opslaanEliminatieUitslag'])->name('poule.eliminatie.uitslag');
-        Route::post('poule/{poule}/eliminatie/seeding', [PouleController::class, 'seedingBGroep'])->name('poule.eliminatie.seeding');
-        Route::get('poule/{poule}/eliminatie/b-groep', [PouleController::class, 'getBGroepSeeding'])->name('poule.eliminatie.b-groep');
+        Route::get('poule/{poule}/eliminatie', [PouleEliminatieController::class, 'eliminatie'])->name('poule.eliminatie');
+        Route::post('poule/{poule}/eliminatie/genereer', [PouleEliminatieController::class, 'genereerEliminatie'])->name('poule.eliminatie.genereer');
+        Route::post('poule/{poule}/eliminatie/uitslag', [PouleEliminatieController::class, 'opslaanEliminatieUitslag'])->name('poule.eliminatie.uitslag');
+        Route::post('poule/{poule}/eliminatie/seeding', [PouleEliminatieController::class, 'seedingBGroep'])->name('poule.eliminatie.seeding');
+        Route::get('poule/{poule}/eliminatie/b-groep', [PouleEliminatieController::class, 'getBGroepSeeding'])->name('poule.eliminatie.b-groep');
 
         // A-groep seeding (swap/move favorieten)
-        Route::get('poule/{poule}/eliminatie/seeding-status', [PouleController::class, 'getSeedingStatus'])->name('poule.eliminatie.seeding-status');
-        Route::post('poule/{poule}/eliminatie/swap', [PouleController::class, 'swapSeeding'])->name('poule.eliminatie.swap');
-        Route::post('poule/{poule}/eliminatie/move', [PouleController::class, 'moveSeeding'])->name('poule.eliminatie.move');
-        Route::post('poule/{poule}/eliminatie/herstel-koppelingen', [PouleController::class, 'herstelBKoppelingen'])->name('poule.eliminatie.herstel-koppelingen');
-        Route::get('poule/{poule}/eliminatie/diagnose-koppelingen', [PouleController::class, 'diagnoseBKoppelingen'])->name('poule.eliminatie.diagnose-koppelingen');
+        Route::get('poule/{poule}/eliminatie/seeding-status', [PouleEliminatieController::class, 'getSeedingStatus'])->name('poule.eliminatie.seeding-status');
+        Route::post('poule/{poule}/eliminatie/swap', [PouleEliminatieController::class, 'swapSeeding'])->name('poule.eliminatie.swap');
+        Route::post('poule/{poule}/eliminatie/move', [PouleEliminatieController::class, 'moveSeeding'])->name('poule.eliminatie.move');
+        Route::post('poule/{poule}/eliminatie/herstel-koppelingen', [PouleEliminatieController::class, 'herstelBKoppelingen'])->name('poule.eliminatie.herstel-koppelingen');
+        Route::get('poule/{poule}/eliminatie/diagnose-koppelingen', [PouleEliminatieController::class, 'diagnoseBKoppelingen'])->name('poule.eliminatie.diagnose-koppelingen');
 
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
