@@ -43,8 +43,10 @@ class AutoFixService
             $previousAttempt = null;
 
             for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
-                // Ask Claude for analysis and fix
-                $analysis = $this->askClaude($e, $codeContext, $attempt, $previousAttempt);
+                // Try central HavunCore first (attempt 1 only), fallback to local
+                $analysis = ($attempt === 1)
+                    ? ($this->askCentral($e, $codeContext) ?? $this->askClaude($e, $codeContext, $attempt, $previousAttempt))
+                    : $this->askClaude($e, $codeContext, $attempt, $previousAttempt);
 
                 if (!$analysis) {
                     Log::info("AutoFix: Claude returned no analysis (attempt {$attempt})");
@@ -97,6 +99,7 @@ class AutoFixService
 
                     $this->sendSuccessNotification($e, $file, $line, $proposal, $attempt);
                     $this->gitCommitAndPush($proposal);
+                    $this->reportToCentral('applied', "Fix applied on attempt {$attempt}");
 
                     return;
                 }
@@ -120,6 +123,7 @@ class AutoFixService
 
             // Both attempts failed - send email to admin
             $this->sendFailureNotification($e, $file, $line);
+            $this->reportToCentral('failed', 'Both attempts failed');
 
         } catch (Throwable $serviceError) {
             // AutoFix mag NOOIT de error handling breken
@@ -786,4 +790,78 @@ class AutoFixService
 
         return implode("\n", $result);
     }
+
+    /**
+     * Try central HavunCore AutoFix API first.
+     * Returns analysis array on success, null on failure (triggers local fallback).
+     */
+    protected function askCentral(Throwable $e, string $codeContext): ?array
+    {
+        $url = rtrim(config('autofix.havuncore_url'), '/') . '/api/autofix/analyze';
+
+        try {
+            $response = Http::timeout(15)->post($url, [
+                'project' => 'judotoernooi',
+                'exception_class' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $this->relativePath($e->getFile()),
+                'line' => $e->getLine(),
+                'trace' => mb_substr($e->getTraceAsString(), 0, 3000),
+                'context' => [
+                    'code' => mb_substr($codeContext, 0, 2000),
+                    'url' => request()?->fullUrl(),
+                    'method' => request()?->method(),
+                ],
+            ]);
+
+            if (!$response->successful() || !$response->json('success')) {
+                Log::info('AutoFix: Central API unavailable, falling back to local', [
+                    'status' => $response->status(),
+                ]);
+                return null;
+            }
+
+            $proposal = $response->json('proposal');
+            $this->centralProposalId = $proposal['id'] ?? null;
+
+            Log::info('AutoFix: Using central HavunCore analysis', [
+                'proposal_id' => $this->centralProposalId,
+                'risk' => $proposal['risk_level'] ?? 'unknown',
+            ]);
+
+            return [
+                'analysis' => $proposal['fix_proposal'] ?? '',
+                'source' => 'central',
+            ];
+        } catch (Throwable $ex) {
+            Log::info('AutoFix: Central API unreachable, falling back to local', [
+                'error' => $ex->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Report fix result back to HavunCore central.
+     */
+    protected function reportToCentral(string $status, ?string $resultMessage = null): void
+    {
+        if (empty($this->centralProposalId)) {
+            return;
+        }
+
+        $url = rtrim(config('autofix.havuncore_url'), '/') . '/api/autofix/report';
+
+        try {
+            Http::timeout(10)->post($url, [
+                'proposal_id' => $this->centralProposalId,
+                'status' => $status,
+                'result_message' => $resultMessage,
+            ]);
+        } catch (Throwable) {
+            // Don't let reporting failures affect the fix flow
+        }
+    }
+
+    protected ?int $centralProposalId = null;
 }
