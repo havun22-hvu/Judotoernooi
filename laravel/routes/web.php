@@ -643,7 +643,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     });
 
     // Wedstrijddag routes (admin only)
-    Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
+    Route::middleware([CheckToernooiRol::class . ':admin', 'track.response-time'])->group(function () {
         Route::get('wedstrijddag/mobiel', [WedstrijddagMobielController::class, 'mobiel'])->name('wedstrijddag.mobiel');
         Route::get('wedstrijddag/mat-voortgang', [WedstrijddagMobielController::class, 'matVoortgangApi'])->name('wedstrijddag.mat-voortgang');
         Route::get('wedstrijddag/poules-api', [WedstrijddagMobielController::class, 'poulesApi'])->name('wedstrijddag.poules-api');
@@ -868,7 +868,7 @@ Route::prefix('local-server')->name('local.')->middleware('local-sync.auth')->gr
 | IMPORTANT: These routes must be LAST to avoid conflicts with other routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
+Route::prefix('{organisator}/{toernooi}')->name('publiek.')->middleware('track.response-time')->group(function () {
     // Main public page (PWA)
     Route::get('/', [PubliekController::class, 'index'])->name('index');
 
