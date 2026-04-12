@@ -6,6 +6,7 @@ use App\Helpers\BandHelper;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\PouleIndeling\PouleTitleBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +20,7 @@ class PouleIndelingService
     private array $gewichtsklassenConfig = [];
     private DynamischeIndelingService $dynamischeIndelingService;
     private ?CategorieClassifier $classifier = null;
+    private PouleTitleBuilder $titleBuilder;
 
     /**
      * Initialize with tournament-specific settings
@@ -38,14 +40,17 @@ class PouleIndelingService
         );
     }
 
-    public function __construct(DynamischeIndelingService $dynamischeIndelingService)
-    {
+    public function __construct(
+        DynamischeIndelingService $dynamischeIndelingService,
+        ?PouleTitleBuilder $titleBuilder = null
+    ) {
         // Default values, will be overridden by initializeFromToernooi
         $this->voorkeur = [5, 4, 6, 3];
         $this->minJudokas = 3;
         $this->maxJudokas = 6;
         $this->prioriteiten = ['leeftijd', 'gewicht', 'band'];
         $this->dynamischeIndelingService = $dynamischeIndelingService;
+        $this->titleBuilder = $titleBuilder ?? new PouleTitleBuilder();
     }
 
     /**
@@ -785,78 +790,21 @@ class PouleIndelingService
     /**
      * Create pool title
      *
-     * Rules:
-     * - Vaste categorie met gewichtsklassen: "Label -24kg"
-     * - Dynamische categorie (max_kg>0 of max_lft>0): "Label 6-7j 22-25kg"
-     * - Alle variabelen=0: alleen "Label"
+     * @see PouleTitleBuilder::build
      */
     private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null, ?string $categorieKey = null): string
     {
-        $parts = [];
-
-        // Get category config
-        $categorieConfig = null;
-        if ($gewichtsklassenConfig && $categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
-            $categorieConfig = $gewichtsklassenConfig[$categorieKey];
-        }
-
-        // Config values
-        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
-        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
-        $isDynamisch = $maxKgVerschil > 0 || $maxLftVerschil > 0;
-
-        // 1. Label (optional via checkbox, default true)
-        $toonLabel = $categorieConfig['toon_label_in_titel'] ?? true;
-        $label = $categorieConfig['label'] ?? $leeftijdsklasse;
-        if ($toonLabel && !empty($label)) {
-            $parts[] = $label;
-        }
-
-        // 2. Gender (if not mixed)
-        if ($geslacht && $geslacht !== 'gemengd') {
-            $parts[] = $geslacht;
-        }
-
-        // 3. Vaste categorie met gewichtsklassen: toon gewichtsklasse
-        // Gebruik !$isDynamisch ipv string prefix check
-        $isVasteGewichtsklasse = !$isDynamisch
-            && !empty($gewichtsklasse)
-            && $gewichtsklasse !== 'Onbekend';
-
-        if ($isVasteGewichtsklasse) {
-            $gk = $gewichtsklasse;
-            if (!str_contains($gk, 'kg')) {
-                $gk .= 'kg';
-            }
-            $parts[] = $gk;
-            // Bij vaste gewichtsklasse geen ranges tonen
-            return implode(' ', $parts) ?: 'Onbekend';
-        }
-
-        // 4. Dynamische categorie: toon ranges alleen als variabel > 0
-        if ($isDynamisch && !empty($pouleJudokas)) {
-            // Leeftijdsrange (alleen als max_lft > 0)
-            if ($maxLftVerschil > 0) {
-                $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
-                if (!empty($leeftijden)) {
-                    $min = min($leeftijden);
-                    $max = max($leeftijden);
-                    $parts[] = $min == $max ? "{$min}j" : "{$min}-{$max}j";
-                }
-            }
-
-            // Gewichtsrange (alleen als max_kg > 0)
-            if ($maxKgVerschil > 0) {
-                $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
-                if (!empty($gewichten)) {
-                    $min = min($gewichten);
-                    $max = max($gewichten);
-                    $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
-                }
-            }
-        }
-
-        return implode(' ', $parts) ?: 'Onbekend';
+        return $this->titleBuilder->build(
+            $leeftijdsklasse,
+            $gewichtsklasse,
+            $geslacht,
+            $pouleNr,
+            $pouleJudokas,
+            $gebruikGewichtsklassen,
+            $volgorde,
+            $gewichtsklassenConfig,
+            $categorieKey
+        );
     }
 
     /**
