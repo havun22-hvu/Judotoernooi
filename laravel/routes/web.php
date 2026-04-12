@@ -20,6 +20,7 @@ use App\Http\Controllers\RoleToegang;
 use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WedstrijddagController;
+use App\Http\Controllers\WedstrijddagMobielController;
 use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
@@ -643,9 +644,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 
     // Wedstrijddag routes (admin only)
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
-        Route::get('wedstrijddag/mobiel', [WedstrijddagController::class, 'mobiel'])->name('wedstrijddag.mobiel');
-        Route::get('wedstrijddag/mat-voortgang', [WedstrijddagController::class, 'matVoortgangApi'])->name('wedstrijddag.mat-voortgang');
-        Route::get('wedstrijddag/poules-api', [WedstrijddagController::class, 'poulesApi'])->name('wedstrijddag.poules-api');
+        Route::get('wedstrijddag/mobiel', [WedstrijddagMobielController::class, 'mobiel'])->name('wedstrijddag.mobiel');
+        Route::get('wedstrijddag/mat-voortgang', [WedstrijddagMobielController::class, 'matVoortgangApi'])->name('wedstrijddag.mat-voortgang');
+        Route::get('wedstrijddag/poules-api', [WedstrijddagMobielController::class, 'poulesApi'])->name('wedstrijddag.poules-api');
         Route::get('wedstrijddag/poules', [WedstrijddagController::class, 'poules'])->name('wedstrijddag.poules');
         Route::post('wedstrijddag/heartbeat-toggle', [WedstrijddagController::class, 'toggleHeartbeat'])->name('wedstrijddag.heartbeat-toggle');
         Route::post('wedstrijddag/verplaats-judoka', [WedstrijddagController::class, 'verplaatsJudoka'])->name('wedstrijddag.verplaats-judoka');
@@ -655,9 +656,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('wedstrijddag/verwijder-uit-poule', [WedstrijddagController::class, 'verwijderUitPoule'])->name('wedstrijddag.verwijder-uit-poule');
         Route::post('wedstrijddag/zet-om-naar-poules', [WedstrijddagController::class, 'zetOmNaarPoules'])->name('wedstrijddag.zetOmNaarPoules');
         Route::post('wedstrijddag/wijzig-poule-type', [WedstrijddagController::class, 'wijzigPouleType'])->name('wedstrijddag.wijzigPouleType');
-        Route::post('wedstrijddag/meld-judoka-af', [WedstrijddagController::class, 'meldJudokaAf'])->name('wedstrijddag.meld-judoka-af');
-        Route::post('wedstrijddag/herstel-judoka', [WedstrijddagController::class, 'herstelJudoka'])->name('wedstrijddag.herstel-judoka');
-        Route::post('wedstrijddag/nieuwe-judoka', [WedstrijddagController::class, 'nieuweJudoka'])->name('wedstrijddag.nieuwe-judoka');
+        Route::post('wedstrijddag/meld-judoka-af', [WedstrijddagMobielController::class, 'meldJudokaAf'])->name('wedstrijddag.meld-judoka-af');
+        Route::post('wedstrijddag/herstel-judoka', [WedstrijddagMobielController::class, 'herstelJudoka'])->name('wedstrijddag.herstel-judoka');
+        Route::post('wedstrijddag/nieuwe-judoka', [WedstrijddagMobielController::class, 'nieuweJudoka'])->name('wedstrijddag.nieuwe-judoka');
     });
 
     // Mat routes (mat + admin)
