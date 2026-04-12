@@ -798,10 +798,7 @@ class PouleIndelingService
             $leeftijdsklasse,
             $gewichtsklasse,
             $geslacht,
-            $pouleNr,
             $pouleJudokas,
-            $gebruikGewichtsklassen,
-            $volgorde,
             $gewichtsklassenConfig,
             $categorieKey
         );
