@@ -6,10 +6,10 @@ use App\Helpers\BandHelper;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\PouleIndeling\JudokaGrouper;
 use App\Services\PouleIndeling\PouleCalculator;
 use App\Services\PouleIndeling\PouleTitleBuilder;
 use App\Services\PouleIndeling\UnassignedJudokaFinder;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PouleIndelingService
@@ -25,6 +25,7 @@ class PouleIndelingService
     private PouleTitleBuilder $titleBuilder;
     private UnassignedJudokaFinder $unassignedFinder;
     private PouleCalculator $calculator;
+    private JudokaGrouper $grouper;
 
     /**
      * Initialize with tournament-specific settings
@@ -48,7 +49,8 @@ class PouleIndelingService
         DynamischeIndelingService $dynamischeIndelingService,
         ?PouleTitleBuilder $titleBuilder = null,
         ?UnassignedJudokaFinder $unassignedFinder = null,
-        ?PouleCalculator $calculator = null
+        ?PouleCalculator $calculator = null,
+        ?JudokaGrouper $grouper = null
     ) {
         // Default values, will be overridden by initializeFromToernooi
         $this->voorkeur = [5, 4, 6, 3];
@@ -59,6 +61,7 @@ class PouleIndelingService
         $this->titleBuilder = $titleBuilder ?? new PouleTitleBuilder();
         $this->unassignedFinder = $unassignedFinder ?? new UnassignedJudokaFinder();
         $this->calculator = $calculator ?? new PouleCalculator();
+        $this->grouper = $grouper ?? new JudokaGrouper();
     }
 
     /**
@@ -147,7 +150,7 @@ class PouleIndelingService
             }
 
             // Get all judokas grouped by category
-            $groepen = $this->groepeerJudokas($toernooi);
+            $groepen = $this->grouper->group($toernooi, $this->gewichtsklassenConfig, $this->prioriteiten);
 
             // Get wedstrijd_systeem settings
             $wedstrijdSysteem = $toernooi->wedstrijd_systeem ?? [];
@@ -553,113 +556,6 @@ class PouleIndelingService
 
 
             return $statistieken;
-        });
-    }
-
-    /**
-     * Group judokas by age class, (optionally) weight class, and gender based on config
-     * Sorted by sort fields (sort_categorie, sort_gewicht, sort_band)
-     *
-     * If gebruik_gewichtsklassen is OFF: group only by leeftijd (+ geslacht from config)
-     * If gebruik_gewichtsklassen is ON: group by leeftijd + gewichtsklasse (+ geslacht from config)
-     */
-    private function groepeerJudokas(Toernooi $toernooi): Collection
-    {
-        // Default to true if null (for backwards compatibility)
-        $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
-
-        // Sort by new sort fields, respecting prioriteiten order
-        // prioriteiten can be: leeftijd, gewicht, band (in any order)
-        $leeftijdIdx = array_search('leeftijd', $this->prioriteiten);
-        $gewichtIdx = array_search('gewicht', $this->prioriteiten);
-        $bandIdx = array_search('band', $this->prioriteiten);
-
-        // Determine if band has higher priority than gewicht (for re-sorting within groups)
-        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false) ? ($bandIdx < $gewichtIdx) : false;
-
-        // Build sort order based on priorities (lower index = higher priority)
-        $sortFields = [];
-        if ($leeftijdIdx !== false) $sortFields[$leeftijdIdx] = ['geboortejaar', 'DESC']; // DESC = jongste eerst (hoger geboortejaar)
-        if ($gewichtIdx !== false) $sortFields[$gewichtIdx] = ['sort_gewicht', 'ASC'];
-        if ($bandIdx !== false) $sortFields[$bandIdx] = ['sort_band', 'ASC'];
-        ksort($sortFields);
-
-        $query = $toernooi->judokas()->orderBy('sort_categorie');
-        foreach ($sortFields as [$field, $direction]) {
-            $query->orderBy($field, $direction);
-        }
-
-        $judokas = $query->get();
-
-        $groepen = $judokas->groupBy(function (Judoka $judoka) use ($gebruikGewichtsklassen) {
-            $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
-            $categorieKey = $judoka->categorie_key ?: '';
-
-            // Get config for gender handling and dynamic grouping
-            $config = $this->gewichtsklassenConfig[$categorieKey] ?? null;
-            $configGeslacht = strtolower($config['geslacht'] ?? 'gemengd');
-            $includeGeslacht = $configGeslacht !== 'gemengd';
-
-            // Check if this category uses dynamic grouping (max_kg_verschil > 0)
-            // If so, don't split by gewichtsklasse - let DynamischeIndelingService handle it
-            $usesDynamic = ($config['max_kg_verschil'] ?? 0) > 0;
-
-            // Check if category has fixed weight classes defined
-            $hasFixedWeightClasses = !empty($config['gewichten'] ?? []);
-
-            $geslacht = strtoupper($judoka->geslacht ?? '');
-
-            if ($usesDynamic) {
-                // Dynamic grouping: group only by age class
-                // DynamischeIndelingService will create weight groups
-                if ($includeGeslacht) {
-                    return "{$leeftijdsklasse}||{$geslacht}";
-                }
-                return "{$leeftijdsklasse}|";
-            } elseif ($hasFixedWeightClasses) {
-                // Fixed weight classes defined: always group by weight class
-                $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
-                if ($includeGeslacht) {
-                    return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
-                }
-                return "{$leeftijdsklasse}|{$gewichtsklasse}";
-            } else {
-                // No weight classes defined and not dynamic: group only by age
-                if ($includeGeslacht) {
-                    return "{$leeftijdsklasse}||{$geslacht}";
-                }
-                return "{$leeftijdsklasse}|";
-            }
-        });
-
-        // Re-sort judokas within each group (groupBy doesn't preserve order!)
-        $groepen = $groepen->map(function ($judokasInGroep) use ($bandFirst) {
-            if ($bandFirst) {
-                return $judokasInGroep->sortBy([
-                    ['sort_band', 'asc'],
-                    ['sort_gewicht', 'asc'],
-                ]);
-            } else {
-                return $judokasInGroep->sortBy([
-                    ['sort_gewicht', 'asc'],
-                    ['sort_band', 'asc'],
-                ]);
-            }
-        });
-
-        // Sort groups by sort_categorie of first judoka, then gewicht
-        return $groepen->sortBy(function ($judokasInGroep, $key) {
-            // Use sort fields from first judoka in group
-            $eerste = $judokasInGroep->first();
-            $sortCategorie = $eerste->sort_categorie ?? 99;
-
-            // Parse gewicht from key for secondary sort
-            $delen = explode('|', $key);
-            $gewicht = $delen[1] ?? '';
-            $gewichtNum = intval(preg_replace('/[^0-9]/', '', $gewicht));
-            $gewichtPlus = str_starts_with($gewicht, '+') ? 1000 : 0;
-
-            return sprintf('%02d%04d', $sortCategorie, $gewichtNum + $gewichtPlus);
         });
     }
 
