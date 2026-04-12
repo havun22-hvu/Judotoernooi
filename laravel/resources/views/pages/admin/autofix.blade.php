@@ -37,6 +37,74 @@
     </div>
 </div>
 
+{{-- Aggregate Metrics --}}
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Metrics</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {{-- Success rate 7 days --}}
+        <div>
+            <div class="text-sm text-gray-500 mb-1">Succesrate (7 dagen)</div>
+            <div class="text-2xl font-bold {{ ($metrics['success_rate_7d'] ?? 0) >= 50 ? 'text-green-600' : 'text-red-600' }}">
+                {{ $metrics['success_rate_7d'] !== null ? $metrics['success_rate_7d'] . '%' : '-' }}
+            </div>
+        </div>
+
+        {{-- Success rate 30 days --}}
+        <div>
+            <div class="text-sm text-gray-500 mb-1">Succesrate (30 dagen)</div>
+            <div class="text-2xl font-bold {{ ($metrics['success_rate_30d'] ?? 0) >= 50 ? 'text-green-600' : 'text-red-600' }}">
+                {{ $metrics['success_rate_30d'] !== null ? $metrics['success_rate_30d'] . '%' : '-' }}
+            </div>
+        </div>
+
+        {{-- Avg time to fix --}}
+        <div>
+            <div class="text-sm text-gray-500 mb-1">Gem. fix-tijd</div>
+            <div class="text-2xl font-bold text-blue-600">
+                @if($metrics['avg_time_to_fix_minutes'] !== null)
+                    @if($metrics['avg_time_to_fix_minutes'] < 60)
+                        {{ $metrics['avg_time_to_fix_minutes'] }} min
+                    @else
+                        {{ round($metrics['avg_time_to_fix_minutes'] / 60, 1) }} uur
+                    @endif
+                @else
+                    -
+                @endif
+            </div>
+        </div>
+
+        {{-- Trend --}}
+        <div>
+            <div class="text-sm text-gray-500 mb-1">Trend (7d vs vorige 7d)</div>
+            <div class="text-2xl font-bold {{ $metrics['trend_direction'] === 'down' ? 'text-green-600' : ($metrics['trend_direction'] === 'up' ? 'text-red-600' : 'text-gray-600') }}">
+                @if($metrics['trend_direction'] === 'down')
+                    &#9660; {{ abs($metrics['trend_percentage']) }}% minder
+                @elseif($metrics['trend_direction'] === 'up')
+                    &#9650; {{ $metrics['trend_percentage'] }}% meer
+                @else
+                    &#8212; Stabiel
+                @endif
+            </div>
+            <div class="text-xs text-gray-400">{{ $metrics['current_week_count'] }} vs {{ $metrics['previous_week_count'] }}</div>
+        </div>
+    </div>
+
+    {{-- Common error types --}}
+    @if($metrics['common_errors']->isNotEmpty())
+        <div class="mt-6">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">Meest voorkomende errors</h3>
+            <div class="space-y-1">
+                @foreach($metrics['common_errors'] as $error)
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="font-mono text-gray-700" title="{{ $error['full_class'] }}">{{ $error['class'] }}</span>
+                        <span class="text-gray-500 font-medium">{{ $error['count'] }}x</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+</div>
+
 {{-- Proposals --}}
 <div class="space-y-3">
     @forelse($proposals as $proposal)

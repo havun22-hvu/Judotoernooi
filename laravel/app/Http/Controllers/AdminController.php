@@ -8,6 +8,7 @@ use App\Models\ToernooiBetaling;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -145,7 +146,73 @@ class AdminController extends Controller
             'errors' => AutofixProposal::where('status', 'error')->count(),
         ];
 
-        return view('pages.admin.autofix', compact('proposals', 'stats'));
+        // Aggregate metrics: success rates
+        $metrics = $this->getAutofixMetrics();
+
+        return view('pages.admin.autofix', compact('proposals', 'stats', 'metrics'));
+    }
+
+    /**
+     * Calculate aggregate AutoFix metrics for the dashboard.
+     */
+    private function getAutofixMetrics(): array
+    {
+        // Success rate last 7 days
+        $last7Total = AutofixProposal::where('created_at', '>=', now()->subDays(7))
+            ->whereIn('status', ['applied', 'failed', 'error'])
+            ->count();
+        $last7Applied = AutofixProposal::where('created_at', '>=', now()->subDays(7))
+            ->where('status', 'applied')
+            ->count();
+
+        // Success rate last 30 days
+        $last30Total = AutofixProposal::where('created_at', '>=', now()->subDays(30))
+            ->whereIn('status', ['applied', 'failed', 'error'])
+            ->count();
+        $last30Applied = AutofixProposal::where('created_at', '>=', now()->subDays(30))
+            ->where('status', 'applied')
+            ->count();
+
+        // Average time-to-fix (created_at → applied_at) in minutes
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $avgTimeToFixQuery = $isSqlite
+            ? "AVG((julianday(applied_at) - julianday(created_at)) * 1440) as avg_minutes"
+            : 'AVG(TIMESTAMPDIFF(MINUTE, created_at, applied_at)) as avg_minutes';
+
+        $avgTimeToFix = AutofixProposal::where('status', 'applied')
+            ->whereNotNull('applied_at')
+            ->selectRaw($avgTimeToFixQuery)
+            ->value('avg_minutes');
+
+        // Most common error types (top 5)
+        $commonErrors = AutofixProposal::select('exception_class', DB::raw('COUNT(*) as count'))
+            ->groupBy('exception_class')
+            ->orderByDesc('count')
+            ->limit(5)
+            ->get()
+            ->map(fn ($row) => [
+                'class' => class_basename($row->exception_class),
+                'full_class' => $row->exception_class,
+                'count' => $row->count,
+            ]);
+
+        // Error trend: compare last 7 days vs previous 7 days
+        $currentWeek = AutofixProposal::where('created_at', '>=', now()->subDays(7))->count();
+        $previousWeek = AutofixProposal::whereBetween('created_at', [now()->subDays(14), now()->subDays(7)])->count();
+        $trend = $previousWeek > 0
+            ? round((($currentWeek - $previousWeek) / $previousWeek) * 100)
+            : ($currentWeek > 0 ? 100 : 0);
+
+        return [
+            'success_rate_7d' => $last7Total > 0 ? round(($last7Applied / $last7Total) * 100) : null,
+            'success_rate_30d' => $last30Total > 0 ? round(($last30Applied / $last30Total) * 100) : null,
+            'avg_time_to_fix_minutes' => $avgTimeToFix !== null ? round((float) $avgTimeToFix) : null,
+            'common_errors' => $commonErrors,
+            'trend_percentage' => $trend,
+            'trend_direction' => $currentWeek > $previousWeek ? 'up' : ($currentWeek < $previousWeek ? 'down' : 'stable'),
+            'current_week_count' => $currentWeek,
+            'previous_week_count' => $previousWeek,
+        ];
     }
 
     /**
