@@ -276,6 +276,57 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 | Handover | `.claude/handover.md` |
 | HavunCore KB | `D:\GitHub\HavunCore\docs\kb\`
 
+## Test Coverage
+
+- Huidige coverage: 89.6% (3215 tests)
+- Minimum: 82.5%
+- Meten: `php artisan test --coverage` (vanuit laravel/ directory)
+- ⛔ NOOIT tests op staging/production draaien (.env overschrijft SQLite)
+
+## Service Architectuur (gerefactord april 2026)
+
+EliminatieService (786 regels) + 3 helpers:
+- `Eliminatie/BracketCalculator` — bracket berekeningen
+- `Eliminatie/WinnerCalculator` — winnaar/bye logica
+- `Eliminatie/MatchScheduler` — wedstrijd planning
+
+BlokMatVerdelingService (882 regels) + 2 helpers:
+- `BlokMatVerdeling/MatAssigner` — mat verdeling
+- `BlokMatVerdeling/ZaalOverzichtBuilder` — zaal overzicht
+
+PouleIndelingService (587 regels) + 4 helpers:
+- `PouleIndeling/PouleTitleBuilder` — poule titels
+- `PouleIndeling/UnassignedJudokaFinder` — niet-ingedeelde judokas
+- `PouleIndeling/PouleCalculator` — poule berekeningen
+- `PouleIndeling/JudokaGrouper` — judoka groepering
+
+AutoFixService (775 regels) + 1 helper:
+- `AutoFix/GitOperations` — git commit/push/PR (sandbox in test env)
+
+## Controller Architectuur (gerefactord april 2026)
+
+BlokController (447) + 2 subcontrollers:
+- `Blok/BlokActivatieController` — categorie/poule activeren/resetten
+- `Blok/BlokSprekerController` — spreker interface
+
+MatController (654) + 2 subcontrollers:
+- `Mat/MatBracketController` — bracket beheer
+- `Mat/MatUitslagController` — uitslag invoer
+
+PouleController (960) + 1 subcontroller:
+- `Poule/PouleEliminatieController` — eliminatie-specifiek
+
+WedstrijddagController (819) + 1 subcontroller:
+- `Wedstrijddag/WedstrijddagMobielController` — mobiele views
+
+## Security (april 2026)
+
+- PIN systeem VERWIJDERD — device binding via 12-char role codes
+- Webhook idempotency via payment_processed_at
+- Mollie/Stripe signature verificatie
+- AutoFix sandbox in test/local env
+- Sync conflict detection + logging (sync_conflicts tabel)
+
 ## Production Commands
 
 ```bash
