@@ -205,7 +205,7 @@ class GitOperations
     }
 
     /**
-     * Extract RISK level from Claude's analysis. Pure utility, shared with AutoFixService.
+     * Extract RISK level (low|medium|high) from Claude's analysis, or 'unknown'.
      */
     public static function extractRisk(string $analysis): string
     {
