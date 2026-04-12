@@ -3,12 +3,11 @@
 namespace App\Services\Eliminatie;
 
 /**
- * BracketCalculator
- *
  * Pure calculation helpers for elimination brackets.
- * No database or model access — stateless math only.
  *
- * Extracted from EliminatieService (refactor: extract BracketCalculator).
+ * Stateless math only — no database, model, or framework access.
+ * Kept separate from EliminatieService so it can be unit-tested
+ * in isolation and reused from other bracket-aware services.
  */
 class BracketCalculator
 {
