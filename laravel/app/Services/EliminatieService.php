@@ -5,9 +5,9 @@ namespace App\Services;
 use App\Models\Poule;
 use App\Models\Wedstrijd;
 use App\Services\Eliminatie\BracketCalculator;
+use App\Services\Eliminatie\MatchScheduler;
 use App\Services\Eliminatie\WinnerCalculator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * EliminatieService - Knockout Bracket Generator
@@ -37,13 +37,16 @@ class EliminatieService
 {
     private BracketCalculator $calculator;
     private WinnerCalculator $winners;
+    private MatchScheduler $scheduler;
 
     public function __construct(
         ?BracketCalculator $calculator = null,
         ?WinnerCalculator $winners = null,
+        ?MatchScheduler $scheduler = null,
     ) {
         $this->calculator = $calculator ?? new BracketCalculator();
         $this->winners = $winners ?? new WinnerCalculator();
+        $this->scheduler = $scheduler ?? new MatchScheduler();
     }
 
     /**
@@ -263,78 +266,13 @@ class EliminatieService
     }
 
     /**
-     * Koppel A-groep wedstrijden aan elkaar
+     * Koppel A-groep wedstrijden aan elkaar.
      *
-     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
-     *
-     * DOORSCHUIF LOGICA (2:1 mapping):
-     * - Wedstrijd 1+2 → wedstrijd 1 in volgende ronde
-     * - Wedstrijd 3+4 → wedstrijd 2 in volgende ronde
-     *
-     * SLOT BEPALING (op basis van wedstrijd index):
-     * - Oneven index (0, 2, 4...) → winnaar_naar_slot = 'wit'
-     * - Even index (1, 3, 5...)   → winnaar_naar_slot = 'blauw'
-     *
-     * Dit komt overeen met de slot formule:
-     * - Slot S gaat naar slot ceil(S/2)
-     * - Oneven doel-slot = wit positie, even doel-slot = blauw positie
+     * @see MatchScheduler::koppelAGroepWedstrijden
      */
     private function koppelAGroepWedstrijden(array $wedstrijdenPerRonde, array $byeJudokas): void
     {
-        $rondes = array_keys($wedstrijdenPerRonde);
-
-        // Koppel wedstrijden aan volgende ronde
-        for ($r = 0; $r < count($rondes) - 1; $r++) {
-            $huidigeRonde = $rondes[$r];
-            $volgendeRonde = $rondes[$r + 1];
-
-            $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
-            $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
-
-            foreach ($huidigeWedstrijden as $idx => $wedstrijd) {
-                // 2:1 mapping: wedstrijd 0,1 → wed 0 | wedstrijd 2,3 → wed 1 | etc.
-                $volgendeIdx = floor($idx / 2);
-
-                // Slot bepaling: idx 0,2,4... → wit | idx 1,3,5... → blauw
-                // (Dit komt overeen met: oneven bracket_positie → wit, even → blauw)
-                $slot = ($idx % 2 == 0) ? 'wit' : 'blauw';
-
-                if (isset($volgendeWedstrijden[$volgendeIdx])) {
-                    $wedstrijd->update([
-                        'volgende_wedstrijd_id' => $volgendeWedstrijden[$volgendeIdx]->id,
-                        'winnaar_naar_slot' => $slot,
-                    ]);
-                }
-            }
-        }
-
-        // Plaats bye judoka's direct in tweede ronde
-        if (count($rondes) >= 2 && !empty($byeJudokas)) {
-            $tweedeRonde = $rondes[1];
-            $tweedeRondeWedstrijden = $wedstrijdenPerRonde[$tweedeRonde];
-            $eersteRondeWedstrijden = $wedstrijdenPerRonde[$rondes[0]];
-
-            // Bepaal welke slots gevuld worden door eerste ronde winnaars
-            $gevuldeSlots = [];
-            foreach ($eersteRondeWedstrijden as $idx => $wed) {
-                $tweedePos = floor($idx / 2);
-                $gevuldeSlots[$tweedePos][] = ($idx % 2 == 0) ? 'wit' : 'blauw';
-            }
-
-            // Vul lege slots met bye judoka's
-            $byeIdx = 0;
-            foreach ($tweedeRondeWedstrijden as $idx => $wed) {
-                $heeftWit = isset($gevuldeSlots[$idx]) && in_array('wit', $gevuldeSlots[$idx]);
-                $heeftBlauw = isset($gevuldeSlots[$idx]) && in_array('blauw', $gevuldeSlots[$idx]);
-
-                if (!$heeftWit && $byeIdx < count($byeJudokas)) {
-                    $wed->update(['judoka_wit_id' => $byeJudokas[$byeIdx++]]);
-                }
-                if (!$heeftBlauw && $byeIdx < count($byeJudokas)) {
-                    $wed->update(['judoka_blauw_id' => $byeJudokas[$byeIdx++]]);
-                }
-            }
-        }
+        $this->scheduler->koppelAGroepWedstrijden($wedstrijdenPerRonde, $byeJudokas);
     }
 
     // =========================================================================
@@ -535,269 +473,33 @@ class EliminatieService
     }
 
     /**
-     * Koppel B-groep wedstrijden op basis van bracket_positie
+     * Koppel B-groep wedstrijden op basis van bracket_positie.
      *
-     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
-     *
-     * SLOT SYSTEEM B-GROEP (van boven naar beneden, GEEN spiegeling!):
-     * - Wedstrijd N heeft: slot_wit = 2N-1, slot_blauw = 2N
-     * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
-     *
-     * TWEE MAPPING TYPES:
-     *
-     * 1. NORMALE 2:1 MAPPING ((2) → volgende (1)):
-     *    - Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | Wed 5+6 → wed 3 | etc.
-     *    - Oneven bracket_positie (1,3,5...) → winnaar naar WIT
-     *    - Even bracket_positie (2,4,6...)   → winnaar naar BLAUW
-     *
-     * 2. SPECIALE 1:1 MAPPING ((1) → (2)):
-     *    - Wed N → wed N (zelfde positie)
-     *    - Winnaar ALTIJD naar WIT (A-verliezer komt op BLAUW)
+     * @see MatchScheduler::koppelBGroepWedstrijden
      */
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
     {
-        $rondes = array_keys($wedstrijdenPerRonde);
-        Log::info("koppelBGroepWedstrijden: rondes=" . implode(', ', $rondes) . ", dubbelRondes=" . ($dubbelRondes ? 'ja' : 'nee'));
-
-        for ($r = 0; $r < count($rondes) - 1; $r++) {
-            $huidigeRonde = $rondes[$r];
-            $volgendeRonde = $rondes[$r + 1];
-
-            $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
-            $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
-
-            // Bepaal mapping type
-            // 1:1 mapping bij: (1) → (2) of naar b_halve_finale_2 (brons)
-            $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
-            $isBrons = $volgendeRonde === 'b_halve_finale_2';
-
-            Log::info("Koppel {$huidigeRonde} (" . count($huidigeWedstrijden) . ") → {$volgendeRonde} (" . count($volgendeWedstrijden) . "): is1naar2={$is1naar2}, isBrons={$isBrons}");
-
-            foreach ($huidigeWedstrijden as $wedstrijd) {
-                $bracketPos = $wedstrijd->bracket_positie;
-
-                if ($is1naar2 || $isBrons) {
-                    // 1:1 MAPPING: (1) → (2) of laatste → brons
-                    // Winnaar altijd naar WIT (A-verliezer komt op BLAUW)
-                    $volgendeBracketPos = $bracketPos;
-                    $slot = 'wit';
-                } else {
-                    // 2:1 MAPPING: standaard knockout
-                    // Formule: doel_wedstrijd = ceil(bracket_positie / 2)
-                    $volgendeBracketPos = (int) ceil($bracketPos / 2);
-
-                    // Formule: oneven bracket_positie → WIT, even → BLAUW
-                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
-                }
-
-                // Zoek volgende wedstrijd op bracket_positie
-                $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendeBracketPos);
-
-                if ($volgendeWedstrijd) {
-                    $wedstrijd->update([
-                        'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
-                        'winnaar_naar_slot' => $slot,
-                    ]);
-                } else {
-                    Log::warning("GEEN VOLGENDE GEVONDEN: Wed {$wedstrijd->id} pos {$bracketPos} zoekt pos {$volgendeBracketPos}");
-                }
-            }
-        }
+        $this->scheduler->koppelBGroepWedstrijden($wedstrijdenPerRonde, $dubbelRondes);
     }
 
     /**
-     * Koppel A-wedstrijden aan B-wedstrijden via herkansing_wedstrijd_id
+     * Koppel A-wedstrijden aan B-wedstrijden via herkansing_wedstrijd_id.
      *
-     * Dit maakt de verliezer-plaatsing deterministisch (net als IJF).
-     * Elke A-wedstrijd weet exact naar welke B-wedstrijd de verliezer gaat.
+     * @see MatchScheduler::koppelAVerliezersAanB
      */
     private function koppelAVerliezersAanB(array $aWedstrijden, array $bWedstrijden, array $params): void
     {
-        $aRondes = array_keys($aWedstrijden);
-        if (count($aRondes) < 2) return;
-
-        $eersteARonde = $aRondes[0];
-        $tweedeARonde = $aRondes[1];
-        $dubbelRondes = $params['dubbelRondes'];
-
-        // Vind B-start ronde (eerste B-ronde)
-        $bRondes = array_keys($bWedstrijden);
-        if (empty($bRondes)) return;
-
-        $bStartRonde = $bRondes[0]; // Eerste B-ronde
-
-        Log::info("koppelAVerliezersAanB: eersteA={$eersteARonde}, tweedeA={$tweedeARonde}, bStart={$bStartRonde}, dubbel=" . ($dubbelRondes ? 'ja' : 'nee'));
-
-        // === EERSTE A-RONDE VERLIEZERS ===
-        if ($dubbelRondes) {
-            // DUBBEL: eerste A-ronde verliezers → B-start(1)
-            // (1) ronde = eerste B-ronde (bv. b_kwartfinale_1)
-            $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'eerste');
-        } else {
-            // SAMEN: eerste A-ronde verliezers → B-start WIT slots bovenaan
-            $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_wit');
-        }
-
-        // === TWEEDE A-RONDE VERLIEZERS ===
-        if ($dubbelRondes) {
-            // DUBBEL: tweede A-ronde verliezers → B-start(2) BLAUW
-            $bStart2Ronde = str_replace('_1', '_2', $bStartRonde);
-            if (isset($bWedstrijden[$bStart2Ronde])) {
-                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStart2Ronde], 'dubbel_blauw');
-            }
-        } else {
-            // SAMEN: tweede A-ronde verliezers → B-start
-            // Fairness vulvolgorde (zie FORMULES.md §Fairness Regel):
-            //   a1 = a2: alle a2 → BLAUW (1:1)
-            //   a1 < a2: extra (a2-a1) a2 → overige WIT + hun BLAUW (a2 vs a2),
-            //            rest a2 → BLAUW van a1 (LAATST vullen)
-            $a1 = $params['a1Verliezers'];
-            $a2 = $params['a2Verliezers'];
-            if ($a1 < $a2) {
-                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_fairness', $a1);
-            } else {
-                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_blauw');
-            }
-        }
-
-        // === LATERE A-RONDES (kwartfinale, halve finale) → corresponderende B-(2) rondes ===
-        for ($r = 2; $r < count($aRondes); $r++) {
-            $aRonde = $aRondes[$r];
-            $aRondeNaam = $aRonde; // bv. 'kwartfinale', 'halve_finale'
-
-            if ($aRonde === 'finale') continue; // Finale verliezer = zilver, geen B-groep
-
-            if ($aRonde === 'halve_finale') {
-                // Halve finale verliezers → b_halve_finale_2 BLAUW
-                if (isset($bWedstrijden['b_halve_finale_2'])) {
-                    $this->koppelARondeAanBRonde($aWedstrijden[$aRonde], $bWedstrijden['b_halve_finale_2'], 'brons_blauw');
-                }
-            } else {
-                // Andere latere rondes → corresponderende B-ronde(2)
-                $bRondeNaam = $dubbelRondes ? "b_{$aRonde}_2" : "b_{$aRonde}";
-                if (isset($bWedstrijden[$bRondeNaam])) {
-                    $this->koppelARondeAanBRonde($aWedstrijden[$aRonde], $bWedstrijden[$bRondeNaam], 'dubbel_blauw');
-                }
-            }
-        }
+        $this->scheduler->koppelAVerliezersAanB($aWedstrijden, $bWedstrijden, $params);
     }
 
     /**
-     * Koppel wedstrijden van één A-ronde aan één B-ronde
+     * Koppel wedstrijden van één A-ronde aan één B-ronde.
      *
-     * @param array $aWedstrijden Wedstrijden in deze A-ronde
-     * @param array $bWedstrijden Wedstrijden in de doel B-ronde
-     * @param string $type Type koppeling:
-     *   - 'eerste': eerste batch, 2:1 mapping naar WIT/BLAUW (voor (1) rondes)
-     *   - 'samen_wit': SAMEN mode, A-verliezers → WIT
-     *   - 'samen_blauw': SAMEN mode, A-verliezers → BLAUW
-     *   - 'samen_fairness': SAMEN mode a1<a2, fairness vulvolgorde (zie FORMULES.md)
-     *   - 'dubbel_blauw': latere rondes, A-verliezers → BLAUW (1:1 mapping)
-     *   - 'brons_blauw': halve finale verliezers → brons matching BLAUW (1:1 mapping)
-     * @param int $a1Count Alleen voor samen_fairness: aantal a1 verliezers
+     * @see MatchScheduler::koppelARondeAanBRonde
      */
     private function koppelARondeAanBRonde(array $aWedstrijden, array $bWedstrijden, string $type, int $a1Count = 0): void
     {
-        if (empty($bWedstrijden)) return;
-
-        // Filter echte wedstrijden (skip byes: wit gevuld, blauw leeg)
-        $echteWedstrijden = [];
-        foreach ($aWedstrijden as $aWedstrijd) {
-            if (is_null($aWedstrijd->judoka_blauw_id) && $aWedstrijd->judoka_wit_id) {
-                continue; // Bye
-            }
-            $echteWedstrijden[] = $aWedstrijd;
-        }
-
-        foreach ($echteWedstrijden as $idx => $aWedstrijd) {
-            $bWedstrijd = null;
-            $slot = 'wit';
-
-            switch ($type) {
-                case 'eerste':
-                    // DUBBEL: verliezers spreiden over alle B(1) wedstrijden
-                    // Als er minder verliezers zijn dan 2x B-capaciteit,
-                    // krijgen sommige B-wedstrijden maar 1 judoka (bye)
-                    $bCapaciteit = count($bWedstrijden);
-                    $totaalVerliezers = count($echteWedstrijden);
-                    $volleWedstrijden = $totaalVerliezers - $bCapaciteit; // B-weds met 2 judoka's
-
-                    if ($volleWedstrijden <= 0) {
-                        // Alle verliezers krijgen eigen B-wedstrijd (allemaal byes)
-                        $bIdx = $idx;
-                        $slot = 'wit';
-                    } elseif ($idx < $volleWedstrijden * 2) {
-                        // Eerste batch: 2:1 mapping (volle wedstrijden)
-                        $bIdx = (int) floor($idx / 2);
-                        $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
-                    } else {
-                        // Rest: 1:1 mapping op WIT (bye wedstrijden, blauw blijft null)
-                        $bIdx = $volleWedstrijden + ($idx - $volleWedstrijden * 2);
-                        $slot = 'wit';
-                    }
-                    $bWedstrijd = $bWedstrijden[$bIdx] ?? null;
-                    break;
-
-                case 'samen_wit':
-                    // SAMEN: 1:1 mapping op WIT slots
-                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
-                    $slot = 'wit';
-                    break;
-
-                case 'samen_blauw':
-                    // SAMEN: 1:1 mapping op BLAUW slots
-                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
-                    $slot = 'blauw';
-                    break;
-
-                case 'samen_fairness':
-                    // SAMEN (a1 < a2): 4-stappen vulvolgorde (FORMULES.md §Fairness)
-                    // a1 verliezers zitten al op WIT slots 0..(a1-1) (via samen_wit)
-                    //
-                    // Stap 2: a2 → ALLE overige WIT (elke wed minstens 1 judoka!)
-                    // Stap 3: rest a2 → BLAUW van a2-weds (a2 vs a2)
-                    // Stap 4: rest a2 → BLAUW van a1-weds (LAATST)
-                    $overigeWeds = count($bWedstrijden) - $a1Count; // = a2 - a1
-
-                    if ($idx < $overigeWeds) {
-                        // Stap 2: a2 → overige WIT slots (idx a1..a2-1)
-                        $bWedstrijd = $bWedstrijden[$a1Count + $idx] ?? null;
-                        $slot = 'wit';
-                    } elseif ($idx < $overigeWeds * 2) {
-                        // Stap 3: a2 → BLAUW van a2-wedstrijden (a2 vs a2)
-                        $blauwIdx = $idx - $overigeWeds;
-                        $bWedstrijd = $bWedstrijden[$a1Count + $blauwIdx] ?? null;
-                        $slot = 'blauw';
-                    } else {
-                        // Stap 4: rest a2 → BLAUW van a1-wedstrijden (LAATST)
-                        $restIdx = $idx - ($overigeWeds * 2);
-                        $bWedstrijd = $bWedstrijden[$restIdx] ?? null;
-                        $slot = 'blauw';
-                    }
-                    break;
-
-                case 'dubbel_blauw':
-                    // DUBBEL: 1:1 mapping op BLAUW in (2) rondes
-                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
-                    $slot = 'blauw';
-                    break;
-
-                case 'brons_blauw':
-                    // Halve finale verliezers → brons op BLAUW
-                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
-                    $slot = 'blauw';
-                    break;
-            }
-
-            if ($bWedstrijd) {
-                $aWedstrijd->update([
-                    'herkansing_wedstrijd_id' => $bWedstrijd->id,
-                    'verliezer_naar_slot' => $slot,
-                ]);
-                Log::info("A-koppeling: {$aWedstrijd->ronde} pos {$aWedstrijd->bracket_positie} → B-wed {$bWedstrijd->id} ({$bWedstrijd->ronde} pos {$bWedstrijd->bracket_positie}) slot={$slot}");
-            }
-        }
+        $this->scheduler->koppelARondeAanBRonde($aWedstrijden, $bWedstrijden, $type, $a1Count);
     }
 
     // =========================================================================
@@ -891,37 +593,13 @@ class EliminatieService
     }
 
     /**
-     * Koppel A-groep verliezers aan IJF B-groep
+     * Koppel A-groep verliezers aan IJF B-groep.
+     *
+     * @see MatchScheduler::koppelIJFVerliezers
      */
     private function koppelIJFVerliezers(Poule $poule, array $aWedstrijden, array $bWedstrijden): void
     {
-        // Zoek kwartfinale wedstrijden in A
-        $kwartfinales = $aWedstrijden['kwartfinale'] ?? [];
-
-        // Koppel 1/4 verliezers aan B-1/2(1)
-        // Pos 1+3 → B-1/2(1) wed 1, Pos 2+4 → B-1/2(1) wed 2
-        if (count($kwartfinales) >= 4) {
-            $bHalveFinale1 = $bWedstrijden['b_halve_finale_1'] ?? [];
-            if (count($bHalveFinale1) >= 2) {
-                $kwartfinales[0]->update(['herkansing_wedstrijd_id' => $bHalveFinale1[0]->id, 'verliezer_naar_slot' => 'wit']);
-                $kwartfinales[2]->update(['herkansing_wedstrijd_id' => $bHalveFinale1[0]->id, 'verliezer_naar_slot' => 'blauw']);
-
-                $kwartfinales[1]->update(['herkansing_wedstrijd_id' => $bHalveFinale1[1]->id, 'verliezer_naar_slot' => 'wit']);
-                $kwartfinales[3]->update(['herkansing_wedstrijd_id' => $bHalveFinale1[1]->id, 'verliezer_naar_slot' => 'blauw']);
-            }
-        }
-
-        // Zoek halve finale wedstrijden in A
-        $halveFinales = $aWedstrijden['halve_finale'] ?? [];
-
-        // Koppel A-1/2 verliezers aan B-1/2(2) blauw slot
-        if (count($halveFinales) >= 2) {
-            $bHalveFinale2 = $bWedstrijden['b_halve_finale_2'] ?? [];
-            if (count($bHalveFinale2) >= 2) {
-                $halveFinales[0]->update(['herkansing_wedstrijd_id' => $bHalveFinale2[0]->id, 'verliezer_naar_slot' => 'blauw']);
-                $halveFinales[1]->update(['herkansing_wedstrijd_id' => $bHalveFinale2[1]->id, 'verliezer_naar_slot' => 'blauw']);
-            }
-        }
+        $this->scheduler->koppelIJFVerliezers($aWedstrijden, $bWedstrijden);
     }
 
     // =========================================================================
@@ -1117,155 +795,33 @@ class EliminatieService
     }
 
     /**
-     * Schrap lege B-wedstrijden na alle A-rondes
+     * Schrap lege B-wedstrijden na alle A-rondes.
      *
-     * Verwijdert wedstrijden waar beide slots leeg zijn.
-     * Past bracket_positie aan voor correcte weergave.
-     *
-     * @param int $pouleId De poule om op te schonen
-     * @return int Aantal verwijderde wedstrijden
+     * @see MatchScheduler::schrapLegeBWedstrijden
      */
     public function schrapLegeBWedstrijden(int $pouleId): int
     {
-        $verwijderd = 0;
-
-        // Vind alle lege B-wedstrijden (beide slots leeg)
-        $legeWedstrijden = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'B')
-            ->whereNull('judoka_wit_id')
-            ->whereNull('judoka_blauw_id')
-            ->whereNull('winnaar_id')  // Nog niet gespeeld
-            ->get();
-
-        foreach ($legeWedstrijden as $wedstrijd) {
-            // Update wedstrijden die naar deze verwezen
-            Wedstrijd::where('volgende_wedstrijd_id', $wedstrijd->id)
-                ->update(['volgende_wedstrijd_id' => $wedstrijd->volgende_wedstrijd_id]);
-
-            // Verwijder de wedstrijd
-            $wedstrijd->delete();
-            $verwijderd++;
-        }
-
-        // Hernummer bracket_positie per ronde
-        $this->hernummerBracketPosities($pouleId);
-
-        Log::info("Verwijderd {$verwijderd} lege B-wedstrijden voor poule {$pouleId}");
-
-        return $verwijderd;
+        return $this->scheduler->schrapLegeBWedstrijden($pouleId);
     }
 
     /**
-     * Hernummer bracket_positie per ronde na verwijderen wedstrijden
+     * Hernummer bracket_positie per ronde na verwijderen wedstrijden.
+     *
+     * @see MatchScheduler::hernummerBracketPosities
      */
     private function hernummerBracketPosities(int $pouleId): void
     {
-        $rondes = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'B')
-            ->distinct()
-            ->pluck('ronde');
-
-        foreach ($rondes as $ronde) {
-            $wedstrijden = Wedstrijd::where('poule_id', $pouleId)
-                ->where('groep', 'B')
-                ->where('ronde', $ronde)
-                ->orderBy('bracket_positie')
-                ->get();
-
-            $positie = 1;
-            foreach ($wedstrijden as $wed) {
-                if ($wed->bracket_positie !== $positie) {
-                    $wed->update(['bracket_positie' => $positie]);
-                }
-                $positie++;
-            }
-        }
+        $this->scheduler->hernummerBracketPosities($pouleId);
     }
 
     /**
-     * Herstel B-groep koppelingen voor bestaande bracket
-     * Gebruik dit als de volgende_wedstrijd_id of winnaar_naar_slot fout staat
+     * Herstel B-groep koppelingen voor bestaande bracket.
      *
-     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
-     *
-     * Gebruikt dezelfde logica als koppelBGroepWedstrijden():
-     * - 2:1 MAPPING: oneven bracket_positie → wit, even → blauw
-     * - 1:1 MAPPING: (1) → (2) altijd naar wit
-     * - GEEN spiegeling, slots van boven naar beneden!
+     * @see MatchScheduler::herstelBKoppelingen
      */
     public function herstelBKoppelingen(int $pouleId): int
     {
-        $hersteld = 0;
-
-        // Haal alle B-groep wedstrijden op, gegroepeerd per ronde
-        // BELANGRIJK: sorteer op volgorde (niet op ronde-naam, want alfabetisch klopt niet!)
-        $wedstrijdenPerRonde = [];
-        $bWedstrijden = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'B')
-            ->orderBy('volgorde')  // Correcte volgorde: 1/8_1, 1/8_2, 1/4_1, 1/4_2, etc.
-            ->get();
-
-        foreach ($bWedstrijden as $wed) {
-            $wedstrijdenPerRonde[$wed->ronde][] = $wed;
-        }
-
-        // Sorteer rondes in correcte volgorde (invoegvolgorde is nu correct door orderBy volgorde)
-        $rondes = array_keys($wedstrijdenPerRonde);
-
-        Log::info("herstelBKoppelingen poule {$pouleId}: rondes=" . implode(', ', $rondes));
-
-        // Bepaal of dit dubbele rondes zijn
-        $dubbelRondes = collect($rondes)->contains(fn($r) => str_ends_with($r, '_1'));
-
-        // Koppel elke ronde aan de volgende
-        for ($r = 0; $r < count($rondes) - 1; $r++) {
-            $huidigeRonde = $rondes[$r];
-            $volgendeRonde = $rondes[$r + 1];
-
-            $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
-            $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
-
-            // Bepaal mapping type (zie koppelBGroepWedstrijden voor details)
-            $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
-            $isBrons = $volgendeRonde === 'b_halve_finale_2';
-
-            Log::info("Koppel {$huidigeRonde} → {$volgendeRonde}: is1naar2={$is1naar2}, isBrons={$isBrons}");
-
-            foreach ($huidigeWedstrijden as $wedstrijd) {
-                $bracketPos = $wedstrijd->bracket_positie;
-
-                if ($is1naar2 || $isBrons) {
-                    // 1:1 MAPPING: winnaar altijd naar WIT
-                    $volgendeBracketPos = $bracketPos;
-                    $slot = 'wit';
-                } else {
-                    // 2:1 MAPPING: standaard knockout
-                    // Formule: doel_wedstrijd = ceil(bracket_positie / 2)
-                    $volgendeBracketPos = (int) ceil($bracketPos / 2);
-
-                    // Formule: oneven bracket_positie → WIT, even → BLAUW
-                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
-                }
-
-                $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendeBracketPos);
-
-                if ($volgendeWedstrijd) {
-                    $wedstrijd->update([
-                        'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
-                        'winnaar_naar_slot' => $slot,
-                    ]);
-                    Log::debug("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → Wed {$volgendeWedstrijd->id} (pos {$volgendeWedstrijd->bracket_positie}), slot={$slot}");
-                    $hersteld++;
-                } else {
-                    Log::warning("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → GEEN VOLGENDE GEVONDEN (zoekt pos {$volgendeBracketPos})");
-                }
-            }
-        }
-
-        Log::info("Hersteld {$hersteld} B-koppelingen voor poule {$pouleId}");
-
-        return $hersteld;
+        return $this->scheduler->herstelBKoppelingen($pouleId);
     }
 
     /**
