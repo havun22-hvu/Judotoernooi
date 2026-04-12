@@ -29,15 +29,11 @@ class JudokaGrouper
      */
     public function group(Toernooi $toernooi, array $gewichtsklassenConfig, array $prioriteiten): Collection
     {
-        // Default to true if null (for backwards compatibility)
-        $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
-
-        // Determine priority positions (lower index = higher priority)
         $leeftijdIdx = array_search('leeftijd', $prioriteiten);
         $gewichtIdx = array_search('gewicht', $prioriteiten);
         $bandIdx = array_search('band', $prioriteiten);
 
-        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false) ? ($bandIdx < $gewichtIdx) : false;
+        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false) && ($bandIdx < $gewichtIdx);
 
         $sortFields = [];
         if ($leeftijdIdx !== false) $sortFields[$leeftijdIdx] = ['geboortejaar', 'DESC'];
@@ -50,27 +46,20 @@ class JudokaGrouper
             $query->orderBy($field, $direction);
         }
 
-        $judokas = $query->get();
-
-        $groepen = $judokas->groupBy(
+        $groepen = $query->get()->groupBy(
             fn(Judoka $judoka) => $this->groupKey($judoka, $gewichtsklassenConfig)
         );
 
-        // Re-sort judokas within each group (groupBy doesn't preserve order!)
-        $groepen = $groepen->map(function ($judokasInGroep) use ($bandFirst) {
-            return $judokasInGroep->sortBy($bandFirst
-                ? [['sort_band', 'asc'], ['sort_gewicht', 'asc']]
-                : [['sort_gewicht', 'asc'], ['sort_band', 'asc']]
-            );
-        });
+        // groupBy doesn't preserve order, so re-sort within each group
+        $groepen = $groepen->map(fn($judokasInGroep) => $judokasInGroep->sortBy($bandFirst
+            ? [['sort_band', 'asc'], ['sort_gewicht', 'asc']]
+            : [['sort_gewicht', 'asc'], ['sort_band', 'asc']]
+        ));
 
-        // Sort groups by sort_categorie of first judoka, then gewicht
         return $groepen->sortBy(function ($judokasInGroep, $key) {
-            $eerste = $judokasInGroep->first();
-            $sortCategorie = $eerste->sort_categorie ?? 99;
+            $sortCategorie = $judokasInGroep->first()->sort_categorie ?? 99;
 
-            $delen = explode('|', $key);
-            $gewicht = $delen[1] ?? '';
+            $gewicht = explode('|', $key)[1] ?? '';
             $gewichtNum = intval(preg_replace('/[^0-9]/', '', $gewicht));
             $gewichtPlus = str_starts_with($gewicht, '+') ? 1000 : 0;
 
