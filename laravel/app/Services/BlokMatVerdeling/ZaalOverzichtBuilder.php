@@ -50,10 +50,7 @@ class ZaalOverzichtBuilder
             ];
 
             foreach ($toernooi->matten as $mat) {
-                // Poules op deze mat (via mat_id)
                 $poules = $blok->poules->where('mat_id', $mat->id);
-                // Eliminatie B-groep entries: poules where b_mat_id points to this mat
-                // (either same mat or different mat via split)
                 $bPoules = $blok->poules
                     ->where('type', 'eliminatie')
                     ->where('b_mat_id', $mat->id);
@@ -61,13 +58,11 @@ class ZaalOverzichtBuilder
                 $pouleEntries = collect();
 
                 foreach ($poules as $p) {
-                    // Eliminatie: always show as A-groep entry (B is added separately below)
                     if ($p->type === 'eliminatie') {
                         $pouleEntries->push($this->buildEliminatieAEntry($p));
                         continue;
                     }
 
-                    // Kruisfinale: use stored values
                     if ($p->type === 'kruisfinale') {
                         $pouleEntries->push($this->buildKruisfinaleEntry($p));
                         continue;
@@ -76,7 +71,6 @@ class ZaalOverzichtBuilder
                     $pouleEntries->push($this->buildVoorrondeEntry($p, $tolerantie));
                 }
 
-                // B-groep entries for eliminatie poules where b_mat_id = this mat
                 foreach ($bPoules as $p) {
                     $pouleEntries->push($this->buildEliminatieBEntry($p));
                 }
@@ -97,8 +91,20 @@ class ZaalOverzichtBuilder
     }
 
     /**
-     * Build eliminatie A-groep entry.
+     * Build base entry fields shared by all poule types.
      */
+    private function baseEntry(Poule $p): array
+    {
+        return [
+            'id' => $p->id,
+            'nummer' => $p->nummer,
+            'titel' => $p->getDisplayTitel(),
+            'leeftijdsklasse' => $p->leeftijdsklasse,
+            'gewichtsklasse' => $p->gewichtsklasse,
+            'type' => $p->type,
+        ];
+    }
+
     private function buildEliminatieAEntry(Poule $p): array
     {
         $aWedstrijden = $p->wedstrijden->where('groep', 'A')->count();
@@ -107,22 +113,13 @@ class ZaalOverzichtBuilder
             $aWedstrijden = $p->berekenAWedstrijden();
         }
 
-        return [
-            'id' => $p->id,
-            'nummer' => $p->nummer,
-            'titel' => $p->getDisplayTitel(),
-            'leeftijdsklasse' => $p->leeftijdsklasse,
-            'gewichtsklasse' => $p->gewichtsklasse,
-            'type' => $p->type,
+        return $this->baseEntry($p) + [
             'groep' => 'A',
             'judokas' => $p->aantal_judokas,
             'wedstrijden' => $aWedstrijden,
         ];
     }
 
-    /**
-     * Build eliminatie B-groep entry.
-     */
     private function buildEliminatieBEntry(Poule $p): array
     {
         $bWedstrijden = $p->wedstrijden->where('groep', 'B')->count();
@@ -132,38 +129,23 @@ class ZaalOverzichtBuilder
             $bWedstrijden = $p->berekenBWedstrijden();
         }
 
-        return [
-            'id' => $p->id,
-            'nummer' => $p->nummer,
-            'titel' => $p->getDisplayTitel(),
-            'leeftijdsklasse' => $p->leeftijdsklasse,
-            'gewichtsklasse' => $p->gewichtsklasse,
-            'type' => $p->type,
+        return $this->baseEntry($p) + [
             'groep' => 'B',
             'judokas' => $bJudokas,
             'wedstrijden' => $bWedstrijden,
         ];
     }
 
-    /**
-     * Build kruisfinale entry.
-     */
     private function buildKruisfinaleEntry(Poule $p): array
     {
-        return [
-            'id' => $p->id,
-            'nummer' => $p->nummer,
-            'titel' => $p->getDisplayTitel(),
-            'leeftijdsklasse' => $p->leeftijdsklasse,
-            'gewichtsklasse' => $p->gewichtsklasse,
-            'type' => $p->type,
+        return $this->baseEntry($p) + [
             'judokas' => $p->aantal_judokas,
             'wedstrijden' => $p->aantal_wedstrijden,
         ];
     }
 
     /**
-     * Build voorronde entry, counting only active judokas (within tolerance).
+     * Voorronde: count only judokas within tolerance.
      */
     private function buildVoorrondeEntry(Poule $p, float $tolerantie): array
     {
@@ -171,13 +153,7 @@ class ZaalOverzichtBuilder
             fn($j) => !$j->moetUitPouleVerwijderd($tolerantie)
         )->count();
 
-        return [
-            'id' => $p->id,
-            'nummer' => $p->nummer,
-            'titel' => $p->getDisplayTitel(),
-            'leeftijdsklasse' => $p->leeftijdsklasse,
-            'gewichtsklasse' => $p->gewichtsklasse,
-            'type' => $p->type,
+        return $this->baseEntry($p) + [
             'judokas' => $actieveJudokas,
             'wedstrijden' => $p->berekenAantalWedstrijden($actieveJudokas),
         ];
