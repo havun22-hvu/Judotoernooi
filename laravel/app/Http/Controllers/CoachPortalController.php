@@ -10,7 +10,7 @@ use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use App\Http\Controllers\PubliekController;
+use App\Http\Controllers\PubliekResultatenController;
 use App\Services\MollieService;
 use App\Services\PaymentProviderFactory;
 
@@ -789,7 +789,7 @@ class CoachPortalController extends Controller
             return redirect()->route('coach.portal.code', $this->routeParams($organisator, $toernooi, $code));
         }
 
-        $publiekController = app(PubliekController::class);
+        $publiekController = app(PubliekResultatenController::class);
         $clubResultaten = $publiekController->getClubResultaten($toernooiModel->organisator, $toernooiModel, $club->id);
         $clubRanking = $publiekController->getClubRanking($toernooiModel);
 

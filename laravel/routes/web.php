@@ -16,14 +16,22 @@ use App\Http\Controllers\Auth\PinAuthController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\PouleController;
 use App\Http\Controllers\PouleEliminatieController;
+use App\Http\Controllers\PouleGeneratieController;
+use App\Http\Controllers\PouleJudokaController;
 use App\Http\Controllers\RoleToegang;
 use App\Http\Controllers\ToernooiController;
+use App\Http\Controllers\ToernooiInstellingenController;
+use App\Http\Controllers\ToernooiAfsluitenController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\OrganisatorDashboardController;
 use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WedstrijddagMobielController;
 use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
+use App\Http\Controllers\PubliekResultatenController;
+use App\Http\Controllers\PubliekWegingController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\MollieController;
 use App\Http\Controllers\StripeController;
@@ -295,7 +303,7 @@ Route::get('organisator/login', fn() => redirect()->route('login'))->name('organ
 // Legacy auth routes - redirect to new URLs
 Route::prefix('organisator')->name('organisator.legacy.')->group(function () {
     Route::get('register', fn() => redirect()->route('register'))->name('register');
-    Route::get('dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->name('dashboard');
+    Route::get('dashboard', [OrganisatorDashboardController::class, 'redirectToOrganisatorDashboard'])->name('dashboard');
 });
 
 /*
@@ -304,7 +312,7 @@ Route::prefix('organisator')->name('organisator.legacy.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:organisator')->group(function () {
-    Route::get('admin', [ToernooiController::class, 'index'])->name('admin.index');
+    Route::get('admin', [AdminDashboardController::class, 'index'])->name('admin.index');
     // Legacy redirect
     Route::get('toernooi', fn() => redirect()->route('admin.index'))->name('toernooi.index.legacy');
 
@@ -331,7 +339,7 @@ Route::middleware('auth:organisator')->group(function () {
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)
-Route::get('/dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->middleware('auth:organisator');
+Route::get('/dashboard', [OrganisatorDashboardController::class, 'redirectToOrganisatorDashboard'])->middleware('auth:organisator');
 
 /*
 |--------------------------------------------------------------------------
@@ -340,7 +348,7 @@ Route::get('/dashboard', [ToernooiController::class, 'redirectToOrganisatorDashb
 */
 Route::prefix('{organisator}')->middleware('auth:organisator')->group(function () {
     // Dashboard
-    Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('organisator.dashboard');
+    Route::get('dashboard', [OrganisatorDashboardController::class, 'organisatorDashboard'])->name('organisator.dashboard');
 
     // Club management (organisator level - clubs persist across toernooien)
     Route::get('clubs', [ClubController::class, 'indexOrganisator'])->name('organisator.clubs.index');
@@ -415,13 +423,13 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::put('/', [ToernooiController::class, 'update'])->name('update');
     Route::delete('/', [ToernooiController::class, 'destroy'])->name('destroy');
     Route::post('archiveer', [ToernooiController::class, 'toggleArchiveer'])->name('archiveer');
-    Route::put('wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('wachtwoorden');
-    Route::put('bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('bloktijden');
-    Route::put('betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
-    Route::put('portaal', [ToernooiController::class, 'updatePortaalInstellingen'])->name('portaal.instellingen');
-    Route::put('local-server-ips', [ToernooiController::class, 'updateLocalServerIps'])->name('local-server-ips');
-    Route::get('detect-my-ip', [ToernooiController::class, 'detectMyIp'])->name('detect-my-ip');
-    Route::post('heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('heropen-voorbereiding');
+    Route::put('wachtwoorden', [ToernooiInstellingenController::class, 'updateWachtwoorden'])->name('wachtwoorden');
+    Route::put('bloktijden', [ToernooiInstellingenController::class, 'updateBloktijden'])->name('bloktijden');
+    Route::put('betalingen', [ToernooiInstellingenController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
+    Route::put('portaal', [ToernooiInstellingenController::class, 'updatePortaalInstellingen'])->name('portaal.instellingen');
+    Route::put('local-server-ips', [ToernooiInstellingenController::class, 'updateLocalServerIps'])->name('local-server-ips');
+    Route::get('detect-my-ip', [ToernooiInstellingenController::class, 'detectMyIp'])->name('detect-my-ip');
+    Route::post('heropen-voorbereiding', [ToernooiInstellingenController::class, 'heropenVoorbereiding'])->name('heropen-voorbereiding');
 
     // Mollie OAuth
     Route::get('mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
@@ -446,9 +454,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::post('reset', [ToernooiController::class, 'reset'])->name('reset');
 
     // Afsluiten routes
-    Route::get('afsluiten', [ToernooiController::class, 'afsluiten'])->name('afsluiten');
-    Route::post('afsluiten', [ToernooiController::class, 'bevestigAfsluiten'])->name('afsluiten.bevestig');
-    Route::post('heropenen', [ToernooiController::class, 'heropenen'])->name('heropenen');
+    Route::get('afsluiten', [ToernooiAfsluitenController::class, 'afsluiten'])->name('afsluiten');
+    Route::post('afsluiten', [ToernooiAfsluitenController::class, 'bevestigAfsluiten'])->name('afsluiten.bevestig');
+    Route::post('heropenen', [ToernooiAfsluitenController::class, 'heropenen'])->name('heropenen');
 
     // Auth routes (public) - redirects naar login
     Route::get('login', fn() => redirect()->route('login'))->name('auth.login');
@@ -495,11 +503,11 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
 
         // Poules management
-        Route::post('poule/genereer', [PouleController::class, 'genereer'])->name('poule.genereer');
-        Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
-        Route::get('poule/zoek-match/{judoka}', [PouleController::class, 'zoekMatch'])->name('poule.zoek-match');
-        Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
-        Route::post('poule/uitschrijven/{judoka}', [PouleController::class, 'uitschrijvenJudoka'])->name('poule.uitschrijven');
+        Route::post('poule/genereer', [PouleGeneratieController::class, 'genereer'])->name('poule.genereer');
+        Route::post('poule/verifieer', [PouleGeneratieController::class, 'verifieer'])->name('poule.verifieer');
+        Route::get('poule/zoek-match/{judoka}', [PouleJudokaController::class, 'zoekMatch'])->name('poule.zoek-match');
+        Route::post('poule/verplaats-judoka', [PouleJudokaController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
+        Route::post('poule/uitschrijven/{judoka}', [PouleJudokaController::class, 'uitschrijvenJudoka'])->name('poule.uitschrijven');
         Route::post('poule', [PouleController::class, 'store'])->name('poule.store');
         Route::patch('poule/{poule}/kruisfinale', [PouleController::class, 'updateKruisfinale'])->name('poule.update-kruisfinale');
         Route::delete('poule/{poule}', [PouleController::class, 'destroy'])->name('poule.destroy');
@@ -572,7 +580,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::get('activiteiten', [ActivityLogController::class, 'index'])->name('activiteiten');
 
         // Resultaten overzicht (organisator)
-        Route::get('resultaten', [PubliekController::class, 'organisatorResultaten'])->name('resultaten.index');
+        Route::get('resultaten', [PubliekResultatenController::class, 'organisatorResultaten'])->name('resultaten.index');
 
         // Reverb (chat server) beheer
         Route::prefix('reverb')->name('reverb.')->group(function () {
@@ -881,15 +889,15 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->middleware('track.r
     // API routes for public page (rate limited)
     Route::middleware('throttle:public-api')->group(function () {
         Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
-        Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
-        Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
+        Route::post('scan-qr', [PubliekWegingController::class, 'scanQR'])->name('scan-qr');
+        Route::post('weging/{judoka}/registreer', [PubliekWegingController::class, 'registreerGewicht'])->name('weging.registreer');
         Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
         Route::get('matten', [PubliekController::class, 'matten'])->name('matten');
     });
     Route::post('aanmelden', [PubliekController::class, 'clubAanmelding'])->middleware('throttle:5,60')->name('club-aanmelding');
     Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
-    Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
-    Route::get('danpunten.csv', [PubliekController::class, 'exportDanpunten'])->name('export-danpunten');
+    Route::get('uitslagen.csv', [PubliekResultatenController::class, 'exportUitslagen'])->name('export-uitslagen');
+    Route::get('danpunten.csv', [PubliekResultatenController::class, 'exportDanpunten'])->name('export-danpunten');
 })
 ->where('organisator', '^(?!admin|login|logout|registreren|weegkaart|coach-kaart|mollie|betaling|help|dashboard|local-server).*$')
 ->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');

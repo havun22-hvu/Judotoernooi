@@ -10,19 +10,13 @@ use App\Models\Blok;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
-use App\Services\WegingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class PubliekController extends Controller
 {
-    public function __construct(
-        private WegingService $wegingService
-    ) {}
-
     /**
      * Show public tournament page with all judokas
      */
@@ -583,373 +577,6 @@ class PubliekController extends Controller
     }
 
     /**
-     * Scan QR code and return judoka info (public, read-only)
-     */
-    public function scanQR(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $qrCode = $request->input('qr_code', '');
-
-        if (empty($qrCode)) {
-            return response()->json(['success' => false, 'message' => 'Geen QR code']);
-        }
-
-        // Extract qr_code from URL if full URL is provided
-        if (str_contains($qrCode, '/weegkaart/')) {
-            $parts = explode('/weegkaart/', $qrCode);
-            $qrCode = end($parts);
-            $qrCode = strtok($qrCode, '?');
-            $qrCode = strtok($qrCode, '#');
-            $qrCode = rtrim($qrCode, '/');
-        }
-
-        $judoka = Judoka::where('toernooi_id', $toernooi->id)
-            ->where('qr_code', $qrCode)
-            ->with(['club', 'poules.blok', 'wegingen'])
-            ->first();
-
-        if (!$judoka) {
-            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden']);
-        }
-
-        $maxWegingen = $toernooi->max_wegingen;
-        $aantalWegingen = $judoka->wegingen->count();
-
-        return response()->json([
-            'success' => true,
-            'judoka' => [
-                'id' => $judoka->id,
-                'naam' => $judoka->naam,
-                'club' => $judoka->club?->naam,
-                'leeftijdsklasse' => $judoka->leeftijdsklasse,
-                'gewichtsklasse' => $judoka->gewichtsklasse,
-                'gewicht' => $judoka->gewicht, // opgegeven gewicht bij aanmelding
-                'blok' => $judoka->poules->first()?->blok?->nummer,
-                'gewogen' => $judoka->gewicht_gewogen > 0,
-                'gewicht_gewogen' => $judoka->gewicht_gewogen,
-                'vorige_wegingen' => $judoka->wegingen->take(5)->map(fn($w) => [
-                    'gewicht' => $w->gewicht,
-                    'tijd' => $w->created_at->format('H:i'),
-                ])->toArray(),
-                'aantal_wegingen' => $aantalWegingen,
-                'max_wegingen' => $maxWegingen,
-                'max_bereikt' => $maxWegingen && $aantalWegingen >= $maxWegingen,
-            ],
-        ]);
-    }
-
-    /**
-     * Register weight for judoka (public route for PWA)
-     * Uses WegingService to properly save weging records
-     */
-    public function registreerGewicht(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
-    {
-        // Verify judoka belongs to this tournament
-        if ($judoka->toernooi_id !== $toernooi->id) {
-            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden'], 404);
-        }
-
-        $validated = $request->validate([
-            'gewicht' => 'required|numeric|min:10|max:200',
-        ]);
-
-        // Use WegingService to register weight (creates Weging record + updates judoka)
-        $resultaat = $this->wegingService->registreerGewicht(
-            $judoka,
-            $validated['gewicht'],
-            $request->user()?->name ?? 'PWA'
-        );
-
-        if (!($resultaat['success'] ?? true)) {
-            return response()->json([
-                'success' => false,
-                'message' => $resultaat['error'] ?? 'Weging niet toegestaan',
-            ], 400);
-        }
-
-        return response()->json([
-            'success' => true,
-            'binnen_klasse' => $resultaat['binnen_klasse'],
-            'alternatieve_poule' => $resultaat['alternatieve_poule'],
-            'opmerking' => $resultaat['opmerking'],
-        ]);
-    }
-
-    /**
-     * Export results as CSV for organizer
-     * Sorted by age class (young to old) and weight (light to heavy)
-     */
-    public function exportUitslagen(Organisator $organisator, Toernooi $toernooi): Response
-    {
-        $uitslagen = $this->getUitslagen($toernooi);
-
-        $csv = "Leeftijdsklasse;Gewichtsklasse;Poule;Plaats;Naam;Club;WP;JP\n";
-
-        foreach ($uitslagen as $leeftijdsklasse => $poules) {
-            foreach ($poules as $poule) {
-                $plaats = 1;
-                foreach ($poule->standings as $standing) {
-                    $csv .= sprintf(
-                        "%s;%s;%d;%d;%s;%s;%d;%d\n",
-                        $leeftijdsklasse,
-                        $poule->gewichtsklasse,
-                        $poule->nummer,
-                        $plaats,
-                        $standing['judoka']->naam,
-                        $standing['judoka']->club?->naam ?? '-',
-                        $standing['wp'],
-                        $standing['jp']
-                    );
-                    $plaats++;
-                }
-            }
-        }
-
-        $filename = sprintf('uitslagen_%s_%s.csv',
-            \Illuminate\Support\Str::slug($toernooi->naam),
-            now()->format('Y-m-d_His')
-        );
-
-        return response($csv)
-            ->header('Content-Type', 'text/csv; charset=UTF-8')
-            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
-    }
-
-    /**
-     * Export danpunten CSV voor JBN - gewonnen wedstrijden voor bruine banden
-     */
-    public function exportDanpunten(Organisator $organisator, Toernooi $toernooi): Response
-    {
-        if (!$toernooi->danpunten_actief) {
-            abort(404);
-        }
-
-        // Get all brown belt judokas with at least 1 won match
-        $bruineBanden = Judoka::where('toernooi_id', $toernooi->id)
-            ->where('band', 'bruin')
-            ->with('club')
-            ->get();
-
-        $csv = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel
-        $csv .= "Naam;JBN Lidnummer;Judoschool;Toernooi;Toernooi datum;Aantal gewonnen wedstrijden\n";
-
-        foreach ($bruineBanden as $judoka) {
-            // Count won matches (poule + eliminatie, exclude byes)
-            $gewonnen = \App\Models\Wedstrijd::where('winnaar_id', $judoka->id)
-                ->whereNotNull('judoka_wit_id')
-                ->whereNotNull('judoka_blauw_id')
-                ->whereHas('poule', fn ($q) => $q->where('toernooi_id', $toernooi->id))
-                ->count();
-
-            if ($gewonnen === 0) {
-                continue;
-            }
-
-            $csv .= sprintf(
-                "%s;%s;%s;%s;%s;%d\n",
-                $judoka->naam,
-                $judoka->jbn_lidnummer ?? '',
-                $judoka->club?->naam ?? '-',
-                $toernooi->naam,
-                $toernooi->datum?->format('d-m-Y') ?? '',
-                $gewonnen
-            );
-        }
-
-        $filename = sprintf('danpunten_%s_%s.csv',
-            \Illuminate\Support\Str::slug($toernooi->naam),
-            now()->format('Y-m-d')
-        );
-
-        return response($csv)
-            ->header('Content-Type', 'text/csv; charset=UTF-8')
-            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
-    }
-
-    /**
-     * Organisator resultaten pagina - alle uitslagen + club ranking
-     */
-    public function organisatorResultaten(Organisator $organisator, Toernooi $toernooi): View
-    {
-        $uitslagen = $this->getUitslagen($toernooi);
-        $clubRanking = $this->getClubRanking($toernooi);
-
-        return view('pages.resultaten.organisator', [
-            'toernooi' => $toernooi,
-            'uitslagen' => $uitslagen,
-            'clubRanking' => $clubRanking,
-        ]);
-    }
-
-    /**
-     * Calculate club ranking based on average WP and JP per judoka
-     * Sort by: avg WP desc, then avg JP desc (tiebreaker)
-     *
-     * WP/JP wordt direct berekend uit wedstrijden tabel (niet via poule standings)
-     * om dubbeltelling te voorkomen bij judoka's in meerdere poules.
-     */
-    public function getClubRanking(Toernooi $toernooi): array
-    {
-        // Get all judokas with their clubs
-        $judokas = Judoka::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('club_id')
-            ->with('club')
-            ->get()
-            ->keyBy('id');
-
-        // Get all wedstrijden for this toernooi
-        $wedstrijden = \App\Models\Wedstrijd::whereHas('poule', function ($q) use ($toernooi) {
-            $q->where('toernooi_id', $toernooi->id);
-        })->get();
-
-        // Calculate WP and JP per judoka directly from wedstrijden
-        $wpPerJudoka = [];
-        $jpPerJudoka = [];
-
-        foreach ($wedstrijden as $w) {
-            // WP: 2 punten voor winnaar
-            if ($w->winnaar_id) {
-                $wpPerJudoka[$w->winnaar_id] = ($wpPerJudoka[$w->winnaar_id] ?? 0) + 2;
-            }
-
-            // JP: uit scores
-            if ($w->judoka_wit_id) {
-                $jpWit = (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                $jpPerJudoka[$w->judoka_wit_id] = ($jpPerJudoka[$w->judoka_wit_id] ?? 0) + $jpWit;
-            }
-            if ($w->judoka_blauw_id) {
-                $jpBlauw = (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                $jpPerJudoka[$w->judoka_blauw_id] = ($jpPerJudoka[$w->judoka_blauw_id] ?? 0) + $jpBlauw;
-            }
-        }
-
-        // Aggregate per club
-        $clubs = [];
-        foreach ($judokas as $judoka) {
-            $clubId = $judoka->club_id;
-            $clubNaam = $judoka->club?->naam ?? 'Geen club';
-
-            if (!isset($clubs[$clubId])) {
-                $clubs[$clubId] = [
-                    'naam' => $clubNaam,
-                    'goud' => 0,
-                    'zilver' => 0,
-                    'brons' => 0,
-                    'totaal_wp' => 0,
-                    'totaal_jp' => 0,
-                    'totaal_judokas' => 0,
-                ];
-            }
-
-            $clubs[$clubId]['totaal_wp'] += $wpPerJudoka[$judoka->id] ?? 0;
-            $clubs[$clubId]['totaal_jp'] += $jpPerJudoka[$judoka->id] ?? 0;
-            $clubs[$clubId]['totaal_judokas']++;
-        }
-
-        // Count medals from uitslagen (plaats 1/2/3 in afgesloten poules)
-        $uitslagen = $this->getUitslagen($toernooi);
-        foreach ($uitslagen as $leeftijdsklasse => $poules) {
-            foreach ($poules as $poule) {
-                foreach ($poule->standings as $index => $standing) {
-                    $plaats = $index + 1;
-                    $clubId = $standing['judoka']->club_id ?? 0;
-
-                    if (isset($clubs[$clubId])) {
-                        if ($plaats === 1) $clubs[$clubId]['goud']++;
-                        if ($plaats === 2) $clubs[$clubId]['zilver']++;
-                        if ($plaats === 3) $clubs[$clubId]['brons']++;
-                    }
-                }
-            }
-        }
-
-        // Calculate averages per ingeschreven judoka
-        foreach ($clubs as $clubId => &$club) {
-            $club['totaal_medailles'] = $club['goud'] + $club['zilver'] + $club['brons'];
-            $aantalJudokas = $club['totaal_judokas'] ?: 1;
-
-            $club['gem_wp'] = round($club['totaal_wp'] / $aantalJudokas, 2);
-            $club['gem_jp'] = round($club['totaal_jp'] / $aantalJudokas, 2);
-        }
-
-        // Sort by average WP desc, then average JP desc (tiebreaker)
-        uasort($clubs, function ($a, $b) {
-            if ($a['gem_wp'] !== $b['gem_wp']) {
-                return $b['gem_wp'] <=> $a['gem_wp'];
-            }
-            return $b['gem_jp'] <=> $a['gem_jp'];
-        });
-
-        $rankedClubs = array_values($clubs);
-        return [
-            'absoluut' => $rankedClubs,
-            'relatief' => $rankedClubs,
-        ];
-    }
-
-    /**
-     * Get results for a specific club (for coach portal)
-     */
-    public function getClubResultaten(Organisator $organisator, Toernooi $toernooi, int $clubId): array
-    {
-        $uitslagen = $this->getUitslagen($toernooi);
-        $resultaten = [];
-
-        foreach ($uitslagen as $leeftijdsklasse => $poules) {
-            foreach ($poules as $poule) {
-                foreach ($poule->standings as $index => $standing) {
-                    if ($standing['judoka']->club_id === $clubId) {
-                        $resultaten[] = [
-                            'judoka' => $standing['judoka'],
-                            'plaats' => $index + 1,
-                            'wp' => $standing['wp'],
-                            'jp' => $standing['jp'],
-                            'leeftijdsklasse' => $leeftijdsklasse,
-                            'gewichtsklasse' => $poule->gewichtsklasse,
-                            'poule_nummer' => $poule->nummer,
-                        ];
-                    }
-                }
-            }
-        }
-
-        // Sort by plaats (best first)
-        usort($resultaten, fn($a, $b) => $a['plaats'] <=> $b['plaats']);
-
-        return $resultaten;
-    }
-
-    /**
-     * Extract band color from band string for colored dot display.
-     * Returns CSS color value.
-     */
-    private function getBandKleur(?string $band): ?string
-    {
-        if (empty($band)) {
-            return null;
-        }
-
-        $bandLower = strtolower($band);
-
-        $kleuren = [
-            'wit' => '#ffffff',
-            'geel' => '#fbbf24',
-            'oranje' => '#f97316',
-            'groen' => '#22c55e',
-            'blauw' => '#3b82f6',
-            'bruin' => '#92400e',
-            'zwart' => '#1f2937',
-        ];
-
-        foreach ($kleuren as $kleur => $hex) {
-            if (str_contains($bandLower, $kleur)) {
-                return $hex;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Store a club registration request from the public page
      */
     public function clubAanmelding(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
@@ -991,5 +618,36 @@ class PubliekController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => __('Aanmelding ontvangen! De organisator neemt contact met u op.')]);
+    }
+
+    /**
+     * Extract band color from band string for colored dot display.
+     * Returns CSS color value.
+     */
+    private function getBandKleur(?string $band): ?string
+    {
+        if (empty($band)) {
+            return null;
+        }
+
+        $bandLower = strtolower($band);
+
+        $kleuren = [
+            'wit' => '#ffffff',
+            'geel' => '#fbbf24',
+            'oranje' => '#f97316',
+            'groen' => '#22c55e',
+            'blauw' => '#3b82f6',
+            'bruin' => '#92400e',
+            'zwart' => '#1f2937',
+        ];
+
+        foreach ($kleuren as $kleur => $hex) {
+            if (str_contains($bandLower, $kleur)) {
+                return $hex;
+            }
+        }
+
+        return null;
     }
 }
