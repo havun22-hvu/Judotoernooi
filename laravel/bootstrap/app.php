@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('backup:wedstrijddag')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prepend(\App\Http\Middleware\ObservabilityMiddleware::class);
+
         // Global middleware - runs on every request
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
@@ -93,6 +95,28 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return back()->with('error', $e->getUserMessage());
+        });
+
+        $exceptions->reportable(function (\Throwable $e) {
+            if (config('observability.enabled', true)) {
+                try {
+                    \Illuminate\Support\Facades\DB::connection('havuncore')->table('error_logs')->insert([
+                        'project' => config('observability.project', 'judotoernooi'),
+                        'exception_class' => get_class($e),
+                        'message' => mb_substr($e->getMessage(), 0, 65535),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => mb_substr($e->getTraceAsString(), 0, 5000),
+                        'severity' => $e instanceof \Error ? 'critical' : ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException && $e->getStatusCode() < 500 ? 'warning' : 'error'),
+                        'url' => request()?->fullUrl(),
+                        'method' => request()?->method(),
+                        'ip_address' => request()?->ip(),
+                        'fingerprint' => hash('sha256', get_class($e) . $e->getFile() . $e->getLine()),
+                        'last_occurred_at' => now(),
+                        'created_at' => now(),
+                    ]);
+                } catch (\Throwable) {}
+            }
         });
 
         // Store debug info in session for error reporting + notify admin
