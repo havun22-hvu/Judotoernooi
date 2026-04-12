@@ -307,7 +307,7 @@ class PouleIndelingService
                         // Build dynamic title with weight range from pool
                         $gewichtRange = $pouleData['gewicht_groep'] ?? '';
                         $pouleType = $isDynamicEliminatie ? 'eliminatie' : 'voorronde';
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig, $categorieKey);
+                        $titel = $this->titleBuilder->build($leeftijdsklasse, $gewichtRange, $geslacht, $pouleJudokas, $gewichtsklassenConfig, $categorieKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -394,7 +394,7 @@ class PouleIndelingService
                     $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
                     foreach ($pouleVerdelingen as $pouleJudokas) {
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig, $categorieKey);
+                        $titel = $this->titleBuilder->build($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleJudokas, $gewichtsklassenConfig, $categorieKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -785,23 +785,6 @@ class PouleIndelingService
         }
 
         return $score;
-    }
-
-    /**
-     * Create pool title
-     *
-     * @see PouleTitleBuilder::build
-     */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null, ?string $categorieKey = null): string
-    {
-        return $this->titleBuilder->build(
-            $leeftijdsklasse,
-            $gewichtsklasse,
-            $geslacht,
-            $pouleJudokas,
-            $gewichtsklassenConfig,
-            $categorieKey
-        );
     }
 
     /**

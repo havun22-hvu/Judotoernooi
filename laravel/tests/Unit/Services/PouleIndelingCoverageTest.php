@@ -764,8 +764,7 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakPouleTitel_dynamic_with_age_and_weight_range(): void
     {
-        $reflection = new \ReflectionMethod($this->service, 'maakPouleTitel');
-        $reflection->setAccessible(true);
+        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
 
         $jaar = (int) date('Y');
         $club = $this->maakClub();
@@ -781,7 +780,6 @@ class PouleIndelingCoverageTest extends TestCase
 
         $config = $toernooi->getAlleGewichtsklassen();
 
-        // Create fake judoka objects with leeftijd and gewicht
         $j1 = $this->maakJudoka($toernooi, $club, [
             'geboortejaar' => $jaar - 8,
             'gewicht' => 25.0,
@@ -793,18 +791,16 @@ class PouleIndelingCoverageTest extends TestCase
             'geslacht' => 'M',
         ]);
 
-        $titel = $reflection->invoke($this->service, 'Test', '25-30kg', null, 1, [$j1, $j2], false, 'gewicht_band', $config, 'test');
+        $titel = $builder->build('Test', '25-30kg', null, [$j1, $j2], $config, 'test');
 
         $this->assertStringContains('Test', $titel);
-        // Dynamic category should show ranges
         $this->assertTrue(str_contains($titel, 'j') || str_contains($titel, 'kg'));
     }
 
     #[Test]
     public function maakPouleTitel_with_label_hidden(): void
     {
-        $reflection = new \ReflectionMethod($this->service, 'maakPouleTitel');
-        $reflection->setAccessible(true);
+        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
 
         $config = [
             'test' => [
@@ -815,7 +811,7 @@ class PouleIndelingCoverageTest extends TestCase
             ],
         ];
 
-        $titel = $reflection->invoke($this->service, 'Test', '-50', null, 1, [], true, 'gewicht_band', $config, 'test');
+        $titel = $builder->build('Test', '-50', null, [], $config, 'test');
 
         // Label should not appear (toon_label_in_titel = false)
         // Should still show weight class
@@ -825,8 +821,7 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakPouleTitel_returns_onbekend_when_empty(): void
     {
-        $reflection = new \ReflectionMethod($this->service, 'maakPouleTitel');
-        $reflection->setAccessible(true);
+        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
 
         $config = [
             'test' => [
@@ -837,7 +832,7 @@ class PouleIndelingCoverageTest extends TestCase
             ],
         ];
 
-        $titel = $reflection->invoke($this->service, '', 'Onbekend', null, 1, [], true, 'gewicht_band', $config, 'test');
+        $titel = $builder->build('', 'Onbekend', null, [], $config, 'test');
 
         // With empty label and hidden, gewichtsklasse = Onbekend (isVasteGewichtsklasse=false), no dynamic
         $this->assertEquals('Onbekend', $titel);
