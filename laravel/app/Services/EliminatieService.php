@@ -173,7 +173,7 @@ class EliminatieService
             }
 
             // Koppel wedstrijden (geen byes)
-            $this->koppelAGroepWedstrijden($wedstrijdenPerRonde, []);
+            $this->scheduler->koppelAGroepWedstrijden($wedstrijdenPerRonde, []);
 
             return $wedstrijdenPerRonde;
         }
@@ -250,7 +250,7 @@ class EliminatieService
 
         // === KOPPEL WEDSTRIJDEN ===
         // Bye judoka's staan al in eerste ronde, geen extra plaatsing nodig
-        $this->koppelAGroepWedstrijden($wedstrijdenPerRonde, []);
+        $this->scheduler->koppelAGroepWedstrijden($wedstrijdenPerRonde, []);
 
         return $wedstrijdenPerRonde;
     }
@@ -263,16 +263,6 @@ class EliminatieService
     private function getRondeNaam(int $n, bool $voorAantal = false): string
     {
         return $this->calculator->getRondeNaam($n, $voorAantal);
-    }
-
-    /**
-     * Koppel A-groep wedstrijden aan elkaar.
-     *
-     * @see MatchScheduler::koppelAGroepWedstrijden
-     */
-    private function koppelAGroepWedstrijden(array $wedstrijdenPerRonde, array $byeJudokas): void
-    {
-        $this->scheduler->koppelAGroepWedstrijden($wedstrijdenPerRonde, $byeJudokas);
     }
 
     // =========================================================================
@@ -313,11 +303,11 @@ class EliminatieService
             $this->genereerEnkeleBRondes($poule, $bStartWedstrijden, $volgorde, $wedstrijdenPerRonde, $aantalBrons);
         }
 
-        $this->koppelBGroepWedstrijden($wedstrijdenPerRonde, $params['dubbelRondes']);
+        $this->scheduler->koppelBGroepWedstrijden($wedstrijdenPerRonde, $params['dubbelRondes']);
 
         // Koppel A-wedstrijden aan B-wedstrijden voor deterministische verliezer-plaatsing
         if (!empty($aWedstrijden)) {
-            $this->koppelAVerliezersAanB($aWedstrijden, $wedstrijdenPerRonde, $params);
+            $this->scheduler->koppelAVerliezersAanB($aWedstrijden, $wedstrijdenPerRonde, $params);
         }
     }
 
@@ -472,36 +462,6 @@ class EliminatieService
         return $this->calculator->getBRondeNaam($wedstrijden);
     }
 
-    /**
-     * Koppel B-groep wedstrijden op basis van bracket_positie.
-     *
-     * @see MatchScheduler::koppelBGroepWedstrijden
-     */
-    private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
-    {
-        $this->scheduler->koppelBGroepWedstrijden($wedstrijdenPerRonde, $dubbelRondes);
-    }
-
-    /**
-     * Koppel A-wedstrijden aan B-wedstrijden via herkansing_wedstrijd_id.
-     *
-     * @see MatchScheduler::koppelAVerliezersAanB
-     */
-    private function koppelAVerliezersAanB(array $aWedstrijden, array $bWedstrijden, array $params): void
-    {
-        $this->scheduler->koppelAVerliezersAanB($aWedstrijden, $bWedstrijden, $params);
-    }
-
-    /**
-     * Koppel wedstrijden van één A-ronde aan één B-ronde.
-     *
-     * @see MatchScheduler::koppelARondeAanBRonde
-     */
-    private function koppelARondeAanBRonde(array $aWedstrijden, array $bWedstrijden, string $type, int $a1Count = 0): void
-    {
-        $this->scheduler->koppelARondeAanBRonde($aWedstrijden, $bWedstrijden, $type, $a1Count);
-    }
-
     // =========================================================================
     // B-GROEP: IJF (Quarter-Final Repechage)
     // =========================================================================
@@ -589,17 +549,7 @@ class EliminatieService
         }
 
         // Koppel A-verliezers aan B-wedstrijden
-        $this->koppelIJFVerliezers($poule, $aWedstrijden, $wedstrijdenPerRonde);
-    }
-
-    /**
-     * Koppel A-groep verliezers aan IJF B-groep.
-     *
-     * @see MatchScheduler::koppelIJFVerliezers
-     */
-    private function koppelIJFVerliezers(Poule $poule, array $aWedstrijden, array $bWedstrijden): void
-    {
-        $this->scheduler->koppelIJFVerliezers($aWedstrijden, $bWedstrijden);
+        $this->scheduler->koppelIJFVerliezers($aWedstrijden, $wedstrijdenPerRonde);
     }
 
     // =========================================================================
@@ -802,16 +752,6 @@ class EliminatieService
     public function schrapLegeBWedstrijden(int $pouleId): int
     {
         return $this->scheduler->schrapLegeBWedstrijden($pouleId);
-    }
-
-    /**
-     * Hernummer bracket_positie per ronde na verwijderen wedstrijden.
-     *
-     * @see MatchScheduler::hernummerBracketPosities
-     */
-    private function hernummerBracketPosities(int $pouleId): void
-    {
-        $this->scheduler->hernummerBracketPosities($pouleId);
     }
 
     /**

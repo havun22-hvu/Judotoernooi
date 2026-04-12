@@ -100,7 +100,7 @@ class MatchScheduler
     // =========================================================================
 
     /**
-     * Koppel B-groep wedstrijden op basis van bracket_positie
+     * Koppel B-groep wedstrijden op basis van bracket_positie.
      *
      * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
      *
@@ -119,6 +119,23 @@ class MatchScheduler
         $rondes = array_keys($wedstrijdenPerRonde);
         Log::info("koppelBGroepWedstrijden: rondes=" . implode(', ', $rondes) . ", dubbelRondes=" . ($dubbelRondes ? 'ja' : 'nee'));
 
+        $this->linkBRoundsSequentially($wedstrijdenPerRonde, $dubbelRondes);
+    }
+
+    /**
+     * Walk een geordende array van B-rondes en koppel elke ronde aan de
+     * volgende via volgende_wedstrijd_id / winnaar_naar_slot.
+     *
+     * Gedeelde kernlogica tussen koppelBGroepWedstrijden (fresh bracket)
+     * en herstelBKoppelingen (repair op bestaande bracket).
+     *
+     * @return int Aantal succesvol gekoppelde wedstrijden
+     */
+    private function linkBRoundsSequentially(array $wedstrijdenPerRonde, bool $dubbelRondes): int
+    {
+        $rondes = array_keys($wedstrijdenPerRonde);
+        $hersteld = 0;
+
         for ($r = 0; $r < count($rondes) - 1; $r++) {
             $huidigeRonde = $rondes[$r];
             $volgendeRonde = $rondes[$r + 1];
@@ -126,19 +143,24 @@ class MatchScheduler
             $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
             $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
 
-            // Bepaal mapping type
             // 1:1 mapping bij: (1) → (2) of naar b_halve_finale_2 (brons)
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
+            $useOneToOne = $is1naar2 || $isBrons;
 
             Log::info("Koppel {$huidigeRonde} (" . count($huidigeWedstrijden) . ") → {$volgendeRonde} (" . count($volgendeWedstrijden) . "): is1naar2={$is1naar2}, isBrons={$isBrons}");
+
+            // Index volgendeWedstrijden op bracket_positie voor O(1) lookup
+            $volgendePerPositie = [];
+            foreach ($volgendeWedstrijden as $wed) {
+                $volgendePerPositie[$wed->bracket_positie] = $wed;
+            }
 
             foreach ($huidigeWedstrijden as $wedstrijd) {
                 $bracketPos = $wedstrijd->bracket_positie;
 
-                if ($is1naar2 || $isBrons) {
-                    // 1:1 MAPPING: (1) → (2) of laatste → brons
-                    // Winnaar altijd naar WIT (A-verliezer komt op BLAUW)
+                if ($useOneToOne) {
+                    // 1:1 MAPPING: winnaar altijd naar WIT (A-verliezer op BLAUW)
                     $volgendeBracketPos = $bracketPos;
                     $slot = 'wit';
                 } else {
@@ -147,20 +169,21 @@ class MatchScheduler
                     $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
-                // Zoek volgende wedstrijd op bracket_positie
-                $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendeBracketPos);
+                $volgendeWedstrijd = $volgendePerPositie[$volgendeBracketPos] ?? null;
 
                 if ($volgendeWedstrijd) {
                     $wedstrijd->update([
                         'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                         'winnaar_naar_slot' => $slot,
                     ]);
+                    $hersteld++;
                 } else {
                     Log::warning("GEEN VOLGENDE GEVONDEN: Wed {$wedstrijd->id} pos {$bracketPos} zoekt pos {$volgendeBracketPos}");
                 }
             }
         }
+
+        return $hersteld;
     }
 
     // =========================================================================
@@ -456,68 +479,24 @@ class MatchScheduler
      */
     public function herstelBKoppelingen(int $pouleId): int
     {
-        $hersteld = 0;
-
-        // Haal alle B-groep wedstrijden op, gegroepeerd per ronde
-        $wedstrijdenPerRonde = [];
+        // Sorteer op volgorde zodat rondes in juiste sequence staan
+        // (alfabetisch klopt niet: 1/8_1, 1/8_2, 1/4_1, 1/4_2, ...)
         $bWedstrijden = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
-            ->orderBy('volgorde')  // Correcte volgorde: 1/8_1, 1/8_2, 1/4_1, 1/4_2, etc.
+            ->orderBy('volgorde')
             ->get();
 
+        $wedstrijdenPerRonde = [];
         foreach ($bWedstrijden as $wed) {
             $wedstrijdenPerRonde[$wed->ronde][] = $wed;
         }
 
         $rondes = array_keys($wedstrijdenPerRonde);
-
         Log::info("herstelBKoppelingen poule {$pouleId}: rondes=" . implode(', ', $rondes));
 
-        // Bepaal of dit dubbele rondes zijn
         $dubbelRondes = collect($rondes)->contains(fn($r) => str_ends_with($r, '_1'));
 
-        // Koppel elke ronde aan de volgende
-        for ($r = 0; $r < count($rondes) - 1; $r++) {
-            $huidigeRonde = $rondes[$r];
-            $volgendeRonde = $rondes[$r + 1];
-
-            $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
-            $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
-
-            // Bepaal mapping type (zie koppelBGroepWedstrijden voor details)
-            $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
-            $isBrons = $volgendeRonde === 'b_halve_finale_2';
-
-            Log::info("Koppel {$huidigeRonde} → {$volgendeRonde}: is1naar2={$is1naar2}, isBrons={$isBrons}");
-
-            foreach ($huidigeWedstrijden as $wedstrijd) {
-                $bracketPos = $wedstrijd->bracket_positie;
-
-                if ($is1naar2 || $isBrons) {
-                    // 1:1 MAPPING: winnaar altijd naar WIT
-                    $volgendeBracketPos = $bracketPos;
-                    $slot = 'wit';
-                } else {
-                    // 2:1 MAPPING: standaard knockout
-                    $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
-                }
-
-                $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendeBracketPos);
-
-                if ($volgendeWedstrijd) {
-                    $wedstrijd->update([
-                        'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
-                        'winnaar_naar_slot' => $slot,
-                    ]);
-                    Log::debug("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → Wed {$volgendeWedstrijd->id} (pos {$volgendeWedstrijd->bracket_positie}), slot={$slot}");
-                    $hersteld++;
-                } else {
-                    Log::warning("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → GEEN VOLGENDE GEVONDEN (zoekt pos {$volgendeBracketPos})");
-                }
-            }
-        }
+        $hersteld = $this->linkBRoundsSequentially($wedstrijdenPerRonde, $dubbelRondes);
 
         Log::info("Hersteld {$hersteld} B-koppelingen voor poule {$pouleId}");
 
