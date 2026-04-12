@@ -10,8 +10,13 @@ use App\Observers\SyncQueueObserver;
 use App\Services\BackupService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Events\MigrationsStarted;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -61,6 +66,24 @@ class AppServiceProvider extends ServiceProvider
 
             // Normal migrate: auto-backup
             app(BackupService::class)->maakMilestoneBackup('voor-migratie');
+        });
+
+        // Slow query logging: log queries taking >500ms
+        DB::listen(function (QueryExecuted $query) {
+            if ($query->time > 500) {
+                Log::channel('slow-queries')->warning('Slow query', [
+                    'sql' => $query->sql,
+                    'time_ms' => round($query->time, 2),
+                ]);
+            }
+        });
+
+        // Queue failure notifications
+        Queue::failing(function (JobFailed $event) {
+            Log::critical('Queue job failed', [
+                'job' => $event->job->getName(),
+                'exception' => $event->exception->getMessage(),
+            ]);
         });
 
         // Configure rate limiters
