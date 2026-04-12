@@ -49,19 +49,13 @@ class GitOperations
      */
     protected function buildCommitMessage(AutofixProposal $proposal): string
     {
-        // Extract ANALYSIS line from Claude's response for readable commit message
         $analysis = '';
         if (preg_match('/ANALYSIS:\s*(.+?)(?:\n|$)/s', $proposal->claude_analysis, $match)) {
             $analysis = trim($match[1]);
         }
 
-        // Extract RISK level
-        $risk = '';
-        if (preg_match('/RISK:\s*(low|medium|high)/i', $proposal->claude_analysis, $riskMatch)) {
-            $risk = strtolower($riskMatch[1]);
-        }
+        $risk = self::extractRisk($proposal->claude_analysis);
 
-        // Build structured commit message
         $shortFile = str_replace('.blade', '', basename($proposal->file, '.php'));
         $prefix = "autofix({$shortFile}): ";
         $maxAnalysis = max(20, 72 - strlen($prefix));
@@ -69,7 +63,7 @@ class GitOperations
 
         $body = "File: {$proposal->file}\n"
             . "Exception: {$proposal->exception_class}\n"
-            . ($risk ? "Risk: {$risk}\n" : '')
+            . ($risk !== 'unknown' ? "Risk: {$risk}\n" : '')
             . "Proposal: #{$proposal->id}";
 
         return $title . "\n\n" . $body;
@@ -182,7 +176,7 @@ class GitOperations
             $proposal->id,
             $proposal->exception_class,
             $file,
-            $this->extractRisk($proposal->claude_analysis),
+            self::extractRisk($proposal->claude_analysis),
             config('app.url'),
             $proposal->approval_token
         );
@@ -211,9 +205,9 @@ class GitOperations
     }
 
     /**
-     * Extract RISK level from Claude's analysis.
+     * Extract RISK level from Claude's analysis. Pure utility, shared with AutoFixService.
      */
-    protected function extractRisk(string $analysis): string
+    public static function extractRisk(string $analysis): string
     {
         if (preg_match('/RISK:\s*(low|medium|high)/i', $analysis, $match)) {
             return strtolower($match[1]);

@@ -673,12 +673,6 @@ class AutoFixService
         }
     }
 
-    /**
-     * Commit fix and push (delegates to GitOperations).
-     *
-     * Kept as a public method for backwards compatibility with
-     * AutoFixController which calls gitCommitAndPush() directly.
-     */
     public function gitCommitAndPush(AutofixProposal $proposal): void
     {
         $this->gitOperations->commitAndPush($proposal);
@@ -689,10 +683,7 @@ class AutoFixService
      */
     protected function extractRisk(string $analysis): string
     {
-        if (preg_match('/RISK:\s*(low|medium|high)/i', $analysis, $match)) {
-            return strtolower($match[1]);
-        }
-        return 'unknown';
+        return GitOperations::extractRisk($analysis);
     }
 
     /**
