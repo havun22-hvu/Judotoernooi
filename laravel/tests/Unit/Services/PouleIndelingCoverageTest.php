@@ -8,6 +8,7 @@ use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\PouleIndeling\PouleTitleBuilder;
+use App\Services\PouleIndeling\UnassignedJudokaFinder;
 use App\Services\PouleIndelingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -498,9 +499,8 @@ class PouleIndelingCoverageTest extends TestCase
             'categorie_key' => 'minis',
         ]);
 
-        $reflection = new \ReflectionMethod($this->service, 'vindNietIngedeeldeJudokas');
-        $reflection->setAccessible(true);
-        $nietIngedeeld = $reflection->invoke($this->service, $toernooi);
+        $finder = new UnassignedJudokaFinder();
+        $nietIngedeeld = $finder->find($toernooi);
 
         $this->assertNotEmpty($nietIngedeeld);
         $this->assertEquals($judoka->id, $nietIngedeeld[0]['id']);
@@ -531,9 +531,7 @@ class PouleIndelingCoverageTest extends TestCase
             'leeftijdsklasse' => 'Onbekend',
         ]);
 
-        $reflection = new \ReflectionMethod($this->service, 'bepaalRedenNietIngedeeld');
-        $reflection->setAccessible(true);
-        $reden = $reflection->invoke($this->service, $judoka, $toernooi);
+        $reden = (new UnassignedJudokaFinder())->determineReason($judoka, $toernooi);
 
         $this->assertStringContains('Geen categorie voor leeftijd', $reden);
     }
@@ -564,9 +562,7 @@ class PouleIndelingCoverageTest extends TestCase
             'gewichtsklasse' => '-30',
         ]);
 
-        $reflection = new \ReflectionMethod($this->service, 'bepaalRedenNietIngedeeld');
-        $reflection->setAccessible(true);
-        $reden = $reflection->invoke($this->service, $judoka, $toernooi);
+        $reden = (new UnassignedJudokaFinder())->determineReason($judoka, $toernooi);
 
         $this->assertStringContains('Geen gewichtsklasse', $reden);
     }
@@ -596,9 +592,7 @@ class PouleIndelingCoverageTest extends TestCase
             'leeftijdsklasse' => "Mini's",
         ]);
 
-        $reflection = new \ReflectionMethod($this->service, 'bepaalRedenNietIngedeeld');
-        $reflection->setAccessible(true);
-        $reden = $reflection->invoke($this->service, $judoka, $toernooi);
+        $reden = (new UnassignedJudokaFinder())->determineReason($judoka, $toernooi);
 
         $this->assertStringContains('band', $reden);
     }
@@ -628,9 +622,7 @@ class PouleIndelingCoverageTest extends TestCase
             'leeftijdsklasse' => 'Cadetten',
         ]);
 
-        $reflection = new \ReflectionMethod($this->service, 'bepaalRedenNietIngedeeld');
-        $reflection->setAccessible(true);
-        $reden = $reflection->invoke($this->service, $judoka, $toernooi);
+        $reden = (new UnassignedJudokaFinder())->determineReason($judoka, $toernooi);
 
         // Should match +60 -> fallback reason about weight difference
         $this->assertStringContains('gewichtsverschil', $reden);

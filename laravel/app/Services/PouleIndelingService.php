@@ -7,6 +7,7 @@ use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\PouleIndeling\PouleTitleBuilder;
+use App\Services\PouleIndeling\UnassignedJudokaFinder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +22,7 @@ class PouleIndelingService
     private DynamischeIndelingService $dynamischeIndelingService;
     private ?CategorieClassifier $classifier = null;
     private PouleTitleBuilder $titleBuilder;
+    private UnassignedJudokaFinder $unassignedFinder;
 
     /**
      * Initialize with tournament-specific settings
@@ -42,7 +44,8 @@ class PouleIndelingService
 
     public function __construct(
         DynamischeIndelingService $dynamischeIndelingService,
-        ?PouleTitleBuilder $titleBuilder = null
+        ?PouleTitleBuilder $titleBuilder = null,
+        ?UnassignedJudokaFinder $unassignedFinder = null
     ) {
         // Default values, will be overridden by initializeFromToernooi
         $this->voorkeur = [5, 4, 6, 3];
@@ -51,6 +54,7 @@ class PouleIndelingService
         $this->prioriteiten = ['leeftijd', 'gewicht', 'band'];
         $this->dynamischeIndelingService = $dynamischeIndelingService;
         $this->titleBuilder = $titleBuilder ?? new PouleTitleBuilder();
+        $this->unassignedFinder = $unassignedFinder ?? new UnassignedJudokaFinder();
     }
 
     /**
@@ -534,7 +538,7 @@ class PouleIndelingService
 
             $toernooi->update(['poules_gegenereerd_op' => now()]);
             // STAP 4: VALIDATIE - Check of alle judoka's zijn ingedeeld
-            $nietIngedeeld = $this->vindNietIngedeeldeJudokas($toernooi);
+            $nietIngedeeld = $this->unassignedFinder->find($toernooi);
             if (!empty($nietIngedeeld)) {
                 $statistieken['niet_ingedeeld'] = $nietIngedeeld;
                 $statistieken['waarschuwingen'][] = [
@@ -812,96 +816,4 @@ class PouleIndelingService
         });
     }
 
-    /**
-     * Vind judoka's die niet in een poule zijn ingedeeld
-     * Dit wijst op een onvolledige categorie configuratie
-     */
-    private function vindNietIngedeeldeJudokas(Toernooi $toernooi): array
-    {
-        // Haal alle judoka IDs op die in een poule zitten
-        $ingedeeldeIds = DB::table('poule_judoka')
-            ->whereIn('poule_id', $toernooi->poules()->pluck('id'))
-            ->pluck('judoka_id')
-            ->toArray();
-
-        // Vind judoka's die niet ingedeeld zijn
-        $nietIngedeeld = $toernooi->judokas()
-            ->whereNotIn('id', $ingedeeldeIds)
-            ->get(['id', 'naam', 'leeftijdsklasse', 'gewichtsklasse', 'band', 'gewicht', 'geboortejaar'])
-            ->map(function ($judoka) use ($toernooi) {
-                $reden = $this->bepaalRedenNietIngedeeld($judoka, $toernooi);
-                return [
-                    'id' => $judoka->id,
-                    'naam' => $judoka->naam,
-                    'leeftijdsklasse' => $judoka->leeftijdsklasse,
-                    'gewichtsklasse' => $judoka->gewichtsklasse,
-                    'band' => $judoka->band,
-                    'gewicht' => $judoka->gewicht,
-                    'reden' => $reden,
-                ];
-            })
-            ->toArray();
-
-        return $nietIngedeeld;
-    }
-
-    /**
-     * Bepaal waarom een judoka niet is ingedeeld
-     */
-    private function bepaalRedenNietIngedeeld($judoka, Toernooi $toernooi): string
-    {
-        $config = $toernooi->getAlleGewichtsklassen();
-        $toernooiJaar = $toernooi->datum?->year ?? (int) date('Y');
-        $leeftijd = $toernooiJaar - $judoka->geboortejaar;
-
-        $leeftijdMatch = false;
-        $bandMatch = false;
-        $gewichtMatch = false;
-
-        foreach ($config as $key => $cat) {
-            $maxLeeftijd = $cat['max_leeftijd'] ?? 99;
-            if ($leeftijd <= $maxLeeftijd) {
-                $leeftijdMatch = true;
-
-                // Check band filter
-                $bandFilter = $cat['band_filter'] ?? '';
-                if (empty($bandFilter) || BandHelper::pastInFilter($judoka->band, $bandFilter)) {
-                    $bandMatch = true;
-                }
-
-                // Check gewicht
-                $gewichten = $cat['gewichten'] ?? [];
-                if (!empty($gewichten) && $judoka->gewicht) {
-                    foreach ($gewichten as $g) {
-                        $klasse = (float) str_replace(['-', '+'], '', $g);
-                        if (str_starts_with($g, '+')) {
-                            if ($judoka->gewicht >= $klasse) {
-                                $gewichtMatch = true;
-                                break;
-                            }
-                        } else {
-                            if ($judoka->gewicht <= $klasse) {
-                                $gewichtMatch = true;
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    $gewichtMatch = true;
-                }
-            }
-        }
-
-        if (!$leeftijdMatch) {
-            return "Geen categorie voor leeftijd {$leeftijd} jaar";
-        }
-        if (!$bandMatch) {
-            return "Geen categorie voor band '{$judoka->band}' bij deze leeftijd";
-        }
-        if (!$gewichtMatch) {
-            return "Geen gewichtsklasse voor {$judoka->gewicht}kg";
-        }
-
-        return "Te groot gewichtsverschil met andere judoka's in de groep";
-    }
 }
