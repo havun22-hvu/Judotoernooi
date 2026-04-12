@@ -7,6 +7,7 @@ use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\PouleIndeling\PouleCalculator;
 use App\Services\PouleIndeling\PouleTitleBuilder;
 use App\Services\PouleIndeling\UnassignedJudokaFinder;
 use App\Services\PouleIndelingService;
@@ -379,20 +380,18 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function berekenAantalWedstrijden_covers_all_branches(): void
     {
-        // Use reflection to test private method
-        $reflection = new \ReflectionMethod($this->service, 'berekenAantalWedstrijden');
-        $reflection->setAccessible(true);
+        $calculator = new PouleCalculator();
 
         // antal <= 1 -> 0
-        $this->assertEquals(0, $reflection->invoke($this->service, 0));
-        $this->assertEquals(0, $reflection->invoke($this->service, 1));
+        $this->assertEquals(0, $calculator->aantalWedstrijden(0));
+        $this->assertEquals(0, $calculator->aantalWedstrijden(1));
 
         // antal === 3 -> 6 (double round)
-        $this->assertEquals(6, $reflection->invoke($this->service, 3));
+        $this->assertEquals(6, $calculator->aantalWedstrijden(3));
 
         // normal case: n*(n-1)/2
-        $this->assertEquals(6, $reflection->invoke($this->service, 4)); // 4*3/2
-        $this->assertEquals(10, $reflection->invoke($this->service, 5)); // 5*4/2
+        $this->assertEquals(6, $calculator->aantalWedstrijden(4)); // 4*3/2
+        $this->assertEquals(10, $calculator->aantalWedstrijden(5)); // 5*4/2
     }
 
     // =========================================================================
@@ -402,27 +401,14 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function berekenVerdelingScore_penalty_for_unknown_size(): void
     {
-        $reflection = new \ReflectionMethod($this->service, 'berekenVerdelingScore');
-        $reflection->setAccessible(true);
-
-        // Initialize service with known preference
-        $this->service->initializeFromToernooi($this->maakToernooi([
-            'test' => [
-                'label' => 'Test',
-                'max_leeftijd' => 99,
-                'geslacht' => 'gemengd',
-                'max_kg_verschil' => 0,
-                'max_leeftijd_verschil' => 0,
-            ],
-        ], ['poule_grootte_voorkeur' => [5, 4, 6, 3]]));
+        $calculator = new PouleCalculator();
+        $voorkeur = [5, 4, 6, 3];
 
         // Size 2 is not in preference [5,4,6,3] -> gets 1000 penalty
-        $score = $reflection->invoke($this->service, [2]);
-        $this->assertEquals(1000, $score);
+        $this->assertEquals(1000, $calculator->verdelingScore([2], $voorkeur));
 
         // Size 5 is first preference -> score = 2^1 - 1 = 1
-        $score = $reflection->invoke($this->service, [5]);
-        $this->assertEquals(1, $score);
+        $this->assertEquals(1, $calculator->verdelingScore([5], $voorkeur));
     }
 
     // =========================================================================
@@ -432,10 +418,8 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakOptimalePoules_returns_single_pool_when_no_valid_split(): void
     {
-        $reflection = new \ReflectionMethod($this->service, 'maakOptimalePoules');
-        $reflection->setAccessible(true);
+        $calculator = new PouleCalculator();
 
-        // Set min=3 max=4, preference [4, 3]
         $toernooi = $this->maakToernooi([
             'test' => [
                 'label' => 'Test',
@@ -445,9 +429,7 @@ class PouleIndelingCoverageTest extends TestCase
                 'max_leeftijd_verschil' => 0,
             ],
         ], ['poule_grootte_voorkeur' => [4, 3]]);
-        $this->service->initializeFromToernooi($toernooi);
 
-        // 7 judokas with min=3, max=4: 7/2 = 3+4 works, but let's test edge
         // 2 judokas: <= minJudokas (3) -> returns single pool
         $club = $this->maakClub();
         $judokas = collect();
@@ -459,7 +441,7 @@ class PouleIndelingCoverageTest extends TestCase
             ]));
         }
 
-        $result = $reflection->invoke($this->service, $judokas);
+        $result = $calculator->optimalePoules($judokas, 3, 4, [4, 3]);
         $this->assertCount(1, $result);
         $this->assertCount(2, $result[0]);
     }
