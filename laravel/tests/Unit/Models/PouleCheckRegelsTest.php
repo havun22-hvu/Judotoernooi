@@ -290,7 +290,7 @@ class PouleCheckRegelsTest extends TestCase
             'categorie_key' => 'test_cat',
         ]);
 
-        $controller = app(\App\Http\Controllers\PouleController::class);
+        $controller = app(\App\Http\Controllers\PouleJudokaController::class);
         $method = new \ReflectionMethod($controller, 'buildPouleResponse');
         $method->setAccessible(true);
 

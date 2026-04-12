@@ -436,7 +436,7 @@ class AlmostEightyCoverageTest extends TestCase
             ->andThrow(new \App\Exceptions\MollieException('Token expired'));
 
         $response = $this->post(route('mollie.webhook'), ['id' => 'tr_test_exception']);
-        $response->assertStatus(200); // Returns 200 to prevent Mollie retries
+        $response->assertStatus(500); // Returns 500 so Mollie retries on transient auth errors
     }
 
     #[Test]
