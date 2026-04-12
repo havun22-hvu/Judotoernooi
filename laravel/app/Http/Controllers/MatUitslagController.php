@@ -24,8 +24,6 @@ use Illuminate\Http\Request;
  * - medal placement finales (finaleUitslag)
  * - marking poules ready for the spreker (pouleKlaar)
  * - setting the current/next/prepare match on a mat (setHuidigeWedstrijd)
- *
- * Split out of MatController to keep each controller focused and under 800 lines.
  */
 class MatUitslagController extends Controller
 {

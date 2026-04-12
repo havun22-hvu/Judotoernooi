@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
  * - advancing byes in the first round (advanceByes)
  * - removing a judoka from a slot, with cascade cleanup (verwijderJudoka)
  *
- * Split out of MatController to keep each controller focused and under 800 lines.
+ * B-group placement of losers is delegated to EliminatieService.
  */
 class MatBracketController extends Controller
 {
@@ -399,58 +399,6 @@ class MatBracketController extends Controller
             'success' => true,
             'advanced' => $advanced,
         ]);
-    }
-
-    /**
-     * Plaats verliezer direct in de B-groep
-     */
-    private function plaatsVerliezerInB(Wedstrijd $bronWedstrijd, int $verliezerId): void
-    {
-        $pouleId = $bronWedstrijd->poule_id;
-
-        // Bepaal target B-ronde op basis van A-ronde
-        // A-groep heeft geen voorronde meer, alleen 1/16 met byes
-        $targetRonde = match ($bronWedstrijd->ronde) {
-            'zestiende_finale', 'achtste_finale' => 'b_start',
-            'kwartfinale' => 'b_kwartfinale_2',
-            'halve_finale' => 'b_halve_finale_2',
-            default => null,
-        };
-
-        if (!$targetRonde) {
-            return;
-        }
-
-        // Zoek lege plek in B-groep
-        $legeWedstrijd = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'B')
-            ->where('ronde', $targetRonde)
-            ->where(function ($q) {
-                $q->whereNull('judoka_wit_id')
-                  ->orWhereNull('judoka_blauw_id');
-            })
-            ->first();
-
-        // Fallback naar andere B-ronde als primaire vol is
-        if (!$legeWedstrijd) {
-            $fallbackRonde = $targetRonde === 'b_start' ? 'b_achtste_finale' : 'b_start';
-            $legeWedstrijd = Wedstrijd::where('poule_id', $pouleId)
-                ->where('groep', 'B')
-                ->where('ronde', $fallbackRonde)
-                ->where(function ($q) {
-                    $q->whereNull('judoka_wit_id')
-                      ->orWhereNull('judoka_blauw_id');
-                })
-                ->first();
-        }
-
-        if ($legeWedstrijd) {
-            if ($legeWedstrijd->judoka_wit_id === null) {
-                $legeWedstrijd->update(['judoka_wit_id' => $verliezerId]);
-            } else {
-                $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
-            }
-        }
     }
 
     /**
