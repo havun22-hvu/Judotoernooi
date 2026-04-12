@@ -302,7 +302,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 function mobielApp() {
     return {
         activeTab: 'zoeken',

@@ -106,7 +106,7 @@
     }
     .animate-pulse-warning { animation: pulse-warning 1s ease-in-out infinite; }
 </style>
-<script>
+<script @nonce>
     let inschrijvingPopupGetoond = false;
     function toonInschrijvingPopup() {
         if (inschrijvingPopupGetoond) return;
@@ -534,7 +534,7 @@
 
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
+<script @nonce>
 // i18n constants
 const __leeg = @json(__('Leeg'));
 const __bezigMetVerificatie = @json(__('Bezig met verificatie...'));

@@ -129,7 +129,7 @@
      class="fixed inset-0 bg-black/50 z-40 hidden"
      onclick="toggleChat()"></div>
 
-<script>
+<script @nonce>
     // Chat configuration
     const chatConfig = {
         type: '{{ $chatType }}',

@@ -62,7 +62,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
     </svg>
 </button>
-<script>
+<script @nonce>
     // Show floating button only if no inline settings button exists in header
     if (!document.querySelector('header button[onclick*="pwa-settings-modal"]')) {
         document.getElementById('pwa-settings-floating-btn').style.display = '';
@@ -138,7 +138,7 @@
     .safe-area-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
 </style>
 
-<script>
+<script @nonce>
     // PWA Install
     let deferredPrompt = null;
 

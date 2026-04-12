@@ -445,7 +445,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
     function goFullscreen() {
         var el = document.documentElement;
         var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
@@ -475,7 +475,7 @@
         $reverbKey = config('broadcasting.connections.reverb.key');
         $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME) ?: 'https';
     @endphp
-    <script>
+    <script @nonce>
     document.addEventListener('DOMContentLoaded', function() {
         const toernooiId = @js($toernooi->id);
         const matId = @js($matId);

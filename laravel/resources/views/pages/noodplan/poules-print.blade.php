@@ -96,7 +96,7 @@
 @endsection
 
 @section('scripts')
-<script>
+<script @nonce>
     function toggleMat(matId, checked) {
         document.querySelectorAll('.mat-page[data-mat-id="' + matId + '"]').forEach(function(el) {
             if (checked) {

@@ -82,7 +82,7 @@
         </form>
     </div>
 
-    <script>
+    <script @nonce>
     function togglePw(fieldId) {
         const input = document.getElementById(fieldId);
         const eyeOpen = document.getElementById('eye-open-' + fieldId);

@@ -304,7 +304,7 @@
     @endif
 </div>
 
-<script>
+<script @nonce>
 document.addEventListener('DOMContentLoaded', function() {
     const select = document.getElementById('tier-select');
     const tierInput = document.getElementById('selected-tier');

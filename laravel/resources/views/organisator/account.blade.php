@@ -213,7 +213,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     function togglePassword(fieldId) {
         const input = document.getElementById(fieldId);
         const eyeOpen = document.getElementById('eye-open-' + fieldId);

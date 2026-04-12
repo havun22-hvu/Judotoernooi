@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
     document.getElementById('forgotForm').addEventListener('submit', function() {
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;

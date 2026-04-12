@@ -45,7 +45,7 @@
     {{-- Real-time mat updates via Reverb --}}
     @if(config('broadcasting.default') === 'reverb')
         @include('partials.mat-updates-listener', ['toernooi' => $toernooi, 'matId' => null])
-        <script>
+        <script @nonce>
             // Auto-refresh when poule is marked as complete
             window.addEventListener('mat-poule-klaar', function(e) {
                 console.log('Spreker: Poule klaar ontvangen', e.detail);

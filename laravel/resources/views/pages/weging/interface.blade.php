@@ -78,7 +78,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 // Countdown timer met melding bij einde
 function countdown(starttijd, eindtijd, blokNummer) {
     return {

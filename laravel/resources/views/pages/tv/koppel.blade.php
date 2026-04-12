@@ -118,7 +118,7 @@
         $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME);
     @endphp
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <script>
+    <script @nonce>
     (function() {
         const code = '{{ $code }}';
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);

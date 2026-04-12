@@ -37,7 +37,7 @@
         pointer-events: none;
     }
 </style>
-<script>
+<script @nonce>
     // === JAVASCRIPT TRANSLATION STRINGS ===
     const __t = {
         sessionExpired: @json(__('Sessie verlopen. De pagina wordt herladen.')),
@@ -544,7 +544,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 // === TRANSLATION STRINGS ===
 const __eliminatie = @json(__('Eliminatie'));
 const __poule = @json(__('Poule'));

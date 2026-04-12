@@ -98,7 +98,7 @@
         </div>
     </div>
 
-<script>
+<script @nonce>
 const __t = {
     confirmPin: @json(__('Bevestig je PIN')),
     enterSamePin: @json(__('Voer dezelfde PIN nogmaals in')),

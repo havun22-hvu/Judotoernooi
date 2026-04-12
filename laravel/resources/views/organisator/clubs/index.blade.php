@@ -206,7 +206,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     confirmDeleteWithJudokas: @json(__('LET OP: ":naam" heeft :count judoka(s). Deze worden ook verwijderd! Doorgaan?')),
     confirmDelete: @json(__('Weet je zeker dat je ":naam" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')),

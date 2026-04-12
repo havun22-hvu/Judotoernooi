@@ -502,7 +502,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         // Gewichtsklassen per leeftijdsklasse - gesorteerd oplopend (- eerst, dan +)
         const gewichtsklassenData = @json($gewichtsklassen);
         // Eliminatie gewichtsklassen per leeftijdsklasse

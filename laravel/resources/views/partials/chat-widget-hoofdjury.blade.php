@@ -169,7 +169,7 @@
     }
 </style>
 
-<script>
+<script @nonce>
     // Chat configuration for hoofdjury
     const chatConfig = {
         type: 'hoofdjury',

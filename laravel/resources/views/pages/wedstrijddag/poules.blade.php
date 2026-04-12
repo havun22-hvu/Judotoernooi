@@ -777,7 +777,7 @@
 
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
+<script @nonce>
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
@@ -1858,7 +1858,7 @@ function closeZoekMatchModal() {
     </div>
 </div>
 
-<script>
+<script @nonce>
 // Make Zoek Match modal draggable
 (function() {
     const dialog = document.getElementById('zoek-match-dialog');

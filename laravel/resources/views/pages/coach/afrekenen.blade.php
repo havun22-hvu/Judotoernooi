@@ -118,7 +118,7 @@
         </div>
         @endif
     </div>
-<script>
+<script @nonce>
 function updateBetaalKnop() {
     const checked = document.getElementById('herroeping-akkoord').checked;
     document.getElementById('betaal-knop').disabled = !checked;

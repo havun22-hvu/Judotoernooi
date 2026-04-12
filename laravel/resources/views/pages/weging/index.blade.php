@@ -136,7 +136,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 function weeglijstTable() {
     return {
         sortKey: null,

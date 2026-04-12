@@ -73,7 +73,7 @@
     <p><strong>{{ __('Totaal') }}:</strong> {{ $coachkaarten->count() }} {{ __('coachkaarten') }}</p>
 </div>
 
-<script>
+<script @nonce>
 document.addEventListener('DOMContentLoaded', function() {
     @foreach($coachkaarten as $kaart)
     @if($kaart->qr_code)

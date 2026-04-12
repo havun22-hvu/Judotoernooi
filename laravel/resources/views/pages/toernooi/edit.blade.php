@@ -582,7 +582,7 @@
             </div>
         </div>
 
-        <script>
+        <script @nonce>
         document.addEventListener('DOMContentLoaded', function() {
             // i18n for this script block
             const __s1 = {
@@ -1023,7 +1023,7 @@
             <div id="gewichtsklassen-container" class="space-y-3"></div>
 
             <!-- Initiële data voor JavaScript -->
-            <script>
+            <script @nonce>
                 window.initieleGewichtsklassen = @json($gewichtsklassen);
                 window.initieleWedstrijdSysteem = @json(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? []);
                 window.initialePuntenCompWedstrijden = @json(old('punten_competitie_wedstrijden', $toernooi->punten_competitie_wedstrijden) ?? []);
@@ -1045,7 +1045,7 @@
             <input type="hidden" name="gewichtsklassen_json" id="gewichtsklassen_json_input">
         </div>
 
-        <script>
+        <script @nonce>
         document.addEventListener('DOMContentLoaded', function() {
             // i18n translations for this script block
             const __t = {
@@ -2115,7 +2115,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
     function templateSave() {
         const __t = {
             templateOpgeslagen: @json(__('Template opgeslagen!')),
@@ -2257,7 +2257,7 @@
         <p class="text-sm text-gray-500 mt-3" x-show="message" x-text="message"></p>
     </div>
 
-    <script>
+    <script @nonce>
     function reverbStatus() {
         const __t = {
             konStatusNietOphalen: @json(__('Kon status niet ophalen')),
@@ -2386,7 +2386,7 @@
         </form>
     </div>
 
-    <script>
+    <script @nonce>
     function toggleMollieOptie() {
         const modus = document.getElementById('portaal_modus').value;
         const mollieSection = document.getElementById('mollie-section');
@@ -3322,7 +3322,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
     const __tn = {
         ongeldigIpFormaat: @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100')),
         foutBijOpslaanNetwerkConfig: @json(__('Fout bij opslaan netwerk config:')),
@@ -3725,7 +3725,7 @@
 
 </div>
 
-<script>
+<script @nonce>
 // Toggle eliminatie gewichtsklassen visibility
 function toggleEliminatieGewichtsklassen(selectElement) {
     const leeftijdsklasse = selectElement.dataset.leeftijdsklasse;
@@ -3764,7 +3764,7 @@ function togglePassword(button) {
 }
 </script>
 
-<script>
+<script @nonce>
 // Auto-save for toernooi settings
 // Global trigger function for drag & drop handlers
 window.triggerAutoSave = function() {};

@@ -122,7 +122,7 @@
 
     {{-- No download button for coach cards - they should only be shown on device, not saved as images --}}
 
-    <script>
+    <script @nonce>
         // Time-based QR code - regenerates every 4 minutes to prevent screenshot fraud
         const QR_VALID_MINUTES = 5;
         const QR_REFRESH_MINUTES = 4;

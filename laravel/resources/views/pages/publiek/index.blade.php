@@ -1143,7 +1143,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         const STORAGE_KEY = 'judotoernooi_favorieten_{{ $toernooi->id }}';
         const NOTIFIED_KEY = 'judotoernooi_notified_{{ $toernooi->id }}';
         const poulesGegenereerd = {{ $poulesGegenereerd ? 'true' : 'false' }};

@@ -229,7 +229,7 @@
 }
 </style>
 
-<script>
+<script @nonce>
 const csrfToken = '{{ csrf_token() }}';
 const genereerUrl = '{{ route('toernooi.poule.eliminatie.genereer', $toernooi->routeParamsWith(['poule' => $poule])) }}';
 const uitslagUrl = '{{ route('toernooi.poule.eliminatie.uitslag', $toernooi->routeParamsWith(['poule' => $poule])) }}';

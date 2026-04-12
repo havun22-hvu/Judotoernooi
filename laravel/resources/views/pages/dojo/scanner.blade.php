@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         const organisatorSlug = '{{ $toernooi->organisator->slug }}';
         const toernooiSlug = '{{ $toernooi->slug }}';
         let html5QrCode = null;

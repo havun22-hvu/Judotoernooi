@@ -242,7 +242,7 @@
 
 </div>
 
-<script>
+<script @nonce>
 document.querySelectorAll('.club-toggle').forEach(cb => {
     cb.addEventListener('change', async function() {
         const clubId = this.dataset.clubId;

@@ -247,7 +247,7 @@
 
 </div>
 
-<script>
+<script @nonce>
 function deviceToegangen() {
     return {
         activeRol: 'mat',
@@ -590,7 +590,7 @@ function deviceToegangen() {
 </script>
 
 @push('scripts')
-<script>
+<script @nonce>
 window._castAppId = '47CF3728';
 window._castAvailable = false;
 

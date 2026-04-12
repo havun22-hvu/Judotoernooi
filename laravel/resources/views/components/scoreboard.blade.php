@@ -336,7 +336,7 @@
 </div>
 
 @once
-<script>
+<script @nonce>
 // Web Audio context for alarm sounds
 let audioContext = null;
 

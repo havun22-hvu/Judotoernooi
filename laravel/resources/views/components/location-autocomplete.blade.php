@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 function locationAutocomplete_{{ $name }}() {
     return {
         query: '{{ addslashes($value) }}',

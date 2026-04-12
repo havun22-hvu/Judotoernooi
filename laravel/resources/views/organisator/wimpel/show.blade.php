@@ -220,7 +220,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     errorAdjusting: @json(__('Fout bij aanpassen')),
     somethingWentWrong: @json(__('Er ging iets mis')),

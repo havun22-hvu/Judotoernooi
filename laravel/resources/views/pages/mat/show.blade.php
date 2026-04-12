@@ -75,7 +75,7 @@
 {{-- Real-time: reload page on score/beurt updates via Reverb --}}
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 @include('partials.mat-updates-listener', ['toernooi' => $toernooi, 'matId' => $mat->id])
-<script>
+<script @nonce>
     // Auto-reload page when a score or beurt update comes in for this mat
     let reloadTimer = null;
     ['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar'].forEach(evt => {

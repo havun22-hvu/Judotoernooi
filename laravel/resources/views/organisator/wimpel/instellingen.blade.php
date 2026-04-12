@@ -114,7 +114,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     errorAdding: @json(__('Fout bij toevoegen')),
     errorSaving: @json(__('Fout bij opslaan')),

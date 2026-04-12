@@ -15,7 +15,7 @@
     $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME) ?: 'https';
 @endphp
 
-<script>
+<script @nonce>
 (function() {
     const matUpdateConfig = {
         toernooiId: {{ $toernooi->id }},

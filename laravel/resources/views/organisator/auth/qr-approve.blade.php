@@ -65,7 +65,7 @@
     </div>
 
 @auth('organisator')
-<script>
+<script @nonce>
 const __t = {
     approving: @json(__('Goedkeuren...')),
     approve: @json(__('Goedkeuren')),

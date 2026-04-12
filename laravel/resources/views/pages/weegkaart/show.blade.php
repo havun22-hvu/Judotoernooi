@@ -217,7 +217,7 @@
         </button>
     </div>
 
-    <script>
+    <script @nonce>
         // Generate QR code - called from Alpine when content becomes visible
         let qrGenerated = false;
         function generateQR() {

@@ -202,7 +202,7 @@ tr:hover { background: #f9fafb; }
     </div>
 </div>
 
-<script>
+<script @nonce>
 const DATA = {!! $jsonData !!};
 
 // i18n constants

@@ -111,7 +111,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
     document.getElementById('registerForm').addEventListener('submit', function() {
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;

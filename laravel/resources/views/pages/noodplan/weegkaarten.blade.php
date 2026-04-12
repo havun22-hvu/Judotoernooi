@@ -267,7 +267,7 @@
     <p><strong>{{ __('Totaal') }}:</strong> {{ $judokas->count() }} {{ __('weegkaarten') }}</p>
 </div>
 
-<script>
+<script @nonce>
 document.addEventListener('DOMContentLoaded', function() {
     @foreach($judokas as $judoka)
     QRCode.toCanvas(document.getElementById('qr-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {

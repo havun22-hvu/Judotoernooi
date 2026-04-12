@@ -19,6 +19,10 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Generate CSP nonce for this request
+        $nonce = base64_encode(random_bytes(16));
+        app()->instance('csp-nonce', $nonce);
+
         $response = $next($request);
 
         // Prevent clickjacking - page cannot be embedded in iframe
@@ -42,7 +46,7 @@ class SecurityHeaders
         if (!app()->environment('local')) {
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com js.pusher.com www.gstatic.com",
+                "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com js.pusher.com www.gstatic.com",
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",

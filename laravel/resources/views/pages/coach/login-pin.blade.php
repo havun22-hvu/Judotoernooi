@@ -70,7 +70,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         // Auto-focus and auto-advance
         const pinInput = document.getElementById('pincode');
         pinInput.focus();

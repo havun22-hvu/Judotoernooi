@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         function meldProbleem() {
             const btn = document.getElementById('meld-btn');
             const status = document.getElementById('meld-status');

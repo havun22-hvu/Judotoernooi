@@ -112,7 +112,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     noClub: @json(__('Geen club')),
     noResults: @json(__('Geen resultaten')),

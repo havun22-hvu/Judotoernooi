@@ -198,7 +198,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         function copyAllLinks() {
             const links = [
                 @foreach($judokas as $judoka)

@@ -872,7 +872,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 function helpPage() {
     return {
         searchQuery: '',

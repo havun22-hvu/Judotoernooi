@@ -278,7 +278,7 @@
 }
 </style>
 
-<script>
+<script @nonce>
 const previewData = @json($analyse['preview_data']);
 const header = @json($analyse['header']);
 const veldLabels = @json(collect($veldInfo)->mapWithKeys(fn($v, $k) => [$k => $v['label']]));

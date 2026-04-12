@@ -236,19 +236,19 @@
     </div>
 
     @if(session('success'))
-    <script>
+    <script @nonce>
         document.addEventListener('DOMContentLoaded', () => showAppToast('✓ ' + @json(session('success')), 'success'));
     </script>
     @endif
 
     @if(session('error'))
-    <script>
+    <script @nonce>
         document.addEventListener('DOMContentLoaded', () => showAppToast('⚠️ ' + @json(session('error')), 'error', 10000));
     </script>
     @endif
 
     @if(session('warning'))
-    <script>
+    <script @nonce>
         document.addEventListener('DOMContentLoaded', () => showAppToast(@json(session('warning')), 'warning'));
     </script>
     @endif
@@ -285,7 +285,7 @@
 
     {{-- DO NOT REMOVE: Idle Timeout - Auto logout after 20 minutes inactivity (security feature) --}}
     @if(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
-    <script>
+    <script @nonce>
         (function() {
             const IDLE_TIMEOUT = 20 * 60 * 1000; // 20 minutes in ms
             const WARNING_BEFORE = 2 * 60 * 1000; // Show warning 2 min before
@@ -357,7 +357,7 @@
     @endif
 
     {{-- DO NOT REMOVE: Global fetch interceptor - redirects to login on 401/419 session expire --}}
-    <script>
+    <script @nonce>
         (function() {
             const originalFetch = window.fetch;
             const loginUrl = '{{ route("login") }}';
@@ -388,7 +388,7 @@
     @endif
 
     {{-- Loading spinner for forms with data-loading attribute --}}
-    <script>
+    <script @nonce>
         document.querySelectorAll('form[data-loading]').forEach(form => {
             form.addEventListener('submit', function() {
                 const msg = this.dataset.loading || 'Bezig...';
@@ -401,7 +401,7 @@
     </script>
 
     {{-- Globale toast functies --}}
-    <script>
+    <script @nonce>
         let appToastTimeout = null;
         function showAppToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('app-toast');
@@ -432,7 +432,7 @@
 
     {{-- DO NOT REMOVE: Noodplan Live Backup Sync - syncs data to localStorage every 30s for offline emergency access --}}
     @if(isset($toernooi) && $toernooi)
-    <script>
+    <script @nonce>
         (function() {
             const toernooiId = {{ $toernooi->id }};
             const syncUrl = '{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}';
@@ -566,7 +566,7 @@
             </div>
         </div>
     </div>
-    <script>
+    <script @nonce>
     (function() {
         // Only show scanner button on touch devices
         const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);

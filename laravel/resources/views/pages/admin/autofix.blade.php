@@ -236,7 +236,7 @@
     @endforelse
 </div>
 
-<script>
+<script @nonce>
 function toggleDetail(id) {
     const el = document.getElementById('detail-' + id);
     const arrow = document.getElementById('arrow-' + id);

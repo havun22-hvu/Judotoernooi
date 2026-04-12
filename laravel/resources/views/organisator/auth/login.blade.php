@@ -276,7 +276,7 @@
         </div>
     </div>
 
-<script>
+<script @nonce>
 const __t = {
     somethingWrong: @json(__('Er ging iets mis')),
     biometricNotSupported: @json(__('Biometrie niet ondersteund op dit apparaat')),

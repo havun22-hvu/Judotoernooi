@@ -636,7 +636,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 // Translation constants for JS
 const __laden = @json(__('Laden...'));
 const __vernieuwen = @json(__('Vernieuwen'));

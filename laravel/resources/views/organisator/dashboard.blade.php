@@ -173,7 +173,7 @@
             </div>
         </div>
 
-        <script>
+        <script @nonce>
             const __t = { confirmDeleteTemplate: @json(__('Weet je zeker dat je deze template wilt verwijderen?')) };
             function templateManager() {
                 return {
@@ -397,7 +397,7 @@
     </main>
 
     {{-- Idle Timeout - Auto logout after 20 minutes inactivity --}}
-    <script>
+    <script @nonce>
         (function() {
             const IDLE_TIMEOUT = 20 * 60 * 1000; // 20 minutes in ms
             const WARNING_BEFORE = 2 * 60 * 1000; // Show warning 2 min before

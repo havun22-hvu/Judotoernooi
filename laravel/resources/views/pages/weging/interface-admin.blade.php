@@ -170,7 +170,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     confirmCloseBlock: @json(__('Weegtijd Blok :blok sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')),
     saveError: @json(__('Fout bij opslaan')),

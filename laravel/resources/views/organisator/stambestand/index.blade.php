@@ -221,7 +221,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     errorSaving: @json(__('Fout bij opslaan')),
     connectionError: @json(__('Verbindingsfout')),

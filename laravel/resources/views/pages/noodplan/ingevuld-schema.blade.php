@@ -436,7 +436,7 @@ function abbreviateClubName($name, $maxLength = 15) {
     </p>
 </div>
 
-<script>
+<script @nonce>
 const totalPoules = {{ $poulesMetSchema->count() }};
 
 function pouleSelect() {

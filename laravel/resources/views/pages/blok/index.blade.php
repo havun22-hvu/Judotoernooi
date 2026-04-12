@@ -49,7 +49,7 @@
     }
     .animate-pulse-warning { animation: pulse-warning 1s ease-in-out infinite; }
 </style>
-<script>
+<script @nonce>
     let inschrijvingPopupGetoond = false;
     function toonInschrijvingPopup() {
         if (inschrijvingPopupGetoond) return;
@@ -490,13 +490,13 @@
 
 <!-- Varianten data voor JavaScript -->
 @if($toonVarianten)
-<script>
+<script @nonce>
 const variantenData = @json($varianten);
 const afkortingen = @json($afkortingen);
 </script>
 @endif
 
-<script>
+<script @nonce>
 function updateBalansSlider(value) {
     const headerSlider = document.getElementById('balans-slider-header');
     const variantSlider = document.getElementById('balans-slider');

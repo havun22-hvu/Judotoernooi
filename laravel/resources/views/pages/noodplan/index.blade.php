@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         function offlineDetector() {
             return {
                 isOffline: false,
@@ -302,7 +302,7 @@
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         function liveBackup() {
             return {
                 syncStatus: 'disconnected',
@@ -718,7 +718,7 @@ function abbreviateClub(name) {
                     </a>
                 </div>
             </div>
-            <script>
+            <script @nonce>
                 function serverPakketStatus() {
                     return {
                         syncStatus: 'none',
@@ -1137,7 +1137,7 @@ function abbreviateClub(name) {
         </div>
     </div>
 
-    <script>
+    <script @nonce>
         function networkConfig() {
             return {
                 scenario: 'A',

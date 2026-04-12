@@ -229,7 +229,7 @@
 @endforeach
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
+<script @nonce>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi->routeParams()) }}';
 const foutBijVerplaatsen = '{{ __('Fout bij verplaatsen:') }}';

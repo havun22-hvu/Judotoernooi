@@ -409,7 +409,7 @@
     </table>
 </div>
 
-<script>
+<script @nonce>
 function judokaTable() {
     // Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
@@ -782,7 +782,7 @@ function judokaTable() {
     </div>
 </div>
 
-<script>
+<script @nonce>
 let _stamData = [];
 const _stamUrl = @json(route('toernooi.judoka.stambestand', $toernooi->routeParams()));
 const _importUrl = @json(route('toernooi.judoka.import-database', $toernooi->routeParams()));

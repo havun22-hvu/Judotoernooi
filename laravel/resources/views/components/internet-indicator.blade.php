@@ -58,7 +58,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 function internetIndicator() {
     return {
         status: 'checking',

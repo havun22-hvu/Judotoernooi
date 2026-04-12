@@ -593,7 +593,7 @@
     <input type="hidden" name="bewaar_presets" id="bewaar-presets" value="0">
 </form>
 
-<script>
+<script @nonce>
 function confirmDelete(orgSlug, slug, naam) {
     if (confirm(`VERWIJDER "${naam}" PERMANENT?\n\nDit verwijdert:\n- Alle judoka's\n- Alle poules en wedstrijden\n- Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!`)) {
         const form = document.getElementById('delete-form');

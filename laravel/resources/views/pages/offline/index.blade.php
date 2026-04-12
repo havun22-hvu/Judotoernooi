@@ -114,7 +114,7 @@
             </div>
         </div>
 
-        <script>
+        <script @nonce>
             function uploadManager() {
                 return {
                     status: 'idle',

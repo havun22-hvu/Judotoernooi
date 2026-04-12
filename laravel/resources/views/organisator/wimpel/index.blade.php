@@ -154,7 +154,7 @@
     </div>
 </div>
 
-<script>
+<script @nonce>
 const __t = {
     connectionError: @json(__('Verbindingsfout')),
     somethingWentWrong: @json(__('Er ging iets mis')),

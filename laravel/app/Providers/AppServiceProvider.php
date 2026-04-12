@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\SystemAlert;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // CSP nonce — use @nonce in Blade <script> tags
+        Blade::directive('nonce', function () {
+            return '<?php echo "nonce=\"" . app("csp-nonce") . "\""; ?>';
+        });
+
         // Register sync queue observer for local server sync
         // Only observes score/weight changes to push to cloud
         Wedstrijd::observe(SyncQueueObserver::class);
