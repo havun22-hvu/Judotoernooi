@@ -7,19 +7,20 @@ use Illuminate\Http\Request;
 
 class AlertsController extends Controller
 {
-    public function __construct()
+    /**
+     * Check if user is sitebeheerder.
+     */
+    private function checkSitebeheerder(): void
     {
-        $this->middleware(function ($request, $next) {
-            $user = auth('organisator')->user();
-            if (!$user?->isSitebeheerder()) {
-                abort(403);
-            }
-            return $next($request);
-        });
+        $user = auth('organisator')->user();
+        if (!$user?->isSitebeheerder()) {
+            abort(403);
+        }
     }
 
     public function index(Request $request)
     {
+        $this->checkSitebeheerder();
         $query = SystemAlert::query()->orderByDesc('created_at');
 
         if ($type = $request->get('type')) {
@@ -37,6 +38,7 @@ class AlertsController extends Controller
 
     public function markRead(SystemAlert $alert)
     {
+        $this->checkSitebeheerder();
         $alert->update(['is_read' => true]);
 
         return back()->with('success', 'Alert gemarkeerd als gelezen.');
@@ -44,6 +46,7 @@ class AlertsController extends Controller
 
     public function markAllRead()
     {
+        $this->checkSitebeheerder();
         SystemAlert::unread()->update(['is_read' => true]);
 
         return back()->with('success', 'Alle alerts gemarkeerd als gelezen.');
