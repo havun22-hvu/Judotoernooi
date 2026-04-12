@@ -7,6 +7,7 @@ use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\PouleIndeling\PouleTitleBuilder;
 use App\Services\PouleIndelingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -764,7 +765,7 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakPouleTitel_dynamic_with_age_and_weight_range(): void
     {
-        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
+        $builder = new PouleTitleBuilder();
 
         $jaar = (int) date('Y');
         $club = $this->maakClub();
@@ -800,7 +801,7 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakPouleTitel_with_label_hidden(): void
     {
-        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
+        $builder = new PouleTitleBuilder();
 
         $config = [
             'test' => [
@@ -821,7 +822,7 @@ class PouleIndelingCoverageTest extends TestCase
     #[Test]
     public function maakPouleTitel_returns_onbekend_when_empty(): void
     {
-        $builder = new \App\Services\PouleIndeling\PouleTitleBuilder();
+        $builder = new PouleTitleBuilder();
 
         $config = [
             'test' => [
