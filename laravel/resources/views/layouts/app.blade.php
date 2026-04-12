@@ -139,6 +139,13 @@
                         <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                             <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Admin Dashboard') }}</a>
+                            @php $unreadAlerts = \App\Models\SystemAlert::unread()->count(); @endphp
+                            <a href="{{ route('admin.alerts') }}" class="flex items-center justify-between px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                {{ __('Alerts') }}
+                                @if($unreadAlerts > 0)
+                                    <span class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 ml-2">{{ $unreadAlerts }}</span>
+                                @endif
+                            </a>
                             @endif
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>

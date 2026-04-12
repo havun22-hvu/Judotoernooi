@@ -37,6 +37,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
 use App\Http\Controllers\ToernooiBetalingController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AlertsController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocalSyncController;
@@ -322,6 +323,11 @@ Route::middleware('auth:organisator')->group(function () {
 
     // AutoFix overzicht (sitebeheerder only)
     Route::get('admin/autofix', [AdminController::class, 'autofix'])->name('admin.autofix');
+
+    // System Alerts (sitebeheerder only)
+    Route::get('admin/alerts', [AlertsController::class, 'index'])->name('admin.alerts');
+    Route::post('admin/alerts/{alert}/read', [AlertsController::class, 'markRead'])->name('admin.alerts.markRead');
+    Route::post('admin/alerts/mark-all-read', [AlertsController::class, 'markAllRead'])->name('admin.alerts.markAllRead');
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)

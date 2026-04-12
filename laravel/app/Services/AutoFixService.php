@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AutofixProposal;
+use App\Models\SystemAlert;
 use App\Services\AutoFix\GitOperations;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
@@ -577,7 +578,7 @@ class AutoFixService
     }
 
     /**
-     * Log success notification (visible in admin panel via autofix_proposals table).
+     * Log success notification and fire in-app alert.
      */
     protected function sendSuccessNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal, int $attempt): void
     {
@@ -587,10 +588,18 @@ class AutoFixService
             'attempt' => $attempt,
             'proposal_id' => $proposal->id,
         ]);
+
+        SystemAlert::fire(
+            'autofix',
+            'medium',
+            "AutoFix applied: {$file}",
+            $proposal->claude_analysis,
+            ['proposal_id' => $proposal->id, 'attempt' => $attempt, 'exception' => get_class($e)]
+        );
     }
 
     /**
-     * Log failure notification (visible in admin panel via autofix_proposals table).
+     * Log failure notification and fire in-app alert.
      */
     protected function sendFailureNotification(Throwable $e, string $file, int $line): void
     {
@@ -599,6 +608,14 @@ class AutoFixService
             'message' => $e->getMessage(),
             'file' => "{$file}:{$line}",
         ]);
+
+        SystemAlert::fire(
+            'autofix',
+            'high',
+            "AutoFix failed: {$file}",
+            $e->getMessage(),
+            ['exception' => get_class($e), 'line' => $line]
+        );
     }
 
     /**

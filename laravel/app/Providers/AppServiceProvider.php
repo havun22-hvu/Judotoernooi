@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Models\SystemAlert;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -78,12 +79,19 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Queue failure notifications
+        // Queue failure notifications — in-app alert instead of email
         Queue::failing(function (JobFailed $event) {
             Log::critical('Queue job failed', [
                 'job' => $event->job->getName(),
                 'exception' => $event->exception->getMessage(),
             ]);
+
+            SystemAlert::fire(
+                'queue_failure',
+                'critical',
+                "Job failed: {$event->job->getName()}",
+                $event->exception->getMessage()
+            );
         });
 
         // Configure rate limiters
