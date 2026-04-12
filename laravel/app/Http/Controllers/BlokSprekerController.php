@@ -62,13 +62,11 @@ class BlokSprekerController extends Controller
                     return $judoka->aanwezigheid !== 'afwezig';
                 });
 
-                $isPuntenComp = false; // Puntencompetitie poules are already filtered out above
-                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isPuntenComp) {
+                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage) {
                     $wp = 0;
                     $jp = 0;
                     $gewonnen = 0;
 
-                    // Points from original poule
                     foreach ($poule->wedstrijden as $w) {
                         if (!$w->is_gespeeld) continue;
                         $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
@@ -76,24 +74,20 @@ class BlokSprekerController extends Controller
 
                         if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                        if (!$isPuntenComp) {
-                            // JP
-                            if ($w->judoka_wit_id === $judoka->id) {
-                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                            } else {
-                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                            }
+                        if ($w->judoka_wit_id === $judoka->id) {
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                        } else {
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                        }
 
-                            // WP: Win=2, Draw=1, Loss=0
-                            if ($w->winnaar_id === $judoka->id) {
-                                $wp += 2;
-                            } elseif ($w->winnaar_id === null) {
-                                $wp += 1; // Gelijkspel
-                            }
+                        // WP: Win=2, Draw=1, Loss=0
+                        if ($w->winnaar_id === $judoka->id) {
+                            $wp += 2;
+                        } elseif ($w->winnaar_id === null) {
+                            $wp += 1;
                         }
                     }
 
-                    // ADD barrage points if judoka participated in barrage
                     if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
                         foreach ($barrage->wedstrijden as $w) {
                             if (!$w->is_gespeeld) continue;
@@ -102,20 +96,16 @@ class BlokSprekerController extends Controller
 
                             if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                            if (!$isPuntenComp) {
-                                // JP
-                                if ($w->judoka_wit_id === $judoka->id) {
-                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                                } else {
-                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                                }
+                            if ($w->judoka_wit_id === $judoka->id) {
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                            } else {
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                            }
 
-                                // WP: Win=2, Draw=1, Loss=0
-                                if ($w->winnaar_id === $judoka->id) {
-                                    $wp += 2;
-                                } elseif ($w->winnaar_id === null) {
-                                    $wp += 1;
-                                }
+                            if ($w->winnaar_id === $judoka->id) {
+                                $wp += 2;
+                            } elseif ($w->winnaar_id === null) {
+                                $wp += 1;
                             }
                         }
                     }
@@ -123,27 +113,22 @@ class BlokSprekerController extends Controller
                     return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp, 'gewonnen' => (int) $gewonnen];
                 });
 
-                // Sort: punten competitie by gewonnen, normal by WP/JP/h2h
                 $wedstrijden = $poule->wedstrijden;
-                if ($isPuntenComp) {
-                    $poule->standings = $standings->sortByDesc('gewonnen')->values();
-                } else {
-                    $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
-                        if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
-                        if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
-                        foreach ($wedstrijden as $w) {
-                            $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
-                                    || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
-                            if ($isMatch && $w->winnaar_id) {
-                                return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
-                            }
+                $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
+                    if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
+                    if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
+                    foreach ($wedstrijden as $w) {
+                        $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
+                                || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
+                        if ($isMatch && $w->winnaar_id) {
+                            return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
                         }
-                        return 0;
-                    })->values();
-                }
+                    }
+                    return 0;
+                })->values();
 
                 $poule->is_eliminatie = false;
-                $poule->is_punten_competitie = $isPuntenComp;
+                $poule->is_punten_competitie = false;
                 $poule->has_barrage = $barrage !== null;
                 return $poule;
             });

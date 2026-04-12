@@ -43,32 +43,13 @@ class BlokActivatieController extends Controller
             ->where('gewichtsklasse', $gewichtsklasse)
             ->get();
 
-        // Generate match schedules for each poule (mats already assigned)
         $totaalWedstrijden = 0;
         $isEliminatie = false;
 
         foreach ($poules as $poule) {
-            // Only generate if no wedstrijden exist yet
-            if ($poule->wedstrijden()->count() === 0) {
-                if ($poule->type === 'eliminatie') {
-                    // Generate elimination bracket (alleen aanwezige judoka's!)
-                    $isEliminatie = true;
-                    $judokaIds = $poule->judokas()
-                        ->where(function ($q) {
-                            $q->whereNull('aanwezigheid')
-                              ->orWhere('aanwezigheid', '!=', 'afwezig');
-                        })
-                        ->pluck('judokas.id')
-                        ->toArray();
-                    $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
-                    $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
-                    $totaalWedstrijden += $stats['totaal_wedstrijden'] ?? 0;
-                } else {
-                    // Generate round-robin matches
-                    $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
-                    $totaalWedstrijden += count($wedstrijden);
-                }
-            }
+            $result = $this->activeerEnkelePoule($poule, $toernooi);
+            $totaalWedstrijden += $result['wedstrijden'];
+            if ($result['is_eliminatie']) $isEliminatie = true;
         }
 
         ActivityLogger::log($toernooi, 'activeer_categorie', "{$leeftijdsklasse} {$gewichtsklasse} geactiveerd (blok {$blokNummer}, {$totaalWedstrijden} wedstrijden)", [
@@ -154,28 +135,9 @@ class BlokActivatieController extends Controller
                 ->with('error', 'Poule niet gevonden');
         }
 
-        // Only generate if no wedstrijden exist yet
-        $totaalWedstrijden = 0;
-        $isEliminatie = false;
-
-        if ($poule->wedstrijden()->count() === 0) {
-            if ($poule->type === 'eliminatie') {
-                $isEliminatie = true;
-                $judokaIds = $poule->judokas()
-                    ->where(function ($q) {
-                        $q->whereNull('aanwezigheid')
-                          ->orWhere('aanwezigheid', '!=', 'afwezig');
-                    })
-                    ->pluck('judokas.id')
-                    ->toArray();
-                $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
-                $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
-                $totaalWedstrijden = $stats['totaal_wedstrijden'] ?? 0;
-            } else {
-                $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
-                $totaalWedstrijden = count($wedstrijden);
-            }
-        }
+        $result = $this->activeerEnkelePoule($poule, $toernooi);
+        $totaalWedstrijden = $result['wedstrijden'];
+        $isEliminatie = $result['is_eliminatie'];
 
         $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poule';
         return redirect()
@@ -326,5 +288,35 @@ class BlokActivatieController extends Controller
         return redirect()
             ->route('toernooi.edit', $toernooi->routeParams())
             ->with('success', "💥 ALLES GERESET - {$totaalVerwijderd} wedstrijden verwijderd, alle matten leeg, klaar voor nieuwe ronde!");
+    }
+
+    /**
+     * Generate wedstrijden for a single poule (eliminatie or round-robin).
+     * Skips poules that already have wedstrijden.
+     *
+     * @return array{wedstrijden: int, is_eliminatie: bool}
+     */
+    private function activeerEnkelePoule(Poule $poule, Toernooi $toernooi): array
+    {
+        if ($poule->wedstrijden()->count() > 0) {
+            return ['wedstrijden' => 0, 'is_eliminatie' => false];
+        }
+
+        if ($poule->type === 'eliminatie') {
+            $judokaIds = $poule->judokas()
+                ->where(function ($q) {
+                    $q->whereNull('aanwezigheid')
+                      ->orWhere('aanwezigheid', '!=', 'afwezig');
+                })
+                ->pluck('judokas.id')
+                ->toArray();
+            $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+            $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
+
+            return ['wedstrijden' => $stats['totaal_wedstrijden'] ?? 0, 'is_eliminatie' => true];
+        }
+
+        $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+        return ['wedstrijden' => count($wedstrijden), 'is_eliminatie' => false];
     }
 }
