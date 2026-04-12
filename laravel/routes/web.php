@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\BlokActivatieController;
 use App\Http\Controllers\BlokController;
+use App\Http\Controllers\BlokSprekerController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\CoachPortalController;
@@ -513,19 +515,19 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
         Route::post('blok/genereer-variabele-verdeling', [BlokController::class, 'genereerVariabeleVerdeling'])->name('blok.genereer-variabele-verdeling');
         Route::post('blok/kies-variant', [BlokController::class, 'kiesVariant'])->name('blok.kies-variant');
-        Route::post('blok/verplaats-categorie', [BlokController::class, 'verplaatsCategorie'])->name('blok.verplaats-categorie');
+        Route::post('blok/verplaats-categorie', [BlokSprekerController::class, 'verplaatsCategorie'])->name('blok.verplaats-categorie');
         Route::post('blok/update-gewenst', [BlokController::class, 'updateGewenst'])->name('blok.update-gewenst');
         Route::post('blok/zet-op-mat', [BlokController::class, 'zetOpMat'])->name('blok.zet-op-mat');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
         Route::post('blok/einde-voorbereiding', [BlokController::class, 'eindeVoorbereiding'])->name('blok.einde-voorbereiding');
-        Route::post('blok/activeer-categorie', [BlokController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
-        Route::post('blok/reset-categorie', [BlokController::class, 'resetCategorie'])->name('blok.reset-categorie');
-        Route::post('blok/activeer-poule', [BlokController::class, 'activeerPoule'])->name('blok.activeer-poule');
-        Route::post('blok/reset-poule', [BlokController::class, 'resetPoule'])->name('blok.reset-poule');
-        Route::post('blok/reset-alles', [BlokController::class, 'resetAlles'])->name('blok.reset-alles');
-        Route::post('blok/reset-blok', [BlokController::class, 'resetBlok'])->name('blok.reset-blok');
-        Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
+        Route::post('blok/activeer-categorie', [BlokActivatieController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
+        Route::post('blok/reset-categorie', [BlokActivatieController::class, 'resetCategorie'])->name('blok.reset-categorie');
+        Route::post('blok/activeer-poule', [BlokActivatieController::class, 'activeerPoule'])->name('blok.activeer-poule');
+        Route::post('blok/reset-poule', [BlokActivatieController::class, 'resetPoule'])->name('blok.reset-poule');
+        Route::post('blok/reset-alles', [BlokActivatieController::class, 'resetAlles'])->name('blok.reset-alles');
+        Route::post('blok/reset-blok', [BlokActivatieController::class, 'resetBlok'])->name('blok.reset-blok');
+        Route::post('blok/verplaats-poule', [BlokSprekerController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
 
         // Clubs management
@@ -674,18 +676,18 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('mat/bracket-html', [MatController::class, 'getBracketHtml'])->name('mat.bracket-html');
         Route::post('mat/advance-byes', [MatBracketController::class, 'advanceByes'])->name('mat.advance-byes');
         Route::post('mat/check-admin-wachtwoord', [MatController::class, 'checkAdminWachtwoord'])->name('mat.check-admin-wachtwoord');
-        Route::post('mat/barrage', [BlokController::class, 'maakBarrage'])->name('mat.barrage');
+        Route::post('mat/barrage', [BlokSprekerController::class, 'maakBarrage'])->name('mat.barrage');
     });
 
     // Spreker routes (spreker + admin)
     Route::middleware(CheckToernooiRol::class . ':spreker')->group(function () {
-        Route::get('spreker', [BlokController::class, 'sprekerInterface'])->name('spreker.interface');
-        Route::post('spreker/afgeroepen', [BlokController::class, 'markeerAfgeroepen'])->name('spreker.afgeroepen');
-        Route::post('spreker/terug', [BlokController::class, 'zetAfgeroepenTerug'])->name('spreker.terug');
-        Route::post('spreker/notities', [BlokController::class, 'saveNotities'])->name('spreker.notities.save');
-        Route::get('spreker/notities', [BlokController::class, 'getNotities'])->name('spreker.notities.get');
-        Route::post('spreker/standings', [BlokController::class, 'getPouleStandings'])->name('spreker.standings');
-        Route::post('spreker/wimpel-uitgereikt', [BlokController::class, 'wimpelUitgereikt'])->name('spreker.wimpel-uitgereikt');
+        Route::get('spreker', [BlokSprekerController::class, 'sprekerInterface'])->name('spreker.interface');
+        Route::post('spreker/afgeroepen', [BlokSprekerController::class, 'markeerAfgeroepen'])->name('spreker.afgeroepen');
+        Route::post('spreker/terug', [BlokSprekerController::class, 'zetAfgeroepenTerug'])->name('spreker.terug');
+        Route::post('spreker/notities', [BlokSprekerController::class, 'saveNotities'])->name('spreker.notities.save');
+        Route::get('spreker/notities', [BlokSprekerController::class, 'getNotities'])->name('spreker.notities.get');
+        Route::post('spreker/standings', [BlokSprekerController::class, 'getPouleStandings'])->name('spreker.standings');
+        Route::post('spreker/wimpel-uitgereikt', [BlokSprekerController::class, 'wimpelUitgereikt'])->name('spreker.wimpel-uitgereikt');
     });
 
 });
