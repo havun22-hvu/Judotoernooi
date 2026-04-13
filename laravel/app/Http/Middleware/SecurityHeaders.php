@@ -44,14 +44,18 @@ class SecurityHeaders
         // Content Security Policy - strict, all assets bundled locally via Vite
         // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode), js.pusher.com (Reverb/Pusher), www.gstatic.com (Google Cast SDK)
         if (!app()->environment('local')) {
+            // Alpine.js (bundled via Vite) requires 'unsafe-eval' for x-data/x-on expressions
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'none'",
-                "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com unpkg.com js.pusher.com www.gstatic.com",
-                "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}'",
+                "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://unpkg.com https://js.pusher.com https://www.gstatic.com",
+                "style-src 'self' 'nonce-{$nonce}' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
-                "connect-src 'self' wss: *.pusher.com nominatim.openstreetmap.org www.gstatic.com",
+                "connect-src 'self' wss://*.pusher.com https://nominatim.openstreetmap.org https://www.gstatic.com",
+                "form-action 'self'",
                 "frame-ancestors 'self'",
+                "base-uri 'self'",
+                "object-src 'none'",
                 "manifest-src 'self'",
             ]));
         }
