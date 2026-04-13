@@ -13,7 +13,7 @@
     <title>{{ __('Spreker Interface') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <style>
+    <style @nonce>
         body { overscroll-behavior: none; }
         [x-cloak] { display: none !important; }
     </style>

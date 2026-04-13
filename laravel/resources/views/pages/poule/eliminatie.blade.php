@@ -200,7 +200,7 @@
     </div>
 @endif
 
-<style>
+<style @nonce>
 .bracket-match {
     width: 180px;
     cursor: pointer;

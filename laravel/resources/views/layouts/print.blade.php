@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', __('Print')) - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
+    <style @nonce>
         @media print {
             /* Verberg niet-printbare elementen */
             .no-print { display: none !important; }

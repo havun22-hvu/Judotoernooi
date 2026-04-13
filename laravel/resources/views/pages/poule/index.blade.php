@@ -99,7 +99,7 @@
         </div>
     </div>
 </div>
-<style>
+<style @nonce>
     @keyframes pulse-warning {
         0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
         50% { transform: scale(1.02); box-shadow: 0 0 30px 10px rgba(234, 88, 12, 0.4); }
@@ -533,7 +533,7 @@
 </div>
 
 <!-- SortableJS for drag and drop -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>
 <script @nonce>
 // i18n constants
 const __leeg = @json(__('Leeg'));
@@ -1584,7 +1584,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<style>
+<style @nonce>
 .sortable-ghost {
     opacity: 0.4;
 }

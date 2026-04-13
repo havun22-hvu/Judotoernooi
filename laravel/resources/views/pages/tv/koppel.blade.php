@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>JudoToernooi — TV Koppelen</title>
-    <style>
+    <style @nonce>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; background: #111827; font-family: 'Arial', 'Helvetica Neue', sans-serif; color: #fff; }
 

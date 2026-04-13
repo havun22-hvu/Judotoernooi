@@ -3,8 +3,8 @@
 @section('title', isset($club) ? __('Weegkaarten') . " - {$club->naam}" : __('Weegkaarten'))
 
 @push('styles')
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" @nonce></script>
+<style @nonce>
     .weegkaart {
         border: 2px solid #333;
         border-radius: 8px;
@@ -246,7 +246,7 @@
 
         {{-- QR code --}}
         <div class="weegkaart-qr">
-            <canvas id="qr-{{ $judoka->id }}" width="120" height="120"></canvas>
+            <div id="qr-{{ $judoka->id }}" style="width:120px;height:120px;"></div>
             <div class="code">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</div>
         </div>
 
@@ -270,9 +270,10 @@
 <script @nonce>
 document.addEventListener('DOMContentLoaded', function() {
     @foreach($judokas as $judoka)
-    QRCode.toCanvas(document.getElementById('qr-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+    new QRCode(document.getElementById('qr-{{ $judoka->id }}'), {
+        text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
         width: 120,
-        margin: 1
+        height: 120
     });
     @endforeach
 });

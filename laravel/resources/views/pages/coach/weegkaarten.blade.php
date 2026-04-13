@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $club->naam }} - {{ __('Weegkaarten') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" @nonce></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8 px-4">
@@ -82,7 +82,7 @@
                     <div class="flex justify-between items-start gap-4">
                         <!-- QR Code (clickable) -->
                         <div class="cursor-pointer shrink-0" @click="showQr = !showQr" title="{{ __('Klik voor grote QR') }}">
-                            <canvas id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></canvas>
+                            <div id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></div>
                         </div>
 
                         <div class="flex-grow min-w-0">
@@ -159,7 +159,7 @@
                     <!-- Grote QR popup -->
                     <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center">
                         <p class="text-sm text-gray-600 mb-2">{{ __('Laat :naam deze QR scannen voor de weegkaart', ['naam' => $judoka->naam]) }}</p>
-                        <canvas id="qr-weeg-large-{{ $judoka->id }}" class="mx-auto"></canvas>
+                        <div id="qr-weeg-large-{{ $judoka->id }}" class="mx-auto"></div>
                     </div>
                 </div>
                 @endforeach
@@ -216,16 +216,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             @foreach($judokas as $judoka)
             // Small QR
-            QRCode.toCanvas(document.getElementById('qr-weeg-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+            new QRCode(document.getElementById('qr-weeg-{{ $judoka->id }}'), {
+                text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
                 width: 56,
-                margin: 0,
-                color: { dark: '#1d4ed8' }
+                height: 56,
+                colorDark: '#1d4ed8'
             });
             // Large QR
-            QRCode.toCanvas(document.getElementById('qr-weeg-large-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+            new QRCode(document.getElementById('qr-weeg-large-{{ $judoka->id }}'), {
+                text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
                 width: 200,
-                margin: 1,
-                color: { dark: '#1d4ed8' }
+                height: 200,
+                colorDark: '#1d4ed8'
             });
             @endforeach
         });

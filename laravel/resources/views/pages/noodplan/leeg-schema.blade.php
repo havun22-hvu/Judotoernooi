@@ -3,7 +3,7 @@
 @section('title', __('Leeg wedstrijdschema') . " - {$aantal} " . __("judoka's"))
 
 @push('styles')
-<style>
+<style @nonce>
     @media print {
         @page {
             size: A4 landscape;

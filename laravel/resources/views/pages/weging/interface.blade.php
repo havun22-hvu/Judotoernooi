@@ -12,8 +12,8 @@
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>{{ __('Weging') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <style>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" integrity="sha384-c9d8RFSL+u3exBOJ4Yp3HUJXS4znl9f+z66d1y54ig+ea249SpqR+w1wyvXz/lk+" crossorigin="anonymous" @nonce></script>
+    <style @nonce>
         body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
         #qr-reader { width: 100%; }
         #qr-reader video { border-radius: 0.5rem; }

@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>{{ __('Mat Interface') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
+    <style @nonce>
         body { overscroll-behavior: none; }
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button,
@@ -116,7 +116,7 @@
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
     <!-- SortableJS for drag & drop in bracket -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>
 
     @include('partials.mat-updates-listener', [
         'toernooi' => $toernooi,

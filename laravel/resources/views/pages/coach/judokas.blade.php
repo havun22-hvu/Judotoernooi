@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $club->naam }} - Judoka's</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
+    <style @nonce>
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }

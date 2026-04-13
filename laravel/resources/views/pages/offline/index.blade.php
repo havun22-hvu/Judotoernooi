@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $toernooi->naam }} - Offline Server</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+    <script src="https://cdn.tailwindcss.com" @nonce></script>
+    <style @nonce>
         /* Fallback als CDN niet beschikbaar (offline!) */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f3f4f6; }
     </style>
@@ -172,6 +172,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js" integrity="sha384-WPtu0YHhJ3arcykfnv1JgUffWDSKRnqnDeTpJUbOc2os2moEmLkIdaeR0trPN4be" crossorigin="anonymous" defer @nonce></script>
 </body>
 </html>

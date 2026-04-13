@@ -6,7 +6,7 @@
     <title>{{ __('Coach Kaart Activeren') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
-    <style>
+    <style @nonce>
         body {
             -webkit-user-select: none;
             user-select: none;
@@ -185,7 +185,7 @@
         @endif
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" integrity="sha384-jzwsV9ieM/KUDMeo+d8dc+jm0GEl7ywPNwg10alB5BodVuC/Kx9RpEnyrl2Om9zH" crossorigin="anonymous" @nonce></script>
     <script @nonce>
         let cropper = null;
         let fotoSelected = false;

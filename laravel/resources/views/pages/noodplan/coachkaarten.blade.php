@@ -3,7 +3,7 @@
 @section('title', isset($club) ? __('Coachkaarten') . " - {$club->naam}" : __('Coachkaarten'))
 
 @push('styles')
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" @nonce></script>
 @endpush
 
 @section('content')
@@ -17,7 +17,7 @@
             </div>
             @if($kaart->qr_code)
             <div class="qr-placeholder">
-                <canvas id="qr-coach-{{ $kaart->id }}" width="100" height="100"></canvas>
+                <div id="qr-coach-{{ $kaart->id }}" style="width:100px;height:100px;"></div>
             </div>
             @else
             <div class="qr-placeholder">
@@ -77,9 +77,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     @foreach($coachkaarten as $kaart)
     @if($kaart->qr_code)
-    QRCode.toCanvas(document.getElementById('qr-coach-{{ $kaart->id }}'), '{{ route('coach-kaart.scan', $kaart->qr_code) }}', {
+    new QRCode(document.getElementById('qr-coach-{{ $kaart->id }}'), {
+        text: '{{ route('coach-kaart.scan', $kaart->qr_code) }}',
         width: 100,
-        margin: 1
+        height: 100
     });
     @endif
     @endforeach

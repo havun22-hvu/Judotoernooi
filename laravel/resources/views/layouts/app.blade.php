@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#1e40af">
     @stack('seo')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
+    <style @nonce>
         /* Verberg spinner pijltjes bij number inputs */
         input[type="number"] {
             -moz-appearance: textfield;

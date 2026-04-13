@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('PIN instellen') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
+    <style @nonce>
         .pin-dot { transition: background-color 0.15s ease; }
         .pin-dot.filled { background-color: #2563eb; }
         .numpad-btn {

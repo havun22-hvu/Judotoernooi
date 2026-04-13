@@ -214,7 +214,7 @@
         </div>
     </form>
 
-<style>
+<style @nonce>
 /* Sleep knoppen - professioneel, neutraal */
 .kolom-chip {
     user-select: none;

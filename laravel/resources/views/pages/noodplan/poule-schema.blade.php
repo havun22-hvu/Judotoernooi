@@ -3,7 +3,7 @@
 @section('title', __('Poule Schema') . ' - ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse)
 
 @push('styles')
-<style>
+<style @nonce>
     @media print {
         @page {
             size: A4 landscape;

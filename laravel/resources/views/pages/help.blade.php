@@ -897,7 +897,7 @@ function helpPage() {
     }
 }
 </script>
-<style>
+<style @nonce>
 .help-section {
     scroll-margin-top: 5rem;
 }

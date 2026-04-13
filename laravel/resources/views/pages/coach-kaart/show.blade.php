@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-title" content="COACH {{ $coachKaart->club->naam }}">
     <title>COACH - {{ $coachKaart->club->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" @nonce></script>
+    <style @nonce>
         @media print {
             .no-print { display: none !important; }
             body { padding: 0; background: white; }
@@ -70,7 +70,7 @@
         {{-- QR CODE - only on bound device, refreshes every 4 minutes --}}
         @if($isCorrectDevice)
         <div class="p-4 flex flex-col items-center bg-white">
-            <canvas id="qr-coach-{{ $coachKaart->id }}" width="208" height="208"></canvas>
+            <div id="qr-coach-{{ $coachKaart->id }}" style="width:208px;height:208px;"></div>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ $coachKaart->qr_code }}</p>
             <p id="qr-timer" class="text-xs text-gray-400 mt-1"></p>
         </div>
@@ -161,16 +161,16 @@
                 return;
             }
 
-            const canvas = document.getElementById('qr-coach-{{ $coachKaart->id }}');
-            if (canvas) {
+            const el = document.getElementById('qr-coach-{{ $coachKaart->id }}');
+            if (el) {
                 const url = await generateTimedUrl();
-                // Clear canvas first
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Clear element first
+                el.innerHTML = '';
 
-                QRCode.toCanvas(canvas, url, {
+                new QRCode(el, {
+                    text: url,
                     width: 208,
-                    margin: 1
+                    height: 208
                 });
                 console.log('QR generated with timestamp:', qrTimestamp);
                 startTimer();

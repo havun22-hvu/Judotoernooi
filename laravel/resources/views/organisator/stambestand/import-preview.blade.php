@@ -180,7 +180,7 @@
         </div>
     </form>
 
-<style>
+<style @nonce>
 .kolom-chip {
     user-select: none;
     transition: all 0.15s;

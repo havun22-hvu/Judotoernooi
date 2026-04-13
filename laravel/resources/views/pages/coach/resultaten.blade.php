@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $club->naam }} - {{ __('Resultaten') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <style>
+    <style @nonce>
         @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none !important; }

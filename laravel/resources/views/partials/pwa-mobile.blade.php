@@ -133,7 +133,7 @@
     </div>
 </div>
 
-<style>
+<style @nonce>
     .safe-area-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
     .safe-area-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
 </style>

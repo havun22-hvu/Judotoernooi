@@ -3,7 +3,7 @@
 @section('title', __('Poule-indeling') . ($blok ? ' ' . __('Blok') . " {$blok->nummer}" : ''))
 
 @push('styles')
-<style>
+<style @nonce>
     @media print {
         .mat-page.print-exclude { display: none !important; }
         .mat-page:not(.print-exclude) + .mat-page:not(.print-exclude) { page-break-before: always; }

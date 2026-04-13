@@ -1,4 +1,4 @@
-<style>
+<style @nonce>
     /* Touch: block text selection on entire mat interface */
     #mat-interface {
         -webkit-user-select: none;

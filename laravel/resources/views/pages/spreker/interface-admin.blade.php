@@ -3,7 +3,7 @@
 @section('title', __('Spreker Interface'))
 
 @push('styles')
-<style>
+<style @nonce>
     [x-cloak] { display: none !important; }
 </style>
 @endpush

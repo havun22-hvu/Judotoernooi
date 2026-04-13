@@ -3,7 +3,7 @@
 @section('title', $titel)
 
 @push('styles')
-<style>
+<style @nonce>
     @media print {
         .print-container {
             max-width: none !important;

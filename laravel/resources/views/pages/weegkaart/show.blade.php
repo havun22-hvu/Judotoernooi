@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Weegkaart - {{ $judoka->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous" @nonce></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" @nonce></script>
+    <style @nonce>
         [x-cloak] { display: none !important; }
         @media print {
             .no-print { display: none !important; }
@@ -182,7 +182,7 @@
 
         {{-- QR CODE --}}
         <div class="p-4 flex flex-col items-center bg-white">
-            <canvas id="qr-weegkaart-{{ $judoka->id }}" width="208" height="208"></canvas>
+            <div id="qr-weegkaart-{{ $judoka->id }}" style="width:208px;height:208px;"></div>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</p>
         </div>
 
@@ -230,13 +230,13 @@
                 return;
             }
 
-            const canvas = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
-            if (canvas) {
-                QRCode.toCanvas(canvas, '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+            const el = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
+            if (el) {
+                el.innerHTML = '';
+                new QRCode(el, {
+                    text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
                     width: 208,
-                    margin: 1
-                }, function(error) {
-                    if (error) console.error('QR generation error:', error);
+                    height: 208
                 });
                 qrGenerated = true;
             }

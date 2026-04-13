@@ -68,7 +68,7 @@
     }
     </script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <style>
+    <style @nonce>
         [x-cloak] { display: none !important; }
         /* Touch-friendly star buttons */
         .favorite-star { cursor: pointer; transition: all 0.2s; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }

@@ -312,7 +312,7 @@
     @endif {{-- Einde van @if(!$isGespeeld) @else --}}
 </div>
 
-<style>
+<style @nonce>
 @media print {
     /* Hide non-printable elements */
     nav, button, a[href], form, .no-print {

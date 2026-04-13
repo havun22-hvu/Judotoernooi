@@ -42,7 +42,7 @@
         </div>
     </div>
 </div>
-<style>
+<style @nonce>
     @keyframes pulse-warning {
         0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
         50% { transform: scale(1.02); box-shadow: 0 0 30px 10px rgba(234, 88, 12, 0.4); }

@@ -152,7 +152,7 @@
      class="fixed inset-0 bg-black/50 z-40 hidden"
      onclick="toggleChat()"></div>
 
-<style>
+<style @nonce>
     .recipient-btn {
         background-color: white;
         border-color: #d1d5db;
