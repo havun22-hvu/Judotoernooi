@@ -182,7 +182,7 @@
 
         {{-- QR CODE --}}
         <div class="p-4 flex flex-col items-center bg-white">
-            <div id="qr-weegkaart-{{ $judoka->id }}" style="width:208px;height:208px;"></div>
+            <div id="qr-weegkaart-{{ $judoka->id }}" class="w-[208px] h-[208px]"></div>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</p>
         </div>
 

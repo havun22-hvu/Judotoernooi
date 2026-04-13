@@ -404,7 +404,7 @@
                      :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
                      @click="lightbox = null; zoomed = false"
                      @keydown.escape.window="lightbox = null; zoomed = false"
-                     style="display:none">
+                     x-cloak>
                     <img :src="lightbox"
                          :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl'"
                          @click.stop="zoomed = !zoomed">

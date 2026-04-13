@@ -63,9 +63,8 @@
     $rondeIdx = $rondeIdx ?? 99;
 @endphp
 
-<div class="absolute w-32 bracket-potje"
+<div class="absolute w-32 bracket-potje top-[{{ $topPos }}px]"
      id="potje-{{ $wed['id'] }}"
-     style="top: {{ $topPos }}px;"
      data-wedstrijd-id="{{ $wed['id'] }}"
      data-poule-id="{{ $pouleId }}"
      ondblclick="window.dblClickBracket({{ $wed['id'] }}, {{ $pouleId }})">

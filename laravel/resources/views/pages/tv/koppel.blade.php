@@ -81,6 +81,13 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* State visibility */
+        .tv-hidden { display: none; }
+        .tv-linked-status { font-size: clamp(24px, 4vh, 48px); font-weight: bold; color: #22C55E; }
+        .tv-expired-status { font-size: clamp(20px, 3vh, 36px); color: #EF4444; }
+        .tv-mt-2vh { margin-top: 2vh; }
+        .tv-link { color: #3B82F6; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -97,15 +104,15 @@
             <p class="countdown" id="countdown"></p>
         </div>
 
-        <div id="state-linked" style="display: none;">
-            <p class="status" style="font-size: clamp(24px, 4vh, 48px); font-weight: bold; color: #22C55E;">TV Gekoppeld!</p>
-            <p class="instruction" style="margin-top: 2vh;">Scorebord wordt geladen...</p>
+        <div id="state-linked" class="tv-hidden">
+            <p class="status tv-linked-status">TV Gekoppeld!</p>
+            <p class="instruction tv-mt-2vh">Scorebord wordt geladen...</p>
         </div>
 
-        <div id="state-expired" style="display: none;">
-            <p class="status" style="font-size: clamp(20px, 3vh, 36px); color: #EF4444;">Code verlopen</p>
-            <p class="instruction" style="margin-top: 2vh;">
-                <a href="{{ route('tv.koppel') }}" style="color: #3B82F6; text-decoration: underline;">Klik hier voor een nieuwe code</a>
+        <div id="state-expired" class="tv-hidden">
+            <p class="status tv-expired-status">Code verlopen</p>
+            <p class="instruction tv-mt-2vh">
+                <a href="{{ route('tv.koppel') }}" class="tv-link">Klik hier voor een nieuwe code</a>
             </p>
         </div>
     </div>

@@ -48,7 +48,7 @@ class SecurityHeaders
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'none'",
                 "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://unpkg.com https://js.pusher.com https://www.gstatic.com",
-                "style-src 'self' 'nonce-{$nonce}' 'unsafe-inline'",
+                "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
                 "connect-src 'self' wss://*.pusher.com https://nominatim.openstreetmap.org https://www.gstatic.com",

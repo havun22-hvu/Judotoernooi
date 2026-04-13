@@ -235,7 +235,7 @@
                 <div class="flex-1">
                     <div class="bg-gray-200 rounded-full h-4 overflow-hidden">
                         <div class="bg-green-500 h-full transition-all duration-500"
-                             style="width: {{ $statistieken['voltooiings_percentage'] }}%"></div>
+                             class="w-[{{ $statistieken['voltooiings_percentage'] }}%]"></div>
                     </div>
                 </div>
                 <div class="text-right">

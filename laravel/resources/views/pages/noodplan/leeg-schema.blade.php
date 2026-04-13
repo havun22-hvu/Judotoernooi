@@ -125,10 +125,10 @@
     <table class="schema-table text-xs">
         <thead>
             <tr class="header-row">
-                <th class="px-1 py-1 text-center" style="width: 24px;">{{ __('Nr') }}</th>
+                <th class="px-1 py-1 text-center w-6">{{ __('Nr') }}</th>
                 <th class="px-2 py-1 text-left naam-cel">{{ __('Naam') }}</th>
                 @foreach($schema as $idx => $wedstrijd)
-                <th class="py-1 text-center" colspan="2" style="min-width: 36px;">
+                <th class="py-1 text-center min-w-[36px]" colspan="2">
                     <div class="font-bold">{{ $idx + 1 }}</div>
                     <div class="sub-header">W &nbsp; J</div>
                 </th>

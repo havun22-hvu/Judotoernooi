@@ -24,7 +24,7 @@
     <div class="mt-4 flex items-center space-x-4">
         <div class="flex-1 bg-gray-100 rounded-full h-2 max-w-md">
             <div class="h-2 rounded-full {{ $toernooi->bezettings_percentage >= 100 ? 'bg-red-500' : 'bg-blue-500' }}"
-                 style="width: {{ min($toernooi->bezettings_percentage, 100) }}%"></div>
+                 class="w-[{{ min($toernooi->bezettings_percentage, 100) }}%]"></div>
         </div>
         <span class="text-sm text-gray-500">
             {{ $statistieken['totaal_judokas'] }} / {{ $toernooi->max_judokas }} ({{ $toernooi->bezettings_percentage }}%)

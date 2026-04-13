@@ -70,7 +70,7 @@
         {{-- QR CODE - only on bound device, refreshes every 4 minutes --}}
         @if($isCorrectDevice)
         <div class="p-4 flex flex-col items-center bg-white">
-            <div id="qr-coach-{{ $coachKaart->id }}" style="width:208px;height:208px;"></div>
+            <div id="qr-coach-{{ $coachKaart->id }}" class="w-[208px] h-[208px]"></div>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ $coachKaart->qr_code }}</p>
             <p id="qr-timer" class="text-xs text-gray-400 mt-1"></p>
         </div>

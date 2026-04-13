@@ -587,7 +587,7 @@
 </div>{{-- end x-data --}}
 
 <!-- Hidden form for delete -->
-<form id="delete-form" method="POST" style="display:none;">
+<form id="delete-form" method="POST" class="hidden">
     @csrf
     @method('DELETE')
     <input type="hidden" name="bewaar_presets" id="bewaar-presets" value="0">

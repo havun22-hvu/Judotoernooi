@@ -3,7 +3,7 @@
 <!-- Main container -->
 <div class="flex flex-col h-full">
     <!-- TOP: Scanner area (45% height) -->
-    <div class="bg-blue-800/50 rounded-lg p-3 mb-2 flex flex-col" style="height: 45%;">
+    <div class="bg-blue-800/50 rounded-lg p-3 mb-2 flex flex-col h-[45%]">
         <!-- Scanner area -->
         <div class="flex-1 flex items-center justify-center">
             <!-- Scan button (when not scanning) -->
@@ -14,8 +14,8 @@
             </button>
 
             <!-- Scanner (when scanning) -->
-            <div id="scanner-container" class="text-center w-full" style="display: none;">
-                <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
+            <div id="scanner-container" class="text-center w-full hidden">
+                <div id="qr-reader" class="w-full max-w-[300px] min-h-[200px] mx-auto"></div>
                 <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">
                     {{ __('Stop') }}
                 </button>
@@ -47,7 +47,7 @@
     </div>
 
     <!-- OVERLAY: Gewicht invoer (over HELE scherm, gecentreerd) -->
-    <div id="judoka-section" class="hidden fixed inset-0 z-50 bg-black/80" style="padding-top: env(safe-area-inset-top);">
+    <div id="judoka-section" class="hidden fixed inset-0 z-50 bg-black/80 pt-[env(safe-area-inset-top)]">
         <div class="h-full flex items-center justify-center p-3">
             <div class="bg-white rounded-2xl w-full max-w-xs p-3 shadow-2xl">
                 <!-- Header met sluiten knop -->
@@ -146,8 +146,8 @@ setInterval(updateClock, 1000);
 async function startScanner() {
     if (scannerActive) return;
 
-    document.getElementById('scan-button').style.display = 'none';
-    document.getElementById('scanner-container').style.display = 'block';
+    document.getElementById('scan-button').classList.add('hidden');
+    document.getElementById('scanner-container').classList.remove('hidden');
 
     scanner = new Html5Qrcode("qr-reader");
 
@@ -172,8 +172,8 @@ async function startScanner() {
             </div>
         `;
         setTimeout(() => {
-            document.getElementById('scanner-container').style.display = 'none';
-            document.getElementById('scan-button').style.display = 'flex';
+            document.getElementById('scanner-container').classList.add('hidden');
+            document.getElementById('scan-button').classList.remove('hidden');
         }, 2000);
     }
 }
@@ -191,8 +191,8 @@ async function stopScanner() {
     scannerActive = false;
     scanner = null;
 
-    document.getElementById('scanner-container').style.display = 'none';
-    document.getElementById('scan-button').style.display = 'flex';
+    document.getElementById('scanner-container').classList.add('hidden');
+    document.getElementById('scan-button').classList.remove('hidden');
 }
 
 // Handle successful scan (with debounce to prevent double processing)

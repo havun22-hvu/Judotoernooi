@@ -84,7 +84,7 @@
     @php
         $totaalProblemen = $teWeinigjudokas->count() + $teVeelJudokas->count() + $problematischeGewichtsPoules->count();
     @endphp
-    <div id="problematische-poules-container" class="{{ $totaalProblemen > 0 ? '' : 'hidden' }}" style="width: fit-content;">
+    <div id="problematische-poules-container" class="{{ $totaalProblemen > 0 ? '' : 'hidden' }} w-fit">
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
         <h3 class="font-bold text-red-800 mb-2">{{ __('Problematische poules') }} (<span id="problematische-count">{{ $totaalProblemen }}</span>)</h3>
 
@@ -1843,7 +1843,7 @@ function closeZoekMatchModal() {
 
 <!-- Zoek Match Modal (draggable) -->
 <div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50" onclick="if(event.target === this) closeZoekMatchModal()">
-    <div id="zoek-match-dialog" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div id="zoek-match-dialog" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <div class="flex justify-between items-center px-4 py-3 border-b bg-blue-700 text-white rounded-t-lg cursor-move" id="zoek-match-header">
             <h3 class="font-bold text-lg select-none">{{ __('Zoek match (wedstrijddag)') }}</h3>
             <button onclick="closeZoekMatchModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>

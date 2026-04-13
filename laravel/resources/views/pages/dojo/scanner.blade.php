@@ -51,9 +51,9 @@
     </div>
 
     <!-- TAB 1: Scanner -->
-    <main id="content-scanner" class="p-3 flex flex-col relative" style="height: calc(100vh - 110px);">
+    <main id="content-scanner" class="p-3 flex flex-col relative h-[calc(100vh-110px)]">
         <!-- TOP HALF: Scanner area (fixed height 45%) -->
-        <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%;">
+        <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col h-[45%]">
             <div class="flex-1 flex items-center justify-center">
                 <button id="scan-button" onclick="startScanner()"
                         class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
@@ -61,8 +61,8 @@
                     <span class="font-bold text-sm">{{ __('Scan') }}</span>
                 </button>
 
-                <div id="scanner-container" class="text-center w-full" style="display: none;">
-                    <div id="reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
+                <div id="scanner-container" class="text-center w-full hidden">
+                    <div id="reader" class="w-full max-w-[300px] min-h-[200px] mx-auto"></div>
                     <button onclick="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
                         {{ __('Stop') }}
                     </button>
@@ -98,7 +98,7 @@
     </main>
 
     <!-- TAB 2: Overzicht -->
-    <main id="content-overzicht" class="hidden p-3" style="height: calc(100vh - 110px); overflow-y: auto;">
+    <main id="content-overzicht" class="hidden p-3 h-[calc(100vh-110px)] overflow-y-auto">
         <!-- Zoekbalk -->
         <div class="mb-3">
             <input type="text" id="club-search" placeholder="{{ __('Zoek budoschool...') }}"
@@ -313,8 +313,8 @@
         async function startScanner() {
             if (scannerActive) return;
 
-            document.getElementById('scan-button').style.display = 'none';
-            document.getElementById('scanner-container').style.display = 'block';
+            document.getElementById('scan-button').classList.add('hidden');
+            document.getElementById('scanner-container').classList.remove('hidden');
 
             html5QrCode = new Html5Qrcode("reader");
 
@@ -335,8 +335,8 @@
                     </div>
                 `;
                 setTimeout(() => {
-                    document.getElementById('scanner-container').style.display = 'none';
-                    document.getElementById('scan-button').style.display = 'flex';
+                    document.getElementById('scanner-container').classList.add('hidden');
+                    document.getElementById('scan-button').classList.remove('hidden');
                 }, 2000);
             }
         }
@@ -346,8 +346,8 @@
             try { await html5QrCode.stop(); } catch (err) {}
             scannerActive = false;
             html5QrCode = null;
-            document.getElementById('scanner-container').style.display = 'none';
-            document.getElementById('scan-button').style.display = 'flex';
+            document.getElementById('scanner-container').classList.add('hidden');
+            document.getElementById('scan-button').classList.remove('hidden');
         }
 
         async function onScanSuccess(decodedText) {

@@ -112,6 +112,87 @@ tr:hover { background: #f9fafb; }
     .schema-place { background: #fef9c3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .schema-title-row td { background: #1f2937 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Layout helpers */
+.np-flex-row { display: flex; gap: 8px; align-items: center; }
+.np-hidden { display: none; }
+.np-tab-noodplan { background: #fef3c7; color: #92400e; font-weight: 600; }
+.np-ml-12 { margin-left: 12px; }
+
+/* Schema helpers */
+.np-card-mb { margin-bottom: 20px; overflow-x: auto; }
+.np-flex-between { display: flex; justify-content: space-between; }
+.np-text-left { text-align: left; }
+.np-header-num { min-width: 48px; text-align: center; }
+.np-bold { font-weight: bold; }
+.np-club-hint { color: #999; font-size: 10px; }
+.np-legend { padding: 8px 12px; font-size: 10px; color: #666; }
+
+/* Score modal helpers */
+.np-modal-hint { margin-bottom: 12px; font-size: 13px; color: #6b7280; }
+.np-label-wit { color: #1e3a5f; }
+.np-label-blauw { color: #2563eb; }
+.np-score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.np-btn-cancel { background: #e5e7eb; }
+
+/* Noodplan section helpers */
+.np-warning-card { border: 2px solid #f59e0b; background: #fffbeb; }
+.np-warning-body { display: flex; gap: 12px; align-items: flex-start; }
+.np-warning-icon { font-size: 24px; }
+.np-warning-title { color: #92400e; }
+.np-warning-list { margin-top: 6px; font-size: 13px; color: #78350f; list-style: disc; padding-left: 20px; }
+
+/* Vrijwilligers helpers */
+.np-rol-header { color: white; }
+.np-rol-count { opacity: 0.7; font-size: 13px; }
+.np-code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+.np-text-muted-sm { margin-bottom: 8px; }
+.np-word-break { word-break: break-all; }
+
+/* Network config helpers */
+.np-net-card { border: 2px solid #1e3a5f; }
+.np-net-header { background: #1e3a5f; color: white; }
+.np-net-box-blue { background: #dbeafe; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+.np-net-hint-blue { font-size: 13px; color: #1e40af; margin-top: 4px; }
+.np-net-box-orange { background: #ffedd5; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+.np-net-hint-orange { font-size: 13px; color: #9a3412; margin-top: 4px; }
+.np-table-auto { width: auto; }
+.np-td-pad { padding-right: 16px; }
+.np-code-blue { background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 16px; }
+.np-code-orange { background: #ffedd5; padding: 4px 8px; border-radius: 4px; font-size: 16px; }
+.np-net-box-green { margin-top: 16px; padding: 12px; background: #d1fae5; border-radius: 8px; }
+.np-table-auto-mt { width: auto; margin-top: 8px; }
+.np-code-green { font-size: 16px; background: #a7f3d0; padding: 4px 8px; border-radius: 4px; }
+
+/* Storingen tabel */
+.np-row-green { background: #d1fae5; }
+.np-row-yellow { background: #fef9c3; }
+.np-row-orange { background: #ffedd5; }
+.np-row-red { background: #fee2e2; }
+.np-text-muted { color: #666; }
+.np-small-muted { color: #666; }
+.np-header-amber { background: #f59e0b; color: white; }
+.np-header-red { background: #dc2626; color: white; }
+
+/* Step boxes */
+.np-step-yellow { background: #fef9c3; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+.np-step-red { background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+.np-step-purple { background: #ede9fe; padding: 12px; border-radius: 8px; }
+.np-step-list { margin-top: 8px; padding-left: 20px; font-size: 13px; }
+.np-code-block { display: block; background: #fecaca; padding: 8px; border-radius: 4px; margin-top: 4px; font-size: 12px; }
+.np-code-inline { background: #fecaca; padding: 2px 6px; border-radius: 4px; }
+
+/* Checklist */
+.np-checklist { list-style: none; padding: 0; font-size: 14px; }
+.np-checklist-item { padding: 6px 0; }
+
+/* Role colors */
+.np-rol-hoofdjury { background: #7c3aed; }
+.np-rol-mat { background: #2563eb; }
+.np-rol-weging { background: #059669; }
+.np-rol-spreker { background: #d97706; }
+.np-rol-dojo { background: #dc2626; }
+.np-rol-default { background: #6b7280; }
 </style>
 </head>
 <body>
@@ -121,9 +202,9 @@ tr:hover { background: #f9fafb; }
         <h1 id="header-title">Offline Pakket</h1>
         <div class="meta" id="header-meta"></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;" class="no-print">
+    <div class="np-flex-row no-print">
         <button class="btn btn-primary" onclick="window.print()">Print</button>
-        <button class="btn btn-success" id="upload-btn" onclick="uploadResultaten()" style="display:none">Upload Resultaten</button>
+        <button class="btn btn-success np-hidden" id="upload-btn" onclick="uploadResultaten()">Upload Resultaten</button>
     </div>
 </div>
 
@@ -136,7 +217,7 @@ tr:hover { background: #f9fafb; }
         <button class="tab" onclick="switchTab('schemas')">Wedstrijdschema's</button>
         <button class="tab" onclick="switchTab('scores')">Score Invoer</button>
         <button class="tab" onclick="switchTab('vrijwilligers')">Vrijwilligers</button>
-        <button class="tab" onclick="switchTab('noodplan')" style="background:#fef3c7;color:#92400e;font-weight:600">Noodplan</button>
+        <button class="tab np-tab-noodplan" onclick="switchTab('noodplan')">Noodplan</button>
     </div>
 
     <!-- WEEGLIJST -->
@@ -173,7 +254,7 @@ tr:hover { background: #f9fafb; }
             <select id="score-blok-filter" onchange="renderScores()">
                 <option value="">Alle blokken</option>
             </select>
-            <label style="margin-left:12px">Status:</label>
+            <label class="np-ml-12">Status:</label>
             <select id="score-status-filter" onchange="renderScores()">
                 <option value="">Alle</option>
                 <option value="open">Nog te spelen</option>
@@ -249,7 +330,7 @@ document.getElementById('header-meta').textContent = 'Datum: ' + DATA.toernooi.d
 function updateUploadBtn() {
     const btn = document.getElementById('upload-btn');
     const count = Object.keys(offlineScores).length;
-    btn.style.display = count > 0 ? '' : 'none';
+    if (count > 0) { btn.classList.remove('np-hidden'); } else { btn.classList.add('np-hidden'); }
     btn.textContent = 'Upload Resultaten (' + count + ')';
 }
 updateUploadBtn();
@@ -402,12 +483,12 @@ function renderSchemas() {
 
         const totalCols = 5 + (schema.length * 2);
 
-        html += '<div class="card" style="margin-bottom:20px;overflow-x:auto;">';
+        html += '<div class="card np-card-mb">';
         html += '<table class="schema-table"><thead>';
 
         // Title row
         html += '<tr class="schema-title-row"><td colspan="' + totalCols + '">';
-        html += '<div style="display:flex;justify-content:space-between">';
+        html += '<div class="np-flex-between">';
         html += '<span>' + esc(DATA.toernooi.naam) + '</span>';
         html += '<span>' + esc(DATA.toernooi.datum) + '</span>';
         html += '</div></td></tr>';
@@ -420,9 +501,9 @@ function renderSchemas() {
         html += '</td></tr>';
 
         // Header row
-        html += '<tr class="schema-header"><th class="schema-nr">Nr</th><th class="schema-naam" style="text-align:left">Naam</th>';
+        html += '<tr class="schema-header"><th class="schema-nr">Nr</th><th class="schema-naam np-text-left">Naam</th>';
         schema.forEach((_, idx) => {
-            html += '<th colspan="2" style="min-width:48px;text-align:center"><div style="font-weight:bold">' + (idx + 1) + '</div><div class="schema-sub">W &nbsp; J</div></th>';
+            html += '<th colspan="2" class="np-header-num"><div class="np-bold">' + (idx + 1) + '</div><div class="schema-sub">W &nbsp; J</div></th>';
         });
         html += '<th class="schema-total">WP</th><th class="schema-total">JP</th><th class="schema-place">Plts</th></tr></thead>';
 
@@ -433,7 +514,7 @@ function renderSchemas() {
             let totWP = 0, totJP = 0, hasPlayed = false;
 
             html += '<tr><td class="schema-nr">' + nr + '</td>';
-            html += '<td class="schema-naam">' + esc(judoka.naam) + ' <span style="color:#999;font-size:10px">(' + abbreviate(judoka.club_naam) + ')</span></td>';
+            html += '<td class="schema-naam">' + esc(judoka.naam) + ' <span class="np-club-hint">(' + abbreviate(judoka.club_naam) + ')</span></td>';
 
             schema.forEach((pair, wedIdx) => {
                 const witNr = pair[0], blauwNr = pair[1];
@@ -471,7 +552,7 @@ function renderSchemas() {
         });
 
         html += '</tbody></table>';
-        html += '<div style="padding:8px 12px;font-size:10px;color:#666"><strong>W</strong> = Wedstrijdpunten | <strong>J</strong> = Judopunten | Plts = handmatig</div>';
+        html += '<div class="np-legend"><strong>W</strong> = Wedstrijdpunten | <strong>J</strong> = Judopunten | Plts = handmatig</div>';
         html += '</div>';
     });
 
@@ -558,17 +639,17 @@ function openScoreModal(wedstrijdId) {
 
     document.getElementById('modal-title').textContent = 'Wedstrijd ' + (w.volgorde || w.id);
 
-    let html = '<div style="margin-bottom:12px;font-size:13px;color:#6b7280;">Kies de winnaar en vul de scores in:</div>';
+    let html = '<div class="np-modal-hint">Kies de winnaar en vul de scores in:</div>';
 
     html += '<button class="winner-btn" id="winner-' + w.judoka_wit_id + '" onclick="selectWinner(' + w.judoka_wit_id + ',' + w.id + ')">';
-    html += '<strong style="color:#1e3a5f">WIT:</strong> ' + esc(wit ? wit.naam : '?');
+    html += '<strong class="np-label-wit">WIT:</strong> ' + esc(wit ? wit.naam : '?');
     html += '</button>';
 
     html += '<button class="winner-btn" id="winner-' + w.judoka_blauw_id + '" onclick="selectWinner(' + w.judoka_blauw_id + ',' + w.id + ')">';
-    html += '<strong style="color:#2563eb">BLAUW:</strong> ' + esc(blauw ? blauw.naam : '?');
+    html += '<strong class="np-label-blauw">BLAUW:</strong> ' + esc(blauw ? blauw.naam : '?');
     html += '</button>';
 
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">';
+    html += '<div class="np-score-grid">';
     html += '<div class="form-group"><label>Score Wit</label><input type="number" id="modal-score-wit" min="0" value="' + (wd.score_wit || 0) + '"></div>';
     html += '<div class="form-group"><label>Score Blauw</label><input type="number" id="modal-score-blauw" min="0" value="' + (wd.score_blauw || 0) + '"></div>';
     html += '</div>';
@@ -577,7 +658,7 @@ function openScoreModal(wedstrijdId) {
     html += '<input type="hidden" id="modal-winnaar-id" value="' + (wd.winnaar_id || '') + '">';
 
     html += '<div class="actions">';
-    html += '<button class="btn" style="background:#e5e7eb" onclick="closeModal()">Annuleren</button>';
+    html += '<button class="btn np-btn-cancel" onclick="closeModal()">Annuleren</button>';
     html += '<button class="btn btn-success" onclick="saveScore()">Opslaan</button>';
     html += '</div>';
 
@@ -736,12 +817,12 @@ function renderVrijwilligers() {
     }
 
     // Warning about PWA reset
-    let html = '<div class="card" style="border: 2px solid #f59e0b; background: #fffbeb;">';
-    html += '<div class="card-body" style="display:flex;gap:12px;align-items:flex-start;">';
-    html += '<span style="font-size:24px">&#9888;&#65039;</span>';
+    let html = '<div class="card np-warning-card">';
+    html += '<div class="card-body np-warning-body">';
+    html += '<span class="np-warning-icon">&#9888;&#65039;</span>';
     html += '<div>';
-    html += '<strong style="color:#92400e">LET OP: Bij overschakeling naar lokale server / Deco WiFi</strong>';
-    html += '<ul style="margin-top:6px;font-size:13px;color:#78350f;list-style:disc;padding-left:20px;">';
+    html += '<strong class="np-warning-title">LET OP: Bij overschakeling naar lokale server / Deco WiFi</strong>';
+    html += '<ul class="np-warning-list">';
     html += '<li>Alle PWA\'s op tablets moeten <strong>gereset</strong> worden (cache wissen of opnieuw installeren)</li>';
     html += '<li>Nieuwe toegangs-URL\'s moeten worden uitgedeeld (de URL wijst dan naar het lokale IP i.p.v. cloud)</li>';
     html += '<li>De codes hieronder blijven wel geldig</li>';
@@ -751,7 +832,7 @@ function renderVrijwilligers() {
     // Group by role
     const rolVolgorde = ['hoofdjury', 'mat', 'weging', 'spreker', 'dojo'];
     const rolLabels = { hoofdjury: 'Hoofdjury', mat: 'Matten', weging: 'Weging', spreker: 'Spreker', dojo: 'Dojo' };
-    const rolKleuren = { hoofdjury: '#7c3aed', mat: '#2563eb', weging: '#059669', spreker: '#d97706', dojo: '#dc2626' };
+    const rolKlassen = { hoofdjury: 'np-rol-hoofdjury', mat: 'np-rol-mat', weging: 'np-rol-weging', spreker: 'np-rol-spreker', dojo: 'np-rol-dojo' };
 
     const perRol = {};
     rolVolgorde.forEach(r => perRol[r] = []);
@@ -765,10 +846,10 @@ function renderVrijwilligers() {
         const items = perRol[rol];
         if (items.length === 0) return;
 
-        const kleur = rolKleuren[rol] || '#6b7280';
+        const rolClass = rolKlassen[rol] || 'np-rol-default';
 
         html += '<div class="card">';
-        html += '<div class="card-header" style="background:' + kleur + ';color:white;">' + (rolLabels[rol] || rol) + ' <span style="opacity:0.7;font-size:13px">(' + items.length + ')</span></div>';
+        html += '<div class="card-header np-rol-header ' + rolClass + '">' + (rolLabels[rol] || rol) + ' <span class="np-rol-count">(' + items.length + ')</span></div>';
         html += '<div class="card-body"><table>';
         html += '<thead><tr><th>Functie</th><th>Naam</th><th>Telefoon</th><th>Code</th><th>Status</th></tr></thead>';
         html += '<tbody>';
@@ -778,7 +859,7 @@ function renderVrijwilligers() {
             html += '<td><strong>' + esc(t.label) + '</strong></td>';
             html += '<td>' + esc(t.naam || '-') + '</td>';
             html += '<td class="text-sm">' + esc(t.telefoon || '-') + '</td>';
-            html += '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px">' + esc(t.code) + '</code></td>';
+            html += '<td><code class="np-code">' + esc(t.code) + '</code></td>';
             html += '<td>';
             if (t.is_gebonden) {
                 html += '<span class="badge badge-green">' + esc(t.device_info || 'Gebonden') + '</span>';
@@ -796,11 +877,11 @@ function renderVrijwilligers() {
     html += '<div class="card">';
     html += '<div class="card-header">Toegangs-URL\'s (cloud)</div>';
     html += '<div class="card-body">';
-    html += '<p class="text-sm text-muted" style="margin-bottom:8px">Deze URL\'s werken alleen als de cloud server bereikbaar is. Bij lokale server moeten nieuwe URL\'s worden aangemaakt.</p>';
+    html += '<p class="text-sm text-muted np-text-muted-sm">Deze URL\'s werken alleen als de cloud server bereikbaar is. Bij lokale server moeten nieuwe URL\'s worden aangemaakt.</p>';
     html += '<table><thead><tr><th>Functie</th><th>URL</th></tr></thead><tbody>';
     toegangen.forEach(t => {
         html += '<tr><td><strong>' + esc(t.label) + '</strong> ' + esc(t.naam || '') + '</td>';
-        html += '<td class="text-sm" style="word-break:break-all">' + esc(t.url) + '</td></tr>';
+        html += '<td class="text-sm np-word-break">' + esc(t.url) + '</td></tr>';
     });
     html += '</tbody></table></div></div>';
 
@@ -815,58 +896,58 @@ function renderNoodplan() {
     let html = '';
 
     // Netwerk configuratie
-    html += '<div class="card" style="border:2px solid #1e3a5f">';
-    html += '<div class="card-header" style="background:#1e3a5f;color:white">Netwerk Configuratie</div>';
+    html += '<div class="card np-net-card">';
+    html += '<div class="card-header np-net-header">Netwerk Configuratie</div>';
     html += '<div class="card-body">';
 
     if (heeftRouter) {
-        html += '<div style="background:#dbeafe;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-net-box-blue">';
         html += '<strong>Configuratie: MET eigen router (TP-Link Deco)</strong>';
-        html += '<p style="font-size:13px;color:#1e40af;margin-top:4px">Tablets blijven altijd op dezelfde WiFi, alleen de bron verandert.</p>';
+        html += '<p class="np-net-hint-blue">Tablets blijven altijd op dezelfde WiFi, alleen de bron verandert.</p>';
         html += '</div>';
 
         if (t.eigen_router_ssid) {
-            html += '<table style="width:auto">';
-            html += '<tr><td style="padding-right:16px"><strong>Router SSID:</strong></td><td><code style="background:#dbeafe;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.eigen_router_ssid) + '</code></td></tr>';
+            html += '<table class="np-table-auto">';
+            html += '<tr><td class="np-td-pad"><strong>Router SSID:</strong></td><td><code class="np-code-blue">' + esc(t.eigen_router_ssid) + '</code></td></tr>';
             if (t.eigen_router_wachtwoord) {
-                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code style="background:#dbeafe;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.eigen_router_wachtwoord) + '</code></td></tr>';
+                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code class="np-code-blue">' + esc(t.eigen_router_wachtwoord) + '</code></td></tr>';
             }
             html += '</table>';
         }
     } else {
-        html += '<div style="background:#ffedd5;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-net-box-orange">';
         html += '<strong>Configuratie: ZONDER eigen router (mobiele hotspot als backup)</strong>';
-        html += '<p style="font-size:13px;color:#9a3412;margin-top:4px">Bij storing: tablets overzetten naar hotspot.</p>';
+        html += '<p class="np-net-hint-orange">Bij storing: tablets overzetten naar hotspot.</p>';
         html += '</div>';
 
         if (t.hotspot_ssid) {
-            html += '<table style="width:auto">';
-            html += '<tr><td style="padding-right:16px"><strong>Hotspot SSID:</strong></td><td><code style="background:#ffedd5;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.hotspot_ssid) + '</code></td></tr>';
+            html += '<table class="np-table-auto">';
+            html += '<tr><td class="np-td-pad"><strong>Hotspot SSID:</strong></td><td><code class="np-code-orange">' + esc(t.hotspot_ssid) + '</code></td></tr>';
             if (t.hotspot_wachtwoord) {
-                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code style="background:#ffedd5;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.hotspot_wachtwoord) + '</code></td></tr>';
+                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code class="np-code-orange">' + esc(t.hotspot_wachtwoord) + '</code></td></tr>';
             }
             html += '</table>';
         }
     }
 
     // Server IPs
-    html += '<div style="margin-top:16px;padding:12px;background:#d1fae5;border-radius:8px">';
+    html += '<div class="np-net-box-green">';
     html += '<strong>Lokale Server IP\'s</strong>';
-    html += '<table style="width:auto;margin-top:8px">';
-    html += '<tr><td style="padding-right:16px">Primary:</td><td><code style="font-size:16px;background:#a7f3d0;padding:4px 8px;border-radius:4px">' + (t.local_server_primary_ip ? 'http://' + esc(t.local_server_primary_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
-    html += '<tr><td>Standby:</td><td><code style="font-size:16px;background:#a7f3d0;padding:4px 8px;border-radius:4px">' + (t.local_server_standby_ip ? 'http://' + esc(t.local_server_standby_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
+    html += '<table class="np-table-auto-mt">';
+    html += '<tr><td class="np-td-pad">Primary:</td><td><code class="np-code-green">' + (t.local_server_primary_ip ? 'http://' + esc(t.local_server_primary_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
+    html += '<tr><td>Standby:</td><td><code class="np-code-green">' + (t.local_server_standby_ip ? 'http://' + esc(t.local_server_standby_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
     html += '</table></div>';
 
     html += '</div></div>';
 
     // Scenario tabel
     html += '<div class="card">';
-    html += '<div class="card-header" style="background:#f59e0b;color:white">Wat te doen bij storingen?</div>';
+    html += '<div class="card-header np-header-amber">Wat te doen bij storingen?</div>';
     html += '<div class="card-body"><table>';
     html += '<thead><tr><th>Situatie</th><th>Wat te doen</th><th>Tablets verbinden met</th></tr></thead>';
     html += '<tbody>';
 
-    html += '<tr style="background:#d1fae5"><td><strong>Normaal</strong></td><td>Niets, alles werkt</td>';
+    html += '<tr class="np-row-green"><td><strong>Normaal</strong></td><td>Niets, alles werkt</td>';
     if (heeftRouter) {
         html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Cloud</td>';
     } else {
@@ -874,45 +955,45 @@ function renderNoodplan() {
     }
     html += '</tr>';
 
-    html += '<tr style="background:#fef9c3"><td><strong>Internet weg</strong></td>';
+    html += '<tr class="np-row-yellow"><td><strong>Internet weg</strong></td>';
     html += '<td>1. Maak hotspot op mobiel<br>2. Verbind ' + (heeftRouter ? 'router' : 'server') + ' met hotspot</td>';
     if (heeftRouter) {
-        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Cloud via hotspot<br><small style="color:#666">(tablets hoeven niet te wisselen!)</small></td>';
+        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Cloud via hotspot<br><small class="np-small-muted">(tablets hoeven niet te wisselen!)</small></td>';
     } else {
         html += '<td><strong>Sporthal WiFi</strong> &rarr; Cloud via hotspot</td>';
     }
     html += '</tr>';
 
     if (!heeftRouter) {
-        html += '<tr style="background:#ffedd5"><td><strong>Sporthal WiFi weg</strong></td>';
+        html += '<tr class="np-row-orange"><td><strong>Sporthal WiFi weg</strong></td>';
         html += '<td>1. Maak hotspot op mobiel<br>2. Verbind server met hotspot<br>3. Zet tablets op hotspot</td>';
-        html += '<td><strong>' + esc(t.hotspot_ssid || 'Mobiele hotspot') + '</strong> &rarr; Cloud via hotspot<br><small style="color:#666">(alle tablets moeten wisselen!)</small></td>';
+        html += '<td><strong>' + esc(t.hotspot_ssid || 'Mobiele hotspot') + '</strong> &rarr; Cloud via hotspot<br><small class="np-small-muted">(alle tablets moeten wisselen!)</small></td>';
         html += '</tr>';
     }
 
-    html += '<tr style="background:#ffedd5"><td><strong>' + (heeftRouter ? 'Hotspot niet mogelijk' : 'Cloud server crash') + '</strong></td>';
+    html += '<tr class="np-row-orange"><td><strong>' + (heeftRouter ? 'Hotspot niet mogelijk' : 'Cloud server crash') + '</strong></td>';
     html += '<td>Start lokale server op laptop</td>';
     if (heeftRouter) {
-        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Lokale server<br><small style="color:#666">(tablets hoeven niet te wisselen, geen cloud sync)</small></td>';
+        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Lokale server<br><small class="np-small-muted">(tablets hoeven niet te wisselen, geen cloud sync)</small></td>';
     } else {
         html += '<td>Verbind alles met eigen router/hotspot &rarr; Lokale server</td>';
     }
     html += '</tr>';
 
-    html += '<tr style="background:#fee2e2"><td><strong>Noodgeval</strong></td>';
-    html += '<td>Print schema\'s uit dit bestand, verder op papier</td><td style="color:#666">N.v.t.</td></tr>';
+    html += '<tr class="np-row-red"><td><strong>Noodgeval</strong></td>';
+    html += '<td>Print schema\'s uit dit bestand, verder op papier</td><td class="np-text-muted">N.v.t.</td></tr>';
 
     html += '</tbody></table></div></div>';
 
     // Stap-voor-stap: lokale server starten
     html += '<div class="card">';
-    html += '<div class="card-header" style="background:#dc2626;color:white">STAP-VOOR-STAP: LOKALE SERVER STARTEN</div>';
+    html += '<div class="card-header np-header-red">STAP-VOOR-STAP: LOKALE SERVER STARTEN</div>';
     html += '<div class="card-body">';
 
     if (heeftRouter) {
-        html += '<div style="background:#fef9c3;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-step-yellow">';
         html += '<strong>Bij internet storing:</strong>';
-        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<ol class="np-step-list">';
         html += '<li>Zet <strong>5G hotspot</strong> aan op telefoon</li>';
         html += '<li>Verbind router met hotspot:<br>';
         html += '&nbsp;&nbsp;&bull; <strong>USB-tethering</strong> (makkelijkst): telefoon via USB aan router<br>';
@@ -920,40 +1001,40 @@ function renderNoodplan() {
         html += '<li>Klaar! Tablets blijven op dezelfde WiFi, internet loopt nu via 5G</li>';
         html += '</ol></div>';
 
-        html += '<div style="background:#fee2e2;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-step-red">';
         html += '<strong>Bij cloud server crash:</strong>';
-        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<ol class="np-step-list">';
         html += '<li>Start lokale server op laptop:<br>';
-        html += '<code style="display:block;background:#fecaca;padding:8px;border-radius:4px;margin-top:4px;font-size:12px">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
+        html += '<code class="np-code-block">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
         html += '<li>Tablets gaan automatisch naar lokale server (zelfde WiFi!)</li>';
         html += '<li><strong>PWA\'s moeten gereset worden!</strong> Cache wissen of opnieuw installeren</li>';
         html += '<li>Deel nieuwe toegangs-URL\'s uit (zie Vrijwilligers tab)</li>';
         html += '</ol></div>';
     } else {
-        html += '<div style="background:#fef9c3;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-step-yellow">';
         html += '<strong>Bij internet/WiFi storing:</strong>';
-        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<ol class="np-step-list">';
         html += '<li>Zet <strong>5G hotspot</strong> aan op telefoon</li>';
         html += '<li>Verbind alle tablets met de hotspot</li>';
         html += '<li>Klaar! Cloud server werkt gewoon via 5G</li>';
         html += '</ol></div>';
 
-        html += '<div style="background:#fee2e2;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<div class="np-step-red">';
         html += '<strong>Bij cloud server crash:</strong>';
-        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<ol class="np-step-list">';
         html += '<li>Start eigen router (bijv. Deco)</li>';
         html += '<li>Verbind laptop + tablets met router WiFi</li>';
         html += '<li>Start lokale server op laptop:<br>';
-        html += '<code style="display:block;background:#fecaca;padding:8px;border-radius:4px;margin-top:4px;font-size:12px">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
-        html += '<li>Open op tablets: <code style="background:#fecaca;padding:2px 6px;border-radius:4px">http://[laptop-ip]:8000</code></li>';
+        html += '<code class="np-code-block">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
+        html += '<li>Open op tablets: <code class="np-code-inline">http://[laptop-ip]:8000</code></li>';
         html += '<li><strong>PWA\'s moeten gereset worden!</strong> Cache wissen of opnieuw installeren</li>';
         html += '<li>Deel nieuwe toegangs-URL\'s uit (zie Vrijwilligers tab)</li>';
         html += '</ol></div>';
     }
 
-    html += '<div style="background:#ede9fe;padding:12px;border-radius:8px">';
+    html += '<div class="np-step-purple">';
     html += '<strong>Noodgeval: verder op papier</strong>';
-    html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+    html += '<ol class="np-step-list">';
     html += '<li>Gebruik de Wedstrijdschema\'s tab in dit bestand om schema\'s te printen</li>';
     html += '<li>Vul scores handmatig in op papier</li>';
     html += '<li>Na afloop: voer alles in via de cloud wanneer internet weer werkt, of gebruik de Score Invoer tab + Upload</li>';
@@ -965,12 +1046,12 @@ function renderNoodplan() {
     html += '<div class="card">';
     html += '<div class="card-header">Wat printen vanuit dit bestand?</div>';
     html += '<div class="card-body">';
-    html += '<ul style="list-style:none;padding:0;font-size:14px">';
-    html += '<li style="padding:6px 0">&#9744; <strong>Weeglijst</strong> tab &rarr; print per blok voor weging</li>';
-    html += '<li style="padding:6px 0">&#9744; <strong>Zaaloverzicht</strong> tab &rarr; print voor overzicht matten/poules</li>';
-    html += '<li style="padding:6px 0">&#9744; <strong>Wedstrijdschema\'s</strong> tab &rarr; print matrix schema\'s voor handmatig invullen</li>';
-    html += '<li style="padding:6px 0">&#9744; <strong>Vrijwilligers</strong> tab &rarr; print voor contactgegevens + codes</li>';
-    html += '<li style="padding:6px 0">&#9744; <strong>Deze pagina</strong> &rarr; print als noodplan instructies</li>';
+    html += '<ul class="np-checklist">';
+    html += '<li class="np-checklist-item">&#9744; <strong>Weeglijst</strong> tab &rarr; print per blok voor weging</li>';
+    html += '<li class="np-checklist-item">&#9744; <strong>Zaaloverzicht</strong> tab &rarr; print voor overzicht matten/poules</li>';
+    html += '<li class="np-checklist-item">&#9744; <strong>Wedstrijdschema\'s</strong> tab &rarr; print matrix schema\'s voor handmatig invullen</li>';
+    html += '<li class="np-checklist-item">&#9744; <strong>Vrijwilligers</strong> tab &rarr; print voor contactgegevens + codes</li>';
+    html += '<li class="np-checklist-item">&#9744; <strong>Deze pagina</strong> &rarr; print als noodplan instructies</li>';
     html += '</ul></div></div>';
 
     document.getElementById('noodplan-content').innerHTML = html;

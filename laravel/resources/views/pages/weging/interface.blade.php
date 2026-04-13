@@ -52,7 +52,7 @@
         </div>
     </header>
 
-    <main class="p-3 flex flex-col relative" style="height: calc(100vh - 60px);">
+    <main class="p-3 flex flex-col relative h-[calc(100vh-60px)]">
         @include('pages.weging.partials._content')
     </main>
 

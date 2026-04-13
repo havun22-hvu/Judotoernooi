@@ -43,7 +43,7 @@
     </div>
 
     {{-- Main container --}}
-    <div class="flex" style="height: {{ $totaleHoogte }}px;" id="bracket-{{ $pouleId }}-B"
+    <div class="flex h-[{{ $totaleHoogte }}px]" id="bracket-{{ $pouleId }}-B"
          data-start-ronde="{{ $startRonde }}" data-totaal-rondes="{{ $totaalNiveaus }}">
         @foreach($niveaus as $niveauIdx => $niveau)
             @foreach($niveau['sub_rondes'] as $subRondeIdx => $ronde)

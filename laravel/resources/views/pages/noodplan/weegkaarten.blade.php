@@ -239,14 +239,14 @@
             </div>
         </div>
         @else
-        <div class="weegkaart-blok" style="background: #fef3c7; justify-content: center;">
-            <span style="color: #92400e; font-size: 10px;">{{ __('Nog geen poule toegewezen') }}</span>
+        <div class="weegkaart-blok bg-amber-100 justify-center">
+            <span class="text-amber-800 text-[10px]">{{ __('Nog geen poule toegewezen') }}</span>
         </div>
         @endif
 
         {{-- QR code --}}
         <div class="weegkaart-qr">
-            <div id="qr-{{ $judoka->id }}" style="width:120px;height:120px;"></div>
+            <div id="qr-{{ $judoka->id }}" class="w-[120px] h-[120px]"></div>
             <div class="code">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</div>
         </div>
 

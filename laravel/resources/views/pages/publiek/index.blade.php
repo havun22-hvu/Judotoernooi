@@ -925,7 +925,7 @@
                 </div>
 
                 {{-- Scorebord display --}}
-                <div class="rounded-lg overflow-hidden shadow-lg" style="background:#111827;">
+                <div class="rounded-lg overflow-hidden shadow-lg bg-gray-900">
                     {{-- Header --}}
                     <div class="text-center py-2">
                         <div class="text-gray-500 text-xs" x-text="'Mat ' + scorebordMatNummer"></div>
@@ -938,7 +938,7 @@
                     </div>
 
                     {{-- Match content --}}
-                    <div id="sb-match" style="display:none;">
+                    <div id="sb-match" class="hidden">
                         {{-- Wit --}}
                         <div class="bg-gray-100 px-4 py-3">
                             <div class="flex items-center gap-2 mb-1">
@@ -959,8 +959,8 @@
                         </div>
 
                         {{-- Timer --}}
-                        <div class="text-center py-3" style="background:#111827;">
-                            <div class="h-1 bg-gray-700 rounded mx-4 mb-2 overflow-hidden"><div class="h-full bg-green-500 rounded transition-all" id="sb-progress" style="width:100%"></div></div>
+                        <div class="text-center py-3 bg-gray-900">
+                            <div class="h-1 bg-gray-700 rounded mx-4 mb-2 overflow-hidden"><div class="h-full bg-green-500 rounded transition-all w-full" id="sb-progress"></div></div>
                             <div class="text-red-500 font-black text-5xl font-mono tabular-nums" id="sb-timer">0:00</div>
                             <div class="hidden bg-yellow-500 text-black font-black text-xs px-3 py-0.5 rounded-full mt-1 inline-block" id="sb-gs-badge">GOLDEN SCORE</div>
                             {{-- Osaekomi --}}
@@ -975,7 +975,7 @@
                         </div>
 
                         {{-- Blauw --}}
-                        <div class="px-4 py-3" style="background:#1E3A8A;">
+                        <div class="px-4 py-3 bg-blue-900">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></span>
                                 <span class="font-black text-white text-lg uppercase truncate" id="sb-blauw-naam">BLAUW</span>
@@ -995,7 +995,7 @@
                     </div>
 
                     {{-- Winner overlay --}}
-                    <div id="sb-winner" class="hidden text-center py-8" style="background:rgba(0,0,0,0.9);">
+                    <div id="sb-winner" class="hidden text-center py-8 bg-black/90">
                         <div class="font-black text-3xl uppercase" id="sb-winner-name"></div>
                         <div class="text-yellow-400 font-black text-xl mt-1">WINNAAR</div>
                         <div class="text-gray-400 text-sm mt-1" id="sb-winner-type"></div>
@@ -1092,7 +1092,7 @@
     </footer>
 
     <!-- PWA Install Banner -->
-    <div id="installBanner" class="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50" style="display: none;">
+    <div id="installBanner" class="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50 hidden">
         <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="bg-white rounded-lg p-2">
@@ -1119,7 +1119,7 @@
     </div>
 
     <!-- iOS Install Instructions -->
-    <div id="iosInstall" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50" style="display: none;">
+    <div id="iosInstall" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50 hidden">
         <div class="max-w-xl mx-auto">
             <div class="flex justify-between items-start mb-3">
                 <p class="font-bold">Installeer op iPhone/iPad</p>
@@ -1680,14 +1680,14 @@
                 },
 
                 _sbShowMatch() {
-                    if (this._sbDom?.standby) this._sbDom.standby.style.display = 'none';
-                    if (this._sbDom?.match) this._sbDom.match.style.display = 'block';
+                    if (this._sbDom?.standby) this._sbDom.standby.classList.add('hidden');
+                    if (this._sbDom?.match) this._sbDom.match.classList.remove('hidden');
                     if (this._sbState) this._sbState.hasMatch = true;
                 },
 
                 _sbShowStandby() {
-                    if (this._sbDom?.standby) this._sbDom.standby.style.display = 'block';
-                    if (this._sbDom?.match) this._sbDom.match.style.display = 'none';
+                    if (this._sbDom?.standby) this._sbDom.standby.classList.remove('hidden');
+                    if (this._sbDom?.match) this._sbDom.match.classList.add('hidden');
                     if (this._sbDom?.winner) this._sbDom.winner.classList.add('hidden');
                     if (this._sbState) this._sbState.hasMatch = false;
                 },
@@ -1925,13 +1925,13 @@
         const isDismissed = localStorage.getItem('pwa_install_dismissed_{{ $toernooi->id }}');
 
         function showBanner(banner) {
-            banner.style.display = 'block';
+            banner.classList.remove('hidden');
             setTimeout(() => banner.classList.remove('translate-y-full'), 100);
         }
 
         function hideBanner(banner) {
             banner.classList.add('translate-y-full');
-            setTimeout(() => banner.style.display = 'none', 300);
+            setTimeout(() => banner.classList.add('hidden'), 300);
         }
 
         // Android/Chrome: beforeinstallprompt

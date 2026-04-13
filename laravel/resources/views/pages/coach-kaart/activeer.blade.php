@@ -129,7 +129,7 @@
 
                 {{-- Cropper container (hidden until image selected) --}}
                 <div id="cropper-container" class="hidden mb-3">
-                    <div class="bg-gray-900 rounded-lg overflow-hidden" style="max-height: 300px;">
+                    <div class="bg-gray-900 rounded-lg overflow-hidden max-h-[300px]">
                         <img id="crop-image" class="max-w-full">
                     </div>
                     <div class="flex justify-center gap-2 mt-2">

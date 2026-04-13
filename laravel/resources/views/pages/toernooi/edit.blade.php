@@ -936,7 +936,7 @@
                                 JBN 2026
                             </span>
                         </label>
-                        <label class="cursor-pointer" id="eigen-preset-radio-label" @if(!$eigenPresetNaam) style="display:none" @endif>
+                        <label class="cursor-pointer {{ !$eigenPresetNaam ? 'hidden' : '' }}" id="eigen-preset-radio-label">
                             <input type="radio" name="categorie_type" value="eigen"
                                    x-model="categorieType"
                                    @change="if($event.target.checked) loadEigenPreset()"
@@ -1616,7 +1616,7 @@
             function updateEigenPresetRadio(naam, activate = false) {
                 if (naam) {
                     eigenPresetNaamDisplay.textContent = naam;
-                    eigenPresetRadioLabel.style.display = '';
+                    eigenPresetRadioLabel.classList.remove('hidden');
                     if (activate) {
                         eigenPresetRadio.checked = true;
                         // Also update Alpine state
@@ -1626,7 +1626,7 @@
                         }
                     }
                 } else {
-                    eigenPresetRadioLabel.style.display = 'none';
+                    eigenPresetRadioLabel.classList.add('hidden');
                 }
                 updateJsonInput();
             }

@@ -40,7 +40,7 @@
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-3">
                         <div class="bg-blue-600 h-3 rounded-full transition-all"
-                             style="width: {{ min(100, ($stamJudoka->wimpel_punten_totaal / $volgende->punten) * 100) }}%"></div>
+                             class="w-[{{ min(100, ($stamJudoka->wimpel_punten_totaal / $volgende->punten) * 100) }}%]"></div>
                     </div>
                     <div class="text-xs text-gray-400 mt-1">
                         Nog {{ $volgende->punten - $stamJudoka->wimpel_punten_totaal }} punten

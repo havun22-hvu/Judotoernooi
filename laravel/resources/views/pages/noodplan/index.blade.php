@@ -420,18 +420,33 @@
     .poule-page.print-exclude { opacity: 0.5; }
     .poule-page { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px dashed #ccc; }
     .poule-page.landscape { page: landscape; }
+    /* Toolbar inline style replacements */
+    .np-separator { color: #666; }
+    .np-btn-link { background: none; border: none; cursor: pointer; font-size: 13px; }
+    .np-btn-link-blue { color: #2563eb; }
+    .np-btn-link-gray { color: #666; }
+    .np-counter { color: #666; font-size: 13px; }
+    .np-btn-print { padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+    /* Schema inline style replacements */
+    .np-flex-between { display: flex; justify-content: space-between; }
+    .np-flex-between-center { display: flex; justify-content: space-between; align-items: center; }
+    .np-text-left { text-align: left; }
+    .np-header-num { min-width: 48px; text-align: center; }
+    .np-num-bold { font-weight: bold; }
+    .np-club-hint { color: #999; font-size: 10px; }
+    .np-legend { margin-top: 6px; font-size: 10px; color: #666; }
 </style>
 </head><body>
 <div class="print-toolbar no-print">
     <div class="toolbar-row">
         <div class="toolbar-controls">
             <strong>LIVE BACKUP${blokLabel} - ${timestamp}</strong>
-            <span style="color:#666">|</span>
-            <button onclick="selectAll(true)" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;">Alles aan</button>
-            <button onclick="selectAll(false)" style="background:none;border:none;color:#666;cursor:pointer;font-size:13px;">Alles uit</button>
-            <span id="print-counter" style="color:#666;font-size:13px;">${totalPoules} van ${totalPoules} geselecteerd</span>
+            <span class="np-separator">|</span>
+            <button onclick="selectAll(true)" class="np-btn-link np-btn-link-blue">Alles aan</button>
+            <button onclick="selectAll(false)" class="np-btn-link np-btn-link-gray">Alles uit</button>
+            <span id="print-counter" class="np-counter">${totalPoules} van ${totalPoules} geselecteerd</span>
         </div>
-        <button onclick="window.print()" style="padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Print geselecteerde</button>
+        <button onclick="window.print()" class="np-btn-print">Print geselecteerde</button>
     </div>
 </div>
 <scr` + `ipt>
@@ -510,7 +525,7 @@ function abbreviateClub(name) {
                                 <thead>
                                     <tr class="title-row">
                                         <td colspan="${totalCols}">
-                                            <div style="display:flex;justify-content:space-between;">
+                                            <div class="np-flex-between">
                                                 <span>${data.toernooi_naam || 'Toernooi'}</span>
                                                 <span>${data.toernooi_datum || ''}</span>
                                             </div>
@@ -518,7 +533,7 @@ function abbreviateClub(name) {
                                     </tr>
                                     <tr class="info-row">
                                         <td colspan="${totalCols}">
-                                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <div class="np-flex-between-center">
                                                 <div class="poule-checkbox no-print">
                                                     <input type="checkbox" checked onchange="togglePoule(this)">
                                                     <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
@@ -529,10 +544,10 @@ function abbreviateClub(name) {
                                     </tr>
                                     <tr class="header-row">
                                         <th class="nr-cel">Nr</th>
-                                        <th class="naam-cel" style="text-align:left">Naam</th>`;
+                                        <th class="naam-cel np-text-left">Naam</th>`;
 
                         schema.forEach((_, idx) => {
-                            html += `<th colspan="2" style="min-width:48px;text-align:center"><div style="font-weight:bold">${idx + 1}</div><div class="sub-header">W &nbsp; J</div></th>`;
+                            html += `<th colspan="2" class="np-header-num"><div class="np-num-bold">${idx + 1}</div><div class="sub-header">W &nbsp; J</div></th>`;
                         });
 
                         html += `<th class="totaal-cel">WP</th><th class="totaal-cel">JP</th><th class="plts-cel">Plts</th></tr></thead><tbody>`;
@@ -541,8 +556,8 @@ function abbreviateClub(name) {
                             const judokaNr = idx + 1;
                             let totaalWP = 0, totaalJP = 0, heeftGespeeld = false;
 
-                            html += `<tr><td class="nr-cel" style="font-weight:bold">${judokaNr}</td>
-                                <td class="naam-cel">${judoka.naam || 'Onbekend'} <span style="color:#999;font-size:10px">(${abbreviateClub(judoka.club)})</span></td>`;
+                            html += `<tr><td class="nr-cel np-num-bold">${judokaNr}</td>
+                                <td class="naam-cel">${judoka.naam || 'Onbekend'} <span class="np-club-hint">(${abbreviateClub(judoka.club)})</span></td>`;
 
                             schema.forEach((schemaWed, wedIdx) => {
                                 const witNr = schemaWed[0];
@@ -579,7 +594,7 @@ function abbreviateClub(name) {
                         });
 
                         html += `</tbody></table>
-                            <div style="margin-top:6px;font-size:10px;color:#666"><strong>W</strong> = Wedstrijdpunten | <strong>J</strong> = Judopunten | Plts = handmatig</div>
+                            <div class="np-legend"><strong>W</strong> = Wedstrijdpunten | <strong>J</strong> = Judopunten | Plts = handmatig</div>
                         </div>`;
                     });
 

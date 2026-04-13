@@ -513,7 +513,7 @@
 
 <!-- Zoek Match Modal (draggable) -->
 <div id="zoek-match-modal" class="fixed inset-0 bg-black bg-opacity-30 hidden z-50 pointer-events-none">
-    <div id="zoek-match-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col absolute pointer-events-auto" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div id="zoek-match-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col absolute pointer-events-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <div id="zoek-match-modal-header" class="p-4 border-b flex justify-between items-center cursor-move select-none bg-gray-50 rounded-t-lg">
             <h2 class="text-lg font-bold text-gray-800">
                 Match voor: <span id="zoek-match-judoka-naam"></span>

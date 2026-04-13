@@ -67,7 +67,7 @@
     </div>
 
     <!-- TAB 1: UITSLAGEN -->
-    <div x-show="activeTab === 'uitslagen'" style="min-height: calc(100vh - 200px);">
+    <div x-show="activeTab === 'uitslagen'" class="min-h-[calc(100vh-200px)]">
         <div class="flex justify-end items-center mb-4 gap-2">
             <button
                 @click="toonGeschiedenis = !toonGeschiedenis"
@@ -280,7 +280,7 @@
     </div>
 
     <!-- TAB 2: OPROEPEN (Poules per blok per mat) -->
-    <div x-show="activeTab === 'oproepen'" style="min-height: calc(100vh - 200px);">
+    <div x-show="activeTab === 'oproepen'" class="min-h-[calc(100vh-200px)]">
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-blue-800 text-sm">
                 <span class="font-bold">📣 {{ __('Oproep hulp:') }}</span> {{ __("Gebruik deze lijst om judoka's naar de juiste mat te roepen.") }}
@@ -367,7 +367,7 @@
             @input.debounce.2000ms="autoSaveNotities()"
             :style="'font-size: ' + fontSize + 'px; line-height: 1.5; height: calc(100vh - 180px);'"
             class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words mb-16"
-            style="word-wrap: break-word; overflow-wrap: break-word;"
+            class="break-words [overflow-wrap:break-word]"
             :class="{ 'border-yellow-400': hasUnsavedChanges }"
             placeholder="{{ __('Typ hier je notities...') }}"
         ></textarea>

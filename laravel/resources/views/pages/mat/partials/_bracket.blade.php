@@ -39,7 +39,7 @@
     </div>
 
     {{-- Bracket container --}}
-    <div class="flex" style="height: {{ $totaleHoogte }}px;" id="bracket-{{ $pouleId }}-A"
+    <div class="flex h-[{{ $totaleHoogte }}px]" id="bracket-{{ $pouleId }}-A"
          data-start-ronde="{{ $startRonde }}" data-totaal-rondes="{{ $totaalRondes }}">
         @foreach($rondes as $rondeIdx => $ronde)
             <div class="relative flex-shrink-0 w-32">

@@ -308,9 +308,9 @@ function abbreviateClubName($name, $maxLength = 15) {
 
     <!-- Header boven tabel (selectie checkbox alleen op scherm) -->
     <div class="page-header">
-        <label class="no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
-            <span style="font-size: 12px; color: #666;">{{ __('Print dit schema') }}</span>
+        <label class="no-print cursor-pointer inline-flex items-center gap-2 mb-2">
+            <input type="checkbox" x-model="printInclude" checked class="w-[18px] h-[18px]">
+            <span class="text-xs text-gray-500">{{ __('Print dit schema') }}</span>
         </label>
         <div class="toernooi-titel">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d-m-Y') }}</div>
         <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
@@ -329,7 +329,7 @@ function abbreviateClubName($name, $maxLength = 15) {
                 <th class="px-1 py-1 text-center nr-cel">{{ __('Nr') }}</th>
                 <th class="px-2 py-1 text-left naam-cel">{{ __('Naam') }}</th>
                 @foreach($schema as $idx => $wedstrijd)
-                <th class="py-1 text-center" colspan="2" style="min-width: 36px;">
+                <th class="py-1 text-center min-w-[36px]" colspan="2">
                     <div class="font-bold">{{ $idx + 1 }}</div>
                     <div class="sub-header">W &nbsp; J</div>
                 </th>

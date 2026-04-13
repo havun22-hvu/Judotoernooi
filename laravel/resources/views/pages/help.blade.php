@@ -10,7 +10,7 @@
 @endpush
 
 @section('content')
-<div x-data="helpPage()" class="max-w-4xl mx-auto" style="min-width: 56rem;">
+<div x-data="helpPage()" class="max-w-4xl mx-auto min-w-[56rem]">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Help & Handleiding') }}</h1>

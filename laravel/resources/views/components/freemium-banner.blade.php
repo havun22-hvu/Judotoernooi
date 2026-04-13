@@ -20,7 +20,7 @@
                 {{-- Progress bar --}}
                 <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
                     <div class="h-2 rounded-full {{ $percentage >= 90 ? 'bg-red-500' : ($percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500') }}"
-                         style="width: {{ min($percentage, 100) }}%"></div>
+                         class="w-[{{ min($percentage, 100) }}%]"></div>
                 </div>
 
                 @if($percentage >= 80)

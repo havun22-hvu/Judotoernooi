@@ -17,7 +17,7 @@
             </div>
             @if($kaart->qr_code)
             <div class="qr-placeholder">
-                <div id="qr-coach-{{ $kaart->id }}" style="width:100px;height:100px;"></div>
+                <div id="qr-coach-{{ $kaart->id }}" class="w-[100px] h-[100px]"></div>
             </div>
             @else
             <div class="qr-placeholder">

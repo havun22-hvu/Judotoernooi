@@ -328,6 +328,14 @@
             font-weight: 600;
             margin-top: 4px;
         }
+
+        /* Spacer between names and timer */
+        .name-timer-spacer { display: flex; flex-direction: row; height: 0.5vh; }
+
+        /* Fullscreen overlay */
+        .fullscreen-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; cursor: pointer; align-items: center; justify-content: center; flex-direction: column; }
+        .fullscreen-overlay-title { font-size: clamp(24px,5vh,48px); font-weight: 800; color: #fff; margin-bottom: 2vh; }
+        .fullscreen-overlay-subtitle { font-size: clamp(16px,3vh,32px); color: #9CA3AF; }
     </style>
 </head>
 <body>
@@ -352,7 +360,7 @@
             </div>
 
             {{-- Spacer tussen namen en timer --}}
-            <div style="display:flex;flex-direction:row;height:0.5vh">
+            <div class="name-timer-spacer">
                 <div class="half-{{ $blauwRechts ? 'blauw' : 'wit' }}"></div>
                 <div class="half-{{ $blauwRechts ? 'wit' : 'blauw' }}"></div>
             </div>
@@ -431,10 +439,10 @@
         </div>
 
         {{-- Fullscreen overlay — shown on load if not already fullscreen --}}
-        <div id="fullscreen-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; cursor:pointer; align-items:center; justify-content:center; flex-direction:column;"
+        <div id="fullscreen-overlay" class="fullscreen-overlay"
              onclick="goFullscreen()">
-            <div style="font-size:clamp(24px,5vh,48px); font-weight:800; color:#fff; margin-bottom:2vh;">JudoToernooi</div>
-            <div style="font-size:clamp(16px,3vh,32px); color:#9CA3AF;">{{ __('Klik voor volledig scherm') }}</div>
+            <div class="fullscreen-overlay-title">JudoToernooi</div>
+            <div class="fullscreen-overlay-subtitle">{{ __('Klik voor volledig scherm') }}</div>
         </div>
 
         {{-- Winner overlay --}}

@@ -317,12 +317,12 @@
                 const warning = document.createElement('div');
                 warning.id = 'idle-warning';
                 warning.innerHTML = `
-                    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
-                        <div style="background:white;padding:24px;border-radius:8px;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">⚠️ {{ __('Sessie verloopt bijna') }}</h3>
-                            <p style="margin-bottom:16px;color:#374151;">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
+                    <div class="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center">
+                        <div class="bg-white p-6 rounded-lg max-w-[400px] text-center shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                            <h3 class="text-lg font-bold mb-3 text-red-700">⚠️ {{ __('Sessie verloopt bijna') }}</h3>
+                            <p class="mb-4 text-gray-700">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
                             <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
-                                    style="background:#2563eb;color:white;padding:10px 24px;border-radius:6px;border:none;cursor:pointer;font-weight:500;">
+                                    class="bg-blue-600 text-white px-6 py-2.5 rounded-md border-none cursor-pointer font-medium">
                                 {{ __('Actief blijven') }}
                             </button>
                         </div>
@@ -559,7 +559,7 @@
                 <h3 class="font-semibold text-sm">{{ __('QR Login Scanner') }}</h3>
                 <button onclick="closeQrScanner()" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
             </div>
-            <div id="qr-scan-reader" class="w-full" style="min-height: 280px;"></div>
+            <div id="qr-scan-reader" class="w-full min-h-[280px]"></div>
             <div class="px-4 py-3 text-center">
                 <p id="qr-scan-status" class="text-sm text-gray-600">{{ __('Richt de camera op de QR code op het inlogscherm') }}</p>
                 <p id="qr-scan-error" class="text-sm text-red-600 hidden mt-1"></p>
