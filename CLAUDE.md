@@ -85,6 +85,16 @@ cd D:\GitHub\JudoToernooi && git pull
 - Deploy: `cd /var/www/judotoernooi/repo-prod && git pull` (of `repo-staging`)
 - Laravel app: `/var/www/judotoernooi/repo-prod/laravel/` (symlinked als `/var/www/judotoernooi/laravel`)
 
+## De 5 Onschendbare Regels
+
+```
+1. NOOIT code schrijven zonder KB + kwaliteitsnormen te raadplegen
+2. NOOIT features/UI-elementen verwijderen zonder instructie
+3. NOOIT credentials/keys/env aanraken
+4. ALTIJD tests draaien voor én na wijzigingen (coverage >80%)
+5. ALTIJD toestemming vragen bij grote wijzigingen
+```
+
 ## Rules (ALWAYS follow)
 
 ### ⛔ NOOIT `php artisan test` OP STAGING/PRODUCTION
