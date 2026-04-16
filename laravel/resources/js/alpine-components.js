@@ -8,6 +8,10 @@
  * VP-18 — see HavunCore/docs/audit/verbeterplan-q2-2026.md
  */
 
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
 export function registerAlpineComponents(Alpine) {
     /**
      * Generic toggle — used for dropdowns, modals, expand/collapse.
@@ -381,6 +385,324 @@ export function registerAlpineComponents(Alpine) {
             } catch (e) {
                 this.isOffline = true;
             }
+        },
+    }));
+
+    /**
+     * Reverb WebSocket server status + controls (start/restart/stop).
+     * Reads data-status-url, data-start-url, data-restart-url, data-stop-url
+     * + data-labels (JSON with konStatusNietOphalen/foutBijStarten/foutBijHerstarten/foutBijStoppen).
+     * CSRF via standard meta tag.
+     */
+    Alpine.data('reverbStatus', () => ({
+        running: false,
+        loading: false,
+        local: false,
+        message: '',
+        urls: { status: '', start: '', restart: '', stop: '' },
+        labels: { konStatusNietOphalen: 'Status fetch failed', foutBijStarten: 'Start failed', foutBijHerstarten: 'Restart failed', foutBijStoppen: 'Stop failed' },
+        init() {
+            this.urls = {
+                status: this.$el.dataset.statusUrl || '',
+                start: this.$el.dataset.startUrl || '',
+                restart: this.$el.dataset.restartUrl || '',
+                stop: this.$el.dataset.stopUrl || '',
+            };
+            try { this.labels = { ...this.labels, ...JSON.parse(this.$el.dataset.labels || '{}') }; } catch (_) {}
+            this.checkStatus();
+        },
+        async checkStatus() {
+            try {
+                const res = await fetch(this.urls.status, { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                this.running = data.running;
+                this.local = data.local || false;
+            } catch (e) {
+                this.message = this.labels.konStatusNietOphalen;
+            }
+        },
+        async _postAction(url, failLabel) {
+            this.loading = true;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+                });
+                const data = await res.json();
+                this.message = data.message;
+                await this.checkStatus();
+            } catch (e) {
+                this.message = this.labels[failLabel];
+            }
+            this.loading = false;
+        },
+        start() { return this._postAction(this.urls.start, 'foutBijStarten'); },
+        restart() { return this._postAction(this.urls.restart, 'foutBijHerstarten'); },
+        stop() { return this._postAction(this.urls.stop, 'foutBijStoppen'); },
+    }));
+
+    /**
+     * WiFi + internet connection status — pings local-server IP + /ping every 30s.
+     * Reads data-local-server-ip from host.
+     */
+    Alpine.data('verbindingStatus', () => ({
+        wifiStatus: 'checking',
+        wifiLatency: null,
+        internetStatus: 'checking',
+        latency: null,
+        laatsteCheck: '-',
+        localServerIp: '',
+        interval: null,
+        init() {
+            this.localServerIp = this.$el.dataset.localServerIp || '';
+            this.checkVerbinding();
+            this.interval = setInterval(() => this.checkVerbinding(), 30000);
+        },
+        destroy() { if (this.interval) clearInterval(this.interval); },
+        async checkVerbinding() {
+            if (this.localServerIp) {
+                const wifiStart = Date.now();
+                try {
+                    await fetch(`http://${this.localServerIp}:8000/ping`, {
+                        method: 'GET', cache: 'no-store', mode: 'no-cors', signal: AbortSignal.timeout(3000),
+                    });
+                    this.wifiLatency = Date.now() - wifiStart;
+                    this.wifiStatus = 'connected';
+                } catch (e) {
+                    const elapsed = Date.now() - wifiStart;
+                    if (elapsed < 2900) {
+                        this.wifiLatency = elapsed;
+                        this.wifiStatus = 'connected';
+                    } else {
+                        this.wifiStatus = navigator.onLine ? 'no-server' : 'offline';
+                        this.wifiLatency = null;
+                    }
+                }
+            } else {
+                this.wifiStatus = navigator.onLine ? 'no-ip' : 'offline';
+                this.wifiLatency = null;
+            }
+            const startTime = Date.now();
+            try {
+                const response = await fetch('/ping', { method: 'GET', cache: 'no-store', signal: AbortSignal.timeout(5000) });
+                this.latency = Date.now() - startTime;
+                this.internetStatus = response.ok ? (this.latency > 2000 ? 'slow' : 'connected') : 'offline';
+            } catch (e) {
+                this.internetStatus = 'offline';
+            }
+            this.laatsteCheck = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        },
+    }));
+
+    /**
+     * Network configuration form — edits local-server + hotspot IPs.
+     * Reads data-save-url, data-toernooi-id, data-primary-ip, data-standby-ip,
+     * data-hotspot-ip, data-has-own-router, data-save-error-label.
+     */
+    Alpine.data('netwerkConfig', () => ({
+        toernooiId: 0,
+        heeftEigenRouter: false,
+        primaryIp: '',
+        standbyIp: '',
+        hotspotIp: '',
+        copied: false,
+        saveUrl: '',
+        saveErrorLabel: 'Error saving network config:',
+        init() {
+            const d = this.$el.dataset;
+            this.toernooiId = parseInt(d.toernooiId || '0', 10);
+            this.heeftEigenRouter = d.hasOwnRouter === 'true';
+            this.primaryIp = d.primaryIp || '';
+            this.standbyIp = d.standbyIp || '';
+            this.hotspotIp = d.hotspotIp || '';
+            this.saveUrl = d.saveUrl || '';
+            this.saveErrorLabel = d.saveErrorLabel || this.saveErrorLabel;
+        },
+        async saveNetwerkConfig() {
+            try {
+                await fetch(this.saveUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+                    body: JSON.stringify({
+                        heeft_eigen_router: this.heeftEigenRouter === true || this.heeftEigenRouter === '1',
+                        local_server_primary_ip: this.primaryIp,
+                        local_server_standby_ip: this.standbyIp,
+                        hotspot_ip: this.hotspotIp,
+                    }),
+                });
+            } catch (e) {
+                console.error(this.saveErrorLabel, e);
+            }
+        },
+        copyToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            this.copied = true;
+            setTimeout(() => { this.copied = false; }, 2000);
+        },
+    }));
+
+    /**
+     * Noodplan backup download — fetches sync-data endpoint and saves as JSON.
+     * Reads data-sync-url, data-toernooi-slug, data-error-label.
+     */
+    Alpine.data('noodplanBackup', () => ({
+        toernooiNaam: '',
+        syncUrl: '',
+        errorLabel: 'Download error:',
+        init() {
+            this.toernooiNaam = this.$el.dataset.toernooiSlug || '';
+            this.syncUrl = this.$el.dataset.syncUrl || '';
+            this.errorLabel = this.$el.dataset.errorLabel || this.errorLabel;
+        },
+        async downloadBackup() {
+            try {
+                const response = await fetch(this.syncUrl);
+                if (!response.ok) throw new Error('Server error');
+                const data = await response.json();
+                this._saveAsFile(data, new Date().toISOString().slice(0, 10));
+            } catch (e) {
+                alert(this.errorLabel + ' ' + e.message);
+            }
+        },
+        _saveAsFile(data, timestamp) {
+            const filename = `noodbackup_${this.toernooiNaam}_${timestamp}.json`;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },
+    }));
+
+    /**
+     * Noodplan local-server control panel — edits IP, tracks uitslagen, imports/exports JSON backup.
+     * Reads data-toernooi-id, data-toernooi-slug, data-primary-ip, data-save-url, data-sync-url
+     * + data-labels (ongeldigIpFormaat / foutBijOpslaan / gekopieerd / geenDataBeschikbaar /
+     * ditBackupVanAnder / backupGeladen / ongeldigJsonBestand).
+     */
+    Alpine.data('noodplanLocalServer', () => ({
+        toernooiId: 0,
+        toernooiNaam: '',
+        primaryIp: '',
+        uitslagCount: 0,
+        laatsteSync: null,
+        editingIp: false,
+        newIp: '',
+        saveUrl: '',
+        syncUrl: '',
+        labels: {},
+        interval: null,
+        init() {
+            const d = this.$el.dataset;
+            this.toernooiId = parseInt(d.toernooiId || '0', 10);
+            this.toernooiNaam = d.toernooiSlug || '';
+            this.primaryIp = d.primaryIp || '';
+            this.saveUrl = d.saveUrl || '';
+            this.syncUrl = d.syncUrl || '';
+            try { this.labels = JSON.parse(d.labels || '{}'); } catch (_) {}
+            this.loadFromStorage();
+            this.interval = setInterval(() => this.loadFromStorage(), 1000);
+        },
+        destroy() { if (this.interval) clearInterval(this.interval); },
+        startEditIp() {
+            this.newIp = this.primaryIp || '';
+            this.editingIp = true;
+            this.$nextTick(() => this.$refs.ipInput?.focus());
+        },
+        async saveIp() {
+            const ip = this.newIp.trim();
+            if (!ip) { this.editingIp = false; return; }
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipRegex.test(ip)) { alert(this.labels.ongeldigIpFormaat); return; }
+            try {
+                await fetch(this.saveUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+                    body: JSON.stringify({ local_server_primary_ip: ip }),
+                });
+                this.primaryIp = ip;
+                this.editingIp = false;
+            } catch (e) {
+                alert(this.labels.foutBijOpslaan + ' ' + e.message);
+            }
+        },
+        copyUrl() {
+            const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
+            navigator.clipboard.writeText(url);
+            alert(this.labels.gekopieerd + ' ' + url);
+        },
+        loadFromStorage() {
+            const countKey = `noodplan_${this.toernooiId}_count`;
+            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+            const count = localStorage.getItem(countKey);
+            this.uitslagCount = count ? parseInt(count) : 0;
+            const sync = localStorage.getItem(syncKey);
+            if (sync) {
+                const date = new Date(sync);
+                this.laatsteSync = date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+        },
+        async downloadBackup() {
+            try {
+                const response = await fetch(this.syncUrl);
+                if (!response.ok) throw new Error('Server error');
+                const data = await response.json();
+                this._saveAsFile(data);
+            } catch (e) {
+                const storageKey = `noodplan_${this.toernooiId}_poules`;
+                const cached = localStorage.getItem(storageKey);
+                if (cached) this._saveAsFile(JSON.parse(cached));
+                else alert(this.labels.geenDataBeschikbaar);
+            }
+        },
+        _saveAsFile(data) {
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+            const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },
+        loadJsonBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
+                        if (!confirm(this.labels.ditBackupVanAnder.replace(':id', data.toernooi_id))) return;
+                    }
+                    const storageKey = `noodplan_${this.toernooiId}_poules`;
+                    const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                    const countKey = `noodplan_${this.toernooiId}_count`;
+                    localStorage.setItem(storageKey, JSON.stringify(data));
+                    localStorage.setItem(syncKey, new Date().toISOString());
+                    let count = 0;
+                    if (data.poules) {
+                        data.poules.forEach((p) => {
+                            if (p.wedstrijden) p.wedstrijden.forEach((w) => { if (w.is_gespeeld) count++; });
+                        });
+                    }
+                    localStorage.setItem(countKey, count.toString());
+                    this.loadFromStorage();
+                    alert(this.labels.backupGeladen.replace(':poules', data.poules?.length || 0).replace(':uitslagen', count));
+                } catch (err) {
+                    alert(this.labels.ongeldigJsonBestand + ' ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         },
     }));
 

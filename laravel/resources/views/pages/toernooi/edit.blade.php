@@ -2200,7 +2200,18 @@
     </div>
 
     <!-- CHAT SERVER (Reverb) -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="reverbStatus"
+         data-status-url="{{ route('toernooi.reverb.status', $toernooi->routeParams()) }}"
+         data-start-url="{{ route('toernooi.reverb.start', $toernooi->routeParams()) }}"
+         data-restart-url="{{ route('toernooi.reverb.restart', $toernooi->routeParams()) }}"
+         data-stop-url="{{ route('toernooi.reverb.stop', $toernooi->routeParams()) }}"
+         data-labels="{{ json_encode([
+             'konStatusNietOphalen' => __('Kon status niet ophalen'),
+             'foutBijStarten' => __('Fout bij starten'),
+             'foutBijHerstarten' => __('Fout bij herstarten'),
+             'foutBijStoppen' => __('Fout bij stoppen'),
+         ]) }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Realtime Server (Reverb)') }}</h2>
         <p class="text-gray-600 mb-4">
             {{ __('Realtime updates voor alle interfaces: chat, live scores, beurtaanduiding, bracket updates.') }}
@@ -2257,82 +2268,7 @@
         <p class="text-sm text-gray-500 mt-3" x-show="message" x-text="message"></p>
     </div>
 
-    <script @nonce>
-    function reverbStatus() {
-        const __t = {
-            konStatusNietOphalen: @json(__('Kon status niet ophalen')),
-            foutBijStarten: @json(__('Fout bij starten')),
-            foutBijHerstarten: @json(__('Fout bij herstarten')),
-            foutBijStoppen: @json(__('Fout bij stoppen')),
-        };
-        return {
-            running: false,
-            loading: false,
-            local: false,
-            message: '',
-            init() {
-                this.checkStatus();
-            },
-            async checkStatus() {
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi->routeParams()) }}', {
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.running = data.running;
-                    this.local = data.local || false;
-                } catch (e) {
-                    this.message = __t.konStatusNietOphalen;
-                }
-            },
-            async start() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.start", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijStarten;
-                }
-                this.loading = false;
-            },
-            async restart() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.restart", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijHerstarten;
-                }
-                this.loading = false;
-            },
-            async stop() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijStoppen;
-                }
-                this.loading = false;
-            }
-        }
-    }
-    </script>
+    {{-- VP-18: reverbStatus registered in resources/js/alpine-components.js; URLs + labels via data-* attributes. --}}
 
     <!-- INSCHRIJVING & PORTAAL -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -2964,13 +2900,23 @@
     </div>
 
     <!-- ==================== NETWERK CONFIGURATIE ==================== -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="netwerkConfig()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="netwerkConfig"
+         data-toernooi-id="{{ $toernooi->id }}"
+         data-has-own-router="{{ $toernooi->heeft_eigen_router ? 'true' : 'false' }}"
+         data-primary-ip="{{ $toernooi->local_server_primary_ip ?? '' }}"
+         data-standby-ip="{{ $toernooi->local_server_standby_ip ?? '' }}"
+         data-hotspot-ip="{{ $toernooi->hotspot_ip ?? '' }}"
+         data-save-url="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}"
+         data-save-error-label="{{ __('Fout bij opslaan netwerk config:') }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🌐</span> {{ __('NETWERK CONFIGURATIE') }}
         </h2>
 
         <!-- Uitleg WiFi vs Internet met live status -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
+             x-data="verbindingStatus"
+             data-local-server-ip="{{ $toernooi->local_server_primary_ip ?? '' }}">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="font-bold text-blue-800">{{ __('Lokaal netwerk vs Internet - wat is het verschil?') }}</h3>
                 <span class="text-xs text-gray-500">{{ __('Laatst gecontroleerd:') }} <span x-text="laatsteCheck"></span></span>
@@ -3201,7 +3147,22 @@
     </div>
 
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="noodplanLocalServer"
+         data-toernooi-id="{{ $toernooi->id }}"
+         data-toernooi-slug="{{ $toernooi->slug }}"
+         data-primary-ip="{{ $toernooi->local_server_primary_ip ?? '' }}"
+         data-save-url="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}"
+         data-sync-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         data-labels="{{ json_encode([
+             'ongeldigIpFormaat' => __('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100'),
+             'foutBijOpslaan' => __('Fout bij opslaan:'),
+             'gekopieerd' => __('Gekopieerd:'),
+             'geenDataBeschikbaar' => __('Geen data beschikbaar (server offline en geen lokale cache).'),
+             'ditBackupVanAnder' => __('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?'),
+             'backupGeladen' => __('Backup geladen: :poules poules, :uitslagen uitslagen'),
+             'ongeldigJsonBestand' => __('Ongeldig JSON bestand:'),
+         ]) }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🔄</span> {{ __('BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER') }}
         </h2>
@@ -3281,7 +3242,11 @@
     </div>
 
     <!-- Voorbereiding avond ervoor -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanBackup()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="noodplanBackup"
+         data-toernooi-slug="{{ $toernooi->slug }}"
+         data-sync-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         data-error-label="{{ __('Fout bij downloaden:') }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">📦</span> {{ __('VOORBEREIDING (avond ervoor)') }}
         </h2>
@@ -3322,301 +3287,7 @@
         </div>
     </div>
 
-    <script @nonce>
-    const __tn = {
-        ongeldigIpFormaat: @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100')),
-        foutBijOpslaanNetwerkConfig: @json(__('Fout bij opslaan netwerk config:')),
-        foutBijDownloaden: @json(__('Fout bij downloaden:')),
-        foutBijOpslaan: @json(__('Fout bij opslaan:')),
-        gekopieerd: @json(__('Gekopieerd:')),
-        geenDataBeschikbaar: @json(__('Geen data beschikbaar (server offline en geen lokale cache).')),
-        ditBackupVanAnder: @json(__('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?')),
-        backupGeladen: @json(__('Backup geladen: :poules poules, :uitslagen uitslagen')),
-        ongeldigJsonBestand: @json(__('Ongeldig JSON bestand:')),
-    };
-    function verbindingStatus() {
-        return {
-            wifiStatus: 'checking',
-            wifiLatency: null,
-            internetStatus: 'checking',
-            latency: null,
-            laatsteCheck: '-',
-            localServerIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-
-            init() {
-                this.checkVerbinding();
-                // Check elke 30 seconden
-                setInterval(() => this.checkVerbinding(), 30000);
-            },
-
-            async checkVerbinding() {
-                // WiFi check - ping lokale server als IP bekend is
-                if (this.localServerIp) {
-                    const wifiStart = Date.now();
-                    try {
-                        const wifiResponse = await fetch(`http://${this.localServerIp}:8000/ping`, {
-                            method: 'GET',
-                            cache: 'no-store',
-                            mode: 'no-cors',
-                            signal: AbortSignal.timeout(3000)
-                        });
-                        this.wifiLatency = Date.now() - wifiStart;
-                        this.wifiStatus = 'connected';
-                    } catch (e) {
-                        // no-cors geeft altijd opaque response, dus check alleen tijd
-                        const elapsed = Date.now() - wifiStart;
-                        if (elapsed < 2900) {
-                            this.wifiLatency = elapsed;
-                            this.wifiStatus = 'connected';
-                        } else {
-                            this.wifiStatus = navigator.onLine ? 'no-server' : 'offline';
-                            this.wifiLatency = null;
-                        }
-                    }
-                } else {
-                    this.wifiStatus = navigator.onLine ? 'no-ip' : 'offline';
-                    this.wifiLatency = null;
-                }
-
-                // Internet check (ping naar cloud)
-                const startTime = Date.now();
-                try {
-                    const response = await fetch('/ping', {
-                        method: 'GET',
-                        cache: 'no-store',
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    const endTime = Date.now();
-                    this.latency = endTime - startTime;
-
-                    if (response.ok) {
-                        this.internetStatus = this.latency > 2000 ? 'slow' : 'connected';
-                    } else {
-                        this.internetStatus = 'offline';
-                    }
-                } catch (e) {
-                    this.internetStatus = 'offline';
-                }
-
-                this.laatsteCheck = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-            }
-        };
-    }
-
-    function netwerkConfig() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            heeftEigenRouter: {{ $toernooi->heeft_eigen_router ? 'true' : 'false' }},
-            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-            standbyIp: '{{ $toernooi->local_server_standby_ip ?? "" }}',
-            hotspotIp: '{{ $toernooi->hotspot_ip ?? "" }}',
-            copied: false,
-
-            async saveNetwerkConfig() {
-                try {
-                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            heeft_eigen_router: this.heeftEigenRouter === true || this.heeftEigenRouter === '1',
-                            local_server_primary_ip: this.primaryIp,
-                            local_server_standby_ip: this.standbyIp,
-                            hotspot_ip: this.hotspotIp
-                        })
-                    });
-                } catch (e) {
-                    console.error(__tn.foutBijOpslaanNetwerkConfig, e);
-                }
-            },
-
-            copyToClipboard(text) {
-                if (!text) return;
-                navigator.clipboard.writeText(text);
-                this.copied = true;
-                setTimeout(() => this.copied = false, 2000);
-            }
-        };
-    }
-
-    function noodplanBackup() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            toernooiNaam: '{{ $toernooi->slug }}',
-
-            async downloadBackup() {
-                try {
-                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                    if (!response.ok) throw new Error('Server error');
-                    const data = await response.json();
-                    this.saveAsFile(data);
-                } catch (e) {
-                    alert(__tn.foutBijDownloaden + ' ' + e.message);
-                }
-            },
-
-            saveAsFile(data) {
-                const timestamp = new Date().toISOString().slice(0, 10);
-                const filename = `noodbackup_${this.toernooiNaam}_${timestamp}.json`;
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        };
-    }
-
-    function noodplanLocalServer() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            toernooiNaam: '{{ $toernooi->slug }}',
-            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-            uitslagCount: 0,
-            laatsteSync: null,
-            editingIp: false,
-            newIp: '',
-
-            init() {
-                this.loadFromStorage();
-                setInterval(() => this.loadFromStorage(), 1000);
-            },
-
-            startEditIp() {
-                this.newIp = this.primaryIp || '';
-                this.editingIp = true;
-                this.$nextTick(() => this.$refs.ipInput?.focus());
-            },
-
-            async saveIp() {
-                const ip = this.newIp.trim();
-                if (!ip) {
-                    this.editingIp = false;
-                    return;
-                }
-                // Valideer IP formaat
-                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-                if (!ipRegex.test(ip)) {
-                    alert(__tn.ongeldigIpFormaat);
-                    return;
-                }
-                try {
-                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ local_server_primary_ip: ip })
-                    });
-                    this.primaryIp = ip;
-                    this.editingIp = false;
-                } catch (e) {
-                    alert(__tn.foutBijOpslaan + ' ' + e.message);
-                }
-            },
-
-            copyUrl() {
-                const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
-                navigator.clipboard.writeText(url);
-                alert(__tn.gekopieerd + ' ' + url);
-            },
-
-            loadFromStorage() {
-                const countKey = `noodplan_${this.toernooiId}_count`;
-                const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-
-                const count = localStorage.getItem(countKey);
-                this.uitslagCount = count ? parseInt(count) : 0;
-
-                const sync = localStorage.getItem(syncKey);
-                if (sync) {
-                    const date = new Date(sync);
-                    this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-                }
-            },
-
-            async downloadBackup() {
-                try {
-                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                    if (!response.ok) throw new Error('Server error');
-                    const data = await response.json();
-                    this.saveAsFile(data);
-                } catch (e) {
-                    const storageKey = `noodplan_${this.toernooiId}_poules`;
-                    const data = localStorage.getItem(storageKey);
-                    if (data) {
-                        this.saveAsFile(JSON.parse(data));
-                    } else {
-                        alert(__tn.geenDataBeschikbaar);
-                    }
-                }
-            },
-
-            saveAsFile(data) {
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-                const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            },
-
-            loadJsonBackup(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
-                            if (!confirm(__tn.ditBackupVanAnder.replace(':id', data.toernooi_id))) {
-                                return;
-                            }
-                        }
-
-                        const storageKey = `noodplan_${this.toernooiId}_poules`;
-                        const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-                        const countKey = `noodplan_${this.toernooiId}_count`;
-
-                        localStorage.setItem(storageKey, JSON.stringify(data));
-                        localStorage.setItem(syncKey, new Date().toISOString());
-
-                        let count = 0;
-                        if (data.poules) {
-                            data.poules.forEach(p => {
-                                if (p.wedstrijden) {
-                                    p.wedstrijden.forEach(w => {
-                                        if (w.is_gespeeld) count++;
-                                    });
-                                }
-                            });
-                        }
-                        localStorage.setItem(countKey, count.toString());
-                        this.loadFromStorage();
-                        alert(__tn.backupGeladen.replace(':poules', data.poules?.length || 0).replace(':uitslagen', count));
-                    } catch (err) {
-                        alert(__tn.ongeldigJsonBestand + ' ' + err.message);
-                    }
-                };
-                reader.readAsText(file);
-                event.target.value = '';
-            }
-        };
-    }
-    </script>
+    {{-- VP-18: verbindingStatus / netwerkConfig / noodplanBackup / noodplanLocalServer registered in resources/js/alpine-components.js; all URLs + labels via data-* attributes. --}}
 
     </div><!-- End TAB: NOODPLAN -->
 
