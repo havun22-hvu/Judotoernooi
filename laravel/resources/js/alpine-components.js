@@ -71,6 +71,19 @@ export function registerAlpineComponents(Alpine) {
         },
         setFilter(name) { this.filter = name; },
         is(name) { return this.filter === name; },
+        /**
+         * Select filter + dispatch filter-changed event (voor gekoppelde filterSearch in zelfde view).
+         */
+        selectFilter(name) {
+            this.filter = name;
+            this.$dispatch('filter-changed', name);
+        },
+        /**
+         * Class helper voor filter buttons. Koppelt filter-naam aan een actieve bg-class.
+         */
+        filterButtonClass(name, activeClass) {
+            return this.filter === name ? activeClass : 'hover:bg-gray-100';
+        },
     }));
 
     /**
@@ -195,6 +208,22 @@ export function registerAlpineComponents(Alpine) {
         editing: false,
         startEdit() { this.editing = true; },
         stopEdit() { this.editing = false; },
+        get notEditing() { return !this.editing; },
+        /**
+         * Filter helper voor coach/judoka lijsten. Neemt filter+search van parent scope
+         * en per-row boolean flags als literal args (CSP-safe).
+         */
+        matchesFilter(filter, search, naamLower, synced, gewijzigd, incompleet, klaar, betaald, klaarBetaling) {
+            if (search !== '' && !naamLower.includes(search.toLowerCase())) return false;
+            if (filter === 'alle') return true;
+            if (filter === 'synced') return synced;
+            if (filter === 'gewijzigd') return gewijzigd;
+            if (filter === 'incompleet') return incompleet;
+            if (filter === 'klaar') return klaar;
+            if (filter === 'betaald') return betaald;
+            if (filter === 'klaar_betaling') return klaarBetaling;
+            return true;
+        },
     }));
 
     /**
