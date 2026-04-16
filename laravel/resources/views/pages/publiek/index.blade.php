@@ -92,7 +92,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
+<body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp" x-init="init()">
     <!-- Splash Screen -->
     <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center transition-opacity duration-500">
         <img src="/icon-512x512.png" alt="Logo" class="w-32 h-32 mb-6 animate-pulse">
@@ -1151,8 +1151,8 @@
         // Judoka names cache for display
         const judokaNamen = @json($categorien->flatten(2)->pluck('naam', 'id'));
 
-        function publiekApp() {
-            return {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('publiekApp', () => ({
                 activeTab: 'info',
                 favorieten: [],
                 favorietenPoules: [],
@@ -1909,8 +1909,8 @@
                         this.zoekLoading = false;
                     }
                 },
-            }
-        }
+            }));
+        });
 
         // PWA Install Logic
         let deferredPrompt;
