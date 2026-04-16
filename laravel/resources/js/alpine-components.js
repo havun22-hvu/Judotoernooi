@@ -28,6 +28,7 @@ export function registerAlpineComponents(Alpine) {
         close() { this.open = false; },
         show() { this.open = true; },
         get rotateClass() { return this.open ? 'rotate-180' : ''; },
+        get rotate90Class() { return this.open ? 'rotate-90' : ''; },
     }));
 
     /**
@@ -55,6 +56,8 @@ export function registerAlpineComponents(Alpine) {
         openModal() { this.open = true; },
         closeModal() { this.open = false; this.showAbout = false; },
         toggleAbout() { this.showAbout = !this.showAbout; },
+        openAbout() { this.showAbout = true; this.open = false; },
+        closeAbout() { this.showAbout = false; },
     }));
 
     /**
