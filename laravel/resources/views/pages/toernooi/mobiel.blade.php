@@ -3,7 +3,7 @@
 @section('title', __('Mobiel') . ' - ' . $toernooi->naam)
 
 @section('content')
-<div x-data="mobielApp()" class="max-w-lg mx-auto pb-24">
+<div x-data="mobielApp" class="max-w-lg mx-auto pb-24">
 
     {{-- Header --}}
     <div class="mb-4">
@@ -47,26 +47,26 @@
 
     {{-- Tab navigation --}}
     <div class="flex border-b border-gray-200 mb-4 overflow-x-auto">
-        <button @click="activeTab = 'zoeken'" :class="activeTab === 'zoeken' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+        <button @click="setTab('zoeken')" :class="tabClass('zoeken')"
                 class="flex-1 min-w-0 py-3 px-2 text-center text-sm font-medium border-b-2 whitespace-nowrap">
             {{ __('Zoeken') }}
         </button>
-        <button @click="activeTab = 'toevoegen'" :class="activeTab === 'toevoegen' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+        <button @click="setTab('toevoegen')" :class="tabClass('toevoegen')"
                 class="flex-1 min-w-0 py-3 px-2 text-center text-sm font-medium border-b-2 whitespace-nowrap">
             {{ __('Toevoegen') }}
         </button>
-        <button @click="activeTab = 'matten'; refreshMatVoortgang()" :class="activeTab === 'matten' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+        <button @click="openMatten()" :class="tabClass('matten')"
                 class="flex-1 min-w-0 py-3 px-2 text-center text-sm font-medium border-b-2 whitespace-nowrap">
             {{ __('Matten') }}
         </button>
-        <button @click="activeTab = 'chat'" :class="activeTab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+        <button @click="setTab('chat')" :class="tabClass('chat')"
                 class="flex-1 min-w-0 py-3 px-2 text-center text-sm font-medium border-b-2 whitespace-nowrap">
             {{ __('Chat') }}
         </button>
     </div>
 
     {{-- TAB 1: Judoka Zoeken --}}
-    <div x-show="activeTab === 'zoeken'" x-cloak>
+    <div x-show="isTab('zoeken')" x-cloak>
         <div class="relative mb-4">
             <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                    placeholder="{{ __('Zoek op naam of club...') }}"
@@ -84,24 +84,24 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="font-medium text-gray-800" x-text="judoka.naam"></div>
-                            <div class="text-sm text-gray-500" x-text="judoka.club || '-'"></div>
+                            <div class="text-sm text-gray-500" x-text="valueOrDash(judoka.club)"></div>
                         </div>
                         <div class="text-right text-sm">
                             <div class="text-gray-600" x-text="judoka.leeftijdsklasse"></div>
-                            <div class="font-medium" x-text="judoka.gewicht_gewogen ? judoka.gewicht_gewogen + ' kg' : 'Niet gewogen'"></div>
+                            <div class="font-medium" x-text="gewogenLabel(judoka)"></div>
                         </div>
                     </div>
                     <div class="flex items-center mt-1 text-xs text-gray-400 space-x-2">
-                        <span x-show="judoka.blok" x-text="'Blok ' + judoka.blok"></span>
+                        <span x-show="judoka.blok" x-text="blokLabel(judoka)"></span>
                         <span x-show="judoka.band" x-text="judoka.band"></span>
-                        <span :class="judoka.aanwezig ? 'text-green-600' : 'text-red-600'"
-                              x-text="judoka.aanwezig ? '{{ __('Aanwezig') }}' : '{{ __('Afwezig') }}'"></span>
+                        <span :class="aanwezigClass(judoka)"
+                              x-text="aanwezigLabel(judoka)"></span>
                     </div>
                 </div>
             </template>
         </div>
 
-        <div x-show="zoekterm.length >= 2 && zoekResultaten.length === 0 && !zoekLoading" class="text-center text-gray-500 py-8">
+        <div x-show="geenResultaten" class="text-center text-gray-500 py-8">
             {{ __('Geen resultaten gevonden') }}
         </div>
         <div x-show="zoekLoading" class="text-center text-gray-400 py-8">
@@ -111,13 +111,13 @@
         {{-- Selected judoka detail --}}
         <div x-show="geselecteerdeJudoka" x-cloak class="mt-4">
             <div class="bg-white border-2 border-blue-300 rounded-lg p-4">
-                <h3 class="font-bold text-gray-800 mb-2" x-text="geselecteerdeJudoka?.naam"></h3>
+                <h3 class="font-bold text-gray-800 mb-2" x-text="selectedNaam"></h3>
 
                 <div class="grid grid-cols-2 gap-2 text-sm mb-3">
-                    <div><span class="text-gray-500">{{ __('Club') }}:</span> <span x-text="geselecteerdeJudoka?.club || '-'"></span></div>
-                    <div><span class="text-gray-500">{{ __('Blok') }}:</span> <span x-text="geselecteerdeJudoka?.blok || '-'"></span></div>
-                    <div><span class="text-gray-500">{{ __('Categorie') }}:</span> <span x-text="geselecteerdeJudoka?.leeftijdsklasse || '-'"></span></div>
-                    <div><span class="text-gray-500">{{ __('Gewicht') }}:</span> <span x-text="geselecteerdeJudoka?.gewicht_gewogen ? geselecteerdeJudoka.gewicht_gewogen + ' kg' : '-'"></span></div>
+                    <div><span class="text-gray-500">{{ __('Club') }}:</span> <span x-text="selectedClub"></span></div>
+                    <div><span class="text-gray-500">{{ __('Blok') }}:</span> <span x-text="selectedBlok"></span></div>
+                    <div><span class="text-gray-500">{{ __('Categorie') }}:</span> <span x-text="selectedCategorie"></span></div>
+                    <div><span class="text-gray-500">{{ __('Gewicht') }}:</span> <span x-text="selectedGewicht"></span></div>
                 </div>
 
                 {{-- Weight input --}}
@@ -143,7 +143,7 @@
                         <select x-model="doelPouleId" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base">
                             <option value="">{{ __('Kies poule...') }}</option>
                             <template x-for="poule in beschikbarePoules" :key="poule.id">
-                                <option :value="poule.id" x-text="'Poule ' + poule.nummer + ' - ' + poule.leeftijdsklasse + (poule.gewichtsklasse ? ' (' + poule.gewichtsklasse + ')' : '')"></option>
+                                <option :value="poule.id" x-text="pouleLabel(poule)"></option>
                             </template>
                         </select>
                         <button @click="verplaatsJudoka()" :disabled="!doelPouleId || verplaatsLoading"
@@ -157,7 +157,7 @@
     </div>
 
     {{-- TAB 2: Judoka Toevoegen --}}
-    <div x-show="activeTab === 'toevoegen'" x-cloak>
+    <div x-show="isTab('toevoegen')" x-cloak>
         <div class="bg-white border border-gray-200 rounded-lg p-4">
             <h3 class="font-medium text-gray-800 mb-3">{{ __('Nieuwe judoka toevoegen aan poule') }}</h3>
 
@@ -211,9 +211,9 @@
                         </template>
                     </select>
                 </div>
-                <button @click="voegJudokaToe()" :disabled="!nieuweJudoka.naam || !nieuweJudoka.poule_id || toevoegenLoading"
+                <button @click="voegJudokaToe()" :disabled="voegDisabled"
                         class="w-full bg-green-600 text-white py-3 rounded-lg font-medium text-base disabled:opacity-50">
-                    <span x-show="!toevoegenLoading">{{ __('Judoka toevoegen') }}</span>
+                    <span x-show="notToevoegenLoading">{{ __('Judoka toevoegen') }}</span>
                     <span x-show="toevoegenLoading">{{ __('Bezig...') }}</span>
                 </button>
             </div>
@@ -221,7 +221,7 @@
     </div>
 
     {{-- TAB 3: Mat Voortgang --}}
-    <div x-show="activeTab === 'matten'" x-cloak>
+    <div x-show="isTab('matten')" x-cloak>
         <div class="flex justify-between items-center mb-3">
             <h3 class="font-medium text-gray-800">{{ __('Voortgang per mat') }}</h3>
             <button @click="refreshMatVoortgang()" class="text-sm text-blue-600">{{ __('Ververs') }}</button>
@@ -231,15 +231,15 @@
             <template x-for="mat in matVoortgang" :key="mat.id">
                 <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     {{-- Mat header --}}
-                    <div class="p-3 flex justify-between items-center cursor-pointer" @click="mat._open = !mat._open">
+                    <div class="p-3 flex justify-between items-center cursor-pointer" @click="toggleMat(mat)">
                         <div>
                             <span class="font-medium text-gray-800" x-text="mat.naam"></span>
-                            <span class="text-sm text-gray-500 ml-2" x-text="mat.gespeeld + '/' + mat.totaal_wedstrijden + ' wedstrijden'"></span>
+                            <span class="text-sm text-gray-500 ml-2" x-text="matWedstrijdenLabel(mat)"></span>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="text-sm font-bold" :class="mat.resterend === 0 ? 'text-green-600' : 'text-orange-600'"
-                                  x-text="mat.resterend + ' over'"></span>
-                            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="mat._open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span class="text-sm font-bold" :class="resterendClass(mat)"
+                                  x-text="resterendLabel(mat)"></span>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="matRotateClass(mat)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
@@ -249,8 +249,8 @@
                     <div class="px-3 pb-2">
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="h-2 rounded-full transition-all"
-                                 :class="mat.resterend === 0 ? 'bg-green-500' : 'bg-blue-500'"
-                                 :style="'width: ' + (mat.totaal_wedstrijden > 0 ? Math.round(mat.gespeeld / mat.totaal_wedstrijden * 100) : 0) + '%'">
+                                 :class="progressBarClass(mat)"
+                                 :style="progressBarStyle(mat)">
                             </div>
                         </div>
                     </div>
@@ -260,14 +260,14 @@
                         <template x-for="poule in mat.poules" :key="poule.id">
                             <div class="px-3 py-2 flex justify-between items-center border-b border-gray-100 last:border-0 text-sm">
                                 <div>
-                                    <span class="text-gray-700" x-text="'P' + poule.nummer"></span>
+                                    <span class="text-gray-700" x-text="pouleNr(poule)"></span>
                                     <span class="text-gray-500 ml-1" x-text="poule.leeftijdsklasse"></span>
                                 </div>
                                 <div class="flex items-center space-x-3">
-                                    <span class="text-gray-600" x-text="poule.gespeeld + '/' + poule.totaal"></span>
+                                    <span class="text-gray-600" x-text="pouleGespeeldLabel(poule)"></span>
                                     <span class="font-medium min-w-[3rem] text-right"
-                                          :class="poule.resterend === 0 ? 'text-green-600' : 'text-orange-600'"
-                                          x-text="poule.resterend + ' over'"></span>
+                                          :class="resterendClass(poule)"
+                                          x-text="resterendLabel(poule)"></span>
                                 </div>
                             </div>
                         </template>
@@ -285,7 +285,7 @@
     </div>
 
     {{-- TAB 4: Chat --}}
-    <div x-show="activeTab === 'chat'" x-cloak>
+    <div x-show="isTab('chat')" x-cloak>
         @include('partials.chat-widget', [
             'chatType' => 'hoofdjury',
             'toernooiId' => $toernooi->id,
@@ -297,15 +297,61 @@
     <div x-show="toast.show" x-transition:enter="transition ease-out duration-300"
          x-transition:leave="transition ease-in duration-200"
          class="fixed bottom-4 left-4 right-4 max-w-lg mx-auto z-50 text-white px-4 py-3 rounded-lg shadow-lg"
-         :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
+         :class="toastClass">
         <span x-text="toast.message"></span>
     </div>
 </div>
 
 <script @nonce>
-function mobielApp() {
-    return {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('mobielApp', () => ({
         activeTab: 'zoeken',
+
+        // --- CSP-safe getters/helpers ---
+        setTab(tab) { this.activeTab = tab; },
+        isTab(tab) { return this.activeTab === tab; },
+        tabClass(tab) {
+            return this.activeTab === tab ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500';
+        },
+        openMatten() { this.activeTab = 'matten'; this.refreshMatVoortgang(); },
+        get geenResultaten() {
+            return this.zoekterm.length >= 2 && this.zoekResultaten.length === 0 && !this.zoekLoading;
+        },
+        get selectedNaam() { return this.geselecteerdeJudoka ? this.geselecteerdeJudoka.naam : ''; },
+        get selectedClub() { return this.geselecteerdeJudoka ? (this.geselecteerdeJudoka.club || '-') : '-'; },
+        get selectedBlok() { return this.geselecteerdeJudoka ? (this.geselecteerdeJudoka.blok || '-') : '-'; },
+        get selectedCategorie() { return this.geselecteerdeJudoka ? (this.geselecteerdeJudoka.leeftijdsklasse || '-') : '-'; },
+        get selectedGewicht() {
+            if (!this.geselecteerdeJudoka) return '-';
+            return this.geselecteerdeJudoka.gewicht_gewogen ? `${this.geselecteerdeJudoka.gewicht_gewogen} kg` : '-';
+        },
+        get notToevoegenLoading() { return !this.toevoegenLoading; },
+        get voegDisabled() {
+            return !this.nieuweJudoka.naam || !this.nieuweJudoka.poule_id || this.toevoegenLoading;
+        },
+        get toastClass() { return this.toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'; },
+        valueOrDash(v) { return v || '-'; },
+        gewogenLabel(j) { return j.gewicht_gewogen ? `${j.gewicht_gewogen} kg` : 'Niet gewogen'; },
+        blokLabel(j) { return `Blok ${j.blok}`; },
+        aanwezigClass(j) { return j.aanwezig ? 'text-green-600' : 'text-red-600'; },
+        aanwezigLabel(j) { return j.aanwezig ? '{{ __("Aanwezig") }}' : '{{ __("Afwezig") }}'; },
+        pouleLabel(p) {
+            const gew = p.gewichtsklasse ? ` (${p.gewichtsklasse})` : '';
+            return `Poule ${p.nummer} - ${p.leeftijdsklasse}${gew}`;
+        },
+        toggleMat(mat) { mat._open = !mat._open; },
+        matWedstrijdenLabel(mat) { return `${mat.gespeeld}/${mat.totaal_wedstrijden} wedstrijden`; },
+        resterendClass(item) { return item.resterend === 0 ? 'text-green-600' : 'text-orange-600'; },
+        resterendLabel(item) { return `${item.resterend} over`; },
+        matRotateClass(mat) { return mat._open ? 'rotate-180' : ''; },
+        progressBarClass(mat) { return mat.resterend === 0 ? 'bg-green-500' : 'bg-blue-500'; },
+        progressBarStyle(mat) {
+            const pct = mat.totaal_wedstrijden > 0 ? Math.round(mat.gespeeld / mat.totaal_wedstrijden * 100) : 0;
+            return `width: ${pct}%`;
+        },
+        pouleNr(p) { return `P${p.nummer}`; },
+        pouleGespeeldLabel(p) { return `${p.gespeeld}/${p.totaal}`; },
+
 
         // Search
         zoekterm: '',
@@ -473,7 +519,7 @@ function mobielApp() {
             this.toast = { show: true, message, type };
             setTimeout(() => { this.toast.show = false; }, 3000);
         },
-    };
-}
+    }));
+});
 </script>
 @endsection
