@@ -326,7 +326,7 @@
 
 <!-- Judoka tabel -->
 @if($judokas->count() > 0)
-<div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
+<div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable">
     <!-- Zoekbalk -->
     <div class="px-4 py-3 bg-gray-50 border-b">
         <div class="flex gap-2 items-center">
@@ -339,13 +339,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
-            <button @click="fuzzyLevel = fuzzyLevel ? 0 : 1"
-                    :class="fuzzyLevel ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+            <button @click="toggleFuzzy()"
+                    :class="fuzzyButtonClass"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                {{ __('Fuzzy') }} <span x-text="fuzzyLevel ? '{{ __('aan') }}' : '{{ __('uit') }}'"></span>
+                {{ __('Fuzzy') }} <span x-text="fuzzyLabel"></span>
             </button>
-            <button @click="toonOnvolledig = !toonOnvolledig"
-                    :class="toonOnvolledig ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+            <button @click="toggleOnvolledig()"
+                    :class="onvolledigButtonClass"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
                 {{ __('Onvolledig') }} ({{ $incompleteJudokas->count() }})
             </button>
@@ -359,45 +359,45 @@
         <thead class="bg-blue-800 text-white sticky top-0 z-10">
             <tr>
                 <th @click="sort('naam')" class="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Naam') }} <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Naam') }} <template x-if="isSorting('naam')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('leeftijdsklasse')" class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Categorie') }} <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Categorie') }} <template x-if="isSorting('leeftijdsklasse')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('gewicht')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Gewicht') }} <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Gewicht') }} <template x-if="isSorting('gewicht')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('geboortejaar')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Geb.jaar') }} <template x-if="sortKey === 'geboortejaar'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Geb.jaar') }} <template x-if="isSorting('geboortejaar')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('geslacht')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('M/V') }} <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('M/V') }} <template x-if="isSorting('geslacht')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('band')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Band') }} <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Band') }} <template x-if="isSorting('band')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th @click="sort('club')" class="w-[28%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">{{ __('Club') }} <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Club') }} <template x-if="isSorting('club')"><span x-text="sortIcon"></span></template></span>
                 </th>
                 <th class="w-[6%] px-4 py-3 text-left text-xs font-medium uppercase">{{ __('Acties') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
             <template x-for="judoka in sortedJudokas" :key="judoka.id">
-                <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
+                <tr :class="rowClass(judoka)">
                     <td class="px-4 py-2 truncate">
-                        <a :href="judoka.url + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
+                        <a :href="judokaUrl(judoka)" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
                         <span x-show="judoka.incompleet" class="ml-1 text-red-600 text-xs">⚠</span>
                     </td>
                     <td class="px-4 py-2 text-sm text-gray-600 truncate" x-text="judoka.leeftijdsklasse"></td>
-                    <td class="px-4 py-2 text-sm" :class="!judoka.gewicht ? 'text-red-600' : ''" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
-                    <td class="px-4 py-2 text-sm" :class="!judoka.geboortejaar ? 'text-red-600' : ''" x-text="judoka.geboortejaar || '-'"></td>
-                    <td class="px-4 py-2 text-sm" x-text="judoka.geslacht === 'Jongen' ? 'M' : 'V'"></td>
-                    <td class="px-4 py-2 text-sm truncate" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
-                    <td class="px-4 py-2 text-sm truncate" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
+                    <td class="px-4 py-2 text-sm" :class="missingClass(judoka.gewicht)" x-text="gewichtLabel(judoka)"></td>
+                    <td class="px-4 py-2 text-sm" :class="missingClass(judoka.geboortejaar)" x-text="valueOrDash(judoka.geboortejaar)"></td>
+                    <td class="px-4 py-2 text-sm" x-text="geslachtLabel(judoka)"></td>
+                    <td class="px-4 py-2 text-sm truncate" :class="missingClass(judoka.band)" x-text="valueOrDash(judoka.band)"></td>
+                    <td class="px-4 py-2 text-sm truncate" :class="missingClass(judoka.club)" x-text="valueOrDash(judoka.club)"></td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <a :href="judoka.editUrl + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 mr-2" title="{{ __('Bewerken') }}">✏️</a>
-                        <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('{{ __('Weet je zeker dat je') }} ' + judoka.naam + ' {{ __('wilt verwijderen?') }}')) $el.submit()">
+                        <a :href="judokaEditUrl(judoka)" class="text-blue-600 hover:text-blue-800 mr-2" title="{{ __('Bewerken') }}">✏️</a>
+                        <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="confirmDelete(judoka, $el)">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-lg" title="{{ __('Verwijderen') }}">×</button>
@@ -410,7 +410,7 @@
 </div>
 
 <script @nonce>
-function judokaTable() {
+document.addEventListener('alpine:init', () => {
     // Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
         if (a.length === 0) return b.length;
@@ -428,7 +428,6 @@ function judokaTable() {
         return matrix[b.length][a.length];
     }
 
-    // Check if term fuzzy-matches any word in text
     function fuzzyMatch(term, text, maxDist) {
         if (maxDist === 0) return text.includes(term);
         const words = text.split(/\s+/);
@@ -436,7 +435,6 @@ function judokaTable() {
             if (word.includes(term)) return true;
             if (term.length >= 3 && levenshtein(term, word.substring(0, term.length + maxDist)) <= maxDist) return true;
         }
-        // Also check substring match with tolerance
         for (let i = 0; i <= text.length - term.length + maxDist; i++) {
             const sub = text.substring(i, i + term.length);
             if (levenshtein(term, sub) <= maxDist) return true;
@@ -444,12 +442,37 @@ function judokaTable() {
         return false;
     }
 
-    return {
+    Alpine.data('judokaTable', () => ({
         sortKey: null,
         sortAsc: true,
         zoekterm: '',
         fuzzyLevel: 0,
         toonOnvolledig: sessionStorage.getItem('toonOnvolledig') === 'true' || new URLSearchParams(window.location.search).get('filter') === 'onvolledig',
+
+        // --- CSP-safe getters/helpers ---
+        get fuzzyButtonClass() {
+            return this.fuzzyLevel ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+        },
+        get fuzzyLabel() { return this.fuzzyLevel ? '{{ __("aan") }}' : '{{ __("uit") }}'; },
+        get onvolledigButtonClass() {
+            return this.toonOnvolledig ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+        },
+        get sortIcon() { return this.sortAsc ? '▲' : '▼'; },
+        isSorting(key) { return this.sortKey === key; },
+        toggleFuzzy() { this.fuzzyLevel = this.fuzzyLevel ? 0 : 1; },
+        toggleOnvolledig() { this.toonOnvolledig = !this.toonOnvolledig; },
+        rowClass(judoka) { return judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'; },
+        missingClass(value) { return !value ? 'text-red-600' : ''; },
+        valueOrDash(value) { return value || '-'; },
+        gewichtLabel(judoka) { return judoka.gewicht ? `${judoka.gewicht} kg` : '-'; },
+        geslachtLabel(judoka) { return judoka.geslacht === 'Jongen' ? 'M' : 'V'; },
+        judokaUrl(judoka) { return judoka.url + (this.toonOnvolledig ? '?filter=onvolledig' : ''); },
+        judokaEditUrl(judoka) { return judoka.editUrl + (this.toonOnvolledig ? '?filter=onvolledig' : ''); },
+        confirmDelete(judoka, form) {
+            if (confirm(`{{ __("Weet je zeker dat je") }} ${judoka.naam} {{ __("wilt verwijderen?") }}`)) {
+                form.submit();
+            }
+        },
 
         init() {
             // Clear sessionStorage after reading - it's only for back navigation
@@ -659,9 +682,9 @@ function judokaTable() {
                 this.sortKey = key;
                 this.sortAsc = true;
             }
-        }
-    }
-}
+        },
+    }));
+});
 </script>
 @else
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
