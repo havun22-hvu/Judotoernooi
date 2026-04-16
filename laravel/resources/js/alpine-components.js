@@ -275,4 +275,41 @@ export function registerAlpineComponents(Alpine) {
         setActive(tab) { this.activeTab = tab; },
         isActive(tab) { return this.activeTab === tab; },
     }));
+
+    /**
+     * Copy-to-clipboard tracker — remembers which key was copied last so the UI
+     * can show a green check on that button for a short window (default 2000ms).
+     */
+    Alpine.data('copyTracker', () => ({
+        copiedUrl: null,
+        async copyAndMark(text, key) {
+            try {
+                await navigator.clipboard.writeText(text);
+                this.copiedUrl = key;
+                setTimeout(() => { this.copiedUrl = null; }, 2000);
+            } catch (_) {
+                this.copiedUrl = null;
+            }
+        },
+        isCopied(key) { return this.copiedUrl === key; },
+    }));
+
+    /**
+     * Copy-tracker with a separate filter/search input (used on coach weegkaarten).
+     */
+    Alpine.data('copyWithSearch', () => ({
+        copiedId: null,
+        search: '',
+        async copyAndMark(text, id) {
+            try {
+                await navigator.clipboard.writeText(text);
+                this.copiedId = id;
+                setTimeout(() => { this.copiedId = null; }, 2000);
+            } catch (_) {
+                this.copiedId = null;
+            }
+        },
+        isCopied(id) { return this.copiedId === id; },
+        clearSearch() { this.search = ''; },
+    }));
 }
