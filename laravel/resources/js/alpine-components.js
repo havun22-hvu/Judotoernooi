@@ -707,6 +707,84 @@ export function registerAlpineComponents(Alpine) {
     }));
 
     /**
+     * Help-page search filter — hides/shows .help-section elements based on text match.
+     */
+    Alpine.data('helpPage', () => ({
+        searchQuery: '',
+        filteredCount: 0,
+        filterContent() {
+            const query = this.searchQuery.toLowerCase().trim();
+            const sections = document.querySelectorAll('.help-section');
+            let count = 0;
+            sections.forEach((section) => {
+                const text = section.textContent.toLowerCase();
+                const keywords = (section.dataset.keywords || '').toLowerCase();
+                const matches = !query || text.includes(query) || keywords.includes(query);
+                section.style.display = matches ? 'block' : 'none';
+                if (matches) count++;
+            });
+            this.filteredCount = count;
+        },
+    }));
+
+    /**
+     * Poule-select checkbox for ingevuld-schema print layout. Toggles a class on the
+     * host element and refreshes the counter via a window event that noodplanPrint listens for.
+     */
+    Alpine.data('pouleSelect', () => ({
+        printInclude: true,
+        init() {
+            this.$watch('printInclude', (value) => {
+                if (value) {
+                    this.$el.classList.remove('print-exclude');
+                    this.$el.classList.remove('opacity-50');
+                } else {
+                    this.$el.classList.add('print-exclude');
+                    this.$el.classList.add('opacity-50');
+                }
+                this.$nextTick(() => {
+                    window.dispatchEvent(new CustomEvent('noodplan-print:refresh'));
+                });
+            });
+        },
+    }));
+
+    /**
+     * Toolbar voor noodplan print-pagina. Host bevat data-total-poules.
+     * selectAll dispatcht input-event naar elke .poule-page checkbox; updateCounter
+     * telt zichtbare poules en synct een teller. Luistert naar noodplan-print:refresh.
+     */
+    Alpine.data('noodplanPrint', () => ({
+        total: 0,
+        selected: 0,
+        label: '',
+        init() {
+            this.total = parseInt(this.$el.dataset.totalPoules || '0', 10);
+            this.label = this.$el.dataset.labelSelected || 'geselecteerd';
+            this.updateCounter();
+            window.addEventListener('noodplan-print:refresh', () => this.updateCounter());
+            setTimeout(() => this.updateCounter(), 200);
+        },
+        selectAll(checked) {
+            document.querySelectorAll('.poule-page').forEach((el) => {
+                const checkbox = el.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = checked;
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    checkbox.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+            setTimeout(() => this.updateCounter(), 100);
+        },
+        updateCounter() {
+            this.selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
+        },
+        print() {
+            window.print();
+        },
+    }));
+
+    /**
      * Server-pakket sync status — polls localStorage for a per-toernooi sync timestamp
      * every 5s. connected = <2min ago, stale = older, none = never.
      * Reads data-toernooi-id from host.

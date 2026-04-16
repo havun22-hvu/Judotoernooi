@@ -10,7 +10,7 @@
 @endpush
 
 @section('content')
-<div x-data="helpPage()" class="max-w-4xl mx-auto min-w-[56rem]">
+<div x-data="helpPage" class="max-w-4xl mx-auto min-w-[56rem]">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Help & Handleiding') }}</h1>
@@ -872,31 +872,7 @@
     </div>
 </div>
 
-<script @nonce>
-function helpPage() {
-    return {
-        searchQuery: '',
-        filteredCount: 0,
-
-        filterContent() {
-            const query = this.searchQuery.toLowerCase().trim();
-            const sections = document.querySelectorAll('.help-section');
-            let count = 0;
-
-            sections.forEach(section => {
-                const text = section.textContent.toLowerCase();
-                const keywords = (section.dataset.keywords || '').toLowerCase();
-                const matches = !query || text.includes(query) || keywords.includes(query);
-
-                section.style.display = matches ? 'block' : 'none';
-                if (matches) count++;
-            });
-
-            this.filteredCount = count;
-        }
-    }
-}
-</script>
+{{-- VP-18: helpPage component geëxtraheerd naar resources/js/alpine-components.js --}}
 <style @nonce>
 .help-section {
     scroll-margin-top: 5rem;
