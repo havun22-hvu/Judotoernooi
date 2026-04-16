@@ -27,6 +27,7 @@ export function registerAlpineComponents(Alpine) {
         toggle() { this.open = !this.open; },
         close() { this.open = false; },
         show() { this.open = true; },
+        get rotateClass() { return this.open ? 'rotate-180' : ''; },
     }));
 
     /**

@@ -45,19 +45,19 @@
     // Problematische poules door gewichtsrange (dynamisch overpoulen)
     $problematischeGewichtsPoules = $problematischeGewichtsPoules ?? collect();
 @endphp
-<div x-data="wedstrijddagPoules()" class="space-y-6">
+<div class="space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">{{ __('Wedstrijddag Poules') }}</h1>
         <div class="flex items-center gap-3">
             {{-- Heartbeat toggle --}}
-            <div x-data="{ active: {{ ($heartbeatActive ?? false) ? 'true' : 'false' }}, loading: false }" class="flex items-center gap-2">
-                <button @click="loading = true; fetch('{{ route('toernooi.wedstrijddag.heartbeat-toggle', $toernooi->routeParams()) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { active = d.active; loading = false; }).catch(() => loading = false)"
-                        :class="active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+            <div x-data="heartbeatToggle" class="flex items-center gap-2">
+                <button @click="toggle()"
+                        :class="buttonClass"
                         class="text-white text-sm font-medium py-2 px-3 rounded flex items-center gap-1.5 transition-colors"
                         :disabled="loading">
-                    <span x-show="!loading" :class="active ? 'text-green-200' : 'text-gray-200'" class="text-xs">&#9679;</span>
+                    <span x-show="notLoading" :class="dotClass" class="text-xs">&#9679;</span>
                     <svg x-show="loading" x-cloak class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    <span x-text="active ? 'LIVE' : 'LIVE uit'"></span>
+                    <span x-text="label"></span>
                 </button>
             </div>
             <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -215,7 +215,7 @@
                     <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                     <span class="text-gray-300 text-sm">{{ $blokJudokas }} {{ __("judoka's") }} | {{ $blokWedstrijden }} {{ __('wedstrijden') }} | {{ $blok['categories']->count() }} {{ __('categorieën') }}</span>
                 </div>
-                <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg :class="rotateClass" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
@@ -1032,9 +1032,37 @@ async function verifieerPoules() {
     }
 }
 
-function wedstrijddagPoules() {
-    return {}
-}
+document.addEventListener('alpine:init', () => {
+    Alpine.data('heartbeatToggle', () => ({
+        active: @json($heartbeatActive ?? false),
+        loading: false,
+        get buttonClass() {
+            return this.active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500';
+        },
+        get dotClass() {
+            return this.active ? 'text-green-200' : 'text-gray-200';
+        },
+        get notLoading() { return !this.loading; },
+        get label() { return this.active ? 'LIVE' : 'LIVE uit'; },
+        async toggle() {
+            this.loading = true;
+            try {
+                const res = await fetch('{{ route("toernooi.wedstrijddag.heartbeat-toggle", $toernooi->routeParams()) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.active = data.active;
+            } catch (e) {
+                console.error('Heartbeat toggle failed:', e);
+            }
+            this.loading = false;
+        },
+    }));
+});
 
 async function verwijderUitPoule(judokaId, pouleId) {
     if (!confirm(__verwijderUitPouleBevestiging)) return;
