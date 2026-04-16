@@ -3,7 +3,7 @@
 @section('title', 'Wimpeltoernooi Instellingen - ' . $organisator->naam)
 
 @section('content')
-<div class="max-w-4xl mx-auto" x-data="milestonesPage()">
+<div class="max-w-4xl mx-auto" x-data="milestonesPage">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -18,7 +18,7 @@
 
     {{-- Feedback --}}
     <div x-show="feedback" x-transition x-cloak
-         :class="feedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+         :class="feedbackClass"
          class="border rounded px-4 py-3 mb-4">
         <span x-text="feedback"></span>
     </div>
@@ -68,7 +68,7 @@
             <h2 class="text-lg font-semibold">Milestones (<span x-text="milestones.length"></span>)</h2>
         </div>
 
-        <template x-if="milestones.length === 0">
+        <template x-if="isEmpty">
             <div class="p-6 text-center text-gray-500">
                 Nog geen milestones. Voeg hierboven je eerste milestone toe.
             </div>
@@ -80,7 +80,7 @@
                     <div class="bg-yellow-100 text-yellow-800 font-bold text-lg w-16 h-10 flex items-center justify-center rounded">
                         <span x-text="ms.punten"></span>
                     </div>
-                    <template x-if="editId !== ms.id">
+                    <template x-if="notEditing(ms)">
                         <div class="flex-1 flex items-center gap-4">
                             <span class="text-gray-800" x-text="ms.omschrijving"></span>
                             <div class="ml-auto flex gap-2">
@@ -95,14 +95,14 @@
                             </div>
                         </div>
                     </template>
-                    <template x-if="editId === ms.id">
+                    <template x-if="isEditing(ms)">
                         <form @submit.prevent="saveMilestone(ms)" class="flex-1 flex items-center gap-2">
                             <input type="number" x-model="editPunten" min="1" class="w-20 border rounded px-2 py-1 text-sm">
                             <input type="text" x-model="editOmschrijving" class="flex-1 border rounded px-2 py-1 text-sm">
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1 rounded">
                                 Opslaan
                             </button>
-                            <button type="button" @click="editId = null"
+                            <button type="button" @click="cancelEdit()"
                                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded">
                                 Annuleer
                             </button>
@@ -115,14 +115,15 @@
 </div>
 
 <script @nonce>
-const __t = {
-    errorAdding: @json(__('Fout bij toevoegen')),
-    errorSaving: @json(__('Fout bij opslaan')),
-    errorDeleting: @json(__('Fout bij verwijderen')),
-    confirmDelete: @json(__('Milestone ":naam" verwijderen?')),
-};
-function milestonesPage() {
-    return {
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        errorAdding: @json(__('Fout bij toevoegen')),
+        errorSaving: @json(__('Fout bij opslaan')),
+        errorDeleting: @json(__('Fout bij verwijderen')),
+        confirmDelete: @json(__('Milestone ":naam" verwijderen?')),
+    };
+
+    Alpine.data('milestonesPage', () => ({
         milestones: @json($milestones),
         nieuwPunten: '',
         nieuwOmschrijving: '',
@@ -133,6 +134,21 @@ function milestonesPage() {
         feedback: '',
         feedbackType: 'success',
 
+        // --- CSP-safe getters/helpers ---
+        get feedbackClass() {
+            return this.feedbackType === 'success'
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-red-100 border-red-400 text-red-700';
+        },
+        get isEmpty() { return this.milestones.length === 0; },
+        isEditing(ms) { return this.editId === ms.id; },
+        notEditing(ms) { return this.editId !== ms.id; },
+        cancelEdit() { this.editId = null; },
+
+        _csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        },
+
         async addMilestone() {
             this.saving = true;
             try {
@@ -140,7 +156,7 @@ function milestonesPage() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
@@ -179,7 +195,7 @@ function milestonesPage() {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
@@ -207,7 +223,7 @@ function milestonesPage() {
                 const res = await fetch(url, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                 });
@@ -226,9 +242,9 @@ function milestonesPage() {
         showFeedback(msg, type) {
             this.feedback = msg;
             this.feedbackType = type;
-            setTimeout(() => this.feedback = '', 3000);
-        }
-    }
-}
+            setTimeout(() => { this.feedback = ''; }, 3000);
+        },
+    }));
+});
 </script>
 @endsection

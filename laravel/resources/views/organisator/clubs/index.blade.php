@@ -3,7 +3,7 @@
 @section('title', __('Mijn Clubs') . ' - ' . $organisator->naam)
 
 @section('content')
-<div class="max-w-6xl mx-auto" x-data="clubsPage()">
+<div class="max-w-6xl mx-auto" x-data="clubsPage">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -113,18 +113,14 @@
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button @click="openEdit({{ $club->id }}, {{ json_encode([
-                                            'naam' => $club->naam,
-                                            'plaats' => $club->plaats,
-                                            'contact_naam' => $club->contact_naam,
-                                            'email' => $club->email,
-                                            'telefoon' => $club->telefoon,
-                                            'website' => $club->website,
-                                        ]) }})" class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium px-3 py-1 rounded">
+                                        <button type="button"
+                                                :data-club-id="{{ $club->id }}"
+                                                @click="openEditById({{ $club->id }})"
+                                                class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium px-3 py-1 rounded">
                                             {{ __('Bewerken') }}
                                         </button>
                                         <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST"
-                                              onsubmit="return confirmDelete({{ $club->judokas_count }}, '{{ addslashes($club->naam) }}')">
+                                              @submit="return confirmDelete({{ $club->judokas_count }}, {{ Js::from($club->naam) }}, $event)">
                                             @csrf
                                             @method('DELETE')
                                             @if(request('back'))
@@ -148,12 +144,12 @@
     <div x-show="editModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div x-show="editModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="editModal = false"></div>
+                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeEdit()"></div>
 
             <div x-show="editModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                  class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
-                <form :action="'{{ route('organisator.clubs.update', [$organisator, '__ID__']) }}'.replace('__ID__', editClubId)" method="POST">
+                <form :action="updateAction" method="POST">
                     @csrf
                     @method('PUT')
                     @if(request('back'))
@@ -196,7 +192,7 @@
                         <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             {{ __('Opslaan') }}
                         </button>
-                        <button type="button" @click="editModal = false" class="mt-3 sm:mt-0 w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded">
+                        <button type="button" @click="closeEdit()" class="mt-3 sm:mt-0 w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded">
                             {{ __('Annuleren') }}
                         </button>
                     </div>
@@ -207,37 +203,51 @@
 </div>
 
 <script @nonce>
-const __t = {
-    confirmDeleteWithJudokas: @json(__('LET OP: ":naam" heeft :count judoka(s). Deze worden ook verwijderd! Doorgaan?')),
-    confirmDelete: @json(__('Weet je zeker dat je ":naam" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')),
-};
-function clubsPage() {
-    return {
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        confirmDeleteWithJudokas: @json(__('LET OP: ":naam" heeft :count judoka(s). Deze worden ook verwijderd! Doorgaan?')),
+        confirmDelete: @json(__('Weet je zeker dat je ":naam" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')),
+    };
+    const clubsLookup = @json($clubs->keyBy('id')->map(fn($c) => [
+        'naam' => $c->naam,
+        'plaats' => $c->plaats,
+        'contact_naam' => $c->contact_naam,
+        'email' => $c->email,
+        'telefoon' => $c->telefoon,
+        'website' => $c->website,
+    ]));
+    const updateUrlTemplate = '{{ route("organisator.clubs.update", [$organisator, "__ID__"]) }}';
+
+    Alpine.data('clubsPage', () => ({
         editModal: false,
         editClubId: null,
-        editData: {
-            naam: '',
-            plaats: '',
-            contact_naam: '',
-            email: '',
-            telefoon: '',
-            website: ''
-        },
-        openEdit(id, data) {
-            this.editClubId = id;
-            this.editData = { ...data };
-            this.editModal = true;
-        }
-    }
-}
+        editData: { naam: '', plaats: '', contact_naam: '', email: '', telefoon: '', website: '' },
 
-function confirmDelete(judokasCount, clubNaam) {
-    if (judokasCount > 0) {
-        if (!confirm(__t.confirmDeleteWithJudokas.replace(':naam', clubNaam).replace(':count', judokasCount))) {
-            return false;
+        get updateAction() {
+            return this.editClubId ? updateUrlTemplate.replace('__ID__', this.editClubId) : '#';
+        },
+
+        openEditById(id) {
+            this.editClubId = id;
+            this.editData = { ...(clubsLookup[id] || { naam: '', plaats: '', contact_naam: '', email: '', telefoon: '', website: '' }) };
+            this.editModal = true;
+        },
+
+        closeEdit() {
+            this.editModal = false;
+        },
+    }));
+
+    window.confirmDelete = function(judokasCount, clubNaam, event) {
+        let ok;
+        if (judokasCount > 0) {
+            ok = confirm(__t.confirmDeleteWithJudokas.replace(':naam', clubNaam).replace(':count', judokasCount));
+        } else {
+            ok = confirm(__t.confirmDelete.replace(':naam', clubNaam));
         }
-    }
-    return confirm(__t.confirmDelete.replace(':naam', clubNaam));
-}
+        if (!ok && event) event.preventDefault();
+        return ok;
+    };
+});
 </script>
 @endsection
