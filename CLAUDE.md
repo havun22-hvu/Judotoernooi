@@ -24,6 +24,7 @@
 > **URL:** https://judotournament.org (production)
 > **Eigenaar:** Havun (henkvu@gmail.com = sitebeheerder)
 > **Doel:** SaaS platform voor judo toernooien - verhuurd aan judoscholen/organisatoren
+> **Onveranderlijke regels:** Zie [`CONTRACTS.md`](CONTRACTS.md) — bij elke wijziging eerst raadplegen.
 
 ## Bedrijfsmodel (SaaS)
 
