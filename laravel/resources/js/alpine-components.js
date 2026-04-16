@@ -312,4 +312,40 @@ export function registerAlpineComponents(Alpine) {
         isCopied(id) { return this.copiedId === id; },
         clearSearch() { this.search = ''; },
     }));
+
+    /**
+     * Internet connectivity indicator — polls /local-server/internet-status every 15s.
+     * Reads data-labels (JSON) for i18n strings.
+     */
+    Alpine.data('internetIndicator', () => ({
+        status: 'checking',
+        latency: null,
+        queueCount: 0,
+        lastCheck: '',
+        showDetails: false,
+        interval: null,
+        labels: { good: 'Good', poor: 'Poor', offline: 'Offline', checking: 'Checking...', unknown: 'Unknown', checked: 'Checked:' },
+        init() {
+            try { this.labels = { ...this.labels, ...JSON.parse(this.$el.dataset.labels || '{}') }; } catch (_) {}
+            this.checkStatus();
+            this.interval = setInterval(() => this.checkStatus(), 15000);
+        },
+        destroy() { if (this.interval) clearInterval(this.interval); },
+        get statusLabel() { return this.labels[this.status] || this.labels.unknown; },
+        async checkStatus() {
+            try {
+                const response = await fetch('/local-server/internet-status');
+                const data = await response.json();
+                this.status = data.status || 'offline';
+                this.latency = data.latency;
+                this.queueCount = data.queue_count || 0;
+                this.lastCheck = this.labels.checked + ' ' + new Date().toLocaleTimeString('nl-NL');
+            } catch (e) {
+                this.status = 'offline';
+                this.latency = null;
+            }
+        },
+        toggleDetails() { this.showDetails = !this.showDetails; },
+        closeDetails() { this.showDetails = false; },
+    }));
 }
