@@ -21,10 +21,10 @@
     $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
 @endphp
 @if($nietGecategoriseerdAantal > 0 || (isset($overlapWarning) && $overlapWarning))
-<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
+<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="warningsBanner" x-show="showWarnings">
     @if($nietGecategoriseerdAantal > 0)
     <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
-         x-data="{ show: true }"
+         x-data="dismissible"
          x-show="show"
          x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
@@ -40,7 +40,7 @@
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     {{ __('Bekijk lijst') }}
                 </a>
-                <button type="button" @click="show = false" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+                <button type="button" @click="dismiss" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@
 
     @if(isset($overlapWarning) && $overlapWarning)
     <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
-         x-data="{ show: true }"
+         x-data="dismissible"
          x-show="show"
          x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
@@ -59,7 +59,7 @@
                     <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
                 </div>
             </div>
-            <button type="button" @click="show = false" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+            <button type="button" @click="dismiss" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
         </div>
     </div>
     @endif
@@ -973,12 +973,12 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-yellow-800 text-sm font-medium">{{ __('Sorteer prioriteit:') }}</span>
                     <button type="button"
-                            x-data="{ open: false }"
-                            @click="open = !open"
+                            x-data="toggle"
+                            @click="toggle"
                             class="relative text-yellow-600 hover:text-yellow-800">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
                         <div x-show="open"
-                             @click.away="open = false"
+                             @click.away="close"
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
                             <p class="font-medium mb-1">{{ __('Sorteer volgorde binnen categorie') }}</p>
@@ -2689,7 +2689,7 @@
 
     <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
     @if($toernooi->weegkaarten_gemaakt_op)
-    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">
+    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="confirmWithPassword">
         <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
             <span class="text-2xl">⚠️</span> {{ __('Noodknop: Heropen Voorbereiding') }}
         </h2>
@@ -2708,7 +2708,7 @@
             </ul>
         </div>
 
-        <button @click="showConfirm = true" x-show="!showConfirm"
+        <button @click="openConfirm" x-show="!showConfirm"
                 class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
             {{ __('Heropen Voorbereiding') }}
         </button>
@@ -2837,7 +2837,7 @@
             </div>
 
             <!-- 3. Weegkaarten -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="toggle">
                 <div>
                     <h4 class="font-medium">{{ __('3. Weegkaarten') }}</h4>
                     <p class="text-sm text-gray-500">{{ __('Per judoka (QR + gegevens)') }}</p>
@@ -2846,8 +2846,8 @@
                     <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -2858,7 +2858,7 @@
 
             <!-- 4. Coachkaarten — alleen voor open toernooi -->
             @if($toernooi->isOpenToernooi())
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="toggle">
                 <div>
                     <h4 class="font-medium">{{ __('4. Coachkaarten') }}</h4>
                     <p class="text-sm text-gray-500">{{ __('Toegang dojo (alle en per club)') }}</p>
@@ -2867,8 +2867,8 @@
                     <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -3035,7 +3035,7 @@
         </div>
 
         <!-- IP Adressen configuratie -->
-        <div class="mb-6" x-data="{ showHelp: false }">
+        <div class="mb-6" x-data="helpPanel">
             <h3 class="font-bold text-gray-800 mb-3">{{ __('IP-adressen configureren') }}</h3>
 
             <div class="grid md:grid-cols-3 gap-4">
@@ -3078,7 +3078,7 @@
             </div>
             <div class="flex items-center gap-4 mt-2">
                 <p class="text-xs text-gray-500">{{ __('Tip: Noteer deze IP\'s ook op papier voor noodgevallen') }}</p>
-                <button type="button" @click="showHelp = !showHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                <button type="button" @click="toggleHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
                     {{ __('Hoe vind ik mijn IP?') }}
                 </button>
             </div>

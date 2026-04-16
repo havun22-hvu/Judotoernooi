@@ -277,7 +277,7 @@
 @endphp
 <div class="mb-8 w-full" x-data="{ open: true }">
     <div class="flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg">
-        <button @click="open = !open" class="flex-1 flex justify-between items-center hover:bg-blue-700 -m-3 p-3 rounded-tl-lg">
+        <button @click="toggle" class="flex-1 flex justify-between items-center hover:bg-blue-700 -m-3 p-3 rounded-tl-lg">
             <span class="text-lg font-bold">{{ $categorieLabel }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
             <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -369,11 +369,11 @@
                         <div class="flex items-center gap-2">
                             {{-- Omzetten dropdown alleen voor eliminatie en kruisfinale --}}
                             @if($isEliminatie || $isKruisfinale)
-                            <div class="relative" x-data="{ open: false }">
-                                <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
+                            <div class="relative" x-data="toggle">
+                                <button @click="toggle" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
                                     {{ __('Omzetten') }} ▾
                                 </button>
-                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
+                                <div x-show="open" @click.away="close" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
                                     @if($isEliminatie)
                                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
                                         {{ __('Alleen poules') }}

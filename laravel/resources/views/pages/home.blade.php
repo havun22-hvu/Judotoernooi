@@ -109,8 +109,8 @@
             </div>
             <div class="flex items-center gap-5">
                 {{-- Taalkiezer --}}
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-300 hover:text-white text-sm transition focus:outline-none">
+                <div class="relative" x-data="toggle">
+                    <button @click="toggle" @click.away="close" class="flex items-center text-blue-300 hover:text-white text-sm transition focus:outline-none">
                         @include('partials.flag-icon', ['lang' => app()->getLocale()])
                         <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -399,7 +399,7 @@
 
                 <!-- Lightbox popup -->
                 <div x-show="lightbox" x-transition.opacity
-                     x-data="{ zoomed: false }"
+                     x-data="zoomable"
                      class="fixed inset-0 z-50 bg-black/80"
                      :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
                      @click="lightbox = null; zoomed = false"

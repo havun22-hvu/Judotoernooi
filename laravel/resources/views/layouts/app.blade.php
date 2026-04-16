@@ -95,8 +95,8 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     {{-- DO NOT REMOVE: Language switcher (NL/EN) - essential for multi-language support --}}
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                    <div class="relative" x-data="toggle">
+                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -126,8 +126,8 @@
 
                     @if(Auth::guard('organisator')->check())
                     {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
-                    <div class="relative" x-data="{ open: false, showAbout: false }">
-                        <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                    <div class="relative" x-data="modalWithAbout">
+                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif

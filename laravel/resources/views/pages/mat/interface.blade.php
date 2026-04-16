@@ -100,7 +100,7 @@
                             </div>
                         </div>
                         <div class="px-5 py-3 bg-gray-50 text-right">
-                            <button @click="showHelp = false" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
+                            <button @click="closeHelp" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
                         </div>
                     </div>
                 </div>

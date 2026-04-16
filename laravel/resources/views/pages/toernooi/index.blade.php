@@ -4,7 +4,7 @@
 @section('main-class', 'max-w-7xl w-full mx-auto')
 
 @section('content')
-<div x-data="{ tab: 'overzicht' }" class="w-full max-w-7xl">
+<div x-data="tabSwitch" data-initial-tab="overzicht" class="w-full max-w-7xl">
 
 {{-- Header --}}
 <div class="flex justify-between items-center mb-6">
@@ -19,19 +19,19 @@
 
 {{-- Tab navigatie --}}
 <nav class="flex gap-1 mb-6 border-b border-gray-200">
-    <button @click="tab = 'overzicht'" :class="tab === 'overzicht' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
+    <button @click="switchTo('overzicht')" :class="tab === 'overzicht' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
         {{ __('Overzicht') }}
     </button>
-    <button @click="tab = 'klanten'" :class="tab === 'klanten' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
+    <button @click="switchTo('klanten')" :class="tab === 'klanten' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
         {{ __('Klanten') }}
     </button>
-    <button @click="tab = 'betalingen'" :class="tab === 'betalingen' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
+    <button @click="switchTo('betalingen')" :class="tab === 'betalingen' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
         {{ __('Betalingen') }}
     </button>
-    <button @click="tab = 'activiteit'" :class="tab === 'activiteit' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
+    <button @click="switchTo('activiteit')" :class="tab === 'activiteit' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
         {{ __('Activiteit') }}
     </button>
-    <button @click="tab = 'systeem'" :class="tab === 'systeem' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
+    <button @click="switchTo('systeem')" :class="tab === 'systeem' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-4 py-2.5 border-b-2 text-sm transition-colors">
         {{ __('Systeem') }}
         @php $afCount = \App\Models\AutofixProposal::where('created_at', '>=', now()->subDay())->count(); @endphp
         @if($afCount > 0)

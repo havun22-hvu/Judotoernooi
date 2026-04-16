@@ -10,9 +10,9 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         {{-- Language switcher --}}
-        <div class="flex justify-end mb-2" x-data="{ open: false }">
+        <div class="flex justify-end mb-2" x-data="toggle">
             <div class="relative">
-                <button @click="open = !open" @click.away="open = false" class="flex items-center text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
+                <button @click="toggle" @click.away="close" class="flex items-center text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
                     @include('partials.flag-icon', ['lang' => app()->getLocale()])
                     <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>

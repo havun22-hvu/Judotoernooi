@@ -51,13 +51,13 @@
         </div>
 
         <!-- Tab Navigation (no print) -->
-        <div class="mb-6 no-print" x-data="{ tab: 'ranking' }">
+        <div class="mb-6 no-print" x-data="tabSwitch" data-initial-tab="ranking">
             <div class="flex border-b border-gray-300">
-                <button @click="tab = 'ranking'" :class="tab === 'ranking' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+                <button @click="switchTo('ranking')" :class="tab === 'ranking' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
                         class="px-6 py-3 font-medium">
                     Club Ranking
                 </button>
-                <button @click="tab = 'uitslagen'" :class="tab === 'uitslagen' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+                <button @click="switchTo('uitslagen')" :class="tab === 'uitslagen' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
                         class="px-6 py-3 font-medium">
                     Alle Uitslagen
                 </button>

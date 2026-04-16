@@ -99,7 +99,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 @foreach($coachKaarten as $index => $kaart)
                 <div class="border rounded-lg overflow-hidden bg-white shadow-sm"
-                     x-data="{ showHistory: false, copied: false }">
+                     x-data="copyHistory">
                     <!-- Card Header with status indicator -->
                     <div class="px-4 py-2 bg-gray-50 border-b flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600">{{ __('Kaart') }} #{{ $index + 1 }}</span>

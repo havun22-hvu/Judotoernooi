@@ -113,7 +113,7 @@
         <!-- Add Judoka Form -->
         @if($inschrijvingOpen && !$maxBereikt && ($magInschrijven ?? true))
         <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm()">
-            <button @click="open = !open" class="flex justify-between items-center w-full text-left">
+            <button @click="toggle" class="flex justify-between items-center w-full text-left">
                 <h2 class="text-xl font-bold text-gray-800">+ {{ __('Nieuwe Judoka Toevoegen') }}</h2>
                 <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
             </button>
@@ -209,7 +209,7 @@
         @endphp
 
         <!-- Sync Status Box -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSwitch" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                     <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
@@ -317,7 +317,7 @@
 
         {{-- Payment Box --}}
         @if($betalingActief ?? false)
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSwitch" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                     <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
