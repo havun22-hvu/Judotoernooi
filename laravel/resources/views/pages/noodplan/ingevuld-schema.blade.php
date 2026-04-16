@@ -186,7 +186,7 @@
 
 @section('toolbar')
 @if(!$poulesMetSchema->isEmpty())
-<div x-data="noodplanPrint" data-total-poules="{{ $poulesMetSchema->count() }}" data-label-selected="{{ __('geselecteerd') }}" class="bg-gray-100 px-4 py-3 border-b">
+<div x-data="noodplanPrint" data-total-poules="{{ $poulesMetSchema->count() }}" class="bg-gray-100 px-4 py-3 border-b">
     <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
             <span class="font-medium text-gray-700">{{ __("Selecteer schema's om te printen") }}:</span>
@@ -194,7 +194,7 @@
             <button x-on:click="selectAll(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">{{ __('Alles uit') }}</button>
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-500"><span x-text="selected"></span> {{ __('van') }} <span x-text="total"></span> <span x-text="label"></span></span>
+            <span class="text-sm text-gray-500"><span x-text="selected"></span> {{ __('van') }} <span x-text="total"></span> {{ __('geselecteerd') }}</span>
             <button x-on:click="print()" type="button" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
                 {{ __('Print geselecteerde') }}
             </button>

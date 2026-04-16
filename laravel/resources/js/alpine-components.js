@@ -12,6 +12,11 @@ function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
+function intFromDataset(el, key, fallback = 0) {
+    const parsed = parseInt(el.dataset[key] ?? '', 10);
+    return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 export function registerAlpineComponents(Alpine) {
     /**
      * Generic toggle — used for dropdowns, modals, expand/collapse.
@@ -706,42 +711,51 @@ export function registerAlpineComponents(Alpine) {
         },
     }));
 
-    /**
-     * Help-page search filter — hides/shows .help-section elements based on text match.
-     */
     Alpine.data('helpPage', () => ({
         searchQuery: '',
         filteredCount: 0,
+        sections: [],
+        init() {
+            this.sections = [...document.querySelectorAll('.help-section')].map((el) => ({
+                el,
+                text: el.textContent.toLowerCase(),
+                keywords: (el.dataset.keywords || '').toLowerCase(),
+            }));
+            this.filteredCount = this.sections.length;
+        },
         filterContent() {
             const query = this.searchQuery.toLowerCase().trim();
-            const sections = document.querySelectorAll('.help-section');
             let count = 0;
-            sections.forEach((section) => {
-                const text = section.textContent.toLowerCase();
-                const keywords = (section.dataset.keywords || '').toLowerCase();
+            this.sections.forEach(({ el, text, keywords }) => {
                 const matches = !query || text.includes(query) || keywords.includes(query);
-                section.style.display = matches ? 'block' : 'none';
+                el.classList.toggle('hidden', !matches);
                 if (matches) count++;
             });
             this.filteredCount = count;
         },
+        clear() {
+            this.searchQuery = '';
+            this.filterContent();
+        },
+        get showQuickstart() {
+            return !this.searchQuery || 'quickstart snel starten begin'.includes(this.searchQuery.toLowerCase());
+        },
+        get noResults() {
+            return this.searchQuery && this.filteredCount === 0;
+        },
     }));
 
     /**
-     * Poule-select checkbox for ingevuld-schema print layout. Toggles a class on the
-     * host element and refreshes the counter via a window event that noodplanPrint listens for.
+     * Poule-select: dispatches noodplan-print:refresh so noodplanPrint can recount.
+     * Suppressed during bulk operations (noodplanPrint.selectAll) to avoid N² dispatches.
      */
     Alpine.data('pouleSelect', () => ({
         printInclude: true,
         init() {
             this.$watch('printInclude', (value) => {
-                if (value) {
-                    this.$el.classList.remove('print-exclude');
-                    this.$el.classList.remove('opacity-50');
-                } else {
-                    this.$el.classList.add('print-exclude');
-                    this.$el.classList.add('opacity-50');
-                }
+                this.$el.classList.toggle('print-exclude', !value);
+                this.$el.classList.toggle('opacity-50', !value);
+                if (window.__noodplanPrintBulk) return;
                 this.$nextTick(() => {
                     window.dispatchEvent(new CustomEvent('noodplan-print:refresh'));
                 });
@@ -749,32 +763,22 @@ export function registerAlpineComponents(Alpine) {
         },
     }));
 
-    /**
-     * Toolbar voor noodplan print-pagina. Host bevat data-total-poules.
-     * selectAll dispatcht input-event naar elke .poule-page checkbox; updateCounter
-     * telt zichtbare poules en synct een teller. Luistert naar noodplan-print:refresh.
-     */
     Alpine.data('noodplanPrint', () => ({
         total: 0,
         selected: 0,
-        label: '',
         init() {
-            this.total = parseInt(this.$el.dataset.totalPoules || '0', 10);
-            this.label = this.$el.dataset.labelSelected || 'geselecteerd';
-            this.updateCounter();
+            this.total = intFromDataset(this.$el, 'totalPoules');
             window.addEventListener('noodplan-print:refresh', () => this.updateCounter());
-            setTimeout(() => this.updateCounter(), 200);
+            this.$nextTick(() => this.updateCounter());
         },
         selectAll(checked) {
-            document.querySelectorAll('.poule-page').forEach((el) => {
-                const checkbox = el.querySelector('input[type="checkbox"]');
-                if (checkbox) {
-                    checkbox.checked = checked;
-                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-                    checkbox.dispatchEvent(new Event('input', { bubbles: true }));
-                }
+            window.__noodplanPrintBulk = true;
+            document.querySelectorAll('.poule-page input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             });
-            setTimeout(() => this.updateCounter(), 100);
+            window.__noodplanPrintBulk = false;
+            this.$nextTick(() => this.updateCounter());
         },
         updateCounter() {
             this.selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
