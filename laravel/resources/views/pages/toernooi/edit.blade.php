@@ -68,7 +68,7 @@
 <div class="h-16"></div>
 @endif
 
-<div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
+<div class="max-w-4xl mx-auto" x-data="editTabs" data-initial-tab="{{ request('tab', 'toernooi') }}">
     <!-- Sticky header met titel en tabs -->
     <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
         <div class="flex justify-between items-center mb-4">
@@ -86,31 +86,31 @@
         <div class="flex border-b items-end">
         <button type="button"
                 @click="activeTab = 'toernooi'"
-                :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                :class="editTabClass('toernooi', 'border-blue-500 text-blue-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Toernooi') }}
         </button>
         <button type="button"
                 @click="activeTab = 'organisatie'"
-                :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                :class="editTabClass('organisatie', 'border-blue-500 text-blue-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Organisatie') }}
         </button>
         <button type="button"
                 @click="activeTab = 'noodplan'"
-                :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                :class="editTabClass('noodplan', 'border-red-500 text-red-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Noodplan') }}
         </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
                 @click="activeTab = 'admin'"
-                :class="activeTab === 'admin' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                :class="editTabClass('admin', 'border-orange-500 text-orange-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Admin') }}
         </button>
         @endif
-        <div class="ml-auto pb-2" x-show="activeTab === 'toernooi'" x-cloak>
+        <div class="ml-auto pb-2" x-show="isTab('toernooi')" x-cloak>
             <button type="button" onclick="document.getElementById('toernooi-form')?.requestSubmit()"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
                 {{ __('Opslaan') }}
@@ -120,7 +120,7 @@
     </div>
 
     <!-- TAB: TOERNOOI -->
-    <div x-show="activeTab === 'toernooi'" x-cloak>
+    <div x-show="isTab('toernooi')" x-cloak>
     <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="{{ __('Instellingen opslaan...') }}">
         @csrf
         @method('PUT')
@@ -515,13 +515,13 @@
                 $opgeslagenSchemas = is_array($rawSchemas) ? $rawSchemas : [];
             @endphp
 
-            <div class="space-y-4" x-data="wedstrijdSchemas()">
+            <div class="space-y-4" x-data="wedstrijdSchemas">
                 <!-- Tabs voor poulegrootte -->
                 <div class="flex border-b">
                     @foreach([2,3,4,5,6,7] as $grootte)
                     <button type="button"
-                            @click="activeTab = {{ $grootte }}"
-                            :class="activeTab === {{ $grootte }} ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            @click="setTab({{ $grootte }})"
+                            :class="tabClass({{ $grootte }})"
                             class="px-4 py-2 font-medium border-b-2 -mb-px transition-colors text-sm">
                         {{ __(':aantal judoka\'s', ['aantal' => $grootte]) }}
                     </button>
@@ -535,7 +535,7 @@
                     $schema = is_array($saved) ? $saved : $standaardSchemas[$grootte];
                     $aantalWed = count($schema);
                 @endphp
-                <div x-show="activeTab === {{ $grootte }}" x-cloak class="pt-2">
+                <div x-show="isTab({{ $grootte }})" x-cloak class="pt-2">
                     <div class="flex items-start gap-6">
                         <!-- Visueel schema -->
                         <div class="flex-1">
@@ -788,9 +788,18 @@
         });
 
         // Alpine component voor tabs
-        function wedstrijdSchemas() {
-            return { activeTab: 4 };
-        }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('wedstrijdSchemas', () => ({
+                activeTab: 4,
+                setTab(n) { this.activeTab = n; },
+                isTab(n) { return this.activeTab === n; },
+                tabClass(n) {
+                    return this.activeTab === n
+                        ? 'border-blue-500 text-blue-600 bg-blue-50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700';
+                },
+            }));
+        });
         </script>
 
         <!-- GEWICHT -->
@@ -1977,7 +1986,7 @@
     </div>
 
     <!-- TAB: ORGANISATIE -->
-    <div x-show="activeTab === 'organisatie'" x-cloak>
+    <div x-show="isTab('organisatie')" x-cloak>
 
     <!-- TOERNOOI PAKKET -->
     @auth('organisator')
@@ -2080,7 +2089,7 @@
 
     <!-- TEMPLATE OPSLAAN -->
     @auth('organisator')
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Opslaan als Template') }}</h2>
         <p class="text-gray-600 mb-4">
             {{ __('Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.') }}
@@ -2107,27 +2116,33 @@
                     <span x-show="!loading">{{ __('Opslaan') }}</span>
                     <span x-show="loading">{{ __('Bezig...') }}</span>
                 </button>
-                <button type="button" @click="showForm = false; naam = ''; beschrijving = ''" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                <button type="button" @click="annuleer()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
                     {{ __('Annuleren') }}
                 </button>
             </div>
-            <p x-show="message" x-text="message" :class="success ? 'text-green-600' : 'text-red-600'" class="text-sm"></p>
+            <p x-show="message" x-text="message" :class="messageClass" class="text-sm"></p>
         </div>
     </div>
 
     <script @nonce>
-    function templateSave() {
+    document.addEventListener('alpine:init', () => {
         const __t = {
             templateOpgeslagen: @json(__('Template opgeslagen!')),
             foutBijOpslaan: @json(__('Fout bij opslaan')),
         };
-        return {
+        Alpine.data('templateSave', () => ({
             showForm: false,
             naam: '',
             beschrijving: '',
             loading: false,
             message: '',
             success: false,
+            get messageClass() { return this.success ? 'text-green-600' : 'text-red-600'; },
+            annuleer() {
+                this.showForm = false;
+                this.naam = '';
+                this.beschrijving = '';
+            },
             async save() {
                 this.loading = true;
                 this.message = '';
@@ -2137,9 +2152,9 @@
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving })
+                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving }),
                     });
                     const data = await res.json();
                     if (res.ok) {
@@ -2157,9 +2172,9 @@
                     this.message = __t.foutBijOpslaan;
                 }
                 this.loading = false;
-            }
-        }
-    }
+            },
+        }));
+    });
     </script>
     @endauth
 
@@ -2729,7 +2744,7 @@
     </div><!-- End TAB: ORGANISATIE -->
 
     <!-- TAB: NOODPLAN -->
-    <div x-show="activeTab === 'noodplan'" x-cloak>
+    <div x-show="isTab('noodplan')" x-cloak>
 
     <!-- ==================== VOORBEREIDING ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -3293,7 +3308,7 @@
 
     <!-- TAB: TEST (alleen voor admin) -->
     @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
-    <div x-show="activeTab === 'admin'" x-cloak>
+    <div x-show="isTab('admin')" x-cloak>
 
     <!-- RESET ALLES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">

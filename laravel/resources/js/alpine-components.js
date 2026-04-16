@@ -25,6 +25,24 @@ export function registerAlpineComponents(Alpine) {
     /**
      * Bracket tabs component for mat interface - active tab A/B with Blade-set default via :data-initial binding.
      */
+    /**
+     * Tab-switcher met string identifiers (toernooi/organisatie/noodplan/admin).
+     * Leest default uit data-initial-tab.
+     */
+    Alpine.data('editTabs', () => ({
+        activeTab: 'toernooi',
+        init() {
+            this.activeTab = this.$el.dataset.initialTab || 'toernooi';
+        },
+        setTab(name) { this.activeTab = name; },
+        isTab(name) { return this.activeTab === name; },
+        editTabClass(name, activeClasses) {
+            return this.activeTab === name
+                ? activeClasses
+                : 'border-transparent text-gray-500 hover:text-gray-700';
+        },
+    }));
+
     Alpine.data('bracketTabs', () => ({
         activeTab: 'A',
         init() {
