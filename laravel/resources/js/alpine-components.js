@@ -22,6 +22,29 @@ export function registerAlpineComponents(Alpine) {
      * Generic toggle — used for dropdowns, modals, expand/collapse.
      * Replaces: x-data="{ open: false }" + @click="open = !open"
      */
+    /**
+     * Bracket tabs component for mat interface - active tab A/B with Blade-set default via :data-initial binding.
+     */
+    Alpine.data('bracketTabs', () => ({
+        activeTab: 'A',
+        init() {
+            this.activeTab = this.$el.dataset.initial || 'A';
+        },
+        isActive(tab) { return this.activeTab === tab; },
+        isTabB() { return this.activeTab === 'B'; },
+        tabClass(tab) {
+            return this.activeTab === tab
+                ? 'border-purple-600 text-purple-700 bg-purple-50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        },
+        switchTab(tab, pouleId) {
+            this.activeTab = tab;
+            if (window.__matInterface && typeof window.__matInterface.laadBracketHtml === 'function') {
+                Promise.resolve().then(() => window.__matInterface.laadBracketHtml(pouleId, tab));
+            }
+        },
+    }));
+
     Alpine.data('toggle', () => ({
         open: false,
         toggle() { this.open = !this.open; },
