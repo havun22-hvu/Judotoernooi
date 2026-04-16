@@ -103,7 +103,7 @@ class Push90LastTest extends TestCase
         $response = $middleware->handle($request, fn($r) => response('ok'));
 
         $this->assertTrue($response->headers->has('Content-Security-Policy'));
-        $this->assertStringContainsString("default-src 'self'", $response->headers->get('Content-Security-Policy'));
+        $this->assertStringContainsString("default-src 'none'", $response->headers->get('Content-Security-Policy'));
     }
 
     #[Test]

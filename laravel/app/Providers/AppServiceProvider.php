@@ -29,7 +29,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Default csp-nonce binding — used by the @nonce Blade directive.
+        // SecurityHeaders middleware overrides this per-request with a real random nonce
+        // in the web pipeline. In non-HTTP contexts (tests, console) this default keeps
+        // view-rendering from crashing with "Target class [csp-nonce] does not exist".
+        $this->app->bind('csp-nonce', fn () => '');
     }
 
     /**
