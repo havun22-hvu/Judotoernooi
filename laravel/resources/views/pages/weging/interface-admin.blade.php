@@ -8,7 +8,7 @@
     <div class="text-sm text-gray-500">{{ __('Auto-refresh 10s') }}</div>
 </div>
 
-<div x-data="weeglijst()" x-init="init()">
+<div x-data="weeglijst" x-init="init()">
     <!-- Filters en stats -->
     <div class="bg-white rounded-lg shadow p-4 mb-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -30,14 +30,14 @@
                 </select>
 
                 <!-- Einde weegtijd knop - alleen zichtbaar als blok geselecteerd en niet gesloten -->
-                <template x-if="blokFilter !== '' && !blokGesloten[blokFilter]">
+                <template x-if="kanSluitenWeegtijd">
                     <button type="button"
                             @click="sluitWeegtijd()"
                             class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded">
                         {{ __('Blok') }} <span x-text="blokFilter"></span>: {{ __('Einde weegtijd') }}
                     </button>
                 </template>
-                <template x-if="blokFilter !== '' && blokGesloten[blokFilter]">
+                <template x-if="isBlokGesloten">
                     <span class="text-gray-500 px-4 py-2">{{ __('Blok') }} <span x-text="blokFilter"></span>: {{ __('Gesloten') }}</span>
                 </template>
             </div>
@@ -46,18 +46,18 @@
             <div class="flex items-center gap-4">
                 @foreach($toernooi->blokken as $blok)
                 <div class="text-center w-28 transition-opacity"
-                     :class="blokFilter !== '' && blokFilter != '{{ $blok->nummer }}' ? 'opacity-40' : ''">
+                     :class="blokFadeClass({{ $blok->nummer }})">
                     <div class="text-xs text-gray-500">{{ __('Blok') }} {{ $blok->nummer }}</div>
                     <div class="text-lg font-bold">
-                        <span class="text-green-600" x-text="stats.blok{{ $blok->nummer }}?.gewogen || 0"></span>
+                        <span class="text-green-600" x-text="blokStat({{ $blok->nummer }}, 'gewogen')"></span>
                         <span class="text-gray-400">/</span>
-                        <span class="text-gray-600" x-text="stats.blok{{ $blok->nummer }}?.totaal || 0"></span>
+                        <span class="text-gray-600" x-text="blokStat({{ $blok->nummer }}, 'totaal')"></span>
                     </div>
                     @if($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">{{ __('Gesloten') }}</div>
                     @elseif($blok->weging_einde && $toernooi->datum?->isToday())
-                    <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
-                         class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
+                    <div x-data="countdown" data-start="{{ $blok->weging_start?->toISOString() }}" data-end="{{ $blok->weging_einde->toISOString() }}" data-blok="{{ $blok->nummer }}" x-init="start()"
+                         class="text-xs font-mono" :class="countdownClass"
                          x-text="display"></div>
                     @endif
                 </div>
@@ -70,8 +70,8 @@
                         <span class="text-gray-400">/</span>
                         <span class="text-gray-600" x-text="stats.totaal"></span>
                     </div>
-                    <div class="text-xs" :class="stats.percentage >= 100 ? 'text-green-600' : 'text-gray-500'"
-                         x-text="stats.percentage + '%'"></div>
+                    <div class="text-xs" :class="percentClass"
+                         x-text="percentLabel"></div>
                 </div>
             </div>
         </div>
@@ -95,29 +95,29 @@
             <tbody class="divide-y divide-gray-200">
                 <template x-for="judoka in gefilterd" :key="judoka.id">
                     <tr class="hover:bg-gray-50"
-                        :class="judoka.afwezig ? 'bg-red-50 opacity-60' : (judoka.gewogen ? '' : 'bg-yellow-50')">
-                        <td class="px-4 py-3 font-medium" :class="judoka.afwezig ? 'line-through text-gray-500' : ''">
+                        :class="rowClass(judoka)">
+                        <td class="px-4 py-3 font-medium" :class="naamClass(judoka)">
                             <span x-text="judoka.naam"></span>
                             <span x-show="judoka.afwezig" class="ml-2 text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded no-underline inline-block">AFWEZIG</span>
                         </td>
-                        <td class="px-4 py-3 text-gray-600" x-text="judoka.club || '-'"></td>
-                        <td class="px-4 py-3" x-text="judoka.leeftijdsklasse || '-'"></td>
-                        <td class="px-4 py-3" x-text="(judoka.gewicht || judoka.gewichtsklasse || '-') + ' kg'"></td>
-                        <td class="px-4 py-3" x-text="judoka.blok ? 'Blok ' + judoka.blok : '-'"></td>
+                        <td class="px-4 py-3 text-gray-600" x-text="clubOrDash(judoka)"></td>
+                        <td class="px-4 py-3" x-text="leeftijdOrDash(judoka)"></td>
+                        <td class="px-4 py-3" x-text="opgegevenLabel(judoka)"></td>
+                        <td class="px-4 py-3" x-text="blokLabel(judoka)"></td>
                         <td class="px-4 py-3">
                             <span x-show="judoka.afwezig" class="text-red-600 font-medium">-</span>
-                            <span x-show="!judoka.afwezig && judoka.gewogen" class="font-bold" x-text="judoka.gewicht_gewogen + ' kg'"></span>
-                            <span x-show="!judoka.afwezig && !judoka.gewogen" class="text-gray-400">-</span>
+                            <span x-show="isGewogen(judoka)" class="font-bold" x-text="gewogenLabel(judoka)"></span>
+                            <span x-show="notGewogen(judoka)" class="text-gray-400">-</span>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500" x-text="judoka.gewogen_om || '-'"></td>
+                        <td class="px-4 py-3 text-sm text-gray-500" x-text="tijdOrDash(judoka)"></td>
                         <td class="px-4 py-3">
                             <button @click="openEditGewicht(judoka)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                <span x-text="judoka.afwezig ? 'Herstel' : 'Wijzig'"></span>
+                                <span x-text="actieLabel(judoka)"></span>
                             </button>
                         </td>
                     </tr>
                 </template>
-                <tr x-show="gefilterd.length === 0">
+                <tr x-show="isEmpty">
                     <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                         {{ __("Geen judoka's gevonden") }}
                     </td>
@@ -130,7 +130,7 @@
     <div x-show="editModal" x-cloak class="fixed inset-0 z-50 pointer-events-none">
         <div class="absolute bg-white rounded-lg shadow-xl w-80 pointer-events-auto"
              x-ref="editModalBox"
-             :style="'left:' + modalX + 'px; top:' + modalY + 'px;'">
+             :style="modalStyle">
             <div class="p-4 border-b cursor-move select-none bg-gray-50 rounded-t-lg"
                  @mousedown="startDrag($event)"
                  @touchstart.prevent="startDrag($event)">
@@ -139,8 +139,8 @@
                     <button @click="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
                 </div>
                 <p class="text-sm text-gray-600">
-                    <span x-text="editJudoka?.naam"></span>
-                    <template x-if="editJudoka?.gewicht && parseFloat(editJudoka.gewicht) > 0">
+                    <span x-text="editNaam"></span>
+                    <template x-if="hasGewichtOpgegeven">
                         <span class="text-blue-600 font-medium">
                             (opgegeven: <span x-text="editJudoka.gewicht"></span> kg)
                         </span>
@@ -162,7 +162,7 @@
                 </button>
                 <button @click="saveGewicht()" :disabled="editSaving"
                         class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
-                    <span x-show="!editSaving">{{ __('Opslaan') }}</span>
+                    <span x-show="notSaving">{{ __('Opslaan') }}</span>
                     <span x-show="editSaving">{{ __('Bezig...') }}</span>
                 </button>
             </div>
@@ -171,29 +171,47 @@
 </div>
 
 <script @nonce>
-const __t = {
-    confirmCloseBlock: @json(__('Weegtijd Blok :blok sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')),
-    saveError: @json(__('Fout bij opslaan')),
-};
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        confirmCloseBlock: @json(__('Weegtijd Blok :blok sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')),
+        saveError: @json(__('Fout bij opslaan')),
+    };
 
-// Countdown timer - toont alleen na starttijd, met alert bij einde
-function countdown(starttijd, eindtijd, blokNummer) {
-    return {
-        start_time: starttijd ? new Date(starttijd) : null,
-        end: new Date(eindtijd),
-        blok: blokNummer,
+    const weegtijdAlertGetoond = {};
+    function toonWeegtijdAlert(blokNummer) {
+        if (weegtijdAlertGetoond[blokNummer]) return;
+        weegtijdAlertGetoond[blokNummer] = true;
+        if (Notification.permission === 'granted') {
+            new Notification('Weegtijd voorbij!', { body: 'Blok ' + blokNummer + ' weegtijd is verstreken', icon: '/icon-192x192.png' });
+        }
+        alert('⏰ Weegtijd Blok ' + blokNummer + ' is voorbij!');
+    }
+
+    Alpine.data('countdown', () => ({
+        start_time: null,
+        end: null,
+        blok: 0,
         display: '',
         expired: false,
         warning: false,
         alerted: false,
         interval: null,
+        init() {
+            this.start_time = this.$el.dataset.start ? new Date(this.$el.dataset.start) : null;
+            this.end = new Date(this.$el.dataset.end);
+            this.blok = parseInt(this.$el.dataset.blok, 10) || 0;
+        },
+        get countdownClass() {
+            if (this.expired) return 'text-red-600 font-bold';
+            if (this.warning) return 'text-yellow-600';
+            return 'text-blue-600';
+        },
         start() {
             this.update();
             this.interval = setInterval(() => this.update(), 1000);
         },
         update() {
             const now = new Date();
-            // Toon niets als weging nog niet begonnen is
             if (this.start_time && now < this.start_time) {
                 this.display = '';
                 return;
@@ -214,24 +232,13 @@ function countdown(starttijd, eindtijd, blokNummer) {
             const m = Math.floor((diff % 3600000) / 60000);
             const s = Math.floor((diff % 60000) / 1000);
             this.display = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-        }
-    }
-}
+        },
+    }));
 
-let weegtijdAlertGetoond = {};
-function toonWeegtijdAlert(blokNummer) {
-    if (weegtijdAlertGetoond[blokNummer]) return;
-    weegtijdAlertGetoond[blokNummer] = true;
-    // Browser notificatie (als toegestaan)
-    if (Notification.permission === 'granted') {
-        new Notification('Weegtijd voorbij!', { body: 'Blok ' + blokNummer + ' weegtijd is verstreken', icon: '/icon-192x192.png' });
-    }
-    // Alert popup
-    alert('⏰ Weegtijd Blok ' + blokNummer + ' is voorbij!');
-}
+    const lijstJsonUrl = '{{ route("toernooi.weging.lijst-json", $toernooi->routeParams()) }}';
+    const currentUrl = '{{ url()->current() }}';
 
-function weeglijst() {
-    return {
+    Alpine.data('weeglijst', () => ({
         judokas: @json($judokas),
         gefilterd: [],
         zoekterm: '',
@@ -256,11 +263,50 @@ function weeglijst() {
             @endforeach
         },
 
+        // --- CSP-safe getters/helpers ---
+        get kanSluitenWeegtijd() {
+            return this.blokFilter !== '' && !this.blokGesloten[this.blokFilter];
+        },
+        get isBlokGesloten() {
+            return this.blokFilter !== '' && !!this.blokGesloten[this.blokFilter];
+        },
+        blokFadeClass(blokNummer) {
+            return this.blokFilter !== '' && this.blokFilter != blokNummer ? 'opacity-40' : '';
+        },
+        blokStat(blokNummer, key) {
+            const stat = this.stats['blok' + blokNummer];
+            return stat && stat[key] ? stat[key] : 0;
+        },
+        get percentClass() { return this.stats.percentage >= 100 ? 'text-green-600' : 'text-gray-500'; },
+        get percentLabel() { return `${this.stats.percentage}%`; },
+        get isEmpty() { return this.gefilterd.length === 0; },
+        rowClass(judoka) {
+            if (judoka.afwezig) return 'bg-red-50 opacity-60';
+            return judoka.gewogen ? '' : 'bg-yellow-50';
+        },
+        naamClass(judoka) { return judoka.afwezig ? 'line-through text-gray-500' : ''; },
+        clubOrDash(judoka) { return judoka.club || '-'; },
+        leeftijdOrDash(judoka) { return judoka.leeftijdsklasse || '-'; },
+        opgegevenLabel(judoka) {
+            const waarde = judoka.gewicht || judoka.gewichtsklasse || '-';
+            return `${waarde} kg`;
+        },
+        blokLabel(judoka) { return judoka.blok ? `Blok ${judoka.blok}` : '-'; },
+        isGewogen(judoka) { return !judoka.afwezig && judoka.gewogen; },
+        notGewogen(judoka) { return !judoka.afwezig && !judoka.gewogen; },
+        gewogenLabel(judoka) { return `${judoka.gewicht_gewogen} kg`; },
+        tijdOrDash(judoka) { return judoka.gewogen_om || '-'; },
+        actieLabel(judoka) { return judoka.afwezig ? 'Herstel' : 'Wijzig'; },
+        get modalStyle() { return `left:${this.modalX}px; top:${this.modalY}px;`; },
+        get editNaam() { return this.editJudoka ? this.editJudoka.naam : ''; },
+        get hasGewichtOpgegeven() {
+            return this.editJudoka && this.editJudoka.gewicht && parseFloat(this.editJudoka.gewicht) > 0;
+        },
+        get notSaving() { return !this.editSaving; },
+
         init() {
             this.berekenStats();
             this.filterJudokas();
-
-            // Auto-refresh elke 10 seconden
             setInterval(() => this.refresh(), 10000);
         },
 
@@ -271,12 +317,12 @@ function weeglijst() {
             const blokId = this.blokIds[this.blokFilter];
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ url()->current() }}'.replace('/weging/interface', '/blok/' + blokId + '/sluit-weging');
+            form.action = currentUrl.replace('/weging/interface', '/blok/' + blokId + '/sluit-weging');
 
             const csrf = document.createElement('input');
             csrf.type = 'hidden';
             csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
+            csrf.value = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
             form.appendChild(csrf);
 
             document.body.appendChild(form);
@@ -290,7 +336,6 @@ function weeglijst() {
                 ? Math.round((this.stats.totaalGewogen / this.stats.totaal) * 100)
                 : 0;
 
-            // Per blok
             @foreach($toernooi->blokken as $blok)
             const blok{{ $blok->nummer }} = this.judokas.filter(j => j.blok == {{ $blok->nummer }});
             this.stats.blok{{ $blok->nummer }} = {
@@ -302,8 +347,6 @@ function weeglijst() {
 
         filterJudokas() {
             let result = [...this.judokas];
-
-            // Zoeken op naam of club
             if (this.zoekterm.length >= 2) {
                 const zoek = this.zoekterm.toLowerCase();
                 result = result.filter(j =>
@@ -311,11 +354,9 @@ function weeglijst() {
                     (j.club && j.club.toLowerCase().includes(zoek))
                 );
             }
-
             if (this.blokFilter) {
                 result = result.filter(j => j.blok == this.blokFilter);
             }
-
             if (this.statusFilter === 'gewogen') {
                 result = result.filter(j => j.gewogen && !j.afwezig);
             } else if (this.statusFilter === 'niet_gewogen') {
@@ -323,22 +364,17 @@ function weeglijst() {
             } else if (this.statusFilter === 'afwezig') {
                 result = result.filter(j => j.afwezig);
             }
-
-            // Sorteer: afwezig onderaan, dan niet gewogen eerst, dan op naam
             result.sort((a, b) => {
-                // Afwezig altijd onderaan
                 if (a.afwezig !== b.afwezig) return a.afwezig ? 1 : -1;
-                // Gewogen onderaan (niet gewogen eerst)
                 if (a.gewogen !== b.gewogen) return a.gewogen ? 1 : -1;
                 return a.naam.localeCompare(b.naam);
             });
-
             this.gefilterd = result;
         },
 
         async refresh() {
             try {
-                const response = await fetch('{{ route('toernooi.weging.lijst-json', $toernooi->routeParams()) }}');
+                const response = await fetch(lijstJsonUrl);
                 const data = await response.json();
                 this.judokas = data;
                 this.berekenStats();
@@ -362,7 +398,6 @@ function weeglijst() {
         openEditGewicht(judoka) {
             this.editJudoka = judoka;
             this.editGewicht = judoka.gewicht_gewogen || '';
-            // Center modal on first open
             this.modalX = Math.max(50, (window.innerWidth - 320) / 2);
             this.modalY = Math.max(50, (window.innerHeight - 300) / 2);
             this.editModal = true;
@@ -405,29 +440,26 @@ function weeglijst() {
 
         async saveGewicht() {
             if (!this.editJudoka) return;
-
             const gewicht = parseFloat(this.editGewicht) || 0;
             this.editSaving = true;
 
             try {
-                const response = await fetch(`{{ url()->current() }}`.replace('/weging/interface', `/weging/${this.editJudoka.id}/registreer`), {
+                const response = await fetch(currentUrl.replace('/weging/interface', `/weging/${this.editJudoka.id}/registreer`), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ gewicht: gewicht })
+                    body: JSON.stringify({ gewicht: gewicht }),
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    // Update lokale data
                     const idx = this.judokas.findIndex(j => j.id === this.editJudoka.id);
                     if (idx !== -1) {
                         if (data.afwezig) {
-                            // Markeer als afwezig (blijft in lijst zichtbaar)
                             this.judokas[idx].afwezig = true;
                             this.judokas[idx].gewogen = false;
                             this.judokas[idx].gewicht_gewogen = null;
@@ -454,8 +486,8 @@ function weeglijst() {
         async markeerAfwezig() {
             this.editGewicht = '0';
             await this.saveGewicht();
-        }
-    }
-}
+        },
+    }));
+});
 </script>
 @endsection
