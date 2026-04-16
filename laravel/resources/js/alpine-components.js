@@ -348,4 +348,69 @@ export function registerAlpineComponents(Alpine) {
         toggleDetails() { this.showDetails = !this.showDetails; },
         closeDetails() { this.showDetails = false; },
     }));
+
+    /**
+     * Offline detector — polls a HEAD endpoint every 10s and listens to
+     * online/offline window events. Reads data-ping-url from host.
+     */
+    Alpine.data('offlineDetector', () => ({
+        isOffline: false,
+        pingUrl: '',
+        interval: null,
+        _online: null,
+        _offline: null,
+        init() {
+            this.pingUrl = this.$el.dataset.pingUrl || '';
+            this.checkConnection();
+            this.interval = setInterval(() => this.checkConnection(), 10000);
+            this._online = () => { this.isOffline = false; };
+            this._offline = () => { this.isOffline = true; };
+            window.addEventListener('online', this._online);
+            window.addEventListener('offline', this._offline);
+        },
+        destroy() {
+            if (this.interval) clearInterval(this.interval);
+            if (this._online) window.removeEventListener('online', this._online);
+            if (this._offline) window.removeEventListener('offline', this._offline);
+        },
+        async checkConnection() {
+            if (!this.pingUrl) return;
+            try {
+                const response = await fetch(this.pingUrl, { method: 'HEAD', cache: 'no-store' });
+                this.isOffline = !response.ok;
+            } catch (e) {
+                this.isOffline = true;
+            }
+        },
+    }));
+
+    /**
+     * Server-pakket sync status — polls localStorage for a per-toernooi sync timestamp
+     * every 5s. connected = <2min ago, stale = older, none = never.
+     * Reads data-toernooi-id from host.
+     */
+    Alpine.data('serverPakketStatus', () => ({
+        syncStatus: 'none',
+        laatsteSync: '',
+        toernooiId: null,
+        interval: null,
+        init() {
+            this.toernooiId = parseInt(this.$el.dataset.toernooiId || '0', 10);
+            this.checkSync();
+            this.interval = setInterval(() => this.checkSync(), 5000);
+        },
+        destroy() { if (this.interval) clearInterval(this.interval); },
+        checkSync() {
+            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+            const sync = localStorage.getItem(syncKey);
+            if (!sync) {
+                this.syncStatus = 'none';
+                return;
+            }
+            const syncDate = new Date(sync);
+            const diffMs = Date.now() - syncDate.getTime();
+            this.laatsteSync = syncDate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            this.syncStatus = diffMs < 120000 ? 'connected' : 'stale';
+        },
+    }));
 }

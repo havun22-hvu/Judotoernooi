@@ -29,7 +29,9 @@
     </div>
 
     <!-- OFFLINE MODUS BANNER -->
-    <div x-data="offlineDetector()" x-init="init()" x-show="isOffline" x-cloak
+    <div x-data="offlineDetector"
+         data-ping-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         x-show="isOffline" x-cloak
          class="bg-orange-100 border-l-4 border-orange-500 p-4 mb-6 rounded">
         <div class="flex items-center">
             <span class="text-2xl mr-3">⚠️</span>
@@ -40,30 +42,7 @@
         </div>
     </div>
 
-    <script @nonce>
-        function offlineDetector() {
-            return {
-                isOffline: false,
-                init() {
-                    this.checkConnection();
-                    setInterval(() => this.checkConnection(), 10000);
-                    window.addEventListener('online', () => this.isOffline = false);
-                    window.addEventListener('offline', () => this.isOffline = true);
-                },
-                async checkConnection() {
-                    try {
-                        const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}', {
-                            method: 'HEAD',
-                            cache: 'no-store'
-                        });
-                        this.isOffline = !response.ok;
-                    } catch (e) {
-                        this.isOffline = true;
-                    }
-                }
-            };
-        }
-    </script>
+    {{-- VP-18: offlineDetector registered in resources/js/alpine-components.js; ping URL via data-ping-url. --}}
 
     {{-- ================================================================== --}}
     {{-- SECTIE 1: EXPORTS & DOWNLOADS                                      --}}
@@ -698,7 +677,7 @@ function abbreviateClub(name) {
         <div class="space-y-4">
             <!-- Noodpakket (.exe) -->
             @if(!$isFreeTier)
-            <div class="p-4 bg-green-50 border-2 border-green-300 rounded" x-data="serverPakketStatus()" x-init="init()">
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded" x-data="serverPakketStatus" data-toernooi-id="{{ $toernooi->id }}">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-green-800 flex items-center gap-2">
@@ -733,39 +712,7 @@ function abbreviateClub(name) {
                     </a>
                 </div>
             </div>
-            <script @nonce>
-                function serverPakketStatus() {
-                    return {
-                        syncStatus: 'none',
-                        laatsteSync: '',
-                        toernooiId: {{ $toernooi->id }},
-
-                        init() {
-                            this.checkSync();
-                            setInterval(() => this.checkSync(), 5000);
-                        },
-
-                        checkSync() {
-                            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-                            const sync = localStorage.getItem(syncKey);
-
-                            if (!sync) {
-                                this.syncStatus = 'none';
-                                return;
-                            }
-
-                            const syncDate = new Date(sync);
-                            const now = new Date();
-                            const diffMs = now - syncDate;
-
-                            this.laatsteSync = syncDate.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-
-                            // < 2 min = connected, anders stale
-                            this.syncStatus = diffMs < 120000 ? 'connected' : 'stale';
-                        }
-                    };
-                }
-            </script>
+            {{-- VP-18: serverPakketStatus registered in resources/js/alpine-components.js; toernooi-id via data-toernooi-id. --}}
             @else
             <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
                 <div class="flex items-center justify-between">
