@@ -94,7 +94,7 @@
 @endphp
 <div id="niet-gecategoriseerd-alert"
      class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
-     x-data="{ show: true, open: false }"
+     x-data="showOpen"
      x-show="show"
      x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
     <div class="flex items-center justify-between">

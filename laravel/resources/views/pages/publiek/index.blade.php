@@ -587,7 +587,7 @@
                 $isDynamisch = $gewichtsklassen->count() === 1 && $gewichtsklassen->has('Alle');
                 $alleJudokas = $gewichtsklassen->flatten();
             @endphp
-            <div class="mb-6" x-data="{ openGewicht: null }">
+            <div class="mb-6" x-data="nullableSelection" data-state-key="openGewicht">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
                     <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
@@ -639,7 +639,7 @@
                 <div class="flex flex-wrap gap-2 mb-3">
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                     @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
-                    <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
+                    <button @click="toggle('{{ $gewichtId }}')"
                             class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
                             :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
                         <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }}</span>
@@ -655,7 +655,7 @@
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} {{ __("judoka's") }}</span>
-                        <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
+                        <button @click="clear" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
                         @foreach($judokas as $judoka)

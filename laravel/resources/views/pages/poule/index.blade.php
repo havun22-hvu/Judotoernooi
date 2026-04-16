@@ -275,7 +275,7 @@
     $categorieGewichten = $categorieConfig['gewichten'] ?? [];
     $heeftVasteGewichten = !empty($categorieGewichten);
 @endphp
-<div class="mb-8 w-full" x-data="{ open: true }">
+<div class="mb-8 w-full" x-data="initiallyOpen">
     <div class="flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="toggle" class="flex-1 flex justify-between items-center hover:bg-blue-700 -m-3 p-3 rounded-tl-lg">
             <span class="text-lg font-bold">{{ $categorieLabel }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>

@@ -381,7 +381,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6" x-data="{ lightbox: null }">
+            <div class="grid md:grid-cols-2 gap-6" x-data="lightboxWithZoom">
                 @foreach([
                     ['img' => 'Poule-overzicht.png', 'label' => __('Poule-overzicht met automatische indeling')],
                     ['img' => 'Zaaloverzicht.png', 'label' => __('Zaaloverzicht met matten en blokken')],
@@ -389,7 +389,7 @@
                     ['img' => 'Eliminatie-bracket.png', 'label' => __('Eliminatie-bracket met A en B groep')],
                 ] as $screenshot)
                 <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow group"
-                     @click="lightbox = '/images/{{ $screenshot['img'] }}'">
+                     @click="open('/images/{{ $screenshot['img'] }}')">
                     <img src="/images/{{ $screenshot['img'] }}" alt="{{ $screenshot['label'] }}" class="w-full max-h-64 object-cover object-top group-hover:scale-[1.02] transition-transform duration-300" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-600 text-sm">{{ $screenshot['label'] }}</p>
@@ -402,13 +402,13 @@
                      x-data="zoomable"
                      class="fixed inset-0 z-50 bg-black/80"
                      :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
-                     @click="lightbox = null; zoomed = false"
-                     @keydown.escape.window="lightbox = null; zoomed = false"
+                     @click="close"
+                     @keydown.escape.window="close"
                      x-cloak>
                     <img :src="lightbox"
                          :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl'"
-                         @click.stop="zoomed = !zoomed">
-                    <button @click.stop="lightbox = null; zoomed = false"
+                         @click.stop="toggleZoom">
+                    <button @click.stop="close"
                             class="fixed top-4 right-4 text-white text-4xl leading-none hover:text-gray-300 z-10">&times;</button>
                 </div>
             </div>

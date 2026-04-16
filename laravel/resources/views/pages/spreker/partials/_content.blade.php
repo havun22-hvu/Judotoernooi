@@ -360,7 +360,7 @@
     </div>
 
     <!-- TAB 3: NOTITIES (Spiekbriefje) - Schermvullend -->
-    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }" class="flex flex-col">
+    <div x-show="activeTab === 'notities'" x-data="fontSizer" class="flex flex-col">
         <!-- Textarea - schermvullend tot aan toolbar (60px toolbar + 120px header/tabs) -->
         <textarea
             x-model="notities"
