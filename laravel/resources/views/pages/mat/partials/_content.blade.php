@@ -202,9 +202,9 @@
         <div class="flex items-center justify-between flex-wrap gap-x-4 gap-y-0.5">
             <!-- Blok/Mat selectie -->
             <div class="text-sm text-gray-600 flex items-center gap-2">
-                <span class="font-bold">Blok <span x-text="blokkenData.find(b => b.id == blokId)?.nummer"></span></span>
+                <span class="font-bold">Blok <span x-text="huidigBlokNummer"></span></span>
                 &bull;
-                <span class="font-bold">Mat <span x-text="mattenData.find(m => m.id == matId)?.nummer"></span></span>
+                <span class="font-bold">Mat <span x-text="huidigMatNummer"></span></span>
                 <a href="#blok-mat-keuze" class="text-purple-600 hover:underline text-xs">({{ __('wijzig') }})</a>
                 @if(!isset($isDeviceBound) || !$isDeviceBound)
                 <button @click="refreshAll()" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1" :class="refreshingClass">
@@ -353,7 +353,7 @@
                         </div>
                         <div class="bracket-container overflow-auto pb-2 max-h-[calc(100vh-180px)]"
                              :id="'bracket-container-' + poule.poule_id + '-A'"
-                             x-init="$nextTick(() => laadBracketHtml(poule.poule_id, 'A'))">
+                             x-init="initBracketA(poule)">
                             <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
                         </div>
                     </div>
@@ -2499,6 +2499,17 @@ document.addEventListener('alpine:init', () => {
         // --- CSP-safe getters/helpers ---
         get refreshingClass() { return this.isRefreshing ? 'animate-spin' : ''; },
         get notRefreshing() { return !this.isRefreshing; },
+        get huidigBlokNummer() {
+            const b = this.blokkenData.find(x => x.id == this.blokId);
+            return b ? b.nummer : '';
+        },
+        get huidigMatNummer() {
+            const m = this.mattenData.find(x => x.id == this.matId);
+            return m ? m.nummer : '';
+        },
+        initBracketA(poule) {
+            this.$nextTick(() => this.laadBracketHtml(poule.poule_id, 'A'));
+        },
         pouleHeaderClass(poule) { return poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'; },
         pouleTextClass(poule) { return poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'; },
         pouleTitel(poule) {
