@@ -347,7 +347,7 @@
                                 <td class="py-2 font-medium">{{ __('2 judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">1w</td>
                                 <td class="py-2">
-                                    <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }" x-init="$watch('modus', value => { $refs.dubbel2.value = value === 'dubbel' ? '1' : '0'; $refs.best3.value = value === 'best3' ? '1' : '0'; })">
+                                    <div class="flex items-center gap-4" x-data="wedstrijdModus" data-initial-modus="{{ $modus2 }}">
                                         <input type="hidden" name="dubbel_bij_2_judokas" x-ref="dubbel2" value="{{ $modus2 === 'dubbel' ? '1' : '0' }}">
                                         <input type="hidden" name="best_of_three_bij_2" x-ref="best3" value="{{ $modus2 === 'best3' ? '1' : '0' }}">
                                         <label class="flex items-center cursor-pointer">
@@ -849,12 +849,12 @@
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Dojo / Coach') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Judoka's per coach -->
-                <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
+                <div class="flex items-center gap-2" x-data="rangeValue" data-initial="{{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }}">
                     <label for="judokas_per_coach" class="text-gray-700 font-medium">{{ __('Judoka\'s per coach kaart:') }}</label>
                     <input type="number" name="judokas_per_coach" id="judokas_per_coach"
                            x-model="value"
                            class="w-16 border rounded px-2 py-1 text-center" min="1">
-                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
+                    <span x-show="isHigh" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
                 </div>
 
                 <!-- Coach in/uitcheck systeem -->
@@ -918,7 +918,7 @@
                 $categorieType = 'jbn_2026';
             }
         @endphp
-        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
+        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="categorieSelector" data-initial-type="{{ $categorieType }}">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">{{ __('Categorieën Instelling') }}</h2>

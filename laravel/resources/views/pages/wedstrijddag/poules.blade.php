@@ -183,11 +183,7 @@
 
     <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
-    <div class="bg-white rounded-lg shadow w-full blok-item" x-data="{
-    open: localStorage.getItem('blok-poules-{{ $blok['id'] }}') !== null
-        ? localStorage.getItem('blok-poules-{{ $blok['id'] }}') === 'true'
-        : {{ $loop->first ? 'true' : 'false' }}
-}" x-init="$watch('open', val => localStorage.setItem('blok-poules-{{ $blok['id'] }}', val))">
+    <div class="bg-white rounded-lg shadow w-full blok-item" x-data="persistentToggle" data-storage-key="blok-poules-{{ $blok['id'] }}" data-default-open="{{ $loop->first ? 'true' : 'false' }}">
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok

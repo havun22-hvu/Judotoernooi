@@ -74,6 +74,87 @@ export function registerAlpineComponents(Alpine) {
      * Tab-switcher met string identifiers (toernooi/organisatie/noodplan/admin).
      * Leest default uit data-initial-tab.
      */
+    /**
+     * Toggle with localStorage persistence. Reads key + default from dataset.
+     */
+    Alpine.data('persistentToggle', () => ({
+        open: false,
+        storageKey: '',
+        init() {
+            this.storageKey = this.$el.dataset.storageKey || '';
+            const stored = localStorage.getItem(this.storageKey);
+            this.open = stored !== null ? stored === 'true' : this.$el.dataset.defaultOpen === 'true';
+            this.$watch('open', (val) => {
+                if (this.storageKey) localStorage.setItem(this.storageKey, val);
+            });
+        },
+        toggle() { this.open = !this.open; },
+        get rotateClass() { return this.open ? 'rotate-180' : ''; },
+    }));
+
+    /**
+     * Wedstrijd modus selector (enkel/dubbel/best3) for edit page.
+     */
+    Alpine.data('wedstrijdModus', () => ({
+        modus: 'enkel',
+        init() {
+            this.modus = this.$el.dataset.initialModus || 'enkel';
+            this.$watch('modus', (value) => {
+                const d = this.$refs.dubbel2;
+                const b = this.$refs.best3;
+                if (d) d.value = value === 'dubbel' ? '1' : '0';
+                if (b) b.value = value === 'best3' ? '1' : '0';
+            });
+        },
+    }));
+
+    /**
+     * Simple numeric value with high-value warning.
+     */
+    Alpine.data('rangeValue', () => ({
+        value: 5,
+        init() {
+            this.value = parseInt(this.$el.dataset.initial || '5', 10);
+        },
+        get isHigh() { return this.value > 10; },
+    }));
+
+    /**
+     * Categorie type selector for edit page.
+     */
+    Alpine.data('categorieSelector', () => ({
+        categorieType: '',
+        init() {
+            this.categorieType = this.$el.dataset.initialType || '';
+        },
+    }));
+
+    /**
+     * Weegkaart confirmation (from_portal bypass + localStorage remember).
+     */
+    Alpine.data('weegkaartConfirm', () => ({
+        fromPortal: false,
+        confirmed: false,
+        qrCode: '',
+        init() {
+            this.qrCode = this.$el.dataset.qrCode || '';
+            this.fromPortal = new URLSearchParams(window.location.search).has('from_portal');
+            this.confirmed = localStorage.getItem(`weegkaart_${this.qrCode}`) === 'true';
+            if (this.showContent && typeof generateQR === 'function') {
+                setTimeout(generateQR, 50);
+            }
+            this.$watch('showContent', (val) => {
+                if (val && typeof generateQR === 'function') setTimeout(generateQR, 50);
+            });
+        },
+        get showContent() { return this.fromPortal || this.confirmed; },
+        get needsConfirmation() { return !this.fromPortal && !this.confirmed; },
+        confirm() {
+            localStorage.setItem(`weegkaart_${this.qrCode}`, 'true');
+            this.confirmed = true;
+        },
+    }));
+
     Alpine.data('editTabs', () => ({
         activeTab: 'toernooi',
         init() {

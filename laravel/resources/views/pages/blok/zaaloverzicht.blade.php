@@ -92,11 +92,7 @@
         ->sortBy('nummer')
         ->values();
 @endphp
-<div class="mb-6 w-full" x-data="{
-    open: localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') !== null
-        ? localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') === 'true'
-        : {{ $loop->first ? 'true' : 'false' }}
-}" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
+<div class="mb-6 w-full" x-data="persistentToggle" data-storage-key="blok-zaal-{{ $blok['nummer'] }}" data-default-open="{{ $loop->first ? 'true' : 'false' }}">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="toggle()" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">

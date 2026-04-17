@@ -24,15 +24,10 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 pb-24"
-      x-data="{
-          fromPortal: new URLSearchParams(window.location.search).has('from_portal'),
-          confirmed: localStorage.getItem('weegkaart_{{ $judoka->qr_code }}') === 'true',
-          get showContent() { return this.fromPortal || this.confirmed }
-      }"
-      x-init="$watch('showContent', val => { if(val) setTimeout(generateQR, 50) }); if(showContent) setTimeout(generateQR, 50)">
+      x-data="weegkaartConfirm" data-qr-code="{{ $judoka->qr_code }}">
 
     {{-- Confirmation Modal - only show when NOT from portal and NOT confirmed --}}
-    <div x-show="!fromPortal && !confirmed" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div x-show="needsConfirmation" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="text-5xl mb-4">⚠️</div>
             <h2 class="text-xl font-bold text-gray-800 mb-2">{{ __('Weegkaart opslaan?') }}</h2>
@@ -50,7 +45,7 @@
                     {{ __('Nee, terug') }}
                 </button>
                 <button
-                    @click="localStorage.setItem('weegkaart_{{ $judoka->qr_code }}', 'true'); confirmed = true"
+                    @click="confirm()"
                     class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
                 >
                     {{ __('Ja, doorgaan') }}
