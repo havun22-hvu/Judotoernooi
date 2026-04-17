@@ -44,8 +44,8 @@ class SecurityHeaders
         // Content Security Policy - strict, all assets bundled locally via Vite
         // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode), js.pusher.com (Reverb/Pusher), www.gstatic.com (Google Cast SDK)
         if (!app()->environment('local')) {
-            // VP-18: Alpine CSP migratie voltooid — @alpinejs/csp build + Alpine.data() componenten
-            // vervangen de eval-gebaseerde expressies. 'unsafe-eval' is daarom verwijderd.
+            // script-src without 'unsafe-eval': relies on @alpinejs/csp build +
+            // Alpine.data() components — no runtime eval of x-* expressions.
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'none'",
                 "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://unpkg.com https://js.pusher.com https://www.gstatic.com",
