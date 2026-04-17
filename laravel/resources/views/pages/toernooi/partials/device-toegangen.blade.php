@@ -110,20 +110,21 @@
                                 </tbody>
                             </table>
                             {{-- QR popup --}}
-                            <div x-show="qrVisibleVoor(toegang)" x-cloak
-                                 class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
-                                <p class="text-sm font-medium text-gray-700 mb-2" x-text="qrPopupTitel()"></p>
-                                <img :src="qrImageUrl()" class="w-36 h-36 mx-auto rounded mb-2">
-                                <div class="flex items-center gap-2 bg-white rounded p-2 text-xs">
-                                    <input type="text" :value="qrUrl" readonly class="flex-1 bg-transparent text-gray-600 border-0 outline-none truncate text-xs">
-                                    <button @click="copyQrUrl(toegang)"
-                                            class="text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
-                                        <span x-show="notCopied('qr', toegang)">{{ __('Kopieer') }}</span>
-                                        <span x-show="isCopied('qr', toegang)" x-cloak>✓</span>
-                                    </button>
+                            <template x-if="qrVisibleVoor(toegang)">
+                                <div class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
+                                    <p class="text-sm font-medium text-gray-700 mb-2" x-text="qrPopupTitel()"></p>
+                                    <img :src="qrImageUrl()" class="w-36 h-36 mx-auto rounded mb-2">
+                                    <div class="flex items-center gap-2 bg-white rounded p-2 text-xs">
+                                        <input type="text" :value="qrUrl" readonly class="flex-1 bg-transparent text-gray-600 border-0 outline-none truncate text-xs">
+                                        <button @click="copyQrUrl(toegang)"
+                                                class="text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
+                                            <span x-show="notCopied('qr', toegang)">{{ __('Kopieer') }}</span>
+                                            <span x-show="isCopied('qr', toegang)" x-cloak>✓</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">{{ __('Scan met telefoon of open op de TV browser') }}</p>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-2">{{ __('Scan met telefoon of open op de TV browser') }}</p>
-                            </div>
+                            </template>
                             {{-- TV Koppel popup --}}
                             <div x-show="tvLinkVisible(toegang)" x-cloak
                                  class="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
