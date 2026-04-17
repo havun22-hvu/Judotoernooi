@@ -17,7 +17,7 @@
                 <div class="flex items-center space-x-4">
                     {{-- Language switcher --}}
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="toggle()" @click.away="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -41,7 +41,7 @@
 
                     {{-- User dropdown (same as app.blade.php) --}}
                     <div class="relative" x-data="modalWithAbout">
-                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        <button @click="toggle()" @click.outside="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if($organisator->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -69,9 +69,9 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="showAbout = false"
-                             @keydown.escape.window="showAbout = false">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="showAbout = false">
+                             @click.self="closeAbout()"
+                             @keydown.escape.window="closeAbout()">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout()">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
                                     <button type="button" @click="closeAbout()"
                                             class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
@@ -146,7 +146,7 @@
         <div x-data="templateManager" class="mb-8">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">{{ __('Mijn Templates') }}</h3>
-                <button @click="toggle" class="text-blue-600 hover:text-blue-800 text-sm">
+                <button @click="toggle()" class="text-blue-600 hover:text-blue-800 text-sm">
                     <span x-show="notOpen">{{ __('Toon templates') }}</span>
                     <span x-show="open">{{ __('Verberg') }}</span>
                 </button>
@@ -327,7 +327,7 @@
         {{-- Archief sectie --}}
         @if($gearchiveerd->isNotEmpty())
         <div x-data="toggle" class="mt-8">
-            <button @click="toggle" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
+            <button @click="toggle()" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
                 <svg class="w-4 h-4 transition-transform" :class="rotate90Class" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>

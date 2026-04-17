@@ -98,7 +98,7 @@
         : {{ $loop->first ? 'true' : 'false' }}
 }" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
-        <button @click="toggle" class="w-full flex justify-between items-center hover:text-gray-200">
+        <button @click="toggle()" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
                 <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                 @php
@@ -146,10 +146,10 @@
             @if($isActivated)
             {{-- Groen: al geactiveerd, dropdown met mat interface en reset --}}
             <div class="relative inline-block" x-data="dropdownState">
-                <button @click="toggleDropdown" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
+                <button @click="toggleDropdown()" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
                     ✓ {{ $chipNaam }} ▾
                 </button>
-                <div x-show="dropdown" @click.away="closeDropdown" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
+                <div x-show="dropdown" @click.away="closeDropdown()" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
                     <a href="{{ route('toernooi.mat.interface', $toernooi->routeParamsWith(['blok' => $blok['nummer']])) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         {{ __('Mat Interface') }}

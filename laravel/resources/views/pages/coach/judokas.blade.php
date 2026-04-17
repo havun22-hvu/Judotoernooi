@@ -113,7 +113,7 @@
         <!-- Add Judoka Form -->
         @if($inschrijvingOpen && !$maxBereikt && ($magInschrijven ?? true))
         <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm">
-            <button @click="toggle" class="flex justify-between items-center w-full text-left">
+            <button @click="toggle()" class="flex justify-between items-center w-full text-left">
                 <h2 class="text-xl font-bold text-gray-800">+ {{ __('Nieuwe Judoka Toevoegen') }}</h2>
                 <span x-text="openLabel" class="text-2xl text-gray-500"></span>
             </button>
@@ -432,7 +432,7 @@
                         @if($inschrijvingOpen && (($magWijzigen ?? true) || ($magInschrijven ?? true)))
                         <div class="flex items-center gap-3 shrink-0">
                             @if($judoka->telefoon)<a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800 text-sm">WA</a>@endif
-                            @if($magWijzigen ?? true)<button @click="startEdit" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
+                            @if($magWijzigen ?? true)<button @click="startEdit()" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
                             <form action="{{ route('coach.portal.judoka.destroy', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
@@ -476,7 +476,7 @@
                             </div>
                             <div class="mt-3 flex items-center gap-3">
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Opslaan</button>
-                                <button type="button" @click="stopEdit" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
+                                <button type="button" @click="stopEdit()" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
                                 <span x-show="leeftijdsklasse" class="text-sm text-blue-600" x-text="leeftijdsklasse"></span>
                             </div>
                         </form>

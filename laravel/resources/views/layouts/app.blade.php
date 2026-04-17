@@ -96,7 +96,7 @@
                 <div class="flex items-center space-x-4">
                     {{-- DO NOT REMOVE: Language switcher (NL/EN) - essential for multi-language support --}}
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="toggle()" @click.away="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -127,7 +127,7 @@
                     @if(Auth::guard('organisator')->check())
                     {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
                     <div class="relative" x-data="modalWithAbout">
-                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        <button @click="toggle()" @click.outside="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -163,11 +163,11 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="showAbout = false"
-                             @keydown.escape.window="showAbout = false">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="showAbout = false">
+                             @click.self="closeAbout()"
+                             @keydown.escape.window="closeAbout()">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout()">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
-                                    <button type="button" @click="showAbout = false"
+                                    <button type="button" @click="closeAbout()"
                                             class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
@@ -194,7 +194,7 @@
                                     </button>
                                 </div>
                                 <div class="px-6 py-3 bg-gray-50 text-center">
-                                    <button type="button" @click="showAbout = false" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                    <button type="button" @click="closeAbout()" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
                                 </div>
                             </div>
                         </div>

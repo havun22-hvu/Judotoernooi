@@ -40,7 +40,7 @@
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     {{ __('Bekijk lijst') }}
                 </a>
-                <button type="button" @click="dismiss" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+                <button type="button" @click="dismiss()" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
             </div>
         </div>
     </div>
@@ -59,7 +59,7 @@
                     <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
                 </div>
             </div>
-            <button type="button" @click="dismiss" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+            <button type="button" @click="dismiss()" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
         </div>
     </div>
     @endif
@@ -983,11 +983,11 @@
                     <span class="text-yellow-800 text-sm font-medium">{{ __('Sorteer prioriteit:') }}</span>
                     <button type="button"
                             x-data="toggle"
-                            @click="toggle"
+                            @click="toggle()"
                             class="relative text-yellow-600 hover:text-yellow-800">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
                         <div x-show="open"
-                             @click.away="close"
+                             @click.away="close()"
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
                             <p class="font-medium mb-1">{{ __('Sorteer volgorde binnen categorie') }}</p>
@@ -2659,7 +2659,7 @@
             </ul>
         </div>
 
-        <button @click="openConfirm" x-show="!showConfirm"
+        <button @click="openConfirm()" x-show="!showConfirm"
                 class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
             {{ __('Heropen Voorbereiding') }}
         </button>
@@ -2797,8 +2797,8 @@
                     <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle()" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.away="close()" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -2818,8 +2818,8 @@
                     <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle()" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.away="close()" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -3039,7 +3039,7 @@
             </div>
             <div class="flex items-center gap-4 mt-2">
                 <p class="text-xs text-gray-500">{{ __('Tip: Noteer deze IP\'s ook op papier voor noodgevallen') }}</p>
-                <button type="button" @click="toggleHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                <button type="button" @click="toggleHelp()" class="text-xs text-blue-600 hover:text-blue-800 underline">
                     {{ __('Hoe vind ik mijn IP?') }}
                 </button>
             </div>

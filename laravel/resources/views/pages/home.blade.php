@@ -110,7 +110,7 @@
             <div class="flex items-center gap-5">
                 {{-- Taalkiezer --}}
                 <div class="relative" x-data="toggle">
-                    <button @click="toggle" @click.away="close" class="flex items-center text-blue-300 hover:text-white text-sm transition focus:outline-none">
+                    <button @click="toggle()" @click.away="close()" class="flex items-center text-blue-300 hover:text-white text-sm transition focus:outline-none">
                         @include('partials.flag-icon', ['lang' => app()->getLocale()])
                         <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -402,13 +402,13 @@
                      x-data="zoomable"
                      class="fixed inset-0 z-50 bg-black/80"
                      :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
-                     @click="close"
-                     @keydown.escape.window="close"
+                     @click="close()"
+                     @keydown.escape.window="close()"
                      x-cloak>
                     <img :src="lightbox"
                          :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl'"
-                         @click.stop="toggleZoom">
-                    <button @click.stop="close"
+                         @click.stop="toggleZoom()">
+                    <button @click.stop="close()"
                             class="fixed top-4 right-4 text-white text-4xl leading-none hover:text-gray-300 z-10">&times;</button>
                 </div>
             </div>

@@ -643,7 +643,7 @@
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} {{ __("judoka's") }}</span>
-                        <button @click="clear" class="text-gray-400 hover:text-gray-600">&times;</button>
+                        <button @click="clear()" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
                         @foreach($judokas as $judoka)

@@ -26,7 +26,7 @@
             'animate-pulse': status === 'checking'
          }"
          class="{{ $sizeClasses }} rounded-full cursor-pointer"
-         @click="toggleDetails"
+         @click="toggleDetails()"
          :title="statusLabel">
     </div>
 
@@ -46,7 +46,7 @@
     {{-- Details Popup --}}
     <div x-show="showDetails"
          x-transition
-         @click.away="closeDetails"
+         @click.away="closeDetails()"
          class="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg p-4 z-50 min-w-48">
         <div class="text-sm">
             <div class="flex justify-between mb-2">

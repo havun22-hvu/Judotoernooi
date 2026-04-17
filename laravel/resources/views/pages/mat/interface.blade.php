@@ -33,13 +33,13 @@
         <div class="flex items-center gap-3">
             <div class="text-2xl font-mono" id="clock"></div>
             <div x-data="menuWithHelp" class="relative">
-                <button @click="toggleMenu" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
+                <button @click="toggleMenu()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
                 {{-- Dropdown menu --}}
-                <div x-show="menuOpen" @click.away="closeMenu" x-transition
+                <div x-show="menuOpen" @click.away="closeMenu()" x-transition
                      class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 text-sm">
                     <button type="button" @click="menuOpen = false; document.getElementById('mat-interface') && Alpine.$data(document.getElementById('mat-interface')).refreshAll()"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
@@ -100,7 +100,7 @@
                             </div>
                         </div>
                         <div class="px-5 py-3 bg-gray-50 text-right">
-                            <button @click="closeHelp" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
+                            <button @click="closeHelp()" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
                         </div>
                     </div>
                 </div>

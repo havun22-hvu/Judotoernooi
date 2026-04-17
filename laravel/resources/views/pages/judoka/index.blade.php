@@ -33,7 +33,7 @@
                 <p class="text-sm text-orange-700">{{ __('Te oud/jong voor dit toernooi. Alleen zichtbaar in het club portal.') }}</p>
             </div>
         </div>
-        <button @click="toggle" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm font-medium">
+        <button @click="toggle()" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm font-medium">
             <span x-text="open ? '{{ __('Verbergen') }}' : '{{ __('Tonen') }}'"></span>
         </button>
     </div>
@@ -106,7 +106,7 @@
             </div>
         </div>
         <div class="flex gap-2">
-            <button @click="toggle" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium">
+            <button @click="toggle()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium">
                 <span x-text="open ? '{{ __('Verbergen') }}' : '{{ __('Details') }}'"></span>
             </button>
             <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
@@ -148,12 +148,12 @@
 <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4" x-data="toggle">
     <div class="flex items-center justify-between">
         <h3 class="font-bold text-yellow-800">
-            <span class="cursor-pointer hover:underline" @click="toggle">
+            <span class="cursor-pointer hover:underline" @click="toggle()">
                 {{ __(':count judoka\'s met ontbrekende gegevens', ['count' => $incompleteJudokas->count()]) }}
                 <span class="text-sm font-normal ml-2">{{ __('(klik voor details)') }}</span>
             </span>
         </h3>
-        <button @click="toggle" class="text-yellow-600 hover:text-yellow-800">
+        <button @click="toggle()" class="text-yellow-600 hover:text-yellow-800">
             <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -251,12 +251,12 @@
 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6" x-data="toggle">
     <div class="flex items-center justify-between">
         <h3 class="font-bold text-orange-800">
-            <span class="cursor-pointer hover:underline" @click="toggle">
+            <span class="cursor-pointer hover:underline" @click="toggle()">
                 {{ __(':count import fouten', ['count' => count(session('import_fouten'))]) }}
                 <span class="text-sm font-normal ml-2">{{ __('(klik voor details)') }}</span>
             </span>
         </h3>
-        <button @click="toggle" class="text-orange-600 hover:text-orange-800">
+        <button @click="toggle()" class="text-orange-600 hover:text-orange-800">
             <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -279,12 +279,12 @@
 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" x-data="toggle">
     <div class="flex items-center justify-between">
         <h3 class="font-bold text-red-800">
-            <span class="cursor-pointer hover:underline" @click="toggle">
+            <span class="cursor-pointer hover:underline" @click="toggle()">
                 {{ __(':count judoka\'s met import waarschuwingen', ['count' => $importWarningsPerClub->flatten()->count()]) }}
                 <span class="text-sm font-normal ml-2">{{ __('(klik voor details per club)') }}</span>
             </span>
         </h3>
-        <button @click="toggle" class="text-red-600 hover:text-red-800">
+        <button @click="toggle()" class="text-red-600 hover:text-red-800">
             <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>

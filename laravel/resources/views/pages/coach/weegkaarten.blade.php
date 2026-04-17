@@ -81,7 +81,7 @@
                      x-show="search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())">
                     <div class="flex justify-between items-start gap-4">
                         <!-- QR Code (clickable) -->
-                        <div class="cursor-pointer shrink-0" @click="toggleQr" title="{{ __('Klik voor grote QR') }}">
+                        <div class="cursor-pointer shrink-0" @click="toggleQr()" title="{{ __('Klik voor grote QR') }}">
                             <div id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></div>
                         </div>
 
