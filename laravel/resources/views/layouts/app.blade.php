@@ -96,13 +96,13 @@
                 <div class="flex items-center space-x-4">
                     {{-- DO NOT REMOVE: Language switcher (NL/EN) - essential for multi-language support --}}
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle()" @click.away="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
                             <form action="{{ route('locale.switch', 'nl') }}" method="POST">
                                 @csrf
                                 @if(isset($toernooi) && $toernooi instanceof \App\Models\Toernooi)
@@ -127,7 +127,7 @@
                     @if(Auth::guard('organisator')->check())
                     {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
                     <div class="relative" x-data="modalWithAbout">
-                        <button @click="toggle()" @click.outside="close()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -136,7 +136,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                             <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Admin Dashboard') }}</a>
                             @php $unreadAlerts = \App\Models\SystemAlert::unread()->count(); @endphp

@@ -1,9 +1,9 @@
 {{-- Compact locale switcher for coach portal --}}
 <div class="relative" x-data="toggle">
-    <button @click="toggle()" @click.away="close()" class="text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
+    <button @click="toggle()" class="text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
         @include('partials.flag-icon', ['lang' => app()->getLocale()])
     </button>
-    <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
+    <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
         <form action="{{ route('locale.switch', 'nl') }}" method="POST">
             @csrf
             <input type="hidden" name="club_id" value="{{ $club->id }}">

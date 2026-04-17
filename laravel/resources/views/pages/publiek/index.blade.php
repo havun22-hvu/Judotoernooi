@@ -522,7 +522,7 @@
         <!-- Deelnemers Tab -->
         <div x-show="activeTab === 'deelnemers'" x-cloak>
             <!-- Search bar - alleen in deelnemers tab -->
-            <div class="mb-4 relative" @click.outside="if(zoekResultaten.length > 0 || heeftGezocht) { zoekResultaten = []; zoekterm = ''; heeftGezocht = false; }">
+            <div class="mb-4 relative" @click.outside="clearZoekResultaten()">
                 <input type="text"
                        x-model="zoekterm"
                        @input.debounce.300ms="zoekJudokas()"
@@ -1919,6 +1919,14 @@
                             this._sbUpdateTimer();
                             d?.winner?.classList.add('hidden');
                             break;
+                    }
+                },
+
+                clearZoekResultaten() {
+                    if (this.zoekResultaten.length > 0 || this.heeftGezocht) {
+                        this.zoekResultaten = [];
+                        this.zoekterm = '';
+                        this.heeftGezocht = false;
                     }
                 },
 
