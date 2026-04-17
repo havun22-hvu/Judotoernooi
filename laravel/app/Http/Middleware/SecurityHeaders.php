@@ -51,7 +51,7 @@ class SecurityHeaders
                 "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
-                "connect-src 'self' wss://*.pusher.com https://nominatim.openstreetmap.org https://www.gstatic.com",
+                "connect-src 'self' wss://*.pusher.com https://js.pusher.com https://nominatim.openstreetmap.org https://www.gstatic.com",
                 "form-action 'self'",
                 "frame-ancestors 'self'",
                 "base-uri 'self'",
