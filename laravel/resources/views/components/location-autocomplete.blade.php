@@ -4,7 +4,7 @@
 --}}
 @props(['name' => 'locatie', 'value' => '', 'placeholder' => null])
 
-<div x-data="locationAutocomplete_{{ $name }}()" class="relative">
+<div x-data="locationAutocomplete" data-initial-query="{{ addslashes($value) }}" class="relative">
     <div class="flex gap-2">
         <div class="flex-1 relative">
             <input type="text"
@@ -12,8 +12,8 @@
                    id="{{ $name }}"
                    x-model="query"
                    @input.debounce.300ms="search()"
-                   @focus="showResults = results.length > 0"
-                   @click.away="showResults = false"
+                   @focus="onFocus()"
+                   @click.away="hideResults()"
                    placeholder="{{ $placeholder ?? __('Zoek adres...') }}"
                    autocomplete="off"
                    {{ $attributes->merge(['class' => 'w-full border rounded px-3 py-2 pr-10']) }}>
@@ -26,9 +26,9 @@
             </div>
         </div>
         {{-- Route button --}}
-        <a x-show="query && query.length > 3"
+        <a x-show="hasQuery"
            x-cloak
-           :href="'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(query)"
+           :href="routeUrl"
            target="_blank"
            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center gap-1 text-sm whitespace-nowrap"
            title="{{ __('Route plannen') }}">
@@ -41,7 +41,7 @@
     </div>
 
     {{-- Autocomplete results --}}
-    <div x-show="showResults && results.length > 0"
+    <div x-show="hasResults"
          x-cloak
          class="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
         <template x-for="(result, index) in results" :key="index">
@@ -54,52 +54,9 @@
     </div>
 
     {{-- No results message --}}
-    <div x-show="showResults && results.length === 0 && query.length >= 3 && !loading"
+    <div x-show="noResults"
          x-cloak
          class="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg p-3 text-sm text-gray-500">
         {{ __('Geen resultaten gevonden') }}
     </div>
 </div>
-
-<script @nonce>
-function locationAutocomplete_{{ $name }}() {
-    return {
-        query: '{{ addslashes($value) }}',
-        results: [],
-        showResults: false,
-        loading: false,
-
-        async search() {
-            if (this.query.length < 3) {
-                this.results = [];
-                this.showResults = false;
-                return;
-            }
-
-            this.loading = true;
-            try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.query)}&countrycodes=nl,be,de&limit=5&addressdetails=1`,
-                    {
-                        headers: {
-                            'Accept-Language': 'nl'
-                        }
-                    }
-                );
-                this.results = await response.json();
-                this.showResults = true;
-            } catch (error) {
-                console.error('Location search error:', error);
-                this.results = [];
-            }
-            this.loading = false;
-        },
-
-        selectResult(result) {
-            this.query = result.display_name;
-            this.showResults = false;
-            this.results = [];
-        }
-    };
-}
-</script>

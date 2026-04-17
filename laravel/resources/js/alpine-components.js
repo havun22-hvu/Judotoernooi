@@ -18,6 +18,51 @@ function intFromDataset(el, key, fallback = 0) {
 }
 
 export function registerAlpineComponents(Alpine) {
+    Alpine.data('locationAutocomplete', () => ({
+        query: '',
+        results: [],
+        showResults: false,
+        loading: false,
+        init() {
+            this.query = this.$el.dataset.initialQuery || '';
+        },
+        get hasQuery() { return this.query && this.query.length > 3; },
+        get routeUrl() {
+            return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(this.query);
+        },
+        get hasResults() { return this.showResults && this.results.length > 0; },
+        get noResults() {
+            return this.showResults && this.results.length === 0 && this.query.length >= 3 && !this.loading;
+        },
+        onFocus() { this.showResults = this.results.length > 0; },
+        hideResults() { this.showResults = false; },
+        async search() {
+            if (this.query.length < 3) {
+                this.results = [];
+                this.showResults = false;
+                return;
+            }
+            this.loading = true;
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.query)}&countrycodes=nl,be,de&limit=5&addressdetails=1`,
+                    { headers: { 'Accept-Language': 'nl' } }
+                );
+                this.results = await response.json();
+                this.showResults = true;
+            } catch (error) {
+                console.error('Location search error:', error);
+                this.results = [];
+            }
+            this.loading = false;
+        },
+        selectResult(result) {
+            this.query = result.display_name;
+            this.showResults = false;
+            this.results = [];
+        },
+    }));
+
     /**
      * Generic toggle — used for dropdowns, modals, expand/collapse.
      * Replaces: x-data="{ open: false }" + @click="open = !open"
