@@ -1,9 +1,56 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 10 april 2026
+> **Laatste update:** 17 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
+
+## Laatste Sessie: 17 april 2026
+
+### Wat is gedaan:
+
+**VP-18 CSP migratie - fixes voor x-* expressies die CSP parser breken**
+
+**1. Toernooi edit: 400 op `/api/device-toegang/qr`**
+- `resources/views/pages/toernooi/partials/device-toegangen.blade.php:112`
+- QR popup gebruikte `x-show` → `<img :src>` binding evalueerde bij page load met lege `qrUrl` → 400 Bad Request
+- Fix: `x-show` → `<template x-if>` zodat img pas in DOM komt als gebruiker QR opent
+
+**2. Mat interface: CSP Parser Error "Unexpected token: OPERATOR '>'"**
+- `resources/views/pages/mat/partials/_content.blade.php`
+- Alpine CSP-build ondersteunt geen arrow functions in inline `x-*` expressies (het `>` in `=>` triggert parser error)
+- Drie plekken gefixt door arrow callback te verplaatsen naar Alpine.data() body:
+  - `blokkenData.find(b => b.id == blokId)?.nummer` → getter `huidigBlokNummer`
+  - `mattenData.find(m => m.id == matId)?.nummer` → getter `huidigMatNummer`
+  - `$nextTick(() => laadBracketHtml(poule.poule_id, 'A'))` → method `initBracketA(poule)`
+- Deployed naar staging, caches gecleared
+
+### Openstaande items:
+- [ ] Bevestiging van gebruiker dat staging error weg is na hard refresh
+- [ ] Rest van codebase scannen op arrow functions in x-* attributes (andere views mogelijk ook CSP-onvriendelijk — `pages/publiek/index.blade.php` heeft er meerdere, `pages/judoka/index.blade.php:99`, `pages/toernooi/edit.blade.php:29,53`)
+
+### Belangrijke context voor volgende keer:
+
+**Alpine CSP-safe parser limitaties (VP-18 migratie):**
+- GEEN arrow functions in `x-*` attributes — verplaats naar Alpine.data() body en roep als method/getter aan
+- GEEN optional chaining `?.` in `x-*` — gebruik `var && var.prop` of wrap in getter
+- GEEN comparison operators `>` / `<` die ambiguity kunnen geven met closing tags — voor `>` / `<` in condities moet je escapen of naar getter verplaatsen
+- Wel ondersteund in x-*: ternary `?:`, equality `==`/`===`, logical `&&`/`||`, property access, array index, function calls
+
+**Pattern voor CSP-safe fix:**
+```js
+// Alpine.data() body — volledige JS ondersteund
+get huidigBlokNummer() {
+    const b = this.blokkenData.find(x => x.id == this.blokId);
+    return b ? b.nummer : '';
+}
+```
+```html
+<!-- x-text gebruikt simpele getter reference -->
+<span x-text="huidigBlokNummer"></span>
+```
+
+**Branch:** `feat/vp18-alpine-csp-migration` (niet gemerged — lopende migratie, batch 29)
 
 ## Laatste Sessie: 9-10 april 2026
 
