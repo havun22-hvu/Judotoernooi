@@ -55,4 +55,23 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('X-Frame-Options');
         $response->assertHeader('X-Content-Type-Options');
     }
+
+    #[Test]
+    public function csp_does_not_contain_unsafe_eval_in_non_local_env(): void
+    {
+        // VP-18: Alpine CSP migratie — regressietest dat 'unsafe-eval' nooit
+        // meer ongemerkt terugkruipt in de script-src directive.
+        $this->app['env'] = 'testing';
+
+        $response = $this->get('/');
+
+        $csp = $response->headers->get('Content-Security-Policy');
+        $this->assertNotNull($csp, 'CSP header moet aanwezig zijn in non-local env.');
+        $this->assertStringNotContainsString(
+            "'unsafe-eval'",
+            $csp,
+            "script-src mag geen 'unsafe-eval' bevatten — Alpine CSP migratie (VP-18)."
+        );
+        $this->assertStringContainsString("'nonce-", $csp, 'Nonce moet in script-src staan.');
+    }
 }
