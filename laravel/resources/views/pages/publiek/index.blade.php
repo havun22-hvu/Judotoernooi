@@ -305,13 +305,13 @@
 
             {{-- Club aanmelding formulier --}}
             @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
-            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="{ aanmeldOpen: false, aanmeldVerstuurd: false, aanmeldError: '', aanmeldLoading: false }">
-                <div class="flex items-center justify-between cursor-pointer" @click="aanmeldOpen = !aanmeldOpen">
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="clubAanmelding">
+                <div class="flex items-center justify-between cursor-pointer" @click="toggle()">
                     <div>
                         <h3 class="text-lg font-bold text-gray-800">{{ __('Deelnemen met jouw club?') }}</h3>
                         <p class="text-sm text-gray-500">{{ __('Meld je club aan en de organisator neemt contact met je op.') }}</p>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 transition-transform" :class="aanmeldOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-gray-400 transition-transform" :class="rotateClass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
@@ -324,20 +324,8 @@
                         </div>
                     </template>
 
-                    <template x-if="!aanmeldVerstuurd">
-                        <form @submit.prevent="
-                            aanmeldLoading = true;
-                            aanmeldError = '';
-                            fetch('{{ route('publiek.club-aanmelding', $toernooi->routeParams()) }}', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                                body: JSON.stringify({ club_naam: $refs.clubNaam.value, contact_naam: $refs.contactNaam.value, email: $refs.email.value, telefoon: $refs.telefoon.value })
-                            }).then(r => r.json()).then(data => {
-                                aanmeldLoading = false;
-                                if (data.success) { aanmeldVerstuurd = true; }
-                                else { aanmeldError = data.error || '{{ __('Er ging iets mis.') }}'; }
-                            }).catch(() => { aanmeldLoading = false; aanmeldError = '{{ __('Verbindingsfout. Probeer opnieuw.') }}'; })
-                        ">
+                    <template x-if="notVerstuurd">
+                        <form @submit.prevent="submit()">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Clubnaam') }} *</label>
@@ -360,7 +348,7 @@
                             <div x-show="aanmeldError" x-cloak class="mt-2 text-sm text-red-600" x-text="aanmeldError"></div>
                             <button type="submit" :disabled="aanmeldLoading"
                                     class="mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg text-sm disabled:opacity-50">
-                                <span x-show="!aanmeldLoading">{{ __('Aanmelden') }}</span>
+                                <span x-show="notLoading">{{ __('Aanmelden') }}</span>
                                 <span x-show="aanmeldLoading">{{ __('Verzenden...') }}</span>
                             </button>
                         </form>
@@ -767,7 +755,7 @@
                     </div>
 
                     <!-- Poules met tabs per favoriet -->
-                    <div x-show="!loadingPoules && favorietenPoules.length > 0" x-data="{ activeFavoriet: null }" x-init="$watch('favorietenPoules', () => { if(favorietenPoules.length > 0 && !activeFavoriet) activeFavoriet = getFirstFavorietId() })">
+                    <div x-show="toonFavorietPoules">
                         <!-- Alert voor favoriet die zich moet gereedmaken (blauw) -->
                         <template x-for="poule in favorietenPoules" :key="'ready-'+poule.id">
                             <template x-if="poule.judokas.some(j => j.is_favoriet && j.is_gereedmaken && !j.is_volgende && !j.is_aan_de_beurt)">
@@ -1152,11 +1140,55 @@
         const judokaNamen = @json($categorien->flatten(2)->pluck('naam', 'id'));
 
         document.addEventListener('alpine:init', () => {
+            Alpine.data('clubAanmelding', () => ({
+                aanmeldOpen: false,
+                aanmeldVerstuurd: false,
+                aanmeldError: '',
+                aanmeldLoading: false,
+                toggle() { this.aanmeldOpen = !this.aanmeldOpen; },
+                get rotateClass() { return this.aanmeldOpen ? 'rotate-180' : ''; },
+                get notVerstuurd() { return !this.aanmeldVerstuurd; },
+                get notLoading() { return !this.aanmeldLoading; },
+                async submit() {
+                    this.aanmeldLoading = true;
+                    this.aanmeldError = '';
+                    try {
+                        const res = await fetch('{{ route("publiek.club-aanmelding", $toernooi->routeParams()) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                club_naam: this.$refs.clubNaam.value,
+                                contact_naam: this.$refs.contactNaam.value,
+                                email: this.$refs.email.value,
+                                telefoon: this.$refs.telefoon.value,
+                            }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.aanmeldVerstuurd = true;
+                        } else {
+                            this.aanmeldError = data.error || '{{ __("Er ging iets mis.") }}';
+                        }
+                    } catch (e) {
+                        this.aanmeldError = '{{ __("Verbindingsfout. Probeer opnieuw.") }}';
+                    }
+                    this.aanmeldLoading = false;
+                },
+            }));
+
             Alpine.data('publiekApp', () => ({
                 activeTab: 'info',
                 favorieten: [],
                 favorietenPoules: [],
                 loadingPoules: false,
+                activeFavoriet: null,
+                get toonFavorietPoules() {
+                    return !this.loadingPoules && this.favorietenPoules.length > 0;
+                },
                 zoekterm: '',
                 zoekResultaten: [],
                 zoekLoading: false,
@@ -1176,6 +1208,13 @@
                 debugTapCount: 0, // For tracking taps
 
                 init() {
+                    // Auto-select first favoriet when poules loaded
+                    this.$watch('favorietenPoules', () => {
+                        if (this.favorietenPoules.length > 0 && !this.activeFavoriet) {
+                            this.activeFavoriet = this.getFirstFavorietId();
+                        }
+                    });
+
                     // Load notification state
                     try {
                         const notified = localStorage.getItem(NOTIFIED_KEY);
