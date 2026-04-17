@@ -1,352 +1,58 @@
-# JudoToernooi - Claude Instructions
+# JudoToernooi — Claude Instructions
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  ⛔ STOP! LEES DIT VOORDAT JE IETS DOET                          ║
-║                                                                   ║
-║  GEEN CODE SCHRIJVEN VOORDAT JE ANTWOORD GEEFT OP:               ║
-║                                                                   ║
-║  1. "Wat staat er in de docs over dit onderwerp?"                ║
-║  2. "Waar staat dat?" (geef bestandsnaam + regelnummer)          ║
-║  3. "Is er iets inconsistent of ontbrekend?"                     ║
-║                                                                   ║
-║  PAS DAARNA mag je code voorstellen.                             ║
-║  Gebruiker moet EERST akkoord geven.                             ║
-║                                                                   ║
-║  📖 VERPLICHTE LEESSTOF:                                         ║
-║     laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md               ║
-║                                                                   ║
-║  ⚠️  Bij twijfel: /kb of vraag aan gebruiker                     ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-> **Type:** Laravel 11 toernooi management systeem (SaaS multi-tenant)
-> **URL:** https://judotournament.org (production)
-> **Eigenaar:** Havun (henkvu@gmail.com = sitebeheerder)
-> **Doel:** SaaS platform voor judo toernooien - verhuurd aan judoscholen/organisatoren
-> **Onveranderlijke regels:** Zie [`CONTRACTS.md`](CONTRACTS.md) — bij elke wijziging eerst raadplegen.
-
-## Bedrijfsmodel (SaaS)
-
-**Havun** verhuurt de JudoToernooi software aan judoscholen (organisatoren).
-
-### Rollen
-| Rol | Beschrijving | Voorbeeld |
-|-----|--------------|-----------|
-| **Sitebeheerder** | Havun admin, ziet alle organisatoren en toernooien | henkvu@gmail.com |
-| **Organisator** | Klant (judoschool), beheert eigen toernooien | Judoschool Cees Veen |
-
-### Data per Organisator (blijft bewaard)
-Organisatoren zijn terugkerende klanten. Deze data blijft bewaard tussen toernooien:
-
-| Data | Beschrijving |
-|------|--------------|
-| **Clubs** | Deelnemende judoscholen (fuzzy name matching) |
-| **Templates** | Toernooi configuraties (intern/open toernooi) |
-| **Presets** | Gewichtsklassen presets |
-| **Toernooien** | Historisch overzicht (ook afgesloten) |
-
-### Toernooi Lifecycle
-```
-Nieuw → Voorbereiding → Wedstrijddag → Afgesloten
-         ↑                              |
-         └── Templates hergebruiken ────┘
-```
-
-### Registratie & Login
-- `/registreren` - Nieuwe organisator aanmelden via magic link (email verificatie)
-- `/login` - Inloggen (email + wachtwoord, passkeys/biometrisch)
-- `/wachtwoord-vergeten` - Wachtwoord reset via magic link
-- Organisator dashboard: `/{slug}/dashboard`
-
-### Sitebeheerder Dashboard
-Route: `/admin` (alleen voor sitebeheerder)
-- Overzicht alle organisatoren en toernooien
-- Klantenbeheer: `/admin/klanten` (bewerken, is_test/kortingsregeling, verwijderen)
-- Per organisator: toernooien, statistieken, status
-
-## CRITICAL: Sessie Start - Sync met Server
-
-AutoFix kan code wijzigen op production en staging. Bij sessie start ALTIJD eerst synchroniseren:
-
-```bash
-# 1. Server: commit & push AutoFix wijzigingen (production)
-ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-prod && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
-
-# 2. Server: commit & push AutoFix wijzigingen (staging)
-ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-staging && git add -A && git diff --cached --quiet || git commit -m 'autofix: server changes' && git push"
-
-# 3. Lokaal: pull server wijzigingen
-cd D:\GitHub\JudoToernooi && git pull
-```
-
-**Waarom?** AutoFix draait op production+staging en kan bestanden aanpassen. Zonder sync werk je op verouderde code.
-
-**Serverstructuur:** Symlinks naar git repo clones. Zie `.claude/deploy.md` voor details.
-- Deploy: `cd /var/www/judotoernooi/repo-prod && git pull` (of `repo-staging`)
-- Laravel app: `/var/www/judotoernooi/repo-prod/laravel/` (symlinked als `/var/www/judotoernooi/laravel`)
+> **Type:** SaaS multi-tenant toernooi-management — https://judotournament.org
+> **Bedrijfsmodel:** Havun verhuurt aan judoscholen (organisatoren).
+> **Stack:** Laravel 11 + Blade + Alpine.js (CSP) + Tailwind, MySQL prod / SQLite local.
+> **Onveranderlijke regels:** [`CONTRACTS.md`](CONTRACTS.md) — eerst raadplegen.
+> **Detail-context + handover:** `.claude/context.md` + `.claude/handover.md`
 
 ## De 5 Onschendbare Regels
 
-```
 1. NOOIT code schrijven zonder KB + kwaliteitsnormen te raadplegen
 2. NOOIT features/UI-elementen verwijderen zonder instructie
 3. NOOIT credentials/keys/env aanraken
-4. ALTIJD tests draaien voor én na wijzigingen (coverage >80%)
+4. ALTIJD tests draaien voor én na wijzigingen (coverage >82,5%, huidig 89,6%)
 5. ALTIJD toestemming vragen bij grote wijzigingen
-```
 
-## Rules (ALWAYS follow)
+## ⛔ Hard nooit's
 
-### ⛔ NOOIT `php artisan test` OP STAGING/PRODUCTION
-`RefreshDatabase` draait `migrate:fresh` → **WIST ALLE DATA**.
-Server `.env` overschrijft `phpunit.xml` SQLite instelling → tests draaien tegen ECHTE MySQL.
-- Tests ALLEEN lokaal draaien
-- Bij lokale problemen: tests SCHRIJVEN en COMMITTEN, niet op server draaien
-- **Incident 4 apr 2026:** Staging DB compleet gewist door tests, hersteld uit backup
+- **Geen `php artisan test` op staging/production** — `.env` overschrijft SQLite → wist MySQL data (incident 4 apr 2026)
+- **Geen polling** (setInterval/setTimeout fetch) — altijd Reverb/WebSockets
+- **Geen direct-op-server editen** — altijd Local → GitHub → Server
+- **Nieuwe broadcast events:** verplicht `use \App\Events\Concerns\SafelyBroadcasts;`
 
-### DENK ALS SAAS-BOUWER, NIET ALS PROBLEEMOPLOSSER
-Je bouwt een **SaaS product** dat door betalende klanten wordt gebruikt. Denk bij elke beslissing:
-- **Werkt dit voor ALLE organisatoren?** Niet alleen voor Henk's test-scenario
-- **Wat als 50 toernooien tegelijk draaien?** Schaalbaarheid, permissies, isolatie
-- **Wat ziet de klant?** Error pages, UX, foutmeldingen — alles moet professioneel
-- **Is dit productie-waardig?** Geen hacks, geen "werkt op mijn machine"
-
-### LEES-DENK-DOE-DOCUMENTEER (Kritiek!)
-
-> **Volledige uitleg:** `HavunCore/docs/kb/runbooks/claude-werkwijze.md`
-
-**Bij ELKE taak:**
-1. **LEES** - Hiërarchisch: CLAUDE.md → relevante code/docs voor de taak
-2. **DENK** - Analyseer, begrijp, stel vragen bij twijfel
-3. **DOE** - Pas dan uitvoeren, rustig, geen haast
-4. **DOCUMENTEER** - Sla nieuwe kennis op in de juiste plek
-
-**Kernregels:**
-- Kwaliteit boven snelheid - liever 1x goed dan 3x fout
-- Bij twijfel: VRAAG en WACHT op antwoord
-- Nooit aannemen, altijd verifiëren
-- Als gebruiker iets herhaalt: direct opslaan in docs
-- **Max 2 pogingen** bij bug fix - daarna STOP en verslag uitbrengen aan gebruiker
-
-**Documentatie discipline:**
-- **Oriënteer** via hoofd docs: `CLAUDE.md` → `laravel/docs/README.md`
-- **Hiërarchisch**: hoofd docs verwijzen naar detail docs → lees die EERST
-- **GEEN** dubbele documentatie - check of info al ergens staat
-- **ONDERHOUD** bestaande docs, maak niet steeds nieuwe files
-
-**Bug fix werkwijze (max 2 pogingen):**
-0. **ALTIJD EERST:** Check VSCode/IDE op syntax errors in betrokken bestanden — gratis opsporing!
-1. **Poging 1:** Analyseer probleem, check VIEW eerst (waar komt data vandaan?), fix
-   → Na elke fix: check VSCode syntax errors voordat je verder gaat
-2. **Poging 2:** Als 1 faalt, heranalyseer, probeer andere aanpak
-3. **STOP na 2 pogingen:** Breng verslag uit aan gebruiker:
-   - Wat is het symptoom?
-   - Waar heb je gezocht?
-   - Wat heb je geprobeerd?
-   - Wat denk je dat het probleem is?
-   - Gebruiker kan dan meedenken
-
-**Hoofd docs → Detail docs:**
-| Onderwerp | Hoofd | Detail |
-|-----------|-------|--------|
-| Workflow toernooi | README.md | `GEBRUIKERSHANDLEIDING.md` |
-| Betalingen | CLAUDE.md | `BETALINGEN.md` |
-| Interfaces/PWA | README.md | `INTERFACES.md` |
-| **Code standaarden** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
-| **Error handling** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/STABILITY.md` |
-
-### BESCHERM BESTAANDE CODE (5 lagen)
-
-Hoe verder de app vordert, hoe belangrijker het is dat werkende code niet onbedoeld kapot gaat.
-**Bij ELKE wijziging aan een view of component: LEES EERST wat er staat en waarom.**
-
-**5 beschermingslagen (gebruik ze!):**
-
-| # | Laag | Beschermt tegen | Hoe |
-|---|------|----------------|-----|
-| 1 | **MD docs** | Onbegrip (waarom bestaat dit?) | Beschrijf functie + implementatie in feature docs |
-| 2 | **DO NOT REMOVE comment** | Onoplettendheid (per ongeluk wissen) | `{{-- DO NOT REMOVE: [wat + waarom] --}}` in de view |
-| 3 | **Tests** | Code-regressie (het werkt niet meer) | PHPUnit/Feature test die de output checkt |
-| 4 | **CLAUDE.md regels** | Alle toekomstige sessies | Deze sectie + specifieke regels |
-| 5 | **Memory** | Context verlies tussen sessies | `memory/MEMORY.md` kritieke regels |
-
-**Regels:**
-- Views met `DO NOT REMOVE` comments: **NIET aanraken** zonder expliciete toestemming
-- Bij twijfel of iets bewust geplaatst is: **VRAAG aan gebruiker**
-- Verwijder NOOIT UI-elementen die je niet begrijpt — lees eerst de docs
-- Na een fix: controleer dat bestaande functionaliteit nog intact is
-
-### NOOIT polling — ALTIJD Reverb/WebSockets
-Deze app gebruikt Reverb voor alle real-time communicatie. NOOIT polling (setInterval/setTimeout fetch loops) bouwen. Altijd een Reverb broadcast event gebruiken.
-
-### Broadcast Events: ALTIJD SafelyBroadcasts trait
-Bij NIEUW broadcast event ALTIJD `use \App\Events\Concerns\SafelyBroadcasts;` toevoegen.
-De trait overschrijft `dispatch()` met circuit breaker + try-catch + log throttling.
-Zie `laravel/docs/3-DEVELOPMENT/STABILITY.md` → "Reverb/Broadcast Bescherming".
-
-### Workflow: Local → GitHub → Server
-```
-ALTIJD: Edit lokaal → Push naar GitHub → Deploy naar staging/production
-NOOIT: Direct op server editen
-```
-
-### Auto-start servers (bij lokaal testen)
-```bash
-cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
-```
-
-### Forbidden without permission
-- SSH keys, credentials, .env files wijzigen
-- Database migrations op production
-- Composer/npm packages installeren
-
-### ⛔ TEST DATA REGELS
-**Testdata aanmaken/wijzigen:**
-- Als gebruiker vraagt → gewoon doen
-
-**NIET DOEN - Bugs maskeren:**
-- Als code niet werkt (bijv. gewicht updaten faalt), NIET de data handmatig "goed" zetten
-- De CODE moet werken, niet de data "toevallig goed staan"
-- Fix altijd de code, niet de symptomen
-
-### Database & Migraties
-**Local/Staging:**
-- `migrate:fresh` alleen voor volledige database reset
-- Na gewone migratie: ALTIJD gegevens terugzetten
-
-**Production (KRITIEK - geen minuut data mag verloren gaan):**
-- ALTIJD backup maken TIJDENS werken aan de app (continu!)
-- ALTIJD backup maken VOOR migratie
-- Dagelijkse backup: server → Hetzner backup (elke avond)
-- Bij crash: direct kunnen herstellen naar laatste backup
-
-### Communication
-- Antwoord max 20-30 regels
-- Bullet points, direct to the point
-
-## Quick Reference
-
-| Omgeving | App pad | Git repo pad |
-|----------|---------|-------------|
-| Local | `D:\GitHub\JudoToernooi\laravel` | `D:\GitHub\JudoToernooi` |
-| Staging | `/var/www/judotoernooi/staging` (symlink) | `/var/www/judotoernooi/repo-staging` |
-| Production | `/var/www/judotoernooi/laravel` (symlink) | `/var/www/judotoernooi/repo-prod` |
-
-**Deploy:** `git pull` in de **git repo pad**, niet in de symlink.
-**Server:** 188.245.159.115 (root, SSH key)
-**GitHub:** https://github.com/havun22-hvu/judotoernooi
-
-## Dit Project
-
-| Aspect | Waarde |
-|--------|--------|
-| **Framework** | Laravel 11 + Blade + Alpine.js + Tailwind |
-| **Local DB** | SQLite |
-| **Server DB** | MySQL (judo_toernooi) |
-
-### Features
-- Toernooi management, deelnemers import, poule indeling
-- Weging interface, mat interface, eliminatie systeem
-- **Betalingen** (Mollie + Stripe, Connect + Platform mode)
-
-## Betalingen (Mollie + Stripe)
-
-> **Uitgebreide docs:** `.claude/context.md` en `laravel/docs/2-FEATURES/BETALINGEN.md`
-
-| Provider | Dekking | Toeslag (platform) |
-|----------|---------|-------------------|
-| **Mollie** (standaard) | Europa | €0,50 |
-| **Stripe** | Wereldwijd | €0,50 |
-
-| Modus | Geld naar | Toeslag |
-|-------|-----------|---------|
-| **Connect** | Organisator's eigen account | Nee |
-| **Platform** | JudoToernooi's account | €0,50 |
-
-**Key files:**
-- `app/Contracts/PaymentProviderInterface.php` - Interface
-- `app/DTOs/PaymentResult.php` - Genormaliseerd resultaat
-- `app/Services/PaymentProviderFactory.php` - Factory
-- `app/Services/Payments/MolliePaymentProvider.php` - Mollie wrapper
-- `app/Services/Payments/StripePaymentProvider.php` - Stripe implementatie
-- `app/Services/MollieService.php` - Bestaande Mollie service
-- `config/services.php` - Provider config
-- `app/Models/Toernooi.php` - Helper methods
-
-## Knowledge Base
-
-| Onderwerp | Locatie |
-|-----------|---------|
-| Project details | `.claude/context.md` |
-| Classificatie/Poules | `laravel/docs/2-FEATURES/CLASSIFICATIE.md` |
-| Mollie betalingen | `laravel/docs/2-FEATURES/BETALINGEN.md` |
-| Error handling | `laravel/docs/3-DEVELOPMENT/STABILITY.md` |
-| Code standaarden | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
-| Project docs | `laravel/docs/README.md` |
-| Handover | `.claude/handover.md` |
-| HavunCore KB | `D:\GitHub\HavunCore\docs\kb\`
-
-## Test Coverage
-
-- Huidige coverage: 89.6% (3215 tests)
-- Minimum: 82.5%
-- Meten: `php artisan test --coverage` (vanuit laravel/ directory)
-- ⛔ NOOIT tests op staging/production draaien (.env overschrijft SQLite)
-
-## Service Architectuur (gerefactord april 2026)
-
-EliminatieService (786 regels) + 3 helpers:
-- `Eliminatie/BracketCalculator` — bracket berekeningen
-- `Eliminatie/WinnerCalculator` — winnaar/bye logica
-- `Eliminatie/MatchScheduler` — wedstrijd planning
-
-BlokMatVerdelingService (882 regels) + 2 helpers:
-- `BlokMatVerdeling/MatAssigner` — mat verdeling
-- `BlokMatVerdeling/ZaalOverzichtBuilder` — zaal overzicht
-
-PouleIndelingService (587 regels) + 4 helpers:
-- `PouleIndeling/PouleTitleBuilder` — poule titels
-- `PouleIndeling/UnassignedJudokaFinder` — niet-ingedeelde judokas
-- `PouleIndeling/PouleCalculator` — poule berekeningen
-- `PouleIndeling/JudokaGrouper` — judoka groepering
-
-AutoFixService (775 regels) + 1 helper:
-- `AutoFix/GitOperations` — git commit/push/PR (sandbox in test env)
-
-## Controller Architectuur (gerefactord april 2026)
-
-BlokController (447) + 2 subcontrollers:
-- `Blok/BlokActivatieController` — categorie/poule activeren/resetten
-- `Blok/BlokSprekerController` — spreker interface
-
-MatController (654) + 2 subcontrollers:
-- `Mat/MatBracketController` — bracket beheer
-- `Mat/MatUitslagController` — uitslag invoer
-
-PouleController (960) + 1 subcontroller:
-- `Poule/PouleEliminatieController` — eliminatie-specifiek
-
-WedstrijddagController (819) + 1 subcontroller:
-- `Wedstrijddag/WedstrijddagMobielController` — mobiele views
-
-## Security (april 2026)
-
-- PIN systeem VERWIJDERD — device binding via 12-char role codes
-- Webhook idempotency via payment_processed_at
-- Mollie/Stripe signature verificatie
-- AutoFix sandbox in test/local env
-- Sync conflict detection + logging (sync_conflicts tabel)
-
-## Production Commands
+## Sessie-start sync (AutoFix kan op server pushen)
 
 ```bash
-# Validate production readiness
-php artisan validate:production
-
-# Run tests
-php artisan test
-
-# Build assets
-npm run build
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-prod && git add -A && git diff --cached --quiet || git commit -m 'autofix' && git push"
+ssh root@188.245.159.115 "cd /var/www/judotoernooi/repo-staging && git add -A && git diff --cached --quiet || git commit -m 'autofix' && git push"
+cd D:\GitHub\JudoToernooi && git pull
 ```
+
+## SaaS-mindset
+
+Werkt dit voor **alle** organisatoren? Wat bij 50 toernooien tegelijk? Wat ziet de klant bij errors? Geen "werkt op mijn machine".
+
+## Werkwijze + bug fix
+
+LEES → DENK → DOE → DOCUMENTEER. Max 2 fix-pogingen, daarna verslag aan gebruiker (symptoom / waar gezocht / wat geprobeerd / hypothese).
+
+## Bescherming bestaande code
+
+`{{-- DO NOT REMOVE --}}` views niet aanraken zonder toestemming. Verwijder NOOIT UI-elementen die je niet begrijpt — lees eerst de feature-docs.
+
+## Test-data discipline
+
+Bugs nooit "wegwerken" door data handmatig recht te zetten. Code moet werken, niet de data toevallig goed staan.
+
+## Kerndocs
+
+- `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` — verplichte leesstof
+- `laravel/docs/3-DEVELOPMENT/STABILITY.md` — error handling + Reverb-bescherming
+- `laravel/docs/2-FEATURES/BETALINGEN.md` — Mollie + Stripe (Connect / Platform €0,50)
+- `laravel/docs/2-FEATURES/CLASSIFICATIE.md` — poule-indeling
+- Service-architectuur (Eliminatie/PouleIndeling/BlokMatVerdeling refactor): `.claude/context.md`
+
+## Server-paden
+
+Local `D:\GitHub\JudoToernooi\laravel` · Staging `/var/www/judotoernooi/repo-staging` · Production `/var/www/judotoernooi/repo-prod` (symlinks naar `/laravel`). Deploy = `git pull` in **repo pad**, niet in symlink. SSH 188.245.159.115.
