@@ -13,7 +13,7 @@
                    x-model="query"
                    @input.debounce.300ms="search()"
                    @focus="onFocus()"
-                   @click.away="hideResults()"
+                   @click.outside="hideResults()"
                    placeholder="{{ $placeholder ?? __('Zoek adres...') }}"
                    autocomplete="off"
                    {{ $attributes->merge(['class' => 'w-full border rounded px-3 py-2 pr-10']) }}>

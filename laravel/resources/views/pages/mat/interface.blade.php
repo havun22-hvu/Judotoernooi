@@ -39,7 +39,7 @@
                     </svg>
                 </button>
                 {{-- Dropdown menu --}}
-                <div x-show="menuOpen" @click.away="closeMenu()" x-transition
+                <div x-show="menuOpen" @click.outside="closeMenu()" x-transition
                      class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 text-sm">
                     <button type="button" @click="menuOpen = false; document.getElementById('mat-interface') && Alpine.$data(document.getElementById('mat-interface')).refreshAll()"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">

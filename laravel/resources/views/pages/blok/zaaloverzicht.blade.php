@@ -111,7 +111,7 @@
                 <span class="px-2 py-1 text-xs bg-red-500 rounded">{{ __('Weging gesloten') }}</span>
                 @endif
             </div>
-            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="rotateClass" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
@@ -145,7 +145,7 @@
                 <button @click="toggleDropdown()" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
                     ✓ {{ $chipNaam }} ▾
                 </button>
-                <div x-show="dropdown" @click.away="closeDropdown()" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
+                <div x-show="dropdown" @click.outside="closeDropdown()" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
                     <a href="{{ route('toernooi.mat.interface', $toernooi->routeParamsWith(['blok' => $blok['nummer']])) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         {{ __('Mat Interface') }}

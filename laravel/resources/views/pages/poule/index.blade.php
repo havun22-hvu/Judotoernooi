@@ -373,7 +373,7 @@
                                 <button @click="toggle()" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
                                     {{ __('Omzetten') }} ▾
                                 </button>
-                                <div x-show="open" @click.away="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
+                                <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
                                     @if($isEliminatie)
                                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
                                         {{ __('Alleen poules') }}
