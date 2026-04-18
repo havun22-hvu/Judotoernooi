@@ -50,3 +50,7 @@ laravel/public/testdata/
 
 # Exception: demo CSV's for free tier
 !laravel/storage/app/demo/demo-*.csv
+
+# Typo-filenames containing env data (Windows path-encoding accidents)
+*.env
+*env.bak
