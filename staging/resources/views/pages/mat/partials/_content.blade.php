@@ -240,12 +240,12 @@
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
                         <span x-text="'P#' + poule.poule_nummer + ' ' + (poule.type === 'eliminatie' ? __eliminatie : __poule) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
-                        (<span x-text="poule.judoka_count"></span> judoka's, <span x-text="poule.wedstrijden.length"></span>w)
+                        (<span x-text="poule.judoka_count"></span> judoka's, <span x-text="poule.wedstrijden?.length ?? 0"></span>w)
                     </h2>
                 </div>
                 <div class="flex items-center gap-3">
                     <!-- Geen wedstrijden: toon waarschuwing -->
-                    <div x-show="poule.wedstrijden.length === 0" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
+                    <div x-show="!poule.wedstrijden?.length" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
                         ⚠ Geen wedstrijden
                     </div>
 
