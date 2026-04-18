@@ -54,3 +54,5 @@ laravel/public/testdata/
 # Typo-filenames containing env data (Windows path-encoding accidents)
 *.env
 *env.bak
+
+.cache_ggshield
