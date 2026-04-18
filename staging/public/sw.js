@@ -116,7 +116,10 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => {
                     return caches.match(event.request).then((cached) => {
-                        return cached || caches.match(OFFLINE_URL);
+                        if (cached) return cached;
+                        return caches.match(OFFLINE_URL).then((offline) => {
+                            return offline || new Response('Offline', { status: 503 });
+                        });
                     });
                 })
         );
@@ -136,7 +139,7 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => {
-                return caches.match(event.request);
+                return caches.match(event.request).then(r => r || Response.error());
             })
     );
 });
