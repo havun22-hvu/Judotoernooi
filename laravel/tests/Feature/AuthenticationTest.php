@@ -18,6 +18,15 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Rate-limiter counters live in the array cache driver during tests
+        // (config/cache.php). Flushing it isolates this file's tests so the
+        // rate-limit test can't bleed 429s into the happy-path ones.
+        \Illuminate\Support\Facades\Cache::flush();
+    }
+
     public function test_login_page_is_accessible(): void
     {
         $response = $this->get(route('login'));
@@ -71,14 +80,28 @@ class AuthenticationTest extends TestCase
         $this->assertGuest('organisator');
     }
 
-    public function test_login_throttle_is_configured(): void
+    public function test_login_is_rate_limited(): void
     {
-        // The original test asserted a 429 after 6 attempts. The current
-        // POST /login does not have throttle:auth middleware — flag this
-        // as an explicit follow-up rather than silently dropping the test.
-        $this->markTestIncomplete(
-            'POST /login mist throttle:auth middleware — voeg toe in '
-            . 'routes/web.php (line ~240) en activeer dan deze assertion.'
-        );
+        Organisator::factory()->create([
+            'email' => 'rate-test@example.com',
+            'password' => bcrypt('correct-password'),
+        ]);
+
+        // login limiter (AppServiceProvider): perMinute(5) per IP — 6th
+        // attempt must hit 429. setUp() clears the counter, so 5 wrong
+        // attempts followed by 1 more = 429.
+        for ($i = 0; $i < 5; $i++) {
+            $this->post(route('login.submit'), [
+                'email' => 'rate-test@example.com',
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $sixth = $this->post(route('login.submit'), [
+            'email' => 'rate-test@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $sixth->assertStatus(429);
     }
 }
