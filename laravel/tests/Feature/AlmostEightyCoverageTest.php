@@ -551,17 +551,10 @@ class AlmostEightyCoverageTest extends TestCase
     // 92-97 (mail error catch)
     // ========================================================================
 
-    #[Test]
-    public function error_notification_sends_email_in_production(): void
-    {
-        $this->markTestSkipped('Service refactored - no longer sends email, stores to AutofixProposal');
-    }
-
-    #[Test]
-    public function error_notification_handles_mail_failure(): void
-    {
-        $this->markTestSkipped('Service refactored - no longer sends email, stores to AutofixProposal');
-    }
+    // 2 tests removed (sends_email_in_production, handles_mail_failure):
+    // ErrorNotificationService stuurt geen e-mail meer, slaat naar AutofixProposal.
+    // De huidige API is gedekt in tests/Unit/Services/ErrorNotificationServiceTest.php
+    // (toegevoegd 2026-04-20). Hier laten staan was VP-17 silent disabling.
 
     #[Test]
     public function error_notification_skips_email_outside_production(): void
