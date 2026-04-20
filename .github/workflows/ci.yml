@@ -104,7 +104,8 @@ jobs:
           sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
           touch database/database.sqlite
           mkdir -p bootstrap/cache
-          chmod -R 775 bootstrap/cache
+          mkdir -p storage/framework/{sessions,views,cache}
+          chmod -R 775 bootstrap/cache storage
         working-directory: laravel
 
       - name: Install dependencies
@@ -139,7 +140,8 @@ jobs:
           sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
           touch database/database.sqlite
           mkdir -p bootstrap/cache
-          chmod -R 775 bootstrap/cache
+          mkdir -p storage/framework/{sessions,views,cache}
+          chmod -R 775 bootstrap/cache storage
         working-directory: laravel
 
       - name: Install dependencies
@@ -178,7 +180,8 @@ jobs:
           sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
           touch database/database.sqlite
           mkdir -p bootstrap/cache
-          chmod -R 775 bootstrap/cache
+          mkdir -p storage/framework/{sessions,views,cache}
+          chmod -R 775 bootstrap/cache storage
         working-directory: laravel
 
       - name: Install dependencies
