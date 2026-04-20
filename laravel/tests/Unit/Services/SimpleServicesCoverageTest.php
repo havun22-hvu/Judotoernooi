@@ -147,11 +147,11 @@ class SimpleServicesCoverageTest extends TestCase
     // ERROR NOTIFICATION SERVICE
     // =========================================================================
 
-    #[Test]
-    public function error_notification_service_notifies_exception_when_enabled(): void
-    {
-        $this->markTestSkipped('Tests old API - service now stores to AutofixProposal table');
-    }
+    // 4 tests removed (notifies_exception_when_enabled, notifies_critical_when_enabled,
+    // formats_exception_data, format_email_body): de oude email-API bestaat
+    // niet meer; ErrorNotificationService slaat naar AutofixProposal table.
+    // De huidige API is gedekt in tests/Unit/Services/ErrorNotificationServiceTest.php
+    // (toegevoegd 2026-04-20). Hier laten staan was VP-17 silent disabling.
 
     #[Test]
     public function error_notification_service_skips_when_disabled_in_testing(): void
@@ -166,12 +166,6 @@ class SimpleServicesCoverageTest extends TestCase
     }
 
     #[Test]
-    public function error_notification_service_notifies_critical_when_enabled(): void
-    {
-        $this->markTestSkipped('Tests old API - service now stores to AutofixProposal table');
-    }
-
-    #[Test]
     public function error_notification_service_skips_critical_when_disabled(): void
     {
         config(['app.error_notifications' => false]);
@@ -181,18 +175,6 @@ class SimpleServicesCoverageTest extends TestCase
         $service = new ErrorNotificationService();
         $service->notifyCritical('Should not log');
         $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function error_notification_service_formats_exception_data(): void
-    {
-        $this->markTestSkipped('Tests old API - service now stores to AutofixProposal table');
-    }
-
-    #[Test]
-    public function error_notification_service_format_email_body(): void
-    {
-        $this->markTestSkipped('Method formatEmailBody no longer exists - service refactored');
     }
 
     // =========================================================================
