@@ -48,6 +48,41 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .pair-row {
+            display: flex;
+            align-items: center;
+            gap: clamp(16px, 3vw, 48px);
+            margin-bottom: 3vh;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .pair-row .code-box { margin-bottom: 0; }
+
+        .divider {
+            font-size: clamp(14px, 2vh, 20px);
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .qr-box {
+            background: #F9FAFB;
+            border-radius: 16px;
+            padding: 2vh;
+            line-height: 0;
+        }
+        .qr-box svg {
+            display: block;
+            width: clamp(180px, 28vh, 320px);
+            height: clamp(180px, 28vh, 320px);
+        }
+        .qr-caption {
+            font-size: clamp(12px, 1.6vh, 18px);
+            color: #9CA3AF;
+            margin-top: 1vh;
+            text-align: center;
+        }
+
         .status {
             font-size: clamp(14px, 2vh, 24px);
             color: #6B7280;
@@ -95,12 +130,19 @@
         <div class="logo">JudoToernooi</div>
 
         <div id="state-waiting">
-            <p class="instruction">Voer deze code in bij de toernooi-instellingen</p>
-            <div class="code-box">
-                <div class="code">{{ $code }}</div>
+            <p class="instruction">Scan de QR of voer de code in</p>
+            <div class="pair-row">
+                <div class="code-box">
+                    <div class="code">{{ $code }}</div>
+                </div>
+                <div class="divider">of</div>
+                <div>
+                    <div class="qr-box">{!! $qrSvg !!}</div>
+                    <p class="qr-caption">Scan met telefoon of scorebord-app</p>
+                </div>
             </div>
             <p class="status"><span class="spinner"></span> Wachten op koppeling...</p>
-            <p class="hint">Ga op de laptop naar Instellingen → Organisatie → Device Toegangen → klik "Koppel TV" bij de juiste mat</p>
+            <p class="hint">Code invoeren kan via Instellingen → Organisatie → Device Toegangen → "Koppel TV"</p>
             <p class="countdown" id="countdown"></p>
         </div>
 

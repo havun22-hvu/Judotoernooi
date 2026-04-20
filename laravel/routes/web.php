@@ -721,6 +721,12 @@ Route::get('cast/receiver', fn() => view('pages.cast.receiver'))->name('cast.rec
 Route::get('tv', [\App\Http\Controllers\TvController::class, 'index'])->name('tv.koppel');
 Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->middleware('auth')->name('tv.link');
 
+// QR-scan landing — organisator scant QR op TV (auth vereist; redirect naar login bij afwezigheid)
+Route::get('tv/qr/{code}', [\App\Http\Controllers\TvController::class, 'qrScan'])
+    ->where('code', '[0-9]{4}')
+    ->middleware('auth')
+    ->name('tv.qr-scan');
+
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
 Route::get('tv/{code}', [MatController::class, 'tvRedirect'])->name('tv.redirect');
 

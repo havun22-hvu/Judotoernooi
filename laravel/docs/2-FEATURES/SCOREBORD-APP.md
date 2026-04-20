@@ -139,6 +139,7 @@ GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (alleen bij (
 POST /api/scoreboard/result          → Uitslag terugsturen
 POST /api/scoreboard/event           → Sync event naar display (event-based, niet continu)
 POST /api/scoreboard/heartbeat       → Verbinding alive houden
+POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) — mat uit token
 ```
 
 #### POST /api/scoreboard/auth
@@ -214,6 +215,21 @@ POST /api/scoreboard/heartbeat       → Verbinding alive houden
 - TV/LCD hoeft alleen browser te openen (geen APK installeren)
 - Werkt op elk device met browser
 - Kan ook via Chromecast/HDMI laptop → TV
+
+### TV Koppelen
+
+TV opent `/tv` → toont 4-cijferige code én QR-code (beide wijzen naar dezelfde koppeling).
+
+**Drie manieren om te koppelen:**
+
+| Methode | Wie | Flow |
+|---------|-----|------|
+| **Code handmatig** | Organisator (laptop) | Instellingen → Device Toegangen → "Koppel TV" → code invoeren |
+| **QR met telefoon** | Organisator | Scan QR met camera → browser opent `/tv/qr/{code}` → kies toernooi + mat |
+| **QR met scorebord-app** | Tafelofficial | Scan QR in-app → `POST /api/scoreboard/tv-link` → mat uit Bearer token |
+
+Backend dispatcht in alle drie gevallen `TvLinked` → TV ontvangt redirect URL via Reverb
+(`tv-koppeling.{code}`) → navigeert naar scoreboard-live pagina.
 
 ---
 

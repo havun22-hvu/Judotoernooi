@@ -37,4 +37,5 @@ Route::middleware('scoreboard.token')->prefix('scoreboard')->name('api.scoreboar
     Route::post('/result', [ScoreboardController::class, 'result'])->name('result');
     Route::post('/event', [ScoreboardController::class, 'event'])->name('event');
     Route::post('/heartbeat', [ScoreboardController::class, 'heartbeat'])->name('heartbeat');
+    Route::post('/tv-link', [ScoreboardController::class, 'tvLink'])->name('tv-link');
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TvKoppeling;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TvController extends Controller
 {
@@ -21,9 +22,50 @@ class TvController extends Controller
             'expires_at' => now()->addMinutes(10),
         ]);
 
+        $qrUrl = url('/tv/qr/' . $koppeling->code);
+        $qrSvg = QrCode::format('svg')->size(280)->margin(1)->generate($qrUrl);
+
         return view('pages.tv.koppel', [
             'code' => $koppeling->code,
             'koppelingId' => $koppeling->id,
+            'qrSvg' => $qrSvg,
+            'qrUrl' => $qrUrl,
+        ]);
+    }
+
+    /**
+     * QR-scan landing — organisator scant QR op TV → kiest mat → koppelt.
+     * Auth vereist. Code komt uit de QR URL, organisator selecteert alleen nog toernooi + mat.
+     */
+    public function qrScan(Request $request, string $code)
+    {
+        TvKoppeling::where('expires_at', '<', now())->delete();
+
+        $koppeling = TvKoppeling::where('code', $code)->first();
+
+        if (!$koppeling || $koppeling->isExpired()) {
+            return view('pages.tv.qr-scan', [
+                'status' => 'expired',
+                'code' => $code,
+            ]);
+        }
+
+        if ($koppeling->isLinked()) {
+            return view('pages.tv.qr-scan', [
+                'status' => 'already-linked',
+                'code' => $code,
+            ]);
+        }
+
+        $user = $request->user();
+        $toernooien = $user->is_sitebeheerder
+            ? \App\Models\Toernooi::where('is_actief', true)->orderByDesc('datum')->get()
+            : $user->toernooien()->where('is_actief', true)->orderByDesc('datum')->get();
+
+        return view('pages.tv.qr-scan', [
+            'status' => 'ready',
+            'code' => $code,
+            'toernooien' => $toernooien,
         ]);
     }
 

@@ -293,6 +293,69 @@ class ScoreboardController extends Controller
     }
 
     /**
+     * Link a TV (shown 4-digit code) to this scoreboard device's mat.
+     * App-side QR-scanner posts the 4-digit code it scanned from the TV screen;
+     * toernooi + mat come from the Bearer token's DeviceToegang (no spoofing possible).
+     */
+    public function tvLink(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|size:4',
+        ]);
+
+        $toegang = $request->input('device_toegang');
+
+        if (!$toegang || !$toegang->toernooi_id || !$toegang->mat_nummer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device is niet gekoppeld aan een mat.',
+            ], 422);
+        }
+
+        \App\Models\TvKoppeling::where('expires_at', '<', now())->delete();
+
+        $koppeling = \App\Models\TvKoppeling::where('code', $validated['code'])
+            ->where('expires_at', '>', now())
+            ->whereNull('linked_at')
+            ->first();
+
+        if (!$koppeling) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code ongeldig of verlopen.',
+            ], 422);
+        }
+
+        $koppeling->update([
+            'toernooi_id' => $toegang->toernooi_id,
+            'mat_nummer' => $toegang->mat_nummer,
+            'linked_at' => now(),
+        ]);
+
+        $matToegang = DeviceToegang::where('toernooi_id', $toegang->toernooi_id)
+            ->where('rol', 'mat')
+            ->where('mat_nummer', $toegang->mat_nummer)
+            ->first();
+
+        $toernooi = Toernooi::with('organisator')->find($toegang->toernooi_id);
+
+        $redirectUrl = $matToegang
+            ? url('/tv/' . substr($matToegang->code, 0, 4))
+            : route('mat.scoreboard-live', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'mat' => $toegang->mat_nummer,
+            ]);
+
+        \App\Events\TvLinked::dispatch($koppeling->code, $redirectUrl);
+
+        return response()->json([
+            'success' => true,
+            'mat_nummer' => $toegang->mat_nummer,
+        ]);
+    }
+
+    /**
      * Convert uitslag_type to judopunten (JP) for the winner.
      * Ippon (incl. awasete/hansoku) = 10, Waza-ari = 7, Yuko/Hantei = 5
      */
