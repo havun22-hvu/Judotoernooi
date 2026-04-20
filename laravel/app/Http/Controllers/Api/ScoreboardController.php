@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Events\ScoreboardAssignment;
 use App\Events\ScoreboardEvent;
 use App\Events\MatUpdate;
+use App\Events\TvLinked;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToegang;
 use App\Models\Judoka;
 use App\Models\Mat;
 use App\Models\Toernooi;
+use App\Models\TvKoppeling;
 use App\Models\Wedstrijd;
 use App\Services\ActivityLogger;
 use App\Services\EliminatieService;
@@ -294,8 +296,8 @@ class ScoreboardController extends Controller
 
     /**
      * Link a TV (shown 4-digit code) to this scoreboard device's mat.
-     * App-side QR-scanner posts the 4-digit code it scanned from the TV screen;
-     * toernooi + mat come from the Bearer token's DeviceToegang (no spoofing possible).
+     * Toernooi + mat come from the Bearer token's DeviceToegang — never from the
+     * request body — so a compromised app cannot hijack a different mat.
      */
     public function tvLink(Request $request): JsonResponse
     {
@@ -305,16 +307,16 @@ class ScoreboardController extends Controller
 
         $toegang = $request->input('device_toegang');
 
-        if (!$toegang || !$toegang->toernooi_id || !$toegang->mat_nummer) {
+        if (!$toegang->toernooi_id || !$toegang->mat_nummer) {
             return response()->json([
                 'success' => false,
                 'message' => 'Device is niet gekoppeld aan een mat.',
             ], 422);
         }
 
-        \App\Models\TvKoppeling::where('expires_at', '<', now())->delete();
+        TvKoppeling::cleanupExpired();
 
-        $koppeling = \App\Models\TvKoppeling::where('code', $validated['code'])
+        $koppeling = TvKoppeling::where('code', $validated['code'])
             ->where('expires_at', '>', now())
             ->whereNull('linked_at')
             ->first();
@@ -326,28 +328,8 @@ class ScoreboardController extends Controller
             ], 422);
         }
 
-        $koppeling->update([
-            'toernooi_id' => $toegang->toernooi_id,
-            'mat_nummer' => $toegang->mat_nummer,
-            'linked_at' => now(),
-        ]);
-
-        $matToegang = DeviceToegang::where('toernooi_id', $toegang->toernooi_id)
-            ->where('rol', 'mat')
-            ->where('mat_nummer', $toegang->mat_nummer)
-            ->first();
-
-        $toernooi = Toernooi::with('organisator')->find($toegang->toernooi_id);
-
-        $redirectUrl = $matToegang
-            ? url('/tv/' . substr($matToegang->code, 0, 4))
-            : route('mat.scoreboard-live', [
-                'organisator' => $toernooi->organisator->slug,
-                'toernooi' => $toernooi->slug,
-                'mat' => $toegang->mat_nummer,
-            ]);
-
-        \App\Events\TvLinked::dispatch($koppeling->code, $redirectUrl);
+        $redirectUrl = $koppeling->linkToMat($toegang->toernooi_id, $toegang->mat_nummer);
+        TvLinked::dispatch($koppeling->code, $redirectUrl);
 
         return response()->json([
             'success' => true,

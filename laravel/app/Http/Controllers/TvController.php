@@ -2,21 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TvLinked;
+use App\Models\Toernooi;
 use App\Models\TvKoppeling;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TvController extends Controller
 {
-    /**
-     * TV koppelpagina — toont code, wacht op koppeling.
-     */
     public function index()
     {
-        // Clean up expired codes
-        TvKoppeling::where('expires_at', '<', now())->delete();
+        TvKoppeling::cleanupExpired();
 
-        // Generate a new code
         $koppeling = TvKoppeling::create([
             'code' => TvKoppeling::generateCode(),
             'expires_at' => now()->addMinutes(10),
@@ -35,31 +32,25 @@ class TvController extends Controller
 
     /**
      * QR-scan landing — organisator scant QR op TV → kiest mat → koppelt.
-     * Auth vereist. Code komt uit de QR URL, organisator selecteert alleen nog toernooi + mat.
+     * Code komt uit de URL (geen body) omdat deze route via QR-scan wordt geopend.
      */
     public function qrScan(Request $request, string $code)
     {
-        TvKoppeling::where('expires_at', '<', now())->delete();
+        TvKoppeling::cleanupExpired();
 
         $koppeling = TvKoppeling::where('code', $code)->first();
 
         if (!$koppeling || $koppeling->isExpired()) {
-            return view('pages.tv.qr-scan', [
-                'status' => 'expired',
-                'code' => $code,
-            ]);
+            return view('pages.tv.qr-scan', ['status' => 'expired', 'code' => $code]);
         }
 
         if ($koppeling->isLinked()) {
-            return view('pages.tv.qr-scan', [
-                'status' => 'already-linked',
-                'code' => $code,
-            ]);
+            return view('pages.tv.qr-scan', ['status' => 'already-linked', 'code' => $code]);
         }
 
         $user = $request->user();
         $toernooien = $user->is_sitebeheerder
-            ? \App\Models\Toernooi::where('is_actief', true)->orderByDesc('datum')->get()
+            ? Toernooi::where('is_actief', true)->orderByDesc('datum')->get()
             : $user->toernooien()->where('is_actief', true)->orderByDesc('datum')->get();
 
         return view('pages.tv.qr-scan', [
@@ -69,9 +60,6 @@ class TvController extends Controller
         ]);
     }
 
-    /**
-     * Link endpoint — organisator koppelt code aan mat.
-     */
     public function link(Request $request)
     {
         $request->validate([
@@ -80,8 +68,7 @@ class TvController extends Controller
             'mat_nummer' => 'required|integer|min:1',
         ]);
 
-        // Authorization: user must own this toernooi
-        $toernooi = \App\Models\Toernooi::with('organisator')->findOrFail($request->toernooi_id);
+        $toernooi = Toernooi::with('organisator')->findOrFail($request->toernooi_id);
         $user = $request->user();
 
         if (!$user || (!$user->is_sitebeheerder && $toernooi->organisator_id !== $user->organisator_id)) {
@@ -103,26 +90,8 @@ class TvController extends Controller
             ], 422);
         }
 
-        $koppeling->update([
-            'toernooi_id' => $request->toernooi_id,
-            'mat_nummer' => $request->mat_nummer,
-            'linked_at' => now(),
-        ]);
-
-        $toegang = $toernooi->deviceToegangen()
-            ->where('rol', 'mat')
-            ->where('mat_nummer', $request->mat_nummer)
-            ->first();
-
-        $redirectUrl = $toegang
-            ? url('/tv/' . substr($toegang->code, 0, 4))
-            : route('mat.scoreboard-live', [
-                'organisator' => $toernooi->organisator->slug,
-                'toernooi' => $toernooi->slug,
-                'mat' => $request->mat_nummer,
-            ]);
-
-        \App\Events\TvLinked::dispatch($koppeling->code, $redirectUrl);
+        $redirectUrl = $koppeling->linkToMat($toernooi->id, $request->mat_nummer);
+        TvLinked::dispatch($koppeling->code, $redirectUrl);
 
         return response()->json([
             'success' => true,

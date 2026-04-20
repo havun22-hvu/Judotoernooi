@@ -50,4 +50,40 @@ class TvKoppeling extends Model
     {
         return $this->linked_at !== null;
     }
+
+    public static function cleanupExpired(): void
+    {
+        self::where('expires_at', '<', now())->delete();
+    }
+
+    /**
+     * Couple this TV to a mat and return the redirect URL used by the TV display.
+     * Short URL (/tv/XXXX) if a mat-role DeviceToegang exists, otherwise the full
+     * scoreboard-live route is returned as fallback.
+     */
+    public function linkToMat(int $toernooiId, int $matNummer): string
+    {
+        $this->update([
+            'toernooi_id' => $toernooiId,
+            'mat_nummer' => $matNummer,
+            'linked_at' => now(),
+        ]);
+
+        $matToegang = DeviceToegang::where('toernooi_id', $toernooiId)
+            ->where('rol', 'mat')
+            ->where('mat_nummer', $matNummer)
+            ->first();
+
+        if ($matToegang) {
+            return url('/tv/' . substr($matToegang->code, 0, 4));
+        }
+
+        $toernooi = Toernooi::with('organisator')->findOrFail($toernooiId);
+
+        return route('mat.scoreboard-live', [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'mat' => $matNummer,
+        ]);
+    }
 }
