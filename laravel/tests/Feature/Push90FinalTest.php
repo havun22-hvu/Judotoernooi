@@ -24,6 +24,7 @@ use App\WebAuthn\DatabaseChallengeRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
 use Tests\TestCase;
@@ -197,14 +198,12 @@ class Push90FinalTest extends TestCase
     public function autofix_read_file_with_context_returns_error_on_missing(): void
     {
         $service = new AutoFixService();
-        // file() on missing path may return false or emit warning; suppress and handle
-        try {
-            $result = @$this->invokePrivate($service, 'readFileWithContext', ['/nonexistent/path.php', 1, 10]);
-            $this->assertIsString($result);
-        } catch (\Throwable $e) {
-            // Accept either outcome - exercising the code path is what matters
-            $this->assertTrue(true);
-        }
+
+        // `file()` returns false on a missing path — method should return
+        // the '[Could not read file]' placeholder, not throw.
+        $result = @$this->invokePrivate($service, 'readFileWithContext', ['/nonexistent/path.php', 1, 10]);
+
+        $this->assertSame('[Could not read file]', $result);
     }
 
     #[Test]
@@ -515,11 +514,12 @@ class Push90FinalTest extends TestCase
         ]);
         $proposal->save();
 
+        $this->expectNotToPerformAssertions();
+
         $this->invokePrivate($service, 'sendSuccessNotification', [$e, 'app/Test.php', 1, $proposal, 1]);
         $this->invokePrivate($service, 'sendFailureNotification', [$e, 'app/Test.php', 1]);
         $this->invokePrivate($service, 'sendDryRunNotification', [$e, 'app/Test.php', 1, $proposal]);
         $this->invokePrivate($service, 'sendNotifyOnlyNotification', [$e, 'app/Test.php', 1, $proposal]);
-        $this->assertTrue(true);
     }
 
     #[Test]
@@ -609,7 +609,8 @@ class Push90FinalTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // No token → method returns early
+        Http::fake();
+
         $this->invokePrivate($gitOps, 'createGitHubPR', [
             sys_get_temp_dir(),
             'main',
@@ -617,17 +618,17 @@ class Push90FinalTest extends TestCase
             'app/test.php',
             $proposal,
         ]);
-        $this->assertTrue(true);
+
+        // Contract: missing token must short-circuit before any GitHub HTTP call.
+        Http::assertNothingSent();
     }
 
     #[Test]
-    public function autofix_create_github_pr_with_token_http_error(): void
+    public function autofix_create_github_pr_with_token_but_unparseable_remote(): void
     {
         config(['autofix.github_token' => 'ghp_test_token']);
 
-        Http::fake([
-            '*' => Http::response(['error' => 'bad request'], 400),
-        ]);
+        Http::fake();
 
         $gitOps = new \App\Services\AutoFix\GitOperations();
         $proposal = AutofixProposal::create([
@@ -643,7 +644,6 @@ class Push90FinalTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // Exec will fail to detect git remote but we still hit HTTP call indirectly
         $this->invokePrivate($gitOps, 'createGitHubPR', [
             sys_get_temp_dir(),
             'main',
@@ -651,7 +651,10 @@ class Push90FinalTest extends TestCase
             'app/test.php',
             $proposal,
         ]);
-        $this->assertTrue(true);
+
+        // Contract: when git remote cannot be parsed (basePath has no .git),
+        // the method logs a warning and short-circuits BEFORE the HTTP call.
+        Http::assertNothingSent();
     }
 
     #[Test]
@@ -777,9 +780,13 @@ class Push90FinalTest extends TestCase
     public function autofix_handle_disabled_noop(): void
     {
         config(['autofix.enabled' => false]);
+        Http::fake();
         $service = new AutoFixService();
+
         $service->handle(new \RuntimeException('test'));
-        $this->assertTrue(true);
+
+        Http::assertNothingSent();
+        $this->assertSame(0, AutofixProposal::count(), 'disabled config must not persist a proposal');
     }
 
     #[Test]
@@ -789,9 +796,13 @@ class Push90FinalTest extends TestCase
             'autofix.enabled' => true,
             'autofix.excluded_exceptions' => [\InvalidArgumentException::class],
         ]);
+        Http::fake();
         $service = new AutoFixService();
+
         $service->handle(new \InvalidArgumentException('excluded'));
-        $this->assertTrue(true);
+
+        Http::assertNothingSent();
+        $this->assertSame(0, AutofixProposal::count(), 'excluded-exception must short-circuit before persist');
     }
 
     #[Test]
@@ -801,9 +812,13 @@ class Push90FinalTest extends TestCase
             'autofix.enabled' => true,
             'autofix.excluded_message_patterns' => ['#simulated-pattern#i'],
         ]);
+        Http::fake();
         $service = new AutoFixService();
+
         $service->handle(new \RuntimeException('simulated-pattern test'));
-        $this->assertTrue(true);
+
+        Http::assertNothingSent();
+        $this->assertSame(0, AutofixProposal::count(), 'pattern-matched message must short-circuit before persist');
     }
 
     #[Test]
@@ -878,9 +893,13 @@ class Push90FinalTest extends TestCase
             public function gitCommitAndPush(AutofixProposal $proposal): void {}
         };
 
-        // Should complete without throwing
         $service->handle(new \RuntimeException('retry-test-' . uniqid()));
-        $this->assertTrue(true);
+
+        // Retry-path: AutoFixService attempts the fix up to autofix.max_attempts
+        // (default 2). Each attempt contacts the Claude proxy and persists a
+        // proposal, so we expect 2 of each.
+        Http::assertSentCount(2);
+        $this->assertSame(2, AutofixProposal::count());
     }
 
     #[Test]
@@ -973,15 +992,20 @@ class Push90FinalTest extends TestCase
     #[Test]
     public function autofix_handle_excluded_file_pattern(): void
     {
+        // excluded_file_patterns is matched against $e->getFile(), so we pick
+        // a pattern that hits THIS test file — that's the origin of the
+        // exception we construct below.
         config([
             'autofix.enabled' => true,
-            'autofix.excluded_file_patterns' => ['#/tmp/#'],
+            'autofix.excluded_file_patterns' => ['#Push90FinalTest#'],
         ]);
+        Http::fake();
         $service = new AutoFixService();
-        // Throw from tmp path
-        $e = new \RuntimeException('test');
-        $service->handle($e);
-        $this->assertTrue(true);
+
+        $service->handle(new \RuntimeException('test'));
+
+        Http::assertNothingSent();
+        $this->assertSame(0, AutofixProposal::count(), 'excluded-file-pattern must short-circuit before persist');
     }
 
     #[Test]
@@ -1178,8 +1202,13 @@ class Push90FinalTest extends TestCase
 
         $this->toernooi->update(['stripe_account_id' => 'acct_x']);
 
+        Log::spy();
+
         $provider->handleOAuthCallback($this->toernooi, 'code123');
-        $this->assertTrue(true);
+
+        // Fully-onboarded path: info log, never a warning.
+        Log::shouldHaveReceived('info')->with('Stripe account fully onboarded', \Mockery::any())->once();
+        Log::shouldNotHaveReceived('warning');
     }
 
     #[Test]
@@ -1201,8 +1230,13 @@ class Push90FinalTest extends TestCase
 
         $this->toernooi->update(['stripe_account_id' => 'acct_y']);
 
+        Log::spy();
+
         $provider->handleOAuthCallback($this->toernooi, 'code456');
-        $this->assertTrue(true);
+
+        // Incomplete onboarding path: warning log, never the onboarded info line.
+        Log::shouldHaveReceived('warning')->with('Stripe account not fully onboarded yet', \Mockery::any())->once();
+        Log::shouldNotHaveReceived('info', ['Stripe account fully onboarded', \Mockery::any()]);
     }
 
     #[Test]
@@ -1527,14 +1561,9 @@ class Push90FinalTest extends TestCase
         $this->setPrivate($builder, 'phpDir', $tmpBase . '/php');
         $this->setPrivate($builder, 'laravelOfflineDir', $tmpBase . '/laravel');
 
-        try {
-            $outputPath = $builder->build($this->toernooi);
-            $this->assertFileExists($outputPath);
-            @unlink($outputPath);
-        } catch (\Throwable $e) {
-            // Accept errors but verify build() code was exercised
-            $this->assertTrue(true);
-        }
+        $outputPath = $builder->build($this->toernooi);
+        $this->assertFileExists($outputPath);
+        @unlink($outputPath);
 
         @unlink($tmpBase . '/launcher.exe');
         @unlink($tmpBase . '/php/php.exe');
@@ -1797,9 +1826,10 @@ class Push90FinalTest extends TestCase
     public function variabele_pas_variant_toe_with_empty_toewijzingen(): void
     {
         $service = new VariabeleBlokVerdelingService();
-        // Should not throw with empty assignments
+
+        $this->expectNotToPerformAssertions();
+
         $service->pasVariantToe($this->toernooi, []);
-        $this->assertTrue(true);
     }
 
     #[Test]
@@ -2367,18 +2397,20 @@ class Push90FinalTest extends TestCase
         ]);
 
         try {
-            $controller = new \App\Http\Controllers\LocalSyncController();
+            // Subclass to skip the real .env write — test the redirect contract
+            // only; the updateEnvFile() helper has its own coverage.
+            $controller = new class extends \App\Http\Controllers\LocalSyncController {
+                protected function updateEnvFile(array $values): void {}
+            };
             $request = \Illuminate\Http\Request::create('/local-server/setup', 'POST', [
                 'role' => 'primary',
                 'device_name' => 'Test Primary',
             ]);
-            try {
-                $response = $controller->saveSetup($request);
-                $this->assertNotNull($response);
-            } catch (\Throwable $e) {
-                // .env file modification may fail in test — acceptable
-                $this->assertTrue(true);
-            }
+
+            $response = $controller->saveSetup($request);
+
+            $this->assertInstanceOf(\Illuminate\Http\RedirectResponse::class, $response);
+            $this->assertSame(route('local.auto-sync'), $response->getTargetUrl());
         } finally {
             $this->cleanupStubViews($stub);
         }
@@ -2394,17 +2426,18 @@ class Push90FinalTest extends TestCase
         ]);
 
         try {
-            $controller = new \App\Http\Controllers\LocalSyncController();
+            $controller = new class extends \App\Http\Controllers\LocalSyncController {
+                protected function updateEnvFile(array $values): void {}
+            };
             $request = \Illuminate\Http\Request::create('/local-server/setup', 'POST', [
                 'role' => 'standby',
                 'device_name' => 'Test Standby',
             ]);
-            try {
-                $response = $controller->saveSetup($request);
-                $this->assertNotNull($response);
-            } catch (\Throwable $e) {
-                $this->assertTrue(true);
-            }
+
+            $response = $controller->saveSetup($request);
+
+            $this->assertInstanceOf(\Illuminate\Http\RedirectResponse::class, $response);
+            $this->assertSame(route('local.standby-sync'), $response->getTargetUrl());
         } finally {
             $this->cleanupStubViews($stub);
         }
@@ -2954,13 +2987,10 @@ class Push90FinalTest extends TestCase
             $method = $refl->getMethod('applyFix');
             $method->setAccessible(true);
 
-            try {
-                $method->invoke($controller, $proposal);
-            } catch (\RuntimeException $e) {
-                // Acceptable - could throw if file was in recent backups or syntax fails
-            }
+            $method->invoke($controller, $proposal);
 
-            $this->assertTrue(true);
+            // applyFix must rewrite the file in-place (OLD -> NEW).
+            $this->assertStringContainsString("'x' => 2", file_get_contents($fullPath));
         } finally {
             @unlink($fullPath);
             $backupDir = storage_path('app/autofix-backups');
@@ -3261,13 +3291,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/dojo-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->dojoDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            // View may not exist; just ensure method is exercised
-            $this->assertTrue(true);
-        }
+        $view = $controller->dojoDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     #[Test]
@@ -3282,12 +3307,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/weging-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->wegingDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            $this->assertTrue(true);
-        }
+        $view = $controller->wegingDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     #[Test]
@@ -3303,12 +3324,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/mat-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->matDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            $this->assertTrue(true);
-        }
+        $view = $controller->matDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     #[Test]
@@ -3427,13 +3444,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/spreker-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->sprekerDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            // View may not exist; still exercises controller logic
-            $this->assertTrue(true);
-        }
+        $view = $controller->sprekerDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     #[Test]
@@ -3461,12 +3473,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/spreker-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->sprekerDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            $this->assertTrue(true);
-        }
+        $view = $controller->sprekerDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     #[Test]
@@ -3481,12 +3489,8 @@ class Push90FinalTest extends TestCase
         $request = \Illuminate\Http\Request::create('/jury-device', 'GET');
         $request->attributes->set('device_toegang', $toegang);
 
-        try {
-            $view = $controller->juryDeviceBound($request);
-            $this->assertNotNull($view);
-        } catch (\Throwable $e) {
-            $this->assertTrue(true);
-        }
+        $view = $controller->juryDeviceBound($request);
+        $this->assertNotNull($view);
     }
 
     // ============================================================
