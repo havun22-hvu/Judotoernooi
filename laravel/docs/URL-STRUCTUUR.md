@@ -19,9 +19,9 @@ De URL structuur is opgebouwd rond twee principes:
 | Type | Omschrijving | Voorbeeld |
 |------|--------------|-----------|
 | **Geen** | Vrij toegankelijk | Publieke toernooi pagina |
-| **Organisator Login** | Email + wachtwoord | Dashboard, toernooi beheer |
-| **PIN** | 4-cijferige code | Coach portal |
-| **PIN + Device** | PIN + browser binding | Vrijwilligers interfaces |
+| **Organisator Login** | Email + wachtwoord (+ passkeys/biometrie) | Dashboard, toernooi beheer |
+| **Rolcode** | 12-char code per rol | Coach portal |
+| **Device binding** | Rolcode + browser/device koppeling | Vrijwilligers-interfaces (mat, weging, dojo, spreker, coach) |
 
 ---
 
@@ -126,9 +126,9 @@ BEHEER:   /{org}/toernooi/{toernooi}
 
 ### 6. Coach Portal
 
-**Auth: PIN code**
+**Auth: Rolcode**
 
-Coaches krijgen een link met code, daarna PIN invoeren.
+Coaches krijgen een link met een 12-char rolcode.
 
 | URL | Doel |
 |-----|------|
@@ -145,9 +145,9 @@ Coaches krijgen een link met code, daarna PIN invoeren.
 
 ### 7. Vrijwilligers (Device Binding)
 
-**Auth: PIN + Device binding**
+**Auth: Rolcode + Device binding**
 
-Vrijwilligers krijgen een toegangslink, voeren PIN in, en hun browser wordt gekoppeld.
+Vrijwilligers krijgen een toegangslink met 12-char rolcode; hun browser/device wordt gekoppeld via `CheckDeviceBinding` middleware.
 
 | URL | Doel |
 |-----|------|

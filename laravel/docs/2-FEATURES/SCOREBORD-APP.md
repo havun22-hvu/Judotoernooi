@@ -399,6 +399,11 @@ nooit uit het request body — voorkomt dat een gecompromitteerde app een andere
 - OTA updates voor kleine fixes
 - Version check endpoint: `GET /api/scoreboard/version`
 
+## Openstaand
+
+- **LCD proporties voor TV (3-10m leesbaarheid):** timer ~15-20vw, grotere cijfers Y/W/I, namen op afstand leesbaar, shido-kaarten groter, vw/vh units voor 1920x1080.
+- **LCD link in device-toegangen updaten** naar `/tv/{eerste 4 tekens}` formaat via `DeviceToegang::getDisplayCode()`.
+
 ---
 
-*Laatst bijgewerkt: 21 maart 2026*
+*Laatst bijgewerkt: 21 april 2026*

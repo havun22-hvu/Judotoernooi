@@ -1,112 +1,98 @@
-# JudoToernooi - Documentatie
+# JudoToernooi — Documentatie
 
-Welkom bij de documentatie van het JudoToernooi Management Systeem.
+Documentatie van het JudoToernooi Management Systeem (Laravel 11 SaaS).
 
 ## Structuur
 
 ```
 docs/
-├── 1-GETTING-STARTED/     # Installatie en configuratie
-├── 2-FEATURES/            # Feature documentatie
-│   ├── BETALINGEN.md      # Mollie integratie
-│   ├── ELIMINATIE/        # Double elimination systeem
-│   └── ...                # Meer feature docs
-├── 3-TECHNICAL/           # API, database, architectuur
-├── 3-DEVELOPMENT/         # Code standaarden, error handling
-├── 4-PLANNING/            # Toekomstige features
-├── 5-REGLEMENT/           # JBN reglementen
-└── 6-INTERNAL/            # Interne docs, lessons learned
+├── 1-GETTING-STARTED/  Installatie en configuratie
+├── 2-FEATURES/         Feature documentatie
+├── 3-DEVELOPMENT/      Code standaarden, API, database, architectuur
+├── 4-PLANNING/         Open/toekomstige features
+├── 5-REGLEMENT/        JBN reglementen
+├── 6-INTERNAL/         Rollen, interne referenties
+└── postmortem/         Incident analyses
 ```
 
-## Inhoud
+## 1. Getting Started
 
-### 1. Getting Started
-- [Installatie](./1-GETTING-STARTED/INSTALLATIE.md) - Server setup
-- [Configuratie](./1-GETTING-STARTED/CONFIGURATIE.md) - App configuratie
+- [Installatie](./1-GETTING-STARTED/INSTALLATIE.md) — server/local setup
+- [Configuratie](./1-GETTING-STARTED/CONFIGURATIE.md) — app configuratie
 
-### 2. Features
-- [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding
-- [Import](./2-FEATURES/IMPORT.md) - CSV/Excel import met warnings
-- [Classificatie & Poule Indeling](./2-FEATURES/CLASSIFICATIE.md) - Algoritme voor poule-indeling
-- [Freemium Model](./2-FEATURES/FREEMIUM.md) - Gratis tier, betaalde staffels, upgrade flow
-- [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie voor inschrijfgeld
-- [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
-- [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
-- [Mat Wedstrijd Selectie](./2-FEATURES/MAT-WEDSTRIJD-SELECTIE.md) - 3-kleuren systeem
-- [Chat](./2-FEATURES/CHAT.md) - Realtime chat met Laravel Reverb
-- [Interfaces](./2-FEATURES/INTERFACES.md) - PWA's en device binding
-- [Noodplan Handleiding](./2-FEATURES/NOODPLAN-HANDLEIDING.md) - Praktische gids voor organisatoren
-- [Lokale Server Handleiding](./2-FEATURES/LOKALE-SERVER-HANDLEIDING.md) - Hot standby setup
-- [Eliminatie Systeem](./2-FEATURES/ELIMINATIE/README.md) - Double elimination
-  - [Formules](./2-FEATURES/ELIMINATIE/FORMULES.md)
-  - [Slot Systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md)
-  - [Test Matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md)
-- [Wimpeltoernooi](./2-FEATURES/WIMPELTOERNOOI.md) - Doorlopend puntensysteem per organisator
-- [Danpunten](./2-FEATURES/DANPUNTEN.md) - JBN danpunten registratie voor bruine banden
-- [Judoka Database](./2-FEATURES/JUDOKA-DATABASE.md) - Stambestand import in toernooi
-- [Scorebord App](./2-FEATURES/SCOREBORD-APP.md) - Android scorebord + web display
+## 2. Features
 
-### 3a. Technical
-- [Codebase-structuur](./3-TECHNICAL/CODEBASE-STRUCTUUR.md) - Volledig overzicht mappen en key files
-- [URL Structuur](./URL-STRUCTUUR.md) - Routes en authenticatie schema
-- [API Documentatie](./3-TECHNICAL/API.md) - REST endpoints
-- [Database Schema](./3-TECHNICAL/DATABASE.md) - Tabelstructuur
-- [Functies Overzicht](./3-TECHNICAL/FUNCTIES.md) - Service functies
-- [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info
-- [Redundantie & Veiligheid](./3-TECHNICAL/REDUNDANTIE.md) - Enterprise fail-safe architectuur
+**Kern-workflow**
+- [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md)
+- [Import](./2-FEATURES/IMPORT.md) — CSV/Excel + warnings
+- [Classificatie & Poule-indeling](./2-FEATURES/CLASSIFICATIE.md)
+- [Blokverdeling](./2-FEATURES/BLOKVERDELING.md)
+- [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md)
+- [Mat Wedstrijd Selectie](./2-FEATURES/MAT-WEDSTRIJD-SELECTIE.md) — 3-kleuren systeem
+- [Eliminatie](./2-FEATURES/ELIMINATIE/README.md) (+ [Formules](./2-FEATURES/ELIMINATIE/FORMULES.md), [Slot-systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md), [Test-matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md))
 
-### 3b. Development
-- [Code Standaarden](./3-DEVELOPMENT/CODE-STANDAARDEN.md) - **Verplichte** coding conventions
-- [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) - Exceptions, Circuit Breaker, Rate Limiting, Activity Logging
+**Business / commercieel**
+- [Betalingen](./2-FEATURES/BETALINGEN.md) — Mollie + Stripe
+- [Freemium](./2-FEATURES/FREEMIUM.md) — tier model
+- [Club Aanmelding](./2-FEATURES/CLUB-AANMELDING.md)
+- [Wimpeltoernooi](./2-FEATURES/WIMPELTOERNOOI.md)
+- [Danpunten](./2-FEATURES/DANPUNTEN.md)
 
-### 4. Planning (historisch)
-- [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - GEREALISEERD
-- [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md) - Offline fallback
-- [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - GEREALISEERD
-- [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - ON HOLD (slug-based routing is live)
-- [Club Stambestand](./4-PLANNING/PLANNING_CLUB_STAMBESTAND.md) - Judoka stambestand per club
-- [Organisator Mobiel](./4-PLANNING/PLANNING_ORGANISATOR_MOBIEL.md) - Responsive dashboard quick-actions op smartphone
+**Interfaces & devices**
+- [Interfaces](./2-FEATURES/INTERFACES.md) — PWA's + device binding
+- [Scorebord App](./2-FEATURES/SCOREBORD-APP.md) — Android + LCD display
+- [Chromecast](./2-FEATURES/CHROMECAST.md)
+- [Chat](./2-FEATURES/CHAT.md) — Reverb realtime
+- [Judoka Self-Check](./2-FEATURES/JUDOKA-SELFCHECK.md)
+- [Judoka Database](./2-FEATURES/JUDOKA-DATABASE.md) — stambestand import
 
-### 5. Reglement
+**Business continuity**
+- [Noodplan Handleiding](./2-FEATURES/NOODPLAN-HANDLEIDING.md)
+- [Lokale Server Handleiding](./2-FEATURES/LOKALE-SERVER-HANDLEIDING.md)
+
+## 3. Development
+
+- [Code Standaarden](./3-DEVELOPMENT/CODE-STANDAARDEN.md) — **verplicht** voor elke wijziging
+- [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) — Exceptions, Circuit Breaker, Rate Limiting, Activity Logging
+- [Codebase-structuur](./3-DEVELOPMENT/CODEBASE-STRUCTUUR.md)
+- [URL Structuur](./URL-STRUCTUUR.md)
+- [API Documentatie](./3-DEVELOPMENT/API.md)
+- [Database Schema](./3-DEVELOPMENT/DATABASE.md)
+- [Functies Overzicht](./3-DEVELOPMENT/FUNCTIES.md)
+- [Ontwikkelaar Gids](./3-DEVELOPMENT/ONTWIKKELAAR.md)
+- [Redundantie & Veiligheid](./3-DEVELOPMENT/REDUNDANTIE.md) — enterprise fail-safe architectuur
+- [SEO](./3-DEVELOPMENT/SEO.md) — robots, sitemap, JSON-LD, GA4
+
+## 4. Planning (openstaand)
+
+- [Categorie-wedstrijdinstellingen](./4-PLANNING/CATEGORIE-WEDSTRIJD-INSTELLINGEN.md) — `shiai_time`, `shime_waza`, `kansetsu_waza` per klasse (IJF compliance)
+- [Publiek Scorebord mobiel](./4-PLANNING/PUBLIEK-SCOREBORD.md) — portrait/landscape variant
+- [Multi-tenancy Roadmap](./4-PLANNING/MULTI-TENANCY-ROADMAP.md) — subdomains (op hold, slug-based werkt)
+
+## 5. Reglement
+
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)
 
-### 6. Internal
-- [Lessons Learned](./6-INTERNAL/LESSONS-LEARNED-AI-SAMENWERKING.md) - AI samenwerking
-- [Rollen Hierarchie](./6-INTERNAL/ROLLEN_HIERARCHIE.md) - Gebruikersrollen
-- [Evaluatie Demo 21 Jan](./6-INTERNAL/EVALUATIE-DEMO-21-JAN.md) - Post-mortem demo
+## 6. Internal
+
+- [Rollen Hiërarchie](./6-INTERNAL/ROLLEN_HIERARCHIE.md)
+
+## Postmortems
+
+- [2026-04-05 Reverb Broadcasting Failure](./postmortem/2026-04-05-reverb-broadcasting-failure.md)
 
 ## Snelle Start
 
 ```bash
-# Clone
 git clone https://github.com/havun22-hvu/judotoernooi.git
 cd judotoernooi/laravel
-
-# Install
-composer install
-npm install
-
-# Configure
+composer install && npm install
 cp .env.example .env
 php artisan key:generate
-
-# Database
-php artisan migrate
-php artisan db:seed
-
-# Run
+php artisan migrate && php artisan db:seed
 php artisan serve --port=8007
 ```
 
 ## Changelog
 
-Zie [CHANGELOG.md](../CHANGELOG.md) voor wijzigingsgeschiedenis.
-
-## Architectuur
-
-Zie [Codebase-structuur](./3-TECHNICAL/CODEBASE-STRUCTUUR.md) voor het volledige overzicht (app/, config/, routes/, resources/, tests/, root-structuur, docs, entry points, frontend, HavunCore).
-
-## Contact
-
-- **Platform**: JudoToernooi (judotournament.org)
-- **GitHub**: https://github.com/havun22-hvu/judotoernooi
+Zie [CHANGELOG.md](../CHANGELOG.md).

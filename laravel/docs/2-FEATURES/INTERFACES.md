@@ -1,7 +1,7 @@
 # Interfaces - PWA & Devices
 
 > **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag
-> **Authenticatie:** Zie `PLANNING_AUTHENTICATIE_SYSTEEM.md` voor device binding details
+> **Authenticatie:** Device binding via 12-char role codes — zie `CheckDeviceBinding` middleware + `DeviceToegang` model.
 
 ## Wie ziet wat?
 
@@ -280,7 +280,7 @@ De Weging heeft **2 totaal verschillende versies**:
   - Markeert alle niet-gewogen judoka's als afwezig
   - Bevestigingsdialog voordat actie uitgevoerd wordt
   - Knop toont "Gesloten" als blok al gesloten is
-  - **Technische werking:** Zie `3-TECHNICAL/FUNCTIES.md` → "Sluit Weegtijd"
+  - **Technische werking:** Zie `3-DEVELOPMENT/FUNCTIES.md` → "Sluit Weegtijd"
 
 ### Versie 2: Weging vrijwilliger - Scanner PWA (standalone)
 
@@ -909,19 +909,9 @@ if ($toernooi->coach_incheck_actief && $coachKaart->ingecheckt_op) {
 - URL + PIN + device binding
 - Beheer via Instellingen → Organisatie → Dojo toegangen
 
-### Layout (Standalone PWA) - REFERENTIE VOOR ALLE SCANNERS
+### Layout (Standalone PWA)
 
-**Bovenste 45% - Scanner Area** (`bg-blue-800/50`):
-1. **Scan knop** (inactief): Grote groene ronde knop (w-28 h-28)
-2. **Scanner** (actief): Camera preview + rode "Stop" knop eronder
-3. **Handmatig invoeren**: "Of voer code handmatig in..." knop
-
-**Onderste 55% - Content Area**:
-1. **Instructies**: Genummerde stappen (wit vlak)
-2. **Stats**: "Coaches gescand vandaag" + teller
-3. **Info**: Blauwe info balk
-
-**Kleur theme:** #1e40af (blue-800)
+Volgt het standaard `Consistent Layout Pattern` (zie boven) — 45% scanner area + 55% content area. Kleur-theme: `#1e40af` (blue-800). Content-vlak: instructies, "Coaches gescand vandaag"-teller, blauwe info-balk.
 
 ### Functionaliteit
 - Scan coachkaart QR-code
@@ -1268,8 +1258,7 @@ WP/JP worden **live berekend** uit wedstrijden in `PubliekController@favorieten`
 
 ## Organisator Mobiel (Responsive Dashboard)
 
-> **Planning:** `4-PLANNING/PLANNING_ORGANISATOR_MOBIEL.md`
-> **Concept:** Organisator loopt door de zaal en lost problemen op via smartphone
+> **Concept:** Organisator loopt door de zaal en lost problemen op via smartphone. Gerealiseerd via responsive `WedstrijddagMobielController` + `toernooi/mobiel.blade.php`.
 
 ### Wat is het?
 
