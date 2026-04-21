@@ -483,13 +483,14 @@ class BlokMatVerdelingCoverageTest extends TestCase
     public function verdeel_over_matten_zonder_matten_doet_niets(): void
     {
         $toernooi = Toernooi::factory()->create();
-        $blok = Blok::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => 1]);
+        Blok::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => 1]);
         // No matten created
         $toernooi->load(['blokken', 'matten']);
 
-        // Should not throw, just return
         $this->service->verdeelOverMatten($toernooi);
-        $this->assertTrue(true); // No exception = pass
+
+        // Zonder matten moet de verdeler niets aan poules-of-blokken muteren.
+        $this->assertSame(0, Poule::where('toernooi_id', $toernooi->id)->whereNotNull('mat_id')->count());
     }
 
     #[Test]

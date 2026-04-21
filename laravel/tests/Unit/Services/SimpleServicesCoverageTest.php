@@ -158,11 +158,12 @@ class SimpleServicesCoverageTest extends TestCase
     {
         config(['app.error_notifications' => false]);
 
+        // Mockery shouldReceive()->never() adds its own assertion via the
+        // PHPUnit integration, so no extra assertTrue() needed.
         Log::shouldReceive('error')->never();
 
         $service = new ErrorNotificationService();
         $service->notifyException(new \RuntimeException('Should not log'));
-        $this->assertTrue(true);
     }
 
     #[Test]
@@ -174,7 +175,6 @@ class SimpleServicesCoverageTest extends TestCase
 
         $service = new ErrorNotificationService();
         $service->notifyCritical('Should not log');
-        $this->assertTrue(true);
     }
 
     // =========================================================================

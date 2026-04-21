@@ -123,9 +123,10 @@ class MollieServiceExtraTest extends TestCase
             'mollie_mode' => 'platform',
         ]);
 
-        // Should not throw — just return
+        $this->expectNotToPerformAssertions();
+
+        // Platform mode must short-circuit without touching the OAuth refresh path.
         $this->service->ensureValidToken($toernooi);
-        $this->assertTrue(true); // No exception = pass
     }
 
     // ========================================================================

@@ -334,12 +334,16 @@ class EliminatieCoverageTest extends TestCase
             ->first();
 
         $judokaId = $judokaIds[0];
+        $bronFollowUp = Wedstrijd::find($bronWed->volgende_wedstrijd_id);
+        $witBefore = $bronFollowUp->judoka_wit_id;
+        $blauwBefore = $bronFollowUp->judoka_blauw_id;
 
-        // Should not crash even if judoka not found in chain
+        // Cross-group call must not mutate the current group's bracket.
         $this->service->verwijderUitLatereRondes($poule->id, 'B', $judokaId, $bronWed->id);
 
-        // No assertion needed — just verify it doesn't crash
-        $this->assertTrue(true);
+        $bronFollowUp->refresh();
+        $this->assertSame($witBefore, $bronFollowUp->judoka_wit_id);
+        $this->assertSame($blauwBefore, $bronFollowUp->judoka_blauw_id);
     }
 
     // =========================================================================

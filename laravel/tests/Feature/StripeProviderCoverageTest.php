@@ -148,10 +148,11 @@ class StripeProviderCoverageTest extends TestCase
 
         $this->mockAccounts->shouldReceive('retrieve')
             ->with('acct_onboarded')
+            ->once()
             ->andReturn($this->makeAccount('acct_onboarded', true, true));
+        // Mockery verifies the `once()` expectation at teardown — no extra assert needed.
 
         $this->provider->handleOAuthCallback($toernooi, 'dummy_code');
-        $this->assertTrue(true);
     }
 
     public function test_handle_oauth_callback_not_fully_onboarded(): void
@@ -160,10 +161,10 @@ class StripeProviderCoverageTest extends TestCase
 
         $this->mockAccounts->shouldReceive('retrieve')
             ->with('acct_partial')
+            ->once()
             ->andReturn($this->makeAccount('acct_partial', false, false));
 
         $this->provider->handleOAuthCallback($toernooi, 'dummy_code');
-        $this->assertTrue(true);
     }
 
     // --- getAccount ---

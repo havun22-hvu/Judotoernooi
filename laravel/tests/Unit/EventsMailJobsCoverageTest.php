@@ -235,16 +235,10 @@ class EventsMailJobsCoverageTest extends TestCase
         Cache::flush();
         Event::fake([MatHeartbeat::class]);
 
-        // Directly call event() to verify the trait path works
-        // The trait wraps event() — we test it catches errors gracefully
-        try {
-            MatHeartbeat::dispatch(1, [['mat' => 1]]);
-        } catch (\Throwable $e) {
-            // If broadcasting fails (no Reverb), that's fine — we test the path
-        }
+        MatHeartbeat::dispatch(1, [['mat' => 1]]);
 
-        // The dispatch should have attempted to broadcast
-        $this->assertTrue(true);
+        // With the circuit closed, the trait must actually dispatch the event.
+        Event::assertDispatched(MatHeartbeat::class);
     }
 
     #[Test]

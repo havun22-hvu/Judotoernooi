@@ -260,10 +260,11 @@ class Final825Test extends TestCase
         config(['app.error_notifications' => true]);
 
         $service = new ErrorNotificationService();
-        $service->notifyException(new \RuntimeException('Test error'), ['key' => 'value']);
 
-        // Method should execute without throwing — service handles DB failures gracefully
-        $this->assertTrue(true);
+        $this->expectNotToPerformAssertions();
+
+        // Method must handle DB failures gracefully, not propagate.
+        $service->notifyException(new \RuntimeException('Test error'), ['key' => 'value']);
     }
 
     #[Test]
@@ -272,9 +273,10 @@ class Final825Test extends TestCase
         config(['app.error_notifications' => true]);
 
         $service = new ErrorNotificationService();
-        $service->notifyCritical('Critical event happened', ['detail' => 'test']);
 
-        $this->assertTrue(true);
+        $this->expectNotToPerformAssertions();
+
+        $service->notifyCritical('Critical event happened', ['detail' => 'test']);
     }
 
     #[Test]
@@ -283,10 +285,11 @@ class Final825Test extends TestCase
         config(['app.error_notifications' => false]);
 
         $service = new ErrorNotificationService();
+
+        $this->expectNotToPerformAssertions();
+
         $service->notifyException(new \RuntimeException('Skipped'));
         $service->notifyCritical('Should skip');
-
-        $this->assertTrue(true);
     }
 
     #[Test]
@@ -295,12 +298,13 @@ class Final825Test extends TestCase
         config(['app.error_notifications' => true]);
 
         $service = new ErrorNotificationService();
+
+        $this->expectNotToPerformAssertions();
+
         $service->notifyCritical('Event with context', [
             'file' => '/some/file.php',
             'line' => 42,
         ]);
-
-        $this->assertTrue(true);
     }
 
     #[Test]
@@ -310,11 +314,11 @@ class Final825Test extends TestCase
 
         $service = new ErrorNotificationService();
 
+        $this->expectNotToPerformAssertions();
+
         foreach (['first', 'second', 'third'] as $msg) {
             $service->notifyException(new \RuntimeException($msg));
         }
-
-        $this->assertTrue(true);
     }
 
     // ========================================================================
@@ -692,25 +696,23 @@ class Final825Test extends TestCase
     {
         Cache::flush();
 
-        // Should not throw even without reverb server running
-        ScoreboardEvent::dispatch($this->toernooi->id, 'test', ['data' => 'value']);
+        $this->expectNotToPerformAssertions();
 
-        // Just making sure it didn't explode
-        $this->assertTrue(true);
+        // SafelyBroadcasts must swallow missing-reverb failures, not surface them.
+        ScoreboardEvent::dispatch($this->toernooi->id, 'test', ['data' => 'value']);
     }
 
     #[Test]
     public function safely_broadcasts_handles_circuit_open(): void
     {
         Cache::flush();
-
         // Force circuit open
         Cache::put('circuit_breaker:reverb:opened_at', time(), 120);
 
-        // Dispatch should skip silently
-        ScoreboardEvent::dispatch($this->toernooi->id, 'test', ['data' => 'value']);
+        $this->expectNotToPerformAssertions();
 
-        $this->assertTrue(true);
+        // Circuit-open state must short-circuit the broadcast silently.
+        ScoreboardEvent::dispatch($this->toernooi->id, 'test', ['data' => 'value']);
     }
 
     // ========================================================================

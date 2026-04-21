@@ -1226,10 +1226,9 @@ class ImportServiceTest extends TestCase
     {
         $service = app(ImportService::class);
 
-        // After clearCache, re-importing should work cleanly
-        $service->clearCache();
+        $this->expectNotToPerformAssertions();
 
-        // No assertion needed beyond no exception - just ensure it's callable
-        $this->assertTrue(true);
+        // clearCache is a void maintenance hook; the contract is "callable without throwing".
+        $service->clearCache();
     }
 }

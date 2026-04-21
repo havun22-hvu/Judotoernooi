@@ -171,14 +171,17 @@ class Push90Test extends TestCase
         config(['autofix.enabled' => true]);
         $service = new AutoFixService();
 
-        // Mock HTTP to simulate AI Proxy failure
         Http::fake([
             '*' => Http::response(['success' => false], 500),
         ]);
 
-        // Should not throw - service error handling
         $service->handle(new \RuntimeException('Test fix flow', 0));
-        $this->assertTrue(true);
+
+        // Contract: on AI-Proxy 500, the service still reaches the proxy but
+        // gives up gracefully — no proposal is persisted and no exception
+        // propagates. Exact retry count is a tuning concern.
+        Http::assertSent(fn ($request) => true);
+        $this->assertSame(0, AutofixProposal::count(), 'AI-Proxy 500 must not persist a proposal');
     }
 
     // ========================================================================
@@ -1340,17 +1343,19 @@ class Push90Test extends TestCase
     #[Test]
     public function autofix_service_handles_excluded_file_patterns(): void
     {
-        config(['autofix.enabled' => true]);
+        // Exception-origin file is this test file; pick a pattern that hits it.
+        config([
+            'autofix.enabled' => true,
+            'autofix.excluded_file_patterns' => ['#Push90Test#'],
+        ]);
+        Http::fake();
         $service = new AutoFixService();
 
-        // Create an exception whose file matches an excluded pattern
-        $e = new \RuntimeException('some error');
-        // Normal RuntimeException has file = this test file, which is a project file
-        // But we trust config exclusions via patterns like #vendor/psy/#
-        // This just verifies the flow doesn't crash
-        $service->handle($e);
+        $service->handle(new \RuntimeException('some error'));
 
-        $this->assertTrue(true);
+        // Excluded-file path must short-circuit before the AI Proxy call.
+        Http::assertNothingSent();
+        $this->assertSame(0, AutofixProposal::count());
     }
 
     #[Test]
