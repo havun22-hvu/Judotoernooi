@@ -53,7 +53,7 @@ cp .env.example .env
 Open `.env` en pas de volgende waarden aan:
 
 ```env
-APP_NAME="WestFries Open JudoToernooi"
+APP_NAME="JudoToernooi"
 APP_URL=https://judotournament.org
 
 DB_CONNECTION=mysql

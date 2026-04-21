@@ -313,7 +313,7 @@ Gegeven `poule_grootte_voorkeur = [5, 4, 6, 3]`:
 | Poulegrootte 3-6 | **Ja, poule van 1-2 toegestaan** |
 | Geslacht (indien apart) | Nee, nooit |
 
-### Verificatie Poule Grootte (per type)
+### Verificatie Poule Grootte per Type
 
 De "Verifieer poules" knop controleert grootte per poule type:
 
