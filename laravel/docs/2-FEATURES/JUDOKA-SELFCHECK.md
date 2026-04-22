@@ -1,3 +1,10 @@
+---
+title: Judoka Self-Check via Weegkaart
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Judoka Self-Check via Weegkaart
 
 > **Status:** Ontwerp (nog niet geïmplementeerd)

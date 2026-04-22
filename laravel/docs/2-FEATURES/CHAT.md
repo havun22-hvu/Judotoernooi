@@ -1,3 +1,10 @@
+---
+title: Real-time Communicatie met Laravel Reverb
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Real-time Communicatie met Laravel Reverb
 
 ## Status: Werkend op staging en production

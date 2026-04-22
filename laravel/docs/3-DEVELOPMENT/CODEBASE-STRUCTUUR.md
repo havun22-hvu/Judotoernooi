@@ -1,3 +1,10 @@
+---
+title: Codebase-structuur
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Codebase-structuur
 
 Overzicht van de volledige projectstructuur (workspace + Laravel app). Bijgewerkt na codebase-scan.

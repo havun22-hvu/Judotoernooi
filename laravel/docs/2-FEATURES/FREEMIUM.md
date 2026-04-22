@@ -1,3 +1,10 @@
+---
+title: Freemium Model
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Freemium Model
 
 > **Doel:** Organisatoren gratis laten uitproberen, betalen voor grotere toernooien.

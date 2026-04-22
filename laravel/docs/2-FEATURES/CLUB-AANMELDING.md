@@ -1,3 +1,10 @@
+---
+title: Club Aanmelding via Publieke Pagina
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Club Aanmelding via Publieke Pagina
 
 > **Status:** In ontwikkeling

@@ -1,3 +1,10 @@
+---
+title: URL Structuur - JudoToernooi
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # URL Structuur - JudoToernooi
 
 > **Versie:** 2.0 (januari 2026)

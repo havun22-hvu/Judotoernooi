@@ -1,3 +1,10 @@
+---
+title: Lokale Server Handleiding
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Lokale Server Handleiding
 
 > Stap-voor-stap gids voor het redundantie systeem

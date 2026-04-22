@@ -1,3 +1,10 @@
+---
+title: Start Session Command
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Start Session Command
 
 > **VERPLICHT** bij elke nieuwe Claude sessie

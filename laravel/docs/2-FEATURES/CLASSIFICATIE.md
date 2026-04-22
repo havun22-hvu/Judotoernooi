@@ -1,3 +1,10 @@
+---
+title: Classificatie & Poule Indeling
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Classificatie & Poule Indeling
 
 > **Status:** Grotendeels voltooid, Python solver geïmplementeerd

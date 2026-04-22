@@ -1,3 +1,10 @@
+---
+title: JBN Jeugd Wedstrijdreglement 2026
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # JBN Jeugd Wedstrijdreglement 2026
 
 Bron: BondsVademecum Hoofdstuk 4.02 - Judo wedstrijdreglement voor jeugd 2026

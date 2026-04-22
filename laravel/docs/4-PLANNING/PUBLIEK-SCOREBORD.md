@@ -1,3 +1,10 @@
+---
+title: Feature: Publiek Scorebord (Mobiel)
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Feature: Publiek Scorebord (Mobiel)
 
 > **Status:** OPEN

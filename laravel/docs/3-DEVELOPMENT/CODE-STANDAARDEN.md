@@ -1,3 +1,10 @@
+---
+title: Code Standaarden - JudoToernooi
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Code Standaarden - JudoToernooi
 
 > **VERPLICHT**: Deze standaarden zijn bindend. Code die hier niet aan voldoet wordt NIET geaccepteerd.

@@ -1,3 +1,10 @@
+---
+title: Rollen Hierarchie - JudoToernooi
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Rollen Hierarchie - JudoToernooi
 
 > **Laatst bijgewerkt:** 2026-02-22

@@ -1,3 +1,10 @@
+---
+title: Eliminatie Systeem (Double Elimination)
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Eliminatie Systeem (Double Elimination)
 
 > **Status**: Actief

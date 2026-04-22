@@ -1,3 +1,10 @@
+---
+title: Noodplan Handleiding voor Organisatoren
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Noodplan Handleiding voor Organisatoren
 
 > **Voor wie:** Organisatoren, hoofdjury, toernooidirecteuren

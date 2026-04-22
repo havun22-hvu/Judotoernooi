@@ -1,3 +1,10 @@
+---
+title: Smallwork Log
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Smallwork Log
 
 > Kleine technische fixes die niet in permanente docs hoeven.

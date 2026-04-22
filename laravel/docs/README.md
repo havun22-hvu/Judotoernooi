@@ -1,3 +1,10 @@
+---
+title: JudoToernooi — Documentatie
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # JudoToernooi — Documentatie
 
 Documentatie van het JudoToernooi Management Systeem (Laravel 11 SaaS).

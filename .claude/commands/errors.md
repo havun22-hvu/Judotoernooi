@@ -1,3 +1,10 @@
+---
+title: Errors Command
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Errors Command
 
 > Analyseer en fix console/log errors.

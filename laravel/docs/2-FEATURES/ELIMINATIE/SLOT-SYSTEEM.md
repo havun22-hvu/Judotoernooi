@@ -1,3 +1,10 @@
+---
+title: Slot Systeem
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Slot Systeem
 
 > Definieert hoe judoka's door de bracket bewegen.

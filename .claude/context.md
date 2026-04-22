@@ -1,3 +1,10 @@
+---
+title: JudoToernooi Context
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # JudoToernooi Context
 
 > Multi-tenant judo toernooi SaaS — judotournament.org (production live)

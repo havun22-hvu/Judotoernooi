@@ -1,3 +1,10 @@
+---
+title: Betalingen - Mollie & Stripe Integratie
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Betalingen - Mollie & Stripe Integratie
 
 > Online betalingen voor judoscholen bij inschrijving van judoka's.

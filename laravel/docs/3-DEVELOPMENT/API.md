@@ -1,3 +1,10 @@
+---
+title: API Documentatie
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # API Documentatie
 
 > **Versie:** 1.0

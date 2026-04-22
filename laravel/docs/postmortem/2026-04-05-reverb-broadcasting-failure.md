@@ -1,3 +1,10 @@
+---
+title: Post-Mortem: Reverb Broadcasting Failure — LCD Scoreboard Down
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Post-Mortem: Reverb Broadcasting Failure — LCD Scoreboard Down
 
 **Datum:** 5 april 2026

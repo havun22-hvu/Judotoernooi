@@ -1,3 +1,10 @@
+---
+title: Scorebord App — Android Bediening + Web Display
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Scorebord App — Android Bediening + Web Display
 
 > **Status:** In ontwikkeling (maart 2026)

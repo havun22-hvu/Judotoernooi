@@ -1,3 +1,10 @@
+---
+title: Gebruikershandleiding
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Gebruikershandleiding
 
 ## Inhoudsopgave

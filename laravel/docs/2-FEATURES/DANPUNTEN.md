@@ -1,3 +1,10 @@
+---
+title: Danpunten
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Danpunten
 
 ## Wat zijn danpunten?

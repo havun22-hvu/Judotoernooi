@@ -1,3 +1,10 @@
+---
+title: Technische Functies
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Technische Functies
 
 Dit document beschrijft de technische werking van belangrijke functies/knoppen in het systeem.

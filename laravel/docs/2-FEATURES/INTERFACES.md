@@ -1,3 +1,10 @@
+---
+title: Interfaces - PWA & Devices
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Interfaces - PWA & Devices
 
 > **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag

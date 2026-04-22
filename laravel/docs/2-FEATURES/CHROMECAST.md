@@ -1,3 +1,10 @@
+---
+title: Chromecast (Google Cast) Integratie
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Chromecast (Google Cast) Integratie
 
 > LCD-scherm URL naar TV casten via Chromecast

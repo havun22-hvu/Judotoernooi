@@ -1,3 +1,10 @@
+---
+title: Deploy Instructies
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Deploy Instructies
 
 ## Serverstructuur (24 mrt 2026)

@@ -1,3 +1,10 @@
+---
+title: Wedstrijdschema Systeem
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Wedstrijdschema Systeem
 
 Dit document beschrijft het wedstrijdschema systeem van JudoToernooi.

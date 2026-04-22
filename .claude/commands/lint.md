@@ -1,3 +1,10 @@
+---
+title: Lint Command
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Lint Command
 
 > Code quality en style checks.

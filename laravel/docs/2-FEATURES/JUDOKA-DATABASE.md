@@ -1,3 +1,10 @@
+---
+title: Judoka Database (Stambestand)
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Judoka Database (Stambestand)
 
 > **Status:** Deels gebouwd, UI uitbreiding nodig

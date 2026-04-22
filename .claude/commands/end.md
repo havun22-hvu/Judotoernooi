@@ -1,3 +1,10 @@
+---
+title: End Session Command
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # End Session Command
 
 > **VERPLICHT** bij elke sessie-afsluiting - laat het project netjes achter!

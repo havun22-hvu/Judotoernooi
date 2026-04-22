@@ -1,3 +1,10 @@
+---
+title: Test Command
+type: claude
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Test Command
 
 > Run tests en fix failures direct.

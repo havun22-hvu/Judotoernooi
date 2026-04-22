@@ -1,3 +1,10 @@
+---
+title: Database Schema
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Database Schema
 
 ## Entity Relationship Diagram

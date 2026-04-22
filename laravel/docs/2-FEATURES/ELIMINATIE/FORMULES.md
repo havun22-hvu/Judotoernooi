@@ -1,3 +1,10 @@
+---
+title: Eliminatie Formules
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Eliminatie Formules
 
 > **Authoritative bron** voor alle eliminatie berekeningen.

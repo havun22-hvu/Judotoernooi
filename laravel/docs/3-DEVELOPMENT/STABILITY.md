@@ -1,3 +1,10 @@
+---
+title: Stability & Error Handling - JudoToernooi
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Stability & Error Handling - JudoToernooi
 
 > **Doel**: Zorgen dat de applicatie stabiel blijft, ook bij onverwachte situaties.

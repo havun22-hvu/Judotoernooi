@@ -1,3 +1,10 @@
+---
+title: Wimpeltoernooi (Doorlopend Puntensysteem)
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Wimpeltoernooi (Doorlopend Puntensysteem)
 
 ## Wat is het?

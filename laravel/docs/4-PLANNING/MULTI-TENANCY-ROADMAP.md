@@ -1,3 +1,10 @@
+---
+title: Planning: Multi-Tenancy
+type: reference
+scope: judotoernooi
+last_check: 2026-04-22
+---
+
 # Planning: Multi-Tenancy
 
 > **Status:** ON HOLD — subdomeinen niet nodig, slug-based routing is live
