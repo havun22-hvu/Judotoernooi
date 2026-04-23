@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $toernooi->naam }} - Offline Server</title>
-    <script src="https://cdn.tailwindcss.com" @nonce></script>
-    <style @nonce>
-        /* Fallback als CDN niet beschikbaar (offline!) */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f3f4f6; }
-    </style>
+    @vite(['resources/css/app.css'])
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8">

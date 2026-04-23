@@ -47,7 +47,7 @@ class SecurityHeaders
             // Alpine.js (bundled via Vite) requires 'unsafe-eval' for x-data/x-on expressions
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'none'",
-                "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://unpkg.com https://js.pusher.com https://www.gstatic.com",
+                "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://js.pusher.com https://www.gstatic.com",
                 "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
