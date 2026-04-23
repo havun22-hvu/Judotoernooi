@@ -714,9 +714,6 @@ Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController:
 // Scoreboard state API — used by inline scoreboard tab in public app
 Route::get('{organisator}/{toernooi}/live/scorebord/{mat}/state', [MatController::class, 'scoreboardState'])->name('publiek.scorebord.state');
 
-// Cast receiver for Chromecast
-Route::get('cast/receiver', fn() => view('pages.cast.receiver'))->name('cast.receiver');
-
 // TV koppel systeem
 Route::get('tv', [\App\Http\Controllers\TvController::class, 'index'])->name('tv.koppel');
 Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->middleware('auth')->name('tv.link');

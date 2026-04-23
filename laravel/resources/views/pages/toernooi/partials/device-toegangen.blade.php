@@ -102,8 +102,6 @@
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
                                                 <button type="button" @click="showTvLink = showTvLink === toegang.id ? null : toegang.id"
                                                         class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">{{ __('Koppel TV') }}</button>
-                                                <button type="button" @click="castToTv(toegang)"
-                                                        class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-xs" id="castBtn">{{ __('Cast') }}</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -536,87 +534,6 @@ function deviceToegangen() {
             }
         },
 
-        _castInitialized: false,
-
-        _initCast() {
-            if (this._castInitialized) return true;
-            if (typeof cast === 'undefined' || !cast.framework) return false;
-            try {
-                cast.framework.CastContext.getInstance().setOptions({
-                    receiverApplicationId: window._castAppId,
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-                });
-                this._castInitialized = true;
-                return true;
-            } catch (e) {
-                console.error('[Cast] Init error:', e);
-                return false;
-            }
-        },
-
-        castToTv(toegang) {
-            if (!this._initCast()) {
-                alert('Cast SDK nog niet geladen. Wacht even en probeer opnieuw.');
-                return;
-            }
-            const castContext = cast.framework.CastContext.getInstance();
-            const state = castContext.getCastState();
-            console.log('[Cast] requestSession, state:', state, 'available:', window._castAvailable);
-
-            if (state === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
-                alert('Geen Chromecast gevonden op dit netwerk.\n\nCheck:\n1. Chromecast aan en op zelfde WiFi\n2. Chrome ingelogd op havun22@gmail.com\n3. Console: chrome://cast voor diagnostiek');
-                return;
-            }
-
-            castContext.requestSession().then(() => {
-                const session = castContext.getCurrentSession();
-                if (!session) {
-                    console.error('[Cast] Geen sessie na requestSession');
-                    return;
-                }
-                const lcdUrl = this.getLcdUrl(toegang);
-                console.log('[Cast] Sending URL:', lcdUrl);
-                session.sendMessage('urn:x-cast:judotoernooi', { url: lcdUrl }).then(() => {
-                    this.copiedId = 'cast_' + toegang.id;
-                    setTimeout(() => this.copiedId = null, 3000);
-                }).catch((e) => console.error('[Cast] Message error:', e));
-            }).catch((e) => {
-                console.error('[Cast] Session error:', e.code, e.description, e);
-                alert('Cast mislukt: ' + (e.description || e.code || 'onbekend') + '\n\nZie console (F12) voor details.');
-            });
-        },
     };
 }
 </script>
-
-@push('scripts')
-<script @nonce>
-window._castAppId = '47CF3728';
-window._castAvailable = false;
-
-window['__onGCastApiAvailable'] = function(isAvailable) {
-    console.log('[Cast] API available:', isAvailable);
-    if (!isAvailable) return;
-
-    try {
-        const ctx = cast.framework.CastContext.getInstance();
-        ctx.setOptions({
-            receiverApplicationId: window._castAppId,
-            autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-        });
-
-        // Listen for device availability changes
-        ctx.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(e) {
-            console.log('[Cast] State changed:', e.castState);
-            window._castAvailable = (e.castState !== cast.framework.CastState.NO_DEVICES_AVAILABLE);
-        });
-
-        console.log('[Cast] Init OK, appId:', window._castAppId);
-        console.log('[Cast] Current state:', ctx.getCastState());
-    } catch (e) {
-        console.error('[Cast] Init error:', e);
-    }
-};
-</script>
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" @nonce></script>
-@endpush
