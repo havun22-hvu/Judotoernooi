@@ -166,7 +166,7 @@
         $reverbKey = config('broadcasting.connections.reverb.key');
         $reverbScheme = parse_url($appUrl, PHP_URL_SCHEME);
     @endphp
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
     <script @nonce>
     (function() {
         const code = '{{ $code }}';

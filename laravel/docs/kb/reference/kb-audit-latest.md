@@ -2,7 +2,7 @@
 title: KB audit — judotoernooi
 type: reference
 scope: judotoernooi
-last_check: 2026-04-22
+last_check: 2026-04-23
 ---
 
 # KB audit — judotoernooi

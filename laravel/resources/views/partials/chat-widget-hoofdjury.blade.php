@@ -473,6 +473,8 @@
         if (typeof Pusher === 'undefined') {
             const pusherScript = document.createElement('script');
             pusherScript.src = 'https://js.pusher.com/8.2.0/pusher.min.js';
+            pusherScript.integrity = 'sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j';
+            pusherScript.crossOrigin = 'anonymous';
             pusherScript.onload = initEcho;
             document.head.appendChild(pusherScript);
         } else {

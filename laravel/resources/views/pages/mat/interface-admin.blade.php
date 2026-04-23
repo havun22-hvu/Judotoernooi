@@ -23,7 +23,7 @@
 @include('pages.mat.partials._content')
 
 <!-- Pusher for Reverb WebSocket -->
-<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
 
 <!-- SortableJS for touch drag & drop in bracket -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>

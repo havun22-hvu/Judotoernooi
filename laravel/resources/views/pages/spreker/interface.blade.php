@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>{{ __('Spreker Interface') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
     <style @nonce>
         body { overscroll-behavior: none; }
         [x-cloak] { display: none !important; }
