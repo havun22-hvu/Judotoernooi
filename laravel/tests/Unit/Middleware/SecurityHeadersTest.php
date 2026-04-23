@@ -99,6 +99,7 @@ class SecurityHeadersTest extends TestCase
         $this->assertNotNull($hsts);
         $this->assertStringContainsString('max-age=31536000', $hsts);
         $this->assertStringContainsString('includeSubDomains', $hsts);
+        $this->assertStringContainsString('preload', $hsts);
 
         // production maar geen HTTPS → geen HSTS (voorkomt mixed-content lock-out)
         $this->assertNull($this->runMiddleware(env: 'production', secure: false)
