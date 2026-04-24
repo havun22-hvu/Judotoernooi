@@ -1,1 +1,1 @@
-{"last_found_secrets": [{"match": "a64bac056c496fbb9897e3f826b0d6005bd5212256e1cdcbb9a86bb980bd7cbb", "name": "Generic Password - commit://staged/laravel/tests/Feature/OrganisatorAuthTest.php"}, {"match": "f5d9900939d828a03c2564f534d735f9c76eb68a7fb215417f9d965312ec8d45", "name": "Generic Password - commit://staged/laravel/tests/Feature/OrganisatorAuthTest.php"}]}
+{"last_found_secrets": [{"name": "Generic Password - commit://staged/laravel/tests/Feature/AuthControllersCoverageTest.php", "match": "dbb6ecb361ace05d176daaa44f70e234886bd0140d6807004e644b9f8cfada0b"}]}

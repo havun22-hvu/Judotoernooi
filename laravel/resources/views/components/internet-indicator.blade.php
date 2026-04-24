@@ -6,9 +6,17 @@
         'md' => 'w-3 h-3',
         default => 'w-2 h-2',
     };
+    $labels = json_encode([
+        'good' => __('Goed'),
+        'poor' => __('Matig'),
+        'offline' => 'Offline',
+        'checking' => __('Controleren...'),
+        'unknown' => __('Onbekend'),
+        'checked' => __('Gecontroleerd:'),
+    ]);
 @endphp
 
-<div x-data="internetIndicator()" x-init="startMonitoring()" class="inline-flex items-center gap-2">
+<div x-data="internetIndicator" data-labels="{{ $labels }}" class="inline-flex items-center gap-2">
     {{-- Status Dot --}}
     <div :class="{
             'bg-green-500': status === 'good',
@@ -18,7 +26,7 @@
             'animate-pulse': status === 'checking'
          }"
          class="{{ $sizeClasses }} rounded-full cursor-pointer"
-         @click="showDetails = !showDetails"
+         @click="toggleDetails()"
          :title="statusLabel">
     </div>
 
@@ -38,7 +46,7 @@
     {{-- Details Popup --}}
     <div x-show="showDetails"
          x-transition
-         @click.away="showDetails = false"
+         @click.outside="closeDetails()"
          class="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg p-4 z-50 min-w-48">
         <div class="text-sm">
             <div class="flex justify-between mb-2">
@@ -57,51 +65,3 @@
         </div>
     </div>
 </div>
-
-<script @nonce>
-function internetIndicator() {
-    return {
-        status: 'checking',
-        latency: null,
-        queueCount: 0,
-        lastCheck: '',
-        showDetails: false,
-        interval: null,
-
-        get statusLabel() {
-            return {
-                'good': '{{ __('Goed') }}',
-                'poor': '{{ __('Matig') }}',
-                'offline': 'Offline',
-                'checking': '{{ __('Controleren...') }}'
-            }[this.status] || '{{ __('Onbekend') }}';
-        },
-
-        async checkStatus() {
-            try {
-                const response = await fetch('/local-server/internet-status');
-                const data = await response.json();
-
-                this.status = data.status || 'offline';
-                this.latency = data.latency;
-                this.queueCount = data.queue_count || 0;
-                this.lastCheck = '{{ __('Gecontroleerd:') }} ' + new Date().toLocaleTimeString('nl-NL');
-            } catch (e) {
-                this.status = 'offline';
-                this.latency = null;
-            }
-        },
-
-        startMonitoring() {
-            this.checkStatus();
-            this.interval = setInterval(() => this.checkStatus(), 15000);
-        },
-
-        stopMonitoring() {
-            if (this.interval) {
-                clearInterval(this.interval);
-            }
-        }
-    };
-}
-</script>

@@ -96,13 +96,13 @@
                 <div class="flex items-center space-x-4">
                     {{-- DO NOT REMOVE: Language switcher (NL/EN) - essential for multi-language support --}}
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
                             <form action="{{ route('locale.switch', 'nl') }}" method="POST">
                                 @csrf
                                 @if(isset($toernooi) && $toernooi instanceof \App\Models\Toernooi)
@@ -126,8 +126,8 @@
 
                     @if(Auth::guard('organisator')->check())
                     {{-- DO NOT REMOVE: User dropdown with admin link, dashboard, settings, help, force refresh, about modal, logout --}}
-                    <div class="relative" x-data="userDropdown">
-                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                    <div class="relative" x-data="modalWithAbout">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -136,7 +136,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                             <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Admin Dashboard') }}</a>
                             @php $unreadAlerts = \App\Models\SystemAlert::unread()->count(); @endphp
@@ -153,7 +153,7 @@
                             <button type="button" id="qr-scan-menu-btn" onclick="openQrScanner()" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('QR Login Scanner') }}</button>
                             <hr class="my-1">
                             <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
-                            <button type="button" @click="openAbout" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
+                            <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
@@ -163,11 +163,11 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="closeAbout"
-                             @keydown.escape.window="closeAbout">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout">
+                             @click.self="closeAbout()"
+                             @keydown.escape.window="closeAbout()">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout()">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
-                                    <button type="button" @click="closeAbout"
+                                    <button type="button" @click="closeAbout()"
                                             class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
@@ -194,7 +194,7 @@
                                     </button>
                                 </div>
                                 <div class="px-6 py-3 bg-gray-50 text-center">
-                                    <button type="button" @click="closeAbout" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                    <button type="button" @click="closeAbout()" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
                                 </div>
                             </div>
                         </div>

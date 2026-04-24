@@ -45,19 +45,19 @@
     // Problematische poules door gewichtsrange (dynamisch overpoulen)
     $problematischeGewichtsPoules = $problematischeGewichtsPoules ?? collect();
 @endphp
-<div x-data="wedstrijddagPoules()" class="space-y-6">
+<div class="space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">{{ __('Wedstrijddag Poules') }}</h1>
         <div class="flex items-center gap-3">
             {{-- Heartbeat toggle --}}
-            <div x-data="{ active: {{ ($heartbeatActive ?? false) ? 'true' : 'false' }}, loading: false }" class="flex items-center gap-2">
-                <button @click="loading = true; fetch('{{ route('toernooi.wedstrijddag.heartbeat-toggle', $toernooi->routeParams()) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { active = d.active; loading = false; }).catch(() => loading = false)"
-                        :class="active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+            <div x-data="heartbeatToggle" class="flex items-center gap-2">
+                <button @click="toggle()"
+                        :class="buttonClass"
                         class="text-white text-sm font-medium py-2 px-3 rounded flex items-center gap-1.5 transition-colors"
                         :disabled="loading">
-                    <span x-show="!loading" :class="active ? 'text-green-200' : 'text-gray-200'" class="text-xs">&#9679;</span>
+                    <span x-show="notLoading" :class="dotClass" class="text-xs">&#9679;</span>
                     <svg x-show="loading" x-cloak class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    <span x-text="active ? 'LIVE' : 'LIVE uit'"></span>
+                    <span x-text="label"></span>
                 </button>
             </div>
             <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -183,11 +183,7 @@
 
     <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
-    <div class="bg-white rounded-lg shadow w-full blok-item" x-data="{
-    open: localStorage.getItem('blok-poules-{{ $blok['id'] }}') !== null
-        ? localStorage.getItem('blok-poules-{{ $blok['id'] }}') === 'true'
-        : {{ $loop->first ? 'true' : 'false' }}
-}" x-init="$watch('open', val => localStorage.setItem('blok-poules-{{ $blok['id'] }}', val))">
+    <div class="bg-white rounded-lg shadow w-full blok-item" x-data="persistentToggle" data-storage-key="blok-poules-{{ $blok['id'] }}" data-default-open="{{ $loop->first ? 'true' : 'false' }}">
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
@@ -210,12 +206,12 @@
             }
         @endphp
         <div class="flex items-center bg-gray-800 text-white rounded-t-lg">
-            <button @click="toggle" class="flex-1 flex justify-between items-center px-4 py-3 hover:bg-gray-700 rounded-tl-lg">
+            <button @click="toggle()" class="flex-1 flex justify-between items-center px-4 py-3 hover:bg-gray-700 rounded-tl-lg">
                 <div class="flex items-center gap-4">
                     <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                     <span class="text-gray-300 text-sm">{{ $blokJudokas }} {{ __("judoka's") }} | {{ $blokWedstrijden }} {{ __('wedstrijden') }} | {{ $blok['categories']->count() }} {{ __('categorieën') }}</span>
                 </div>
-                <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg :class="rotateClass" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
@@ -288,8 +284,8 @@
                             </div>
                             <div class="flex items-center gap-1">
                                 @if($verwijderdeTekstElim->isNotEmpty())
-                                <div class="relative" x-data="showToggle">
-                                    <span @click="toggleShow" @click.away="hideIt" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                <div class="relative" x-data="dismissible" data-show-initial="false">
+                                    <span @click="flip()" @click.outside="dismiss()" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
                                     <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
                                 </div>
                                 @endif
@@ -299,8 +295,8 @@
                                     title="{{ $isDoorgestuurdElim ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
                                 >{{ $isDoorgestuurdElim ? '✓' : '→' }}</button>
                                 <div class="relative" x-data="toggle">
-                                    <button @click="toggle" class="bg-gray-500 hover:bg-gray-400 text-white text-xs px-2 py-0.5 rounded"><svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
-                                    <div x-show="open" @click.away="close" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
+                                    <button @click="toggle()" class="bg-gray-500 hover:bg-gray-400 text-white text-xs px-2 py-0.5 rounded"><svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                                    <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
                                         <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
                                         <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ {{ __('kruisfinale') }}</button>
                                     </div>
@@ -376,8 +372,8 @@
                     @if($isEliminatie)
                     @php $elimPoule = $category['poules']->first(); @endphp
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">{{ __('Omzetten naar poules') }} ▾</button>
-                        <div x-show="open" @click.away="close" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
+                        <button @click="toggle()" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">{{ __('Omzetten naar poules') }} ▾</button>
+                        <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
                             <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">{{ __('Alleen poules') }}</button>
                             <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">{{ __('Poules + kruisfinale') }}</button>
                         </div>
@@ -411,8 +407,8 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-orange-200">~<span class="poule-wedstrijden">{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }}</span> {{ __('wedstrijden') }}</span>
                                 @if($verwijderdeTekstElim->isNotEmpty())
-                                <div class="relative" x-data="showToggle">
-                                    <span @click="toggleShow" @click.away="hideIt" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                <div class="relative" x-data="dismissible" data-show-initial="false">
+                                    <span @click="flip()" @click.outside="dismiss()" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
                                     <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
                                 </div>
                                 @endif
@@ -574,8 +570,8 @@
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
                                         @if($verwijderdeTekst->isNotEmpty())
-                                        <div class="relative" x-data="showToggle">
-                                            <span @click="toggleShow" @click.away="hideIt" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                        <div class="relative" x-data="dismissible" data-show-initial="false">
+                                            <span @click="flip()" @click.outside="dismiss()" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
                                             <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekst->join("\n") }}</div>
                                         </div>
                                         @endif
@@ -1032,9 +1028,37 @@ async function verifieerPoules() {
     }
 }
 
-function wedstrijddagPoules() {
-    return {}
-}
+document.addEventListener('alpine:init', () => {
+    Alpine.data('heartbeatToggle', () => ({
+        active: @json($heartbeatActive ?? false),
+        loading: false,
+        get buttonClass() {
+            return this.active ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500';
+        },
+        get dotClass() {
+            return this.active ? 'text-green-200' : 'text-gray-200';
+        },
+        get notLoading() { return !this.loading; },
+        get label() { return this.active ? 'LIVE' : 'LIVE uit'; },
+        async toggle() {
+            this.loading = true;
+            try {
+                const res = await fetch('{{ route("toernooi.wedstrijddag.heartbeat-toggle", $toernooi->routeParams()) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.active = data.active;
+            } catch (e) {
+                console.error('Heartbeat toggle failed:', e);
+            }
+            this.loading = false;
+        },
+    }));
+});
 
 async function verwijderUitPoule(judokaId, pouleId) {
     if (!confirm(__verwijderUitPouleBevestiging)) return;

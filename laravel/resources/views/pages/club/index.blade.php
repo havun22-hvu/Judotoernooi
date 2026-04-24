@@ -3,7 +3,7 @@
 @section('title', __('Clubs uitnodigen'))
 
 @section('content')
-<div x-data="urlCopy">
+<div x-data="copyTracker">
 
 <div class="flex justify-between items-center mb-6">
     <div>
@@ -181,18 +181,18 @@
                             <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600 max-w-[180px] truncate" title="{{ $portalUrl }}">
                                 {{ $portalUrl }}
                             </code>
-                            <button @click="copy({{ Js::from($portalUrl) }}, 'url-{{ $club->id }}')"
+                            <button @click="copyAndMark('{{ $portalUrl }}', 'url-{{ $club->id }}')"
                                     class="p-1 rounded flex-shrink-0"
-                                    :class="copiedUrl === 'url-{{ $club->id }}' ? 'text-green-600' : 'text-gray-400 hover:text-blue-600'"
+                                    :class="isCopied('url-{{ $club->id }}') ? 'text-green-600' : 'text-gray-400 hover:text-blue-600'"
                                     title="{{ __('Kopieer URL') }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/></svg>
                             </button>
                         </div>
                         <div class="flex items-center gap-1">
                             <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $pivotPincode }}</span>
-                            <button @click="copy({{ Js::from($pivotPincode) }}, 'pin-{{ $club->id }}')"
+                            <button @click="copyAndMark('{{ $pivotPincode }}', 'pin-{{ $club->id }}')"
                                     class="p-1 rounded flex-shrink-0"
-                                    :class="copiedUrl === 'pin-{{ $club->id }}' ? 'text-green-600' : 'text-gray-400 hover:text-amber-600'"
+                                    :class="isCopied('pin-{{ $club->id }}') ? 'text-green-600' : 'text-gray-400 hover:text-amber-600'"
                                     title="{{ __('Kopieer PIN') }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/></svg>
                             </button>

@@ -67,7 +67,7 @@
         ]
     }
     </script>
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style @nonce>
         [x-cloak] { display: none !important; }
         /* Touch-friendly star buttons */
@@ -92,7 +92,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
+<body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp" x-init="init()">
     <!-- Splash Screen -->
     <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center transition-opacity duration-500">
         <img src="/icon-512x512.png" alt="Logo" class="w-32 h-32 mb-6 animate-pulse">
@@ -305,13 +305,13 @@
 
             {{-- Club aanmelding formulier --}}
             @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
-            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="aanmeldForm({ url: {{ Js::from(route('publiek.club-aanmelding', $toernooi->routeParams())) }}, csrfToken: {{ Js::from(csrf_token()) }}, errorMsg: {{ Js::from(__('Er ging iets mis.')) }}, connectionError: {{ Js::from(__('Verbindingsfout. Probeer opnieuw.')) }} })">
-                <div class="flex items-center justify-between cursor-pointer" @click="toggleOpen">
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="clubAanmelding">
+                <div class="flex items-center justify-between cursor-pointer" @click="toggle()">
                     <div>
                         <h3 class="text-lg font-bold text-gray-800">{{ __('Deelnemen met jouw club?') }}</h3>
                         <p class="text-sm text-gray-500">{{ __('Meld je club aan en de organisator neemt contact met je op.') }}</p>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 transition-transform" :class="aanmeldOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-gray-400 transition-transform" :class="rotateClass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
@@ -324,8 +324,8 @@
                         </div>
                     </template>
 
-                    <template x-if="!aanmeldVerstuurd">
-                        <form @submit.prevent="submit">
+                    <template x-if="notVerstuurd">
+                        <form @submit.prevent="submit()">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Clubnaam') }} *</label>
@@ -348,7 +348,7 @@
                             <div x-show="aanmeldError" x-cloak class="mt-2 text-sm text-red-600" x-text="aanmeldError"></div>
                             <button type="submit" :disabled="aanmeldLoading"
                                     class="mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg text-sm disabled:opacity-50">
-                                <span x-show="!aanmeldLoading">{{ __('Aanmelden') }}</span>
+                                <span x-show="notLoading">{{ __('Aanmelden') }}</span>
                                 <span x-show="aanmeldLoading">{{ __('Verzenden...') }}</span>
                             </button>
                         </form>
@@ -522,7 +522,7 @@
         <!-- Deelnemers Tab -->
         <div x-show="activeTab === 'deelnemers'" x-cloak>
             <!-- Search bar - alleen in deelnemers tab -->
-            <div class="mb-4 relative" @click.outside="if(zoekResultaten.length > 0 || heeftGezocht) { zoekResultaten = []; zoekterm = ''; heeftGezocht = false; }">
+            <div class="mb-4 relative" @click.outside="clearZoekResultaten()">
                 <input type="text"
                        x-model="zoekterm"
                        @input.debounce.300ms="zoekJudokas()"
@@ -575,7 +575,7 @@
                 $isDynamisch = $gewichtsklassen->count() === 1 && $gewichtsklassen->has('Alle');
                 $alleJudokas = $gewichtsklassen->flatten();
             @endphp
-            <div class="mb-6" x-data="activeSelector">
+            <div class="mb-6" x-data="nullableSelection" data-state-key="openGewicht">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
                     <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
@@ -629,9 +629,9 @@
                     @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                     <button @click="toggle('{{ $gewichtId }}')"
                             class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
-                            :class="is('{{ $gewichtId }}') ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
+                            :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
                         <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }}</span>
-                        <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="is('{{ $gewichtId }}') ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
+                        <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
                     </button>
                     @endforeach
                 </div>
@@ -639,7 +639,7 @@
                 {{-- Gewichtsklassen panels --}}
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                 @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
-                <div x-show="is('{{ $gewichtId }}')" x-collapse x-cloak
+                <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} {{ __("judoka's") }}</span>
@@ -755,7 +755,7 @@
                     </div>
 
                     <!-- Poules met tabs per favoriet -->
-                    <div x-show="!loadingPoules && favorietenPoules.length > 0" x-data="{ activeFavoriet: null }" x-init="$watch('favorietenPoules', () => { if(favorietenPoules.length > 0 && !activeFavoriet) activeFavoriet = getFirstFavorietId() })">
+                    <div x-show="toonFavorietPoules">
                         <!-- Alert voor favoriet die zich moet gereedmaken (blauw) -->
                         <template x-for="poule in favorietenPoules" :key="'ready-'+poule.id">
                             <template x-if="poule.judokas.some(j => j.is_favoriet && j.is_gereedmaken && !j.is_volgende && !j.is_aan_de_beurt)">
@@ -1139,12 +1139,56 @@
         // Judoka names cache for display
         const judokaNamen = @json($categorien->flatten(2)->pluck('naam', 'id'));
 
-        function publiekApp() {
-            return {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('clubAanmelding', () => ({
+                aanmeldOpen: false,
+                aanmeldVerstuurd: false,
+                aanmeldError: '',
+                aanmeldLoading: false,
+                toggle() { this.aanmeldOpen = !this.aanmeldOpen; },
+                get rotateClass() { return this.aanmeldOpen ? 'rotate-180' : ''; },
+                get notVerstuurd() { return !this.aanmeldVerstuurd; },
+                get notLoading() { return !this.aanmeldLoading; },
+                async submit() {
+                    this.aanmeldLoading = true;
+                    this.aanmeldError = '';
+                    try {
+                        const res = await fetch('{{ route("publiek.club-aanmelding", $toernooi->routeParams()) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                club_naam: this.$refs.clubNaam.value,
+                                contact_naam: this.$refs.contactNaam.value,
+                                email: this.$refs.email.value,
+                                telefoon: this.$refs.telefoon.value,
+                            }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.aanmeldVerstuurd = true;
+                        } else {
+                            this.aanmeldError = data.error || '{{ __("Er ging iets mis.") }}';
+                        }
+                    } catch (e) {
+                        this.aanmeldError = '{{ __("Verbindingsfout. Probeer opnieuw.") }}';
+                    }
+                    this.aanmeldLoading = false;
+                },
+            }));
+
+            Alpine.data('publiekApp', () => ({
                 activeTab: 'info',
                 favorieten: [],
                 favorietenPoules: [],
                 loadingPoules: false,
+                activeFavoriet: null,
+                get toonFavorietPoules() {
+                    return !this.loadingPoules && this.favorietenPoules.length > 0;
+                },
                 zoekterm: '',
                 zoekResultaten: [],
                 zoekLoading: false,
@@ -1164,6 +1208,13 @@
                 debugTapCount: 0, // For tracking taps
 
                 init() {
+                    // Auto-select first favoriet when poules loaded
+                    this.$watch('favorietenPoules', () => {
+                        if (this.favorietenPoules.length > 0 && !this.activeFavoriet) {
+                            this.activeFavoriet = this.getFirstFavorietId();
+                        }
+                    });
+
                     // Load notification state
                     try {
                         const notified = localStorage.getItem(NOTIFIED_KEY);
@@ -1871,6 +1922,14 @@
                     }
                 },
 
+                clearZoekResultaten() {
+                    if (this.zoekResultaten.length > 0 || this.heeftGezocht) {
+                        this.zoekResultaten = [];
+                        this.zoekterm = '';
+                        this.heeftGezocht = false;
+                    }
+                },
+
                 async zoekJudokas() {
                     if (this.zoekterm.length < 2) {
                         this.zoekResultaten = [];
@@ -1897,8 +1956,8 @@
                         this.zoekLoading = false;
                     }
                 },
-            }
-        }
+            }));
+        });
 
         // PWA Install Logic
         let deferredPrompt;

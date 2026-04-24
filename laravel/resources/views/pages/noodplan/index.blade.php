@@ -29,7 +29,9 @@
     </div>
 
     <!-- OFFLINE MODUS BANNER -->
-    <div x-data="offlineDetector()" x-init="init()" x-show="isOffline" x-cloak
+    <div x-data="offlineDetector"
+         data-ping-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         x-show="isOffline" x-cloak
          class="bg-orange-100 border-l-4 border-orange-500 p-4 mb-6 rounded">
         <div class="flex items-center">
             <span class="text-2xl mr-3">⚠️</span>
@@ -40,30 +42,7 @@
         </div>
     </div>
 
-    <script @nonce>
-        function offlineDetector() {
-            return {
-                isOffline: false,
-                init() {
-                    this.checkConnection();
-                    setInterval(() => this.checkConnection(), 10000);
-                    window.addEventListener('online', () => this.isOffline = false);
-                    window.addEventListener('offline', () => this.isOffline = true);
-                },
-                async checkConnection() {
-                    try {
-                        const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}', {
-                            method: 'HEAD',
-                            cache: 'no-store'
-                        });
-                        this.isOffline = !response.ok;
-                    } catch (e) {
-                        this.isOffline = true;
-                    }
-                }
-            };
-        }
-    </script>
+    {{-- VP-18: offlineDetector registered in resources/js/alpine-components.js; ping URL via data-ping-url. --}}
 
     {{-- ================================================================== --}}
     {{-- SECTIE 1: EXPORTS & DOWNLOADS                                      --}}
@@ -151,11 +130,11 @@
                         {{ __('Alle') }}
                     </a>
                     <div class="relative">
-                        <button @click="toggle" type="button"
+                        <button @click="toggle()" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                             {{ __('Per club') }} ▼
                         </button>
-                        <div x-show="open" @click.away="close" x-cloak
+                        <div x-show="open" @click.outside="close()" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
@@ -180,11 +159,11 @@
                         {{ __('Alle') }}
                     </a>
                     <div class="relative">
-                        <button @click="toggle" type="button"
+                        <button @click="toggle()" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                             {{ __('Per club') }} ▼
                         </button>
-                        <div x-show="open" @click.away="close" x-cloak
+                        <div x-show="open" @click.outside="close()" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
@@ -232,15 +211,15 @@
     {{-- ================================================================== --}}
 
     <!-- TIJDENS DE WEDSTRIJD -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup()" x-init="init()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup" x-init="init()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🏆</span>
             {{ __('TIJDENS DE WEDSTRIJD') }}
-            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+            <span x-show="isConnected" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
                 <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
                 Live
             </span>
-            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+            <span x-show="isDisconnected" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
                 <span class="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
                 {{ __('Backup modus') }}
             </span>
@@ -248,9 +227,9 @@
 
         <div class="space-y-4">
             <!-- Status info + laden van JSON backup -->
-            <div class="p-3 rounded text-sm flex items-center justify-between" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
+            <div class="p-3 rounded text-sm flex items-center justify-between" :class="statusBackupClass">
                 <div>
-                    <span x-text="uitslagCount"></span> {{ __('uitslagen in backup') }} | {{ __('Laatste sync') }}: <span x-text="laatsteSync || '{{ __('Nog geen data') }}'"></span>
+                    <span x-text="uitslagCount"></span> {{ __('uitslagen in backup') }} | {{ __('Laatste sync') }}: <span x-text="laatsteSyncLabel"></span>
                 </div>
                 <div class="flex gap-2">
                     <label class="px-3 py-1 bg-white border rounded text-xs cursor-pointer hover:bg-gray-50">
@@ -303,13 +282,22 @@
     </div>
 
     <script @nonce>
-        function liveBackup() {
-            return {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('liveBackup', () => ({
                 syncStatus: 'disconnected',
                 uitslagCount: 0,
                 laatsteSync: null,
                 hasData: false,
                 toernooiId: {{ $toernooi->id }},
+
+                get isConnected() { return this.syncStatus === 'connected'; },
+                get isDisconnected() { return this.syncStatus === 'disconnected'; },
+                get statusBackupClass() {
+                    return this.syncStatus === 'connected'
+                        ? 'bg-green-50 border border-green-200 text-green-700'
+                        : 'bg-orange-50 border border-orange-200 text-orange-700';
+                },
+                get laatsteSyncLabel() { return this.laatsteSync || '{{ __("Nog geen data") }}'; },
 
                 init() {
                     this.loadFromStorage();
@@ -668,13 +656,12 @@ function abbreviateClub(name) {
                                 schema.push([p1, p2]);
                             }
                         }
-                        // Rotate players (keep first fixed)
                         players.splice(1, 0, players.pop());
                     }
                     return schema;
-                }
-            };
-        }
+                },
+            }));
+        });
     </script>
 
     {{-- ================================================================== --}}
@@ -698,7 +685,7 @@ function abbreviateClub(name) {
         <div class="space-y-4">
             <!-- Noodpakket (.exe) -->
             @if(!$isFreeTier)
-            <div class="p-4 bg-green-50 border-2 border-green-300 rounded" x-data="serverPakketStatus()" x-init="init()">
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded" x-data="serverPakketStatus" data-toernooi-id="{{ $toernooi->id }}">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-green-800 flex items-center gap-2">
@@ -733,39 +720,7 @@ function abbreviateClub(name) {
                     </a>
                 </div>
             </div>
-            <script @nonce>
-                function serverPakketStatus() {
-                    return {
-                        syncStatus: 'none',
-                        laatsteSync: '',
-                        toernooiId: {{ $toernooi->id }},
-
-                        init() {
-                            this.checkSync();
-                            setInterval(() => this.checkSync(), 5000);
-                        },
-
-                        checkSync() {
-                            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-                            const sync = localStorage.getItem(syncKey);
-
-                            if (!sync) {
-                                this.syncStatus = 'none';
-                                return;
-                            }
-
-                            const syncDate = new Date(sync);
-                            const now = new Date();
-                            const diffMs = now - syncDate;
-
-                            this.laatsteSync = syncDate.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-
-                            // < 2 min = connected, anders stale
-                            this.syncStatus = diffMs < 120000 ? 'connected' : 'stale';
-                        }
-                    };
-                }
-            </script>
+            {{-- VP-18: serverPakketStatus registered in resources/js/alpine-components.js; toernooi-id via data-toernooi-id. --}}
             @else
             <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
                 <div class="flex items-center justify-between">
@@ -787,7 +742,7 @@ function abbreviateClub(name) {
     </div>
 
     <!-- NETWERK CONFIGURATIE -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="networkConfig()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="networkConfig">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🌐</span>
             NETWERK CONFIGURATIE
@@ -808,8 +763,8 @@ function abbreviateClub(name) {
         <div class="mb-6">
             <h3 class="font-bold text-gray-800 mb-3">Welk scenario past bij jouw sporthal?</h3>
             <div class="grid md:grid-cols-3 gap-3">
-                <button type="button" @click="scenario = 'A'"
-                        :class="scenario === 'A' ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300 hover:border-green-300'"
+                <button type="button" @click="setScenario('A')"
+                        :class="scenarioClass('A', 'green')"
                         class="p-4 border-2 rounded-lg text-left transition-all">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-xl">📶</span>
@@ -817,8 +772,8 @@ function abbreviateClub(name) {
                     </div>
                     <p class="text-xs text-gray-600">Sporthal WiFi is snel en stabiel</p>
                 </button>
-                <button type="button" @click="scenario = 'B'"
-                        :class="scenario === 'B' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300' : 'border-gray-300 hover:border-blue-300'"
+                <button type="button" @click="setScenario('B')"
+                        :class="scenarioClass('B', 'blue')"
                         class="p-4 border-2 rounded-lg text-left transition-all">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-xl">📡</span>
@@ -826,8 +781,8 @@ function abbreviateClub(name) {
                     </div>
                     <p class="text-xs text-gray-600">Eigen netwerk (Deco / hubs / LAN)</p>
                 </button>
-                <button type="button" @click="scenario = 'C'"
-                        :class="scenario === 'C' ? 'border-red-500 bg-red-50 ring-2 ring-red-300' : 'border-gray-300 hover:border-red-300'"
+                <button type="button" @click="setScenario('C')"
+                        :class="scenarioClass('C', 'red')"
                         class="p-4 border-2 rounded-lg text-left transition-all">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-xl">🔴</span>
@@ -839,7 +794,7 @@ function abbreviateClub(name) {
         </div>
 
         <!-- SCENARIO A -->
-        <div x-show="scenario === 'A'" x-cloak>
+        <div x-show="isScenario('A')" x-cloak>
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <h4 class="font-bold text-green-800 mb-2">Scenario A: Goed internet bereik</h4>
                 <div class="grid md:grid-cols-2 gap-3 text-sm">
@@ -879,7 +834,7 @@ function abbreviateClub(name) {
         </div>
 
         <!-- SCENARIO B -->
-        <div x-show="scenario === 'B'" x-cloak>
+        <div x-show="isScenario('B')" x-cloak>
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <h4 class="font-bold text-blue-800 mb-2">Scenario B: Slecht WiFi bereik</h4>
                 <div class="grid md:grid-cols-2 gap-3 text-sm">
@@ -916,7 +871,7 @@ function abbreviateClub(name) {
         </div>
 
         <!-- SCENARIO C -->
-        <div x-show="scenario === 'C'" x-cloak>
+        <div x-show="isScenario('C')" x-cloak>
             <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <h4 class="font-bold text-red-800 mb-2">Scenario C: Geen internet / server crash</h4>
                 <div class="grid md:grid-cols-2 gap-3 text-sm">
@@ -1050,7 +1005,7 @@ function abbreviateClub(name) {
 
         <!-- Instellen knop -->
         <div class="flex justify-end">
-            <button @click="showEditModal = true"
+            <button @click="openEdit()"
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium text-sm">
                 ⚙️ Netwerkinstellingen configureren
             </button>
@@ -1132,7 +1087,7 @@ function abbreviateClub(name) {
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <button type="button" @click="showEditModal = false"
+                        <button type="button" @click="closeEdit()"
                                 class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
                             Annuleren
                         </button>
@@ -1153,20 +1108,38 @@ function abbreviateClub(name) {
     </div>
 
     <script @nonce>
-        function networkConfig() {
-            return {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('networkConfig', () => ({
                 scenario: 'A',
                 showEditModal: false,
                 showCopied: false,
 
+                setScenario(s) { this.scenario = s; },
+                isScenario(s) { return this.scenario === s; },
+                scenarioClass(s, color) {
+                    const colorMap = {
+                        green: 'border-green-500 bg-green-50 ring-2 ring-green-300',
+                        blue: 'border-blue-500 bg-blue-50 ring-2 ring-blue-300',
+                        red: 'border-red-500 bg-red-50 ring-2 ring-red-300',
+                    };
+                    const hoverMap = {
+                        green: 'border-gray-300 hover:border-green-300',
+                        blue: 'border-gray-300 hover:border-blue-300',
+                        red: 'border-gray-300 hover:border-red-300',
+                    };
+                    return this.scenario === s ? colorMap[color] : hoverMap[color];
+                },
+                openEdit() { this.showEditModal = true; },
+                closeEdit() { this.showEditModal = false; },
+
                 copyToClipboard(text) {
                     navigator.clipboard.writeText(text).then(() => {
                         this.showCopied = true;
-                        setTimeout(() => this.showCopied = false, 2000);
+                        setTimeout(() => { this.showCopied = false; }, 2000);
                     });
-                }
-            };
-        }
+                },
+            }));
+        });
     </script>
 
     <!-- STAP-VOOR-STAP INSTRUCTIES -->

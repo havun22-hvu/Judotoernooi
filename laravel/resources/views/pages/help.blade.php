@@ -10,7 +10,7 @@
 @endpush
 
 @section('content')
-<div x-data="helpPage()" class="max-w-4xl mx-auto min-w-[56rem]">
+<div x-data="helpPage" class="max-w-4xl mx-auto min-w-[56rem]">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Help & Handleiding') }}</h1>
@@ -28,17 +28,17 @@
             <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <button x-show="searchQuery" @click="searchQuery = ''; filterContent()" class="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600">
+            <button x-show="searchQuery" @click="clear()" type="button" class="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
-        <p x-show="searchQuery && filteredCount === 0" class="mt-2 text-orange-600">{{ __('Geen resultaten gevonden voor') }} "<span x-text="searchQuery"></span>"</p>
+        <p x-show="noResults" class="mt-2 text-orange-600">{{ __('Geen resultaten gevonden voor') }} "<span x-text="searchQuery"></span>"</p>
     </div>
 
     {{-- Quickstart Card --}}
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg shadow-lg p-6 mb-8" x-show="!searchQuery || 'quickstart snel starten begin'.includes(searchQuery.toLowerCase())">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg shadow-lg p-6 mb-8" x-show="showQuickstart">
         <h2 class="text-xl font-bold mb-3">{{ __('Quickstart - Volledige Workflow') }}</h2>
 
         <h4 class="font-semibold mb-2">{{ __('Voorbereiding (weken/maanden voor toernooi)') }}</h4>
@@ -872,31 +872,7 @@
     </div>
 </div>
 
-<script @nonce>
-function helpPage() {
-    return {
-        searchQuery: '',
-        filteredCount: 0,
-
-        filterContent() {
-            const query = this.searchQuery.toLowerCase().trim();
-            const sections = document.querySelectorAll('.help-section');
-            let count = 0;
-
-            sections.forEach(section => {
-                const text = section.textContent.toLowerCase();
-                const keywords = (section.dataset.keywords || '').toLowerCase();
-                const matches = !query || text.includes(query) || keywords.includes(query);
-
-                section.style.display = matches ? 'block' : 'none';
-                if (matches) count++;
-            });
-
-            this.filteredCount = count;
-        }
-    }
-}
-</script>
+{{-- VP-18: helpPage component geëxtraheerd naar resources/js/alpine-components.js --}}
 <style @nonce>
 .help-section {
     scroll-margin-top: 5rem;

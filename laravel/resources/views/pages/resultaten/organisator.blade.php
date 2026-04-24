@@ -51,25 +51,25 @@
         </div>
 
         <!-- Tab Navigation (no print) -->
-        <div class="mb-6 no-print" x-data="tabPanel({ activeTab: 'ranking' })">
+        <div class="mb-6 no-print" x-data="tabSwitch" data-initial-tab="ranking">
             <div class="flex border-b border-gray-300">
-                <button @click="setTab('ranking')" :class="activeTab === 'ranking' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+                <button @click="switchTo('ranking')" :class="tab === 'ranking' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
                         class="px-6 py-3 font-medium">
                     Club Ranking
                 </button>
-                <button @click="setTab('uitslagen')" :class="activeTab === 'uitslagen' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+                <button @click="switchTo('uitslagen')" :class="tab === 'uitslagen' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
                         class="px-6 py-3 font-medium">
                     Alle Uitslagen
                 </button>
             </div>
 
             <!-- Club Ranking Tab -->
-            <div x-show="activeTab === 'ranking'" class="mt-6">
+            <div x-show="tab === 'ranking'" class="mt-6">
                 @include('pages.resultaten._club-ranking', ['clubRanking' => $clubRanking])
             </div>
 
             <!-- Uitslagen Tab -->
-            <div x-show="activeTab === 'uitslagen'" class="mt-6">
+            <div x-show="tab === 'uitslagen'" class="mt-6">
                 @include('pages.resultaten._uitslagen', ['uitslagen' => $uitslagen])
             </div>
         </div>

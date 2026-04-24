@@ -24,8 +24,9 @@
 <div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="warningsBanner" x-show="showWarnings">
     @if($nietGecategoriseerdAantal > 0)
     <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
-         x-data="showToggle({ show: true, flashClass: 'animate-error-blink', flashMs: 1500 })"
-         x-show="show">
+         x-data="dismissible"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
@@ -39,7 +40,7 @@
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     {{ __('Bekijk lijst') }}
                 </a>
-                <button type="button" @click="hideIt" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+                <button type="button" @click="dismiss()" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
             </div>
         </div>
     </div>
@@ -47,8 +48,9 @@
 
     @if(isset($overlapWarning) && $overlapWarning)
     <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
-         x-data="showToggle({ show: true, flashClass: 'animate-error-blink', flashMs: 1500 })"
-         x-show="show">
+         x-data="dismissible"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
@@ -57,7 +59,7 @@
                     <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
                 </div>
             </div>
-            <button type="button" @click="hideIt" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+            <button type="button" @click="dismiss()" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
         </div>
     </div>
     @endif
@@ -66,7 +68,7 @@
 <div class="h-16"></div>
 @endif
 
-<div class="max-w-4xl mx-auto" x-data="tabPanel({ activeTab: {{ Js::from(request('tab', 'toernooi')) }} })">
+<div class="max-w-4xl mx-auto" x-data="editTabs" data-initial-tab="{{ request('tab', 'toernooi') }}">
     <!-- Sticky header met titel en tabs -->
     <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
         <div class="flex justify-between items-center mb-4">
@@ -83,32 +85,32 @@
         <!-- TABS -->
         <div class="flex border-b items-end">
         <button type="button"
-                @click="setTab('toernooi')"
-                :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                @click="activeTab = 'toernooi'"
+                :class="editTabClass('toernooi', 'border-blue-500 text-blue-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Toernooi') }}
         </button>
         <button type="button"
-                @click="setTab('organisatie')"
-                :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                @click="activeTab = 'organisatie'"
+                :class="editTabClass('organisatie', 'border-blue-500 text-blue-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Organisatie') }}
         </button>
         <button type="button"
-                @click="setTab('noodplan')"
-                :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                @click="activeTab = 'noodplan'"
+                :class="editTabClass('noodplan', 'border-red-500 text-red-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Noodplan') }}
         </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
-                @click="setTab('admin')"
-                :class="activeTab === 'admin' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                @click="activeTab = 'admin'"
+                :class="editTabClass('admin', 'border-orange-500 text-orange-600')"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Admin') }}
         </button>
         @endif
-        <div class="ml-auto pb-2" x-show="activeTab === 'toernooi'" x-cloak>
+        <div class="ml-auto pb-2" x-show="isTab('toernooi')" x-cloak>
             <button type="button" onclick="document.getElementById('toernooi-form')?.requestSubmit()"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
                 {{ __('Opslaan') }}
@@ -118,7 +120,7 @@
     </div>
 
     <!-- TAB: TOERNOOI -->
-    <div x-show="activeTab === 'toernooi'" x-cloak>
+    <div x-show="isTab('toernooi')" x-cloak>
     <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="{{ __('Instellingen opslaan...') }}">
         @csrf
         @method('PUT')
@@ -345,7 +347,7 @@
                                 <td class="py-2 font-medium">{{ __('2 judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">1w</td>
                                 <td class="py-2">
-                                    <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }" x-init="$watch('modus', value => { $refs.dubbel2.value = value === 'dubbel' ? '1' : '0'; $refs.best3.value = value === 'best3' ? '1' : '0'; })">
+                                    <div class="flex items-center gap-4" x-data="wedstrijdModus" data-initial-modus="{{ $modus2 }}">
                                         <input type="hidden" name="dubbel_bij_2_judokas" x-ref="dubbel2" value="{{ $modus2 === 'dubbel' ? '1' : '0' }}">
                                         <input type="hidden" name="best_of_three_bij_2" x-ref="best3" value="{{ $modus2 === 'best3' ? '1' : '0' }}">
                                         <label class="flex items-center cursor-pointer">
@@ -513,13 +515,13 @@
                 $opgeslagenSchemas = is_array($rawSchemas) ? $rawSchemas : [];
             @endphp
 
-            <div class="space-y-4" x-data="wedstrijdSchemas()">
+            <div class="space-y-4" x-data="wedstrijdSchemas">
                 <!-- Tabs voor poulegrootte -->
                 <div class="flex border-b">
                     @foreach([2,3,4,5,6,7] as $grootte)
                     <button type="button"
-                            @click="activeTab = {{ $grootte }}"
-                            :class="activeTab === {{ $grootte }} ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            @click="setTab({{ $grootte }})"
+                            :class="tabClass({{ $grootte }})"
                             class="px-4 py-2 font-medium border-b-2 -mb-px transition-colors text-sm">
                         {{ __(':aantal judoka\'s', ['aantal' => $grootte]) }}
                     </button>
@@ -533,7 +535,7 @@
                     $schema = is_array($saved) ? $saved : $standaardSchemas[$grootte];
                     $aantalWed = count($schema);
                 @endphp
-                <div x-show="activeTab === {{ $grootte }}" x-cloak class="pt-2">
+                <div x-show="isTab({{ $grootte }})" x-cloak class="pt-2">
                     <div class="flex items-start gap-6">
                         <!-- Visueel schema -->
                         <div class="flex-1">
@@ -786,9 +788,18 @@
         });
 
         // Alpine component voor tabs
-        function wedstrijdSchemas() {
-            return { activeTab: 4 };
-        }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('wedstrijdSchemas', () => ({
+                activeTab: 4,
+                setTab(n) { this.activeTab = n; },
+                isTab(n) { return this.activeTab === n; },
+                tabClass(n) {
+                    return this.activeTab === n
+                        ? 'border-blue-500 text-blue-600 bg-blue-50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700';
+                },
+            }));
+        });
         </script>
 
         <!-- GEWICHT -->
@@ -838,12 +849,12 @@
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Dojo / Coach') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Judoka's per coach -->
-                <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
+                <div class="flex items-center gap-2" x-data="rangeValue" data-initial="{{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }}">
                     <label for="judokas_per_coach" class="text-gray-700 font-medium">{{ __('Judoka\'s per coach kaart:') }}</label>
                     <input type="number" name="judokas_per_coach" id="judokas_per_coach"
                            x-model="value"
                            class="w-16 border rounded px-2 py-1 text-center" min="1">
-                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
+                    <span x-show="isHigh" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
                 </div>
 
                 <!-- Coach in/uitcheck systeem -->
@@ -907,7 +918,7 @@
                 $categorieType = 'jbn_2026';
             }
         @endphp
-        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
+        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="categorieSelector" data-initial-type="{{ $categorieType }}">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">{{ __('Categorieën Instelling') }}</h2>
@@ -972,11 +983,11 @@
                     <span class="text-yellow-800 text-sm font-medium">{{ __('Sorteer prioriteit:') }}</span>
                     <button type="button"
                             x-data="toggle"
-                            @click="toggle"
+                            @click="toggle()"
                             class="relative text-yellow-600 hover:text-yellow-800">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
                         <div x-show="open"
-                             @click.away="close"
+                             @click.outside="close()"
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
                             <p class="font-medium mb-1">{{ __('Sorteer volgorde binnen categorie') }}</p>
@@ -1975,7 +1986,7 @@
     </div>
 
     <!-- TAB: ORGANISATIE -->
-    <div x-show="activeTab === 'organisatie'" x-cloak>
+    <div x-show="isTab('organisatie')" x-cloak>
 
     <!-- TOERNOOI PAKKET -->
     @auth('organisator')
@@ -2078,7 +2089,7 @@
 
     <!-- TEMPLATE OPSLAAN -->
     @auth('organisator')
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Opslaan als Template') }}</h2>
         <p class="text-gray-600 mb-4">
             {{ __('Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.') }}
@@ -2105,27 +2116,33 @@
                     <span x-show="!loading">{{ __('Opslaan') }}</span>
                     <span x-show="loading">{{ __('Bezig...') }}</span>
                 </button>
-                <button type="button" @click="showForm = false; naam = ''; beschrijving = ''" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                <button type="button" @click="annuleer()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
                     {{ __('Annuleren') }}
                 </button>
             </div>
-            <p x-show="message" x-text="message" :class="success ? 'text-green-600' : 'text-red-600'" class="text-sm"></p>
+            <p x-show="message" x-text="message" :class="messageClass" class="text-sm"></p>
         </div>
     </div>
 
     <script @nonce>
-    function templateSave() {
+    document.addEventListener('alpine:init', () => {
         const __t = {
             templateOpgeslagen: @json(__('Template opgeslagen!')),
             foutBijOpslaan: @json(__('Fout bij opslaan')),
         };
-        return {
+        Alpine.data('templateSave', () => ({
             showForm: false,
             naam: '',
             beschrijving: '',
             loading: false,
             message: '',
             success: false,
+            get messageClass() { return this.success ? 'text-green-600' : 'text-red-600'; },
+            annuleer() {
+                this.showForm = false;
+                this.naam = '';
+                this.beschrijving = '';
+            },
             async save() {
                 this.loading = true;
                 this.message = '';
@@ -2135,9 +2152,9 @@
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving })
+                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving }),
                     });
                     const data = await res.json();
                     if (res.ok) {
@@ -2155,9 +2172,9 @@
                     this.message = __t.foutBijOpslaan;
                 }
                 this.loading = false;
-            }
-        }
-    }
+            },
+        }));
+    });
     </script>
     @endauth
 
@@ -2198,7 +2215,18 @@
     </div>
 
     <!-- CHAT SERVER (Reverb) -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="reverbStatus"
+         data-status-url="{{ route('toernooi.reverb.status', $toernooi->routeParams()) }}"
+         data-start-url="{{ route('toernooi.reverb.start', $toernooi->routeParams()) }}"
+         data-restart-url="{{ route('toernooi.reverb.restart', $toernooi->routeParams()) }}"
+         data-stop-url="{{ route('toernooi.reverb.stop', $toernooi->routeParams()) }}"
+         data-labels="{{ json_encode([
+             'konStatusNietOphalen' => __('Kon status niet ophalen'),
+             'foutBijStarten' => __('Fout bij starten'),
+             'foutBijHerstarten' => __('Fout bij herstarten'),
+             'foutBijStoppen' => __('Fout bij stoppen'),
+         ]) }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Realtime Server (Reverb)') }}</h2>
         <p class="text-gray-600 mb-4">
             {{ __('Realtime updates voor alle interfaces: chat, live scores, beurtaanduiding, bracket updates.') }}
@@ -2255,82 +2283,7 @@
         <p class="text-sm text-gray-500 mt-3" x-show="message" x-text="message"></p>
     </div>
 
-    <script @nonce>
-    function reverbStatus() {
-        const __t = {
-            konStatusNietOphalen: @json(__('Kon status niet ophalen')),
-            foutBijStarten: @json(__('Fout bij starten')),
-            foutBijHerstarten: @json(__('Fout bij herstarten')),
-            foutBijStoppen: @json(__('Fout bij stoppen')),
-        };
-        return {
-            running: false,
-            loading: false,
-            local: false,
-            message: '',
-            init() {
-                this.checkStatus();
-            },
-            async checkStatus() {
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi->routeParams()) }}', {
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.running = data.running;
-                    this.local = data.local || false;
-                } catch (e) {
-                    this.message = __t.konStatusNietOphalen;
-                }
-            },
-            async start() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.start", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijStarten;
-                }
-                this.loading = false;
-            },
-            async restart() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.restart", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijHerstarten;
-                }
-                this.loading = false;
-            },
-            async stop() {
-                this.loading = true;
-                try {
-                    const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi->routeParams()) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.message = data.message;
-                    await this.checkStatus();
-                } catch (e) {
-                    this.message = __t.foutBijStoppen;
-                }
-                this.loading = false;
-            }
-        }
-    }
-    </script>
+    {{-- VP-18: reverbStatus registered in resources/js/alpine-components.js; URLs + labels via data-* attributes. --}}
 
     <!-- INSCHRIJVING & PORTAAL -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -2687,7 +2640,7 @@
 
     <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
     @if($toernooi->weegkaarten_gemaakt_op)
-    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="deleteConfirm">
+    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="confirmWithPassword">
         <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
             <span class="text-2xl">⚠️</span> {{ __('Noodknop: Heropen Voorbereiding') }}
         </h2>
@@ -2706,7 +2659,7 @@
             </ul>
         </div>
 
-        <button @click="showConfirm = true" x-show="!showConfirm"
+        <button @click="openConfirm()" x-show="!showConfirm"
                 class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
             {{ __('Heropen Voorbereiding') }}
         </button>
@@ -2791,7 +2744,7 @@
     </div><!-- End TAB: ORGANISATIE -->
 
     <!-- TAB: NOODPLAN -->
-    <div x-show="activeTab === 'noodplan'" x-cloak>
+    <div x-show="isTab('noodplan')" x-cloak>
 
     <!-- ==================== VOORBEREIDING ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -2844,8 +2797,8 @@
                     <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle()" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.outside="close()" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -2865,8 +2818,8 @@
                     <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="toggle" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
-                        <div x-show="open" @click.away="close" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                        <button @click="toggle()" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
+                        <div x-show="open" @click.outside="close()" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
                             @endforeach
@@ -2962,13 +2915,23 @@
     </div>
 
     <!-- ==================== NETWERK CONFIGURATIE ==================== -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="netwerkConfig()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="netwerkConfig"
+         data-toernooi-id="{{ $toernooi->id }}"
+         data-has-own-router="{{ $toernooi->heeft_eigen_router ? 'true' : 'false' }}"
+         data-primary-ip="{{ $toernooi->local_server_primary_ip ?? '' }}"
+         data-standby-ip="{{ $toernooi->local_server_standby_ip ?? '' }}"
+         data-hotspot-ip="{{ $toernooi->hotspot_ip ?? '' }}"
+         data-save-url="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}"
+         data-save-error-label="{{ __('Fout bij opslaan netwerk config:') }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🌐</span> {{ __('NETWERK CONFIGURATIE') }}
         </h2>
 
         <!-- Uitleg WiFi vs Internet met live status -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
+             x-data="verbindingStatus"
+             data-local-server-ip="{{ $toernooi->local_server_primary_ip ?? '' }}">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="font-bold text-blue-800">{{ __('Lokaal netwerk vs Internet - wat is het verschil?') }}</h3>
                 <span class="text-xs text-gray-500">{{ __('Laatst gecontroleerd:') }} <span x-text="laatsteCheck"></span></span>
@@ -3033,7 +2996,7 @@
         </div>
 
         <!-- IP Adressen configuratie -->
-        <div class="mb-6" x-data="helpToggle">
+        <div class="mb-6" x-data="helpPanel">
             <h3 class="font-bold text-gray-800 mb-3">{{ __('IP-adressen configureren') }}</h3>
 
             <div class="grid md:grid-cols-3 gap-4">
@@ -3076,7 +3039,7 @@
             </div>
             <div class="flex items-center gap-4 mt-2">
                 <p class="text-xs text-gray-500">{{ __('Tip: Noteer deze IP\'s ook op papier voor noodgevallen') }}</p>
-                <button type="button" @click="toggleHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                <button type="button" @click="toggleHelp()" class="text-xs text-blue-600 hover:text-blue-800 underline">
                     {{ __('Hoe vind ik mijn IP?') }}
                 </button>
             </div>
@@ -3199,7 +3162,22 @@
     </div>
 
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="noodplanLocalServer"
+         data-toernooi-id="{{ $toernooi->id }}"
+         data-toernooi-slug="{{ $toernooi->slug }}"
+         data-primary-ip="{{ $toernooi->local_server_primary_ip ?? '' }}"
+         data-save-url="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}"
+         data-sync-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         data-labels="{{ json_encode([
+             'ongeldigIpFormaat' => __('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100'),
+             'foutBijOpslaan' => __('Fout bij opslaan:'),
+             'gekopieerd' => __('Gekopieerd:'),
+             'geenDataBeschikbaar' => __('Geen data beschikbaar (server offline en geen lokale cache).'),
+             'ditBackupVanAnder' => __('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?'),
+             'backupGeladen' => __('Backup geladen: :poules poules, :uitslagen uitslagen'),
+             'ongeldigJsonBestand' => __('Ongeldig JSON bestand:'),
+         ]) }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🔄</span> {{ __('BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER') }}
         </h2>
@@ -3279,7 +3257,11 @@
     </div>
 
     <!-- Voorbereiding avond ervoor -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanBackup()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6"
+         x-data="noodplanBackup"
+         data-toernooi-slug="{{ $toernooi->slug }}"
+         data-sync-url="{{ route('toernooi.noodplan.sync-data', $toernooi->routeParams()) }}"
+         data-error-label="{{ __('Fout bij downloaden:') }}">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">📦</span> {{ __('VOORBEREIDING (avond ervoor)') }}
         </h2>
@@ -3320,307 +3302,13 @@
         </div>
     </div>
 
-    <script @nonce>
-    const __tn = {
-        ongeldigIpFormaat: @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100')),
-        foutBijOpslaanNetwerkConfig: @json(__('Fout bij opslaan netwerk config:')),
-        foutBijDownloaden: @json(__('Fout bij downloaden:')),
-        foutBijOpslaan: @json(__('Fout bij opslaan:')),
-        gekopieerd: @json(__('Gekopieerd:')),
-        geenDataBeschikbaar: @json(__('Geen data beschikbaar (server offline en geen lokale cache).')),
-        ditBackupVanAnder: @json(__('Dit backup bestand is van een ander toernooi (ID: :id). Toch laden?')),
-        backupGeladen: @json(__('Backup geladen: :poules poules, :uitslagen uitslagen')),
-        ongeldigJsonBestand: @json(__('Ongeldig JSON bestand:')),
-    };
-    function verbindingStatus() {
-        return {
-            wifiStatus: 'checking',
-            wifiLatency: null,
-            internetStatus: 'checking',
-            latency: null,
-            laatsteCheck: '-',
-            localServerIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-
-            init() {
-                this.checkVerbinding();
-                // Check elke 30 seconden
-                setInterval(() => this.checkVerbinding(), 30000);
-            },
-
-            async checkVerbinding() {
-                // WiFi check - ping lokale server als IP bekend is
-                if (this.localServerIp) {
-                    const wifiStart = Date.now();
-                    try {
-                        const wifiResponse = await fetch(`http://${this.localServerIp}:8000/ping`, {
-                            method: 'GET',
-                            cache: 'no-store',
-                            mode: 'no-cors',
-                            signal: AbortSignal.timeout(3000)
-                        });
-                        this.wifiLatency = Date.now() - wifiStart;
-                        this.wifiStatus = 'connected';
-                    } catch (e) {
-                        // no-cors geeft altijd opaque response, dus check alleen tijd
-                        const elapsed = Date.now() - wifiStart;
-                        if (elapsed < 2900) {
-                            this.wifiLatency = elapsed;
-                            this.wifiStatus = 'connected';
-                        } else {
-                            this.wifiStatus = navigator.onLine ? 'no-server' : 'offline';
-                            this.wifiLatency = null;
-                        }
-                    }
-                } else {
-                    this.wifiStatus = navigator.onLine ? 'no-ip' : 'offline';
-                    this.wifiLatency = null;
-                }
-
-                // Internet check (ping naar cloud)
-                const startTime = Date.now();
-                try {
-                    const response = await fetch('/ping', {
-                        method: 'GET',
-                        cache: 'no-store',
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    const endTime = Date.now();
-                    this.latency = endTime - startTime;
-
-                    if (response.ok) {
-                        this.internetStatus = this.latency > 2000 ? 'slow' : 'connected';
-                    } else {
-                        this.internetStatus = 'offline';
-                    }
-                } catch (e) {
-                    this.internetStatus = 'offline';
-                }
-
-                this.laatsteCheck = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-            }
-        };
-    }
-
-    function netwerkConfig() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            heeftEigenRouter: {{ $toernooi->heeft_eigen_router ? 'true' : 'false' }},
-            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-            standbyIp: '{{ $toernooi->local_server_standby_ip ?? "" }}',
-            hotspotIp: '{{ $toernooi->hotspot_ip ?? "" }}',
-            copied: false,
-
-            async saveNetwerkConfig() {
-                try {
-                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            heeft_eigen_router: this.heeftEigenRouter === true || this.heeftEigenRouter === '1',
-                            local_server_primary_ip: this.primaryIp,
-                            local_server_standby_ip: this.standbyIp,
-                            hotspot_ip: this.hotspotIp
-                        })
-                    });
-                } catch (e) {
-                    console.error(__tn.foutBijOpslaanNetwerkConfig, e);
-                }
-            },
-
-            copyToClipboard(text) {
-                if (!text) return;
-                navigator.clipboard.writeText(text);
-                this.copied = true;
-                setTimeout(() => this.copied = false, 2000);
-            }
-        };
-    }
-
-    function noodplanBackup() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            toernooiNaam: '{{ $toernooi->slug }}',
-
-            async downloadBackup() {
-                try {
-                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                    if (!response.ok) throw new Error('Server error');
-                    const data = await response.json();
-                    this.saveAsFile(data);
-                } catch (e) {
-                    alert(__tn.foutBijDownloaden + ' ' + e.message);
-                }
-            },
-
-            saveAsFile(data) {
-                const timestamp = new Date().toISOString().slice(0, 10);
-                const filename = `noodbackup_${this.toernooiNaam}_${timestamp}.json`;
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        };
-    }
-
-    function noodplanLocalServer() {
-        return {
-            toernooiId: {{ $toernooi->id }},
-            toernooiNaam: '{{ $toernooi->slug }}',
-            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
-            uitslagCount: 0,
-            laatsteSync: null,
-            editingIp: false,
-            newIp: '',
-
-            init() {
-                this.loadFromStorage();
-                setInterval(() => this.loadFromStorage(), 1000);
-            },
-
-            startEditIp() {
-                this.newIp = this.primaryIp || '';
-                this.editingIp = true;
-                this.$nextTick(() => this.$refs.ipInput?.focus());
-            },
-
-            async saveIp() {
-                const ip = this.newIp.trim();
-                if (!ip) {
-                    this.editingIp = false;
-                    return;
-                }
-                // Valideer IP formaat
-                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-                if (!ipRegex.test(ip)) {
-                    alert(__tn.ongeldigIpFormaat);
-                    return;
-                }
-                try {
-                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ local_server_primary_ip: ip })
-                    });
-                    this.primaryIp = ip;
-                    this.editingIp = false;
-                } catch (e) {
-                    alert(__tn.foutBijOpslaan + ' ' + e.message);
-                }
-            },
-
-            copyUrl() {
-                const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
-                navigator.clipboard.writeText(url);
-                alert(__tn.gekopieerd + ' ' + url);
-            },
-
-            loadFromStorage() {
-                const countKey = `noodplan_${this.toernooiId}_count`;
-                const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-
-                const count = localStorage.getItem(countKey);
-                this.uitslagCount = count ? parseInt(count) : 0;
-
-                const sync = localStorage.getItem(syncKey);
-                if (sync) {
-                    const date = new Date(sync);
-                    this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-                }
-            },
-
-            async downloadBackup() {
-                try {
-                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                    if (!response.ok) throw new Error('Server error');
-                    const data = await response.json();
-                    this.saveAsFile(data);
-                } catch (e) {
-                    const storageKey = `noodplan_${this.toernooiId}_poules`;
-                    const data = localStorage.getItem(storageKey);
-                    if (data) {
-                        this.saveAsFile(JSON.parse(data));
-                    } else {
-                        alert(__tn.geenDataBeschikbaar);
-                    }
-                }
-            },
-
-            saveAsFile(data) {
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-                const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            },
-
-            loadJsonBackup(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
-                            if (!confirm(__tn.ditBackupVanAnder.replace(':id', data.toernooi_id))) {
-                                return;
-                            }
-                        }
-
-                        const storageKey = `noodplan_${this.toernooiId}_poules`;
-                        const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
-                        const countKey = `noodplan_${this.toernooiId}_count`;
-
-                        localStorage.setItem(storageKey, JSON.stringify(data));
-                        localStorage.setItem(syncKey, new Date().toISOString());
-
-                        let count = 0;
-                        if (data.poules) {
-                            data.poules.forEach(p => {
-                                if (p.wedstrijden) {
-                                    p.wedstrijden.forEach(w => {
-                                        if (w.is_gespeeld) count++;
-                                    });
-                                }
-                            });
-                        }
-                        localStorage.setItem(countKey, count.toString());
-                        this.loadFromStorage();
-                        alert(__tn.backupGeladen.replace(':poules', data.poules?.length || 0).replace(':uitslagen', count));
-                    } catch (err) {
-                        alert(__tn.ongeldigJsonBestand + ' ' + err.message);
-                    }
-                };
-                reader.readAsText(file);
-                event.target.value = '';
-            }
-        };
-    }
-    </script>
+    {{-- VP-18: verbindingStatus / netwerkConfig / noodplanBackup / noodplanLocalServer registered in resources/js/alpine-components.js; all URLs + labels via data-* attributes. --}}
 
     </div><!-- End TAB: NOODPLAN -->
 
     <!-- TAB: TEST (alleen voor admin) -->
     @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
-    <div x-show="activeTab === 'admin'" x-cloak>
+    <div x-show="isTab('admin')" x-cloak>
 
     <!-- RESET ALLES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">

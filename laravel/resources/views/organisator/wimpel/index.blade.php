@@ -3,7 +3,7 @@
 @section('title', 'Wimpeltoernooi - ' . $organisator->naam)
 
 @section('content')
-<div class="max-w-6xl mx-auto" x-data="wimpelPage()">
+<div class="max-w-6xl mx-auto" x-data="wimpelPage">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -49,7 +49,7 @@
             <h3 class="font-semibold text-blue-800 mb-2">Punten bijschrijven</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach($onverwerkteToernooien as $toernooi)
-                    <button @click="verwerkToernooi({{ $toernooi->id }}, '{{ addslashes($toernooi->naam) }}')"
+                    <button @click="verwerkToernooi({{ $toernooi->id }}, {{ Js::from($toernooi->naam) }})"
                             class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-3 rounded"
                             :disabled="verwerking">
                         {{ $toernooi->naam }}
@@ -65,7 +65,7 @@
 
     {{-- Feedback --}}
     <div x-show="feedback" x-transition x-cloak
-         :class="feedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+         :class="feedbackClass"
          class="border rounded px-4 py-3 mb-4">
         <span x-text="feedback"></span>
     </div>
@@ -82,28 +82,28 @@
             <h2 class="text-lg font-semibold">Judoka's (<span x-text="gefilterd.length"></span>)</h2>
         </div>
 
-        <template x-if="judokas.length === 0">
+        <template x-if="isEmpty">
             <div class="p-6 text-center text-gray-500">
                 Nog geen judoka's. Punten worden automatisch bijgeschreven na een puntencompetitie toernooi.
             </div>
         </template>
 
-        <template x-if="judokas.length > 0">
+        <template x-if="hasJudokas">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th @click="sorteer('naam')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Naam
-                                <span x-show="sortKolom === 'naam'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                                <span x-show="isSorting('naam')" x-text="sortIcon"></span>
                             </th>
                             <th @click="sorteer('geboortejaar')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Geb.jaar
-                                <span x-show="sortKolom === 'geboortejaar'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                                <span x-show="isSorting('geboortejaar')" x-text="sortIcon"></span>
                             </th>
                             <th @click="sorteer('wimpel_punten_totaal')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Punten
-                                <span x-show="sortKolom === 'wimpel_punten_totaal'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                                <span x-show="isSorting('wimpel_punten_totaal')" x-text="sortIcon"></span>
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Volgende milestone</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
@@ -123,12 +123,12 @@
                                 <td class="px-4 py-3 text-gray-600 text-sm">
                                     <template x-if="judoka.volgende">
                                         <span>
-                                            <span x-text="judoka.volgende.punten + ' pt'"></span>
+                                            <span x-text="puntenLabel(judoka)"></span>
                                             &rarr; <span x-text="judoka.volgende.omschrijving"></span>
-                                            <span class="text-xs text-gray-400" x-text="'(nog ' + (judoka.volgende.punten - judoka.wimpel_punten_totaal) + ')'"></span>
+                                            <span class="text-xs text-gray-400" x-text="puntenTot(judoka)"></span>
                                         </span>
                                     </template>
-                                    <template x-if="!judoka.volgende">
+                                    <template x-if="geenVolgende(judoka)">
                                         <span class="text-gray-400">-</span>
                                     </template>
                                 </td>
@@ -155,13 +155,16 @@
 </div>
 
 <script @nonce>
-const __t = {
-    connectionError: @json(__('Verbindingsfout')),
-    somethingWentWrong: @json(__('Er ging iets mis')),
-    confirmProcess: @json(__('Punten bijschrijven van ":naam"?')),
-};
-function wimpelPage() {
-    return {
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        connectionError: @json(__('Verbindingsfout')),
+        somethingWentWrong: @json(__('Er ging iets mis')),
+        confirmProcess: @json(__('Punten bijschrijven van ":naam"?')),
+    };
+    const bevestigUrlBase = '{{ url($organisator->slug . "/wimpeltoernooi") }}';
+    const verwerkUrl = '{{ route("organisator.wimpel.verwerk", $organisator) }}';
+
+    Alpine.data('wimpelPage', () => ({
         zoek: '',
         verwerking: false,
         feedback: '',
@@ -185,17 +188,34 @@ function wimpelPage() {
             })->values();
         @endphp {!! json_encode($judokaData) !!},
 
+        // --- CSP-safe getters/helpers ---
+        get feedbackClass() {
+            return this.feedbackType === 'success'
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-red-100 border-red-400 text-red-700';
+        },
+        get isEmpty() { return this.judokas.length === 0; },
+        get hasJudokas() { return this.judokas.length > 0; },
+        get sortIcon() { return this.sortRichting === 'asc' ? ' ▲' : ' ▼'; },
+        isSorting(kolom) { return this.sortKolom === kolom; },
+        geenVolgende(judoka) { return !judoka.volgende; },
+        puntenLabel(judoka) { return `${judoka.volgende.punten} pt`; },
+        puntenTot(judoka) {
+            return `(nog ${judoka.volgende.punten - judoka.wimpel_punten_totaal})`;
+        },
+
+        _csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        },
+
         get gefilterd() {
             let lijst = this.judokas;
-
             if (this.zoek) {
                 const z = this.zoek.toLowerCase();
                 lijst = lijst.filter(j => j.naam.toLowerCase().includes(z));
             }
-
             const kolom = this.sortKolom;
             const richting = this.sortRichting === 'asc' ? 1 : -1;
-
             return [...lijst].sort((a, b) => {
                 let va = a[kolom];
                 let vb = b[kolom];
@@ -217,17 +237,15 @@ function wimpelPage() {
 
         async bevestigJudoka(judokaId) {
             try {
-                const response = await fetch(`{{ url($organisator->slug . '/wimpeltoernooi') }}/${judokaId}/bevestig`, {
+                const response = await fetch(`${bevestigUrlBase}/${judokaId}/bevestig`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                 });
                 const data = await response.json();
-                if (data.success) {
-                    location.reload();
-                }
+                if (data.success) location.reload();
             } catch (e) {
                 this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
@@ -236,23 +254,19 @@ function wimpelPage() {
 
         async verwerkToernooi(toernooiId, naam) {
             if (!confirm(__t.confirmProcess.replace(':naam', naam))) return;
-
             this.verwerking = true;
             this.feedback = '';
-
             try {
-                const response = await fetch('{{ route("organisator.wimpel.verwerk", $organisator) }}', {
+                const response = await fetch(verwerkUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({ toernooi_id: toernooiId }),
                 });
-
                 const data = await response.json();
-
                 if (data.success) {
                     this.feedback = data.message;
                     this.feedbackType = 'success';
@@ -265,10 +279,9 @@ function wimpelPage() {
                 this.feedback = __t.connectionError;
                 this.feedbackType = 'error';
             }
-
             this.verwerking = false;
-        }
-    }
-}
+        },
+    }));
+});
 </script>
 @endsection

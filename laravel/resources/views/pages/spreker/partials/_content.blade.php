@@ -22,7 +22,7 @@
         $wimpelUitgereiktUrl = route('toernooi.spreker.wimpel-uitgereikt', $toernooi->routeParams());
     }
 @endphp
-<div x-data="sprekerInterface()" x-cloak class="w-full max-w-4xl mx-auto">
+<div x-data="sprekerInterface" x-cloak class="w-full max-w-4xl mx-auto">
     <!-- Feedback bar (groene balk) -->
     <div
         x-show="showFeedbackBar"
@@ -42,23 +42,23 @@
     <div class="sticky top-[60px] z-40 bg-gray-100 pb-4">
         <div class="flex bg-white rounded-lg shadow-sm border border-gray-200">
             <button
-                @click="activeTab = 'uitslagen'"
-                :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                @click="setTab('uitslagen')"
+                :class="tabClass('uitslagen')"
                 class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
             >
                 <span class="text-lg">🏆</span> {{ __('Uitslagen') }}
                 <span x-show="klarePouleCount > 0" class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="klarePouleCount"></span>
             </button>
             <button
-                @click="activeTab = 'oproepen'"
-                :class="activeTab === 'oproepen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                @click="setTab('oproepen')"
+                :class="tabClass('oproepen')"
                 class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
             >
                 <span class="text-lg">📣</span> {{ __('Oproepen') }}
             </button>
             <button
-                @click="activeTab = 'notities'"
-                :class="activeTab === 'notities' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                @click="setTab('notities')"
+                :class="tabClass('notities')"
                 class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
             >
                 <span class="text-lg">📝</span> {{ __('Notities') }}
@@ -67,10 +67,10 @@
     </div>
 
     <!-- TAB 1: UITSLAGEN -->
-    <div x-show="activeTab === 'uitslagen'" class="min-h-[calc(100vh-200px)]">
+    <div x-show="isTab('uitslagen')" class="min-h-[calc(100vh-200px)]">
         <div class="flex justify-end items-center mb-4 gap-2">
             <button
-                @click="toonGeschiedenis = !toonGeschiedenis"
+                @click="toggleGeschiedenis()"
                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
             >
                 <span>📋</span> {{ __('Vorige') }}
@@ -80,8 +80,8 @@
                 :disabled="isRefreshing"
                 class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
             >
-                <span :class="isRefreshing ? 'animate-spin' : ''">🔄</span>
-                <span x-text="isRefreshing ? __laden : __vernieuwen"></span>
+                <span :class="refreshIconClass">🔄</span>
+                <span x-text="refreshLabel"></span>
             </button>
         </div>
 
@@ -89,7 +89,7 @@
         <div x-show="toonGeschiedenis" x-cloak class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div class="flex justify-between items-center mb-3">
                 <span class="text-gray-700 font-bold">📋 {{ __('Eerder afgeroepen (vandaag)') }}</span>
-                <button @click="toonGeschiedenis = false" class="text-gray-400 hover:text-gray-600">✕</button>
+                <button @click="sluitGeschiedenis()" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <template x-if="geschiedenis.length === 0">
                 <p class="text-gray-500 text-sm">{{ __('Nog geen prijsuitreikingen vandaag') }}</p>
@@ -102,7 +102,7 @@
                             class="flex justify-between items-center bg-white px-3 py-2 rounded border text-sm hover:bg-gray-50 transition-colors w-full text-left"
                         >
                             <span>
-                                <span :class="item.type === 'eliminatie' ? 'text-purple-600' : 'text-green-600'" class="font-medium" x-text="item.naam"></span>
+                                <span :class="geschiedenisItemClass(item)" class="font-medium" x-text="item.naam"></span>
                             </span>
                             <span class="text-gray-400 flex items-center gap-2">
                                 <span x-text="item.tijd"></span>
@@ -280,7 +280,7 @@
     </div>
 
     <!-- TAB 2: OPROEPEN (Poules per blok per mat) -->
-    <div x-show="activeTab === 'oproepen'" class="min-h-[calc(100vh-200px)]">
+    <div x-show="isTab('oproepen')" class="min-h-[calc(100vh-200px)]">
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-blue-800 text-sm">
                 <span class="font-bold">📣 {{ __('Oproep hulp:') }}</span> {{ __("Gebruik deze lijst om judoka's naar de juiste mat te roepen.") }}
@@ -292,8 +292,8 @@
             <div class="flex flex-wrap gap-2 mb-4">
                 @foreach($poulesPerBlok as $blokNr => $data)
                 <button
-                    @click="selectedBlok = {{ $blokNr }}"
-                    :class="selectedBlok === {{ $blokNr }} ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                    @click="selectBlok({{ $blokNr }})"
+                    :class="blokButtonClass({{ $blokNr }})"
                     class="px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                     {{ __('Blok') }} {{ $blokNr }}
@@ -303,7 +303,7 @@
 
             <!-- Poules per mat voor geselecteerd blok -->
             @foreach($poulesPerBlok as $blokNr => $data)
-            <div x-show="selectedBlok === {{ $blokNr }}" class="space-y-4">
+            <div x-show="isBlok({{ $blokNr }})" class="space-y-4">
                 @if($data['matten']->isEmpty())
                 <div class="bg-gray-100 rounded-lg p-8 text-center">
                     <p class="text-gray-500">{{ __('Geen poules toegewezen aan matten in dit blok') }}</p>
@@ -325,7 +325,7 @@
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <div class="font-bold text-gray-800">
-                                            <span x-text="openPoules.includes({{ $poule->id }}) ? '▼' : '▶'" class="mr-1"></span>
+                                            <span x-text="pouleArrow({{ $poule->id }})" class="mr-1"></span>
                                             {{ __('Poule') }} {{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                                         </div>
                                         <div class="text-sm text-gray-500 ml-4">
@@ -334,7 +334,7 @@
                                     </div>
                                 </div>
                                 <!-- Judoka namen (inklapbaar) - alleen aanwezige judoka's -->
-                                <div x-show="openPoules.includes({{ $poule->id }})" class="mt-2 pl-4 border-l-2 border-blue-200">
+                                <div x-show="isPouleOpen({{ $poule->id }})" class="mt-2 pl-4 border-l-2 border-blue-200">
                                     <div class="grid grid-cols-1 gap-1 text-sm">
                                         @foreach($pouleActiveJudokas as $judoka)
                                         <div class="flex justify-between">
@@ -360,7 +360,7 @@
     </div>
 
     <!-- TAB 3: NOTITIES (Spiekbriefje) - Schermvullend -->
-    <div x-show="activeTab === 'notities'" x-data="fontSizer" class="flex flex-col">
+    <div x-show="isTab('notities')" x-data="fontSizer" class="flex flex-col">
         <!-- Textarea - schermvullend tot aan toolbar (60px toolbar + 120px header/tabs) -->
         <textarea
             x-model="notities"
@@ -368,7 +368,7 @@
             :style="'font-size: ' + fontSize + 'px; line-height: 1.5; height: calc(100vh - 180px);'"
             class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words mb-16"
             class="break-words [overflow-wrap:break-word]"
-            :class="{ 'border-yellow-400': hasUnsavedChanges }"
+            :class="unsavedBorderClass"
             placeholder="{{ __('Typ hier je notities...') }}"
         ></textarea>
 
@@ -378,13 +378,13 @@
                 <!-- Zoom controls -->
                 <div class="flex items-center gap-2 border-r pr-3 mr-1">
                     <button
-                        @click="fontSize = Math.max(14, fontSize - 2)"
+                        @click="smaller()"
                         class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
                         title="{{ __('Kleiner') }}"
                     >−</button>
                     <span class="w-10 text-center text-base font-medium text-gray-600" x-text="fontSize"></span>
                     <button
-                        @click="fontSize = Math.min(48, fontSize + 2)"
+                        @click="bigger()"
                         class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
                         title="{{ __('Groter') }}"
                     >+</button>
@@ -394,7 +394,7 @@
                 <button
                     @click="handleSaveClick()"
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-xl font-medium"
-                    :class="{ 'ring-2 ring-yellow-400': hasUnsavedChanges }"
+                    :class="unsavedRingClass"
                 >
                     💾
                 </button>
@@ -429,11 +429,11 @@
     </div>
 
     <!-- Modal: Opslaan dialoog -->
-    <div x-show="showSaveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showSaveModal = false">
+    <div x-show="showSaveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="closeSaveModal()">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div class="bg-green-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
                 <span class="font-bold">💾 {{ __('Notities opslaan') }}</span>
-                <button @click="showSaveModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+                <button @click="closeSaveModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
             <div class="p-4">
                 <!-- Geen templates: alleen naam invullen -->
@@ -473,7 +473,7 @@
                                     "<span class="font-bold" x-text="templates[selectedTemplate].naam"></span>" {{ __('overschrijven?') }}
                                 </p>
                                 <button
-                                    @click="overschrijfTemplate(parseInt(selectedTemplate))"
+                                    @click="overschrijfSelectedTemplate()"
                                     class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium"
                                 >
                                     {{ __('Ja, overschrijven') }}
@@ -482,12 +482,12 @@
                         </template>
 
                         <!-- Andere template kiezen -->
-                        <div class="border-t pt-3" :class="{ 'border-t-0 pt-0': selectedTemplate === '' }">
-                            <p class="text-gray-600 mb-2 text-sm" x-text="selectedTemplate !== '' ? __ofKiesAndereTemplate : __kiesTemplateOmTeOverschrijven"></p>
+                        <div class="border-t pt-3" :class="templateListSpacerClass">
+                            <p class="text-gray-600 mb-2 text-sm" x-text="templateKiesLabel"></p>
                             <div class="space-y-1 max-h-32 overflow-y-auto mb-3">
                                 <template x-for="(template, index) in templates" :key="index">
                                     <button
-                                        x-show="String(index) !== selectedTemplate"
+                                        x-show="isAndereTemplate(index)"
                                         @click="overschrijfTemplate(index)"
                                         class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors text-sm"
                                     >
@@ -522,7 +522,7 @@
                             <button @click="justSaveNotities()" class="text-gray-600 hover:text-gray-800 text-sm">
                                 {{ __('Alleen opslaan (geen template)') }}
                             </button>
-                            <button @click="showSaveModal = false" class="text-gray-400 hover:text-gray-600 text-sm">
+                            <button @click="closeSaveModal()" class="text-gray-400 hover:text-gray-600 text-sm">
                                 {{ __('Annuleren') }}
                             </button>
                         </div>
@@ -533,17 +533,15 @@
     </div>
 
     <!-- Modal: Poule uitslagen bekijken -->
-    <div x-show="showPouleModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showPouleModal = false">
+    <div x-show="showPouleModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="closePouleModal()">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
             <!-- Header -->
-            <div :class="selectedPouleData?.poule?.is_eliminatie ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-4 py-3 flex justify-between items-center">
-                <div x-show="!loadingPoule && selectedPouleData">
-                    <div class="font-bold" x-text="selectedPouleData?.poule?.is_eliminatie
-                        ? 'P#' + selectedPouleData?.poule?.nummer + ' ' + __eliminatie + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
-                        : __poule + ' ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse"></div>
+            <div :class="pouleHeaderClass" class="text-white px-4 py-3 flex justify-between items-center">
+                <div x-show="pouleDataLoaded">
+                    <div class="font-bold" x-text="pouleTitel"></div>
                 </div>
                 <div x-show="loadingPoule" class="font-bold" x-text="__laden"></div>
-                <button @click="showPouleModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+                <button @click="closePouleModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
 
             <!-- Content -->
@@ -554,77 +552,64 @@
                 </div>
 
                 <!-- ELIMINATIE: Medaille winnaars -->
-                <template x-if="!loadingPoule && selectedPouleData?.poule?.is_eliminatie">
+                <template x-if="isEliminatieData">
                     <div class="grid gap-3">
-                        <template x-for="(standing, index) in selectedPouleData?.standings || []" :key="index">
+                        <template x-for="(standing, index) in eliminationStandings" :key="index">
                             <div class="flex items-center gap-3 p-3 rounded-lg"
-                                :class="{
-                                    'bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400': standing.plaats === 1,
-                                    'bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-400': standing.plaats === 2,
-                                    'bg-gradient-to-r from-orange-100 to-orange-200 border-2 border-orange-400': standing.plaats === 3
-                                }">
-                                <div class="text-3xl" x-text="standing.plaats === 1 ? '🥇' : (standing.plaats === 2 ? '🥈' : '🥉')"></div>
+                                :class="medalRowClass(standing)">
+                                <div class="text-3xl" x-text="medalEmoji(standing)"></div>
                                 <div>
                                     <div class="font-bold text-lg" x-text="standing.naam"></div>
                                     <div class="text-sm text-gray-600" x-text="standing.club"></div>
                                 </div>
                                 <div class="ml-auto text-2xl font-bold"
-                                    :class="{
-                                        'text-yellow-700': standing.plaats === 1,
-                                        'text-gray-700': standing.plaats === 2,
-                                        'text-orange-700': standing.plaats === 3
-                                    }"
-                                    x-text="standing.plaats + 'e'"></div>
+                                    :class="medalTextClass(standing)"
+                                    x-text="plaatsLabel(standing)"></div>
                             </div>
                         </template>
                     </div>
                 </template>
 
                 <!-- POULE: Resultaten tabel -->
-                <template x-if="!loadingPoule && selectedPouleData && !selectedPouleData?.poule?.is_eliminatie">
+                <template x-if="isPouleData">
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
                                 <th class="px-3 py-2 text-left font-bold text-gray-700">{{ __('Naam') }}</th>
-                                <template x-if="selectedPouleData?.poule?.is_punten_competitie">
+                                <template x-if="isPuntenCompetitie">
                                     <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">W</th>
                                 </template>
-                                <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                <template x-if="notPuntenCompetitie">
                                     <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">WP</th>
                                 </template>
-                                <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                <template x-if="notPuntenCompetitie">
                                     <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">JP</th>
                                 </template>
-                                <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                <template x-if="notPuntenCompetitie">
                                     <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">#</th>
                                 </template>
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(standing, index) in selectedPouleData?.standings || []" :key="index">
+                            <template x-for="(standing, index) in pouleStandings" :key="index">
                                 <tr class="border-b last:border-0">
                                     <td class="px-3 py-2">
                                         <span class="font-bold" x-text="standing.naam"></span>
-                                        <span class="text-gray-500 text-xs" x-text="'(' + standing.club + ')'"></span>
+                                        <span class="text-gray-500 text-xs" x-text="clubLabel(standing)"></span>
                                     </td>
-                                    <template x-if="selectedPouleData?.poule?.is_punten_competitie">
+                                    <template x-if="isPuntenCompetitie">
                                         <td class="px-2 py-2 text-center font-bold bg-green-50 text-green-800" x-text="standing.gewonnen"></td>
                                     </template>
-                                    <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                    <template x-if="notPuntenCompetitie">
                                         <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800" x-text="standing.wp"></td>
                                     </template>
-                                    <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                    <template x-if="notPuntenCompetitie">
                                         <td class="px-2 py-2 text-center bg-blue-50 text-blue-800" x-text="standing.jp"></td>
                                     </template>
-                                    <template x-if="!selectedPouleData?.poule?.is_punten_competitie">
+                                    <template x-if="notPuntenCompetitie">
                                     <td class="px-2 py-2 text-center font-bold text-lg"
-                                        :class="{
-                                            'bg-yellow-400 text-yellow-900': index === 0,
-                                            'bg-gray-300 text-gray-800': index === 1,
-                                            'bg-orange-300 text-orange-900': index === 2,
-                                            'bg-yellow-50': index > 2
-                                        }"
-                                        x-text="index + 1"></td>
+                                        :class="plaatsCellClass(index)"
+                                        x-text="plaatsNummer(index)"></td>
                                     </template>
                                 </tr>
                             </template>
@@ -691,12 +676,104 @@ async function zetTerug(pouleId, button) {
     }
 }
 
-function sprekerInterface() {
+document.addEventListener('alpine:init', () => {
     const STORAGE_KEY = 'spreker_geschiedenis_{{ $toernooi->id }}';
     const vandaag = new Date().toDateString();
 
-    return {
+    Alpine.data('sprekerInterface', () => ({
         activeTab: 'uitslagen',
+
+        // --- CSP-safe getters/helpers ---
+        setTab(tab) { this.activeTab = tab; },
+        isTab(tab) { return this.activeTab === tab; },
+        tabClass(tab) {
+            return this.activeTab === tab
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        },
+        toggleGeschiedenis() { this.toonGeschiedenis = !this.toonGeschiedenis; },
+        sluitGeschiedenis() { this.toonGeschiedenis = false; },
+        get refreshIconClass() { return this.isRefreshing ? 'animate-spin' : ''; },
+        get refreshLabel() { return this.isRefreshing ? __laden : __vernieuwen; },
+        geschiedenisItemClass(item) {
+            return item.type === 'eliminatie' ? 'text-purple-600' : 'text-green-600';
+        },
+        selectBlok(nr) { this.selectedBlok = nr; },
+        isBlok(nr) { return this.selectedBlok === nr; },
+        blokButtonClass(nr) {
+            return this.selectedBlok === nr
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+        },
+        pouleArrow(id) { return this.openPoules.includes(id) ? '▼' : '▶'; },
+        isPouleOpen(id) { return this.openPoules.includes(id); },
+        get unsavedBorderClass() { return this.hasUnsavedChanges ? 'border-yellow-400' : ''; },
+        get unsavedRingClass() { return this.hasUnsavedChanges ? 'ring-2 ring-yellow-400' : ''; },
+        closeSaveModal() { this.showSaveModal = false; },
+        closePouleModal() { this.showPouleModal = false; },
+        overschrijfSelectedTemplate() {
+            if (this.selectedTemplate !== '') this.overschrijfTemplate(parseInt(this.selectedTemplate));
+        },
+        get templateListSpacerClass() { return this.selectedTemplate === '' ? 'border-t-0 pt-0' : ''; },
+        get templateKiesLabel() {
+            return this.selectedTemplate !== '' ? __ofKiesAndereTemplate : __kiesTemplateOmTeOverschrijven;
+        },
+        isAndereTemplate(index) { return String(index) !== this.selectedTemplate; },
+        get pouleHeaderClass() {
+            return this.selectedPouleData && this.selectedPouleData.poule && this.selectedPouleData.poule.is_eliminatie
+                ? 'bg-purple-700'
+                : 'bg-green-700';
+        },
+        get pouleDataLoaded() { return !this.loadingPoule && this.selectedPouleData; },
+        get pouleTitel() {
+            if (!this.selectedPouleData || !this.selectedPouleData.poule) return '';
+            const p = this.selectedPouleData.poule;
+            const prefix = p.is_eliminatie ? `P#${p.nummer} ${__eliminatie}` : `${__poule} ${p.nummer}`;
+            return `${prefix} - ${p.leeftijdsklasse} ${p.gewichtsklasse}`;
+        },
+        get isEliminatieData() {
+            return !this.loadingPoule && this.selectedPouleData && this.selectedPouleData.poule && this.selectedPouleData.poule.is_eliminatie;
+        },
+        get isPouleData() {
+            return !this.loadingPoule && this.selectedPouleData && this.selectedPouleData.poule && !this.selectedPouleData.poule.is_eliminatie;
+        },
+        get isPuntenCompetitie() {
+            return this.selectedPouleData && this.selectedPouleData.poule && this.selectedPouleData.poule.is_punten_competitie;
+        },
+        get notPuntenCompetitie() {
+            return this.selectedPouleData && this.selectedPouleData.poule && !this.selectedPouleData.poule.is_punten_competitie;
+        },
+        get eliminationStandings() {
+            return this.selectedPouleData && this.selectedPouleData.standings ? this.selectedPouleData.standings : [];
+        },
+        get pouleStandings() {
+            return this.selectedPouleData && this.selectedPouleData.standings ? this.selectedPouleData.standings : [];
+        },
+        medalRowClass(standing) {
+            if (standing.plaats === 1) return 'bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400';
+            if (standing.plaats === 2) return 'bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-400';
+            if (standing.plaats === 3) return 'bg-gradient-to-r from-orange-100 to-orange-200 border-2 border-orange-400';
+            return '';
+        },
+        medalEmoji(standing) {
+            if (standing.plaats === 1) return '🥇';
+            if (standing.plaats === 2) return '🥈';
+            return '🥉';
+        },
+        medalTextClass(standing) {
+            if (standing.plaats === 1) return 'text-yellow-700';
+            if (standing.plaats === 2) return 'text-gray-700';
+            return 'text-orange-700';
+        },
+        plaatsLabel(standing) { return `${standing.plaats}e`; },
+        clubLabel(standing) { return `(${standing.club})`; },
+        plaatsCellClass(index) {
+            if (index === 0) return 'bg-yellow-400 text-yellow-900';
+            if (index === 1) return 'bg-gray-300 text-gray-800';
+            if (index === 2) return 'bg-orange-300 text-orange-900';
+            return 'bg-yellow-50';
+        },
+        plaatsNummer(index) { return index + 1; },
         toonGeschiedenis: false,
         geschiedenis: [],
         selectedBlok: {{ isset($poulesPerBlok) && $poulesPerBlok->isNotEmpty() ? $poulesPerBlok->keys()->first() : 1 }},
@@ -1056,11 +1133,11 @@ function sprekerInterface() {
             this.templates[index].tekst = this.notities;
             this.saveTemplates();
             await this.saveNotities();
-            this.selectedTemplate = String(index); // Toon naam in dropdown
+            this.selectedTemplate = String(index);
             this.showSaveModal = false;
             this.showFeedback(__templateBijgewerkt.replace(':naam', template.naam));
-        }
-    }
-}
+        },
+    }));
+});
 
 </script>

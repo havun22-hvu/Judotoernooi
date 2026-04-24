@@ -59,7 +59,7 @@
         @endif
 
         <!-- Weegkaarten List -->
-        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="copyIdSearch">
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="copyWithSearch">
             <div class="px-6 py-4 border-b bg-gray-50">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">{{ __('Weegkaarten') }} ({{ $judokas->count() }})</h2>
@@ -77,11 +77,11 @@
                     $weegkaartUrl = route('weegkaart.show', $judoka->qr_code);
                     $blok = $judoka->poules->first()?->blok;
                 @endphp
-                <div class="p-4 hover:bg-gray-50" x-data="qrToggle"
-                     x-show="$root.search === '' || '{{ strtolower($judoka->naam) }}'.includes($root.search.toLowerCase())">
+                <div class="p-4 hover:bg-gray-50" x-data="qrDisplay"
+                     x-show="search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())">
                     <div class="flex justify-between items-start gap-4">
                         <!-- QR Code (clickable) -->
-                        <div class="cursor-pointer shrink-0" @click="toggleQr" title="{{ __('Klik voor grote QR') }}">
+                        <div class="cursor-pointer shrink-0" @click="toggleQr()" title="{{ __('Klik voor grote QR') }}">
                             <div id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></div>
                         </div>
 
@@ -119,10 +119,10 @@
 
                             <!-- Copy link button -->
                             <button
-                                @click="$root.copyId({{ Js::from($weegkaartUrl) }}, {{ $judoka->id }})"
+                                @click="copyAndMark('{{ $weegkaartUrl }}', {{ $judoka->id }})"
                                 class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm"
                             >
-                                <template x-if="$root.copiedId !== {{ $judoka->id }}">
+                                <template x-if="!isCopied({{ $judoka->id }})">
                                     <span class="flex items-center">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
@@ -130,7 +130,7 @@
                                         {{ __('Kopieer') }}
                                     </span>
                                 </template>
-                                <template x-if="$root.copiedId === {{ $judoka->id }}">
+                                <template x-if="isCopied({{ $judoka->id }})">
                                     <span class="flex items-center text-green-700">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>

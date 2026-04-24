@@ -152,8 +152,8 @@
         </div>
 
         <!-- Club Ranking Tables -->
-        <div x-data="rankingToggle" class="no-print">
-            <button @click="toggleRanking"
+        <div x-data="rankingPanel" class="no-print">
+            <button @click="toggleRanking()"
                     class="w-full bg-white rounded-lg shadow p-4 text-left flex justify-between items-center hover:bg-gray-50">
                 <span class="font-bold text-gray-800">{{ __('Totaal Club Ranking') }}</span>
                 <svg class="w-5 h-5 text-gray-500 transition-transform" :class="showRanking ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">

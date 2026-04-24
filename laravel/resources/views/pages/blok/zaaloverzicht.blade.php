@@ -92,13 +92,9 @@
         ->sortBy('nummer')
         ->values();
 @endphp
-<div class="mb-6 w-full" x-data="{
-    open: localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') !== null
-        ? localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') === 'true'
-        : {{ $loop->first ? 'true' : 'false' }}
-}" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
+<div class="mb-6 w-full" x-data="persistentToggle" data-storage-key="blok-zaal-{{ $blok['nummer'] }}" data-default-open="{{ $loop->first ? 'true' : 'false' }}">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
-        <button @click="toggle" class="w-full flex justify-between items-center hover:text-gray-200">
+        <button @click="toggle()" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
                 <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                 @php
@@ -115,7 +111,7 @@
                 <span class="px-2 py-1 text-xs bg-red-500 rounded">{{ __('Weging gesloten') }}</span>
                 @endif
             </div>
-            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="rotateClass" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
@@ -145,11 +141,11 @@
             @endphp
             @if($isActivated)
             {{-- Groen: al geactiveerd, dropdown met mat interface en reset --}}
-            <div class="relative inline-block" x-data="{ dropdown: false }">
-                <button @click="dropdown = !dropdown" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
+            <div class="relative inline-block" x-data="dropdownState">
+                <button @click="toggleDropdown()" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
                     ✓ {{ $chipNaam }} ▾
                 </button>
-                <div x-show="dropdown" @click.away="dropdown = false" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
+                <div x-show="dropdown" @click.outside="closeDropdown()" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
                     <a href="{{ route('toernooi.mat.interface', $toernooi->routeParamsWith(['blok' => $blok['nummer']])) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         {{ __('Mat Interface') }}

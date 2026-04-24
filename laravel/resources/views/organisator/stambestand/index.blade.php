@@ -3,7 +3,7 @@
 @section('title', 'Judoka\'s ' . ($organisator->organisatie_naam ?: $organisator->naam))
 
 @section('content')
-<div class="max-w-6xl mx-auto" x-data="stambestandPage()">
+<div class="max-w-6xl mx-auto" x-data="stambestandPage">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -48,7 +48,7 @@
 
     {{-- Feedback (AJAX) --}}
     <div x-show="feedback" x-transition x-cloak
-         :class="feedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+         :class="alertClass(feedbackType)"
          class="border rounded px-4 py-3 mb-4">
         <span x-text="feedback"></span>
     </div>
@@ -72,12 +72,12 @@
             <span class="text-green-800 font-bold" x-text="gefilterd.length"></span>
             <span class="text-green-700 text-sm">resultaten</span>
         </div>
-        <span x-show="!zoek" class="text-sm text-gray-500" x-text="gefilterd.length + ' judoka\'s'"></span>
+        <span x-show="geenZoek" class="text-sm text-gray-500" x-text="gefilterdLabel"></span>
     </div>
 
     {{-- Toevoegen/bewerken formulier --}}
     <div x-show="showForm" x-transition x-cloak class="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 class="text-lg font-semibold mb-4" x-text="editId ? 'Judoka bewerken' : 'Judoka toevoegen'"></h3>
+        <h3 class="text-lg font-semibold mb-4" x-text="formTitel"></h3>
         <form @submit.prevent="saveJudoka()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
@@ -114,7 +114,7 @@
             <div class="md:col-span-3 flex gap-3">
                 <button type="submit" :disabled="saving"
                         class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded text-sm">
-                    <span x-text="saving ? 'Opslaan...' : (editId ? 'Bijwerken' : 'Toevoegen')"></span>
+                    <span x-text="saveButtonLabel"></span>
                 </button>
                 <button type="button" @click="showForm = false"
                         class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded text-sm">
@@ -126,46 +126,46 @@
 
     {{-- Judoka tabel --}}
     <div class="bg-white rounded-lg shadow">
-        <template x-if="judokas.length === 0">
+        <template x-if="isEmpty">
             <div class="p-6 text-center text-gray-500">
                 Nog geen judoka's in het stambestand. Voeg ze toe via het formulier of importeer een CSV.
             </div>
         </template>
 
-        <template x-if="judokas.length > 0">
+        <template x-if="hasJudokas">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th @click="sorteer('naam')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Naam
-                                <span x-show="sortKolom === 'naam'" x-text="sortRichting === 'asc' ? ' &#9650;' : ' &#9660;'"></span>
+                                <span x-show="isSorting('naam')" x-text="sortIcon"></span>
                             </th>
                             <th @click="sorteer('geboortejaar')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Geb.jaar
-                                <span x-show="sortKolom === 'geboortejaar'" x-text="sortRichting === 'asc' ? ' &#9650;' : ' &#9660;'"></span>
+                                <span x-show="isSorting('geboortejaar')" x-text="sortIcon"></span>
                             </th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Geslacht</th>
                             <th @click="sorteer('band')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Band
-                                <span x-show="sortKolom === 'band'" x-text="sortRichting === 'asc' ? ' &#9650;' : ' &#9660;'"></span>
+                                <span x-show="isSorting('band')" x-text="sortIcon"></span>
                             </th>
                             <th @click="sorteer('gewicht')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
                                 Gewicht
-                                <span x-show="sortKolom === 'gewicht'" x-text="sortRichting === 'asc' ? ' &#9650;' : ' &#9660;'"></span>
+                                <span x-show="isSorting('gewicht')" x-text="sortIcon"></span>
                             </th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <template x-for="judoka in gefilterd" :key="judoka.id">
-                            <tr class="hover:bg-gray-50" :class="{ 'opacity-50': !judoka.actief }">
+                            <tr class="hover:bg-gray-50" :class="rowClass(judoka)">
                                 <td class="px-4 py-3 font-medium" x-text="judoka.naam"></td>
                                 <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geboortejaar"></td>
                                 <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geslacht"></td>
-                                <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.band.charAt(0).toUpperCase() + judoka.band.slice(1)"></td>
+                                <td class="px-4 py-3 text-center text-gray-600" x-text="bandLabel(judoka)"></td>
                                 <td class="px-4 py-3 text-center text-gray-600">
-                                    <span x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></span>
+                                    <span x-text="gewichtLabel(judoka)"></span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -175,8 +175,8 @@
                                         </button>
                                         <button @click="toggleActief(judoka)"
                                                 class="text-xs font-medium px-3 py-1 rounded"
-                                                :class="judoka.actief ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' : 'bg-green-100 hover:bg-green-200 text-green-700'"
-                                                x-text="judoka.actief ? 'Archiveer' : 'Activeer'">
+                                                :class="toggleButtonClass(judoka)"
+                                                x-text="toggleButtonLabel(judoka)">
                                         </button>
                                         <button @click="deleteJudoka(judoka)"
                                                 class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-3 py-1 rounded">
@@ -222,13 +222,16 @@
 </div>
 
 <script @nonce>
-const __t = {
-    errorSaving: @json(__('Fout bij opslaan')),
-    connectionError: @json(__('Verbindingsfout')),
-    confirmDelete: @json(__('" :naam" verwijderen uit het stambestand?')),
-};
-function stambestandPage() {
-    return {
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        errorSaving: @json(__('Fout bij opslaan')),
+        connectionError: @json(__('Verbindingsfout')),
+        confirmDelete: @json(__('" :naam" verwijderen uit het stambestand?')),
+    };
+    const judokaUrlBase = '{{ url($organisator->slug . "/judokas") }}';
+    const storeUrl = '{{ route("organisator.stambestand.store", $organisator) }}';
+
+    Alpine.data('stambestandPage', () => ({
         zoek: '',
         filter: 'actief',
         feedback: '',
@@ -257,9 +260,41 @@ function stambestandPage() {
 
         bandVolgorde: { wit: 0, geel: 1, oranje: 2, groen: 3, blauw: 4, bruin: 5, zwart: 6 },
 
+        // --- CSP-safe getters/helpers ---
+        alertClass(type) {
+            return type === 'success'
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-red-100 border-red-400 text-red-700';
+        },
+        get geenZoek() { return !this.zoek; },
+        get gefilterdLabel() { return `${this.gefilterd.length} judoka's`; },
+        get formTitel() { return this.editId ? 'Judoka bewerken' : 'Judoka toevoegen'; },
+        get saveButtonLabel() {
+            if (this.saving) return 'Opslaan...';
+            return this.editId ? 'Bijwerken' : 'Toevoegen';
+        },
+        get isEmpty() { return this.judokas.length === 0; },
+        get hasJudokas() { return this.judokas.length > 0; },
+        get sortIcon() { return this.sortRichting === 'asc' ? ' ▲' : ' ▼'; },
+        isSorting(key) { return this.sortKolom === key; },
+        rowClass(judoka) { return judoka.actief ? '' : 'opacity-50'; },
+        bandLabel(judoka) {
+            return judoka.band.charAt(0).toUpperCase() + judoka.band.slice(1);
+        },
+        gewichtLabel(judoka) { return judoka.gewicht ? `${judoka.gewicht} kg` : '-'; },
+        toggleButtonClass(judoka) {
+            return judoka.actief
+                ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700'
+                : 'bg-green-100 hover:bg-green-200 text-green-700';
+        },
+        toggleButtonLabel(judoka) { return judoka.actief ? 'Archiveer' : 'Activeer'; },
+
+        _csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        },
+
         get gefilterd() {
             let lijst = this.judokas;
-
             if (this.filter === 'actief') lijst = lijst.filter(j => j.actief);
             else if (this.filter === 'inactief') lijst = lijst.filter(j => !j.actief);
 
@@ -269,7 +304,6 @@ function stambestandPage() {
                 const tekstTerms = [];
 
                 terms.forEach(term => {
-                    // Weight patterns: -45, +55, 20-30, 20kg
                     const clean = term.replace(/kg$/i, '');
                     if (/^[+-]?\d+(\.\d+)?$/.test(clean) || /^\d+(\.\d+)?-\d+(\.\d+)?$/.test(clean)) {
                         gewichtFilters.push(clean);
@@ -278,7 +312,6 @@ function stambestandPage() {
                     }
                 });
 
-                // Apply weight filters
                 gewichtFilters.forEach(f => {
                     if (f.startsWith('-')) {
                         const max = parseFloat(f.substring(1));
@@ -295,7 +328,6 @@ function stambestandPage() {
                     }
                 });
 
-                // Text search over all fields
                 if (tekstTerms.length > 0) {
                     lijst = lijst.filter(j => {
                         const text = [j.naam, j.geboortejaar, j.geslacht, j.band, j.gewicht ? j.gewicht + 'kg' : '', j.notities || '']
@@ -354,10 +386,7 @@ function stambestandPage() {
             this.saving = true;
             this.feedback = '';
 
-            const url = this.editId
-                ? `{{ url($organisator->slug . '/judokas') }}/${this.editId}`
-                : '{{ route("organisator.stambestand.store", $organisator) }}';
-
+            const url = this.editId ? `${judokaUrlBase}/${this.editId}` : storeUrl;
             const method = this.editId ? 'PUT' : 'POST';
             const body = { ...this.form };
             if (!body.gewicht) body.gewicht = null;
@@ -368,7 +397,7 @@ function stambestandPage() {
                     method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify(body),
@@ -405,10 +434,10 @@ function stambestandPage() {
 
         async toggleActief(judoka) {
             try {
-                const response = await fetch(`{{ url($organisator->slug . '/judokas') }}/${judoka.id}/toggle`, {
+                const response = await fetch(`${judokaUrlBase}/${judoka.id}/toggle`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                 });
@@ -426,12 +455,11 @@ function stambestandPage() {
 
         async deleteJudoka(judoka) {
             if (!confirm(__t.confirmDelete.replace(':naam', judoka.naam))) return;
-
             try {
-                const response = await fetch(`{{ url($organisator->slug . '/judokas') }}/${judoka.id}`, {
+                const response = await fetch(`${judokaUrlBase}/${judoka.id}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': this._csrf(),
                         'Accept': 'application/json',
                     },
                 });
@@ -446,8 +474,7 @@ function stambestandPage() {
                 this.feedbackType = 'error';
             }
         },
-
-    }
-}
+    }));
+});
 </script>
 @endsection

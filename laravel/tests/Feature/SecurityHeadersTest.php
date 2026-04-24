@@ -57,16 +57,15 @@ class SecurityHeadersTest extends TestCase
     }
 
     #[Test]
-    public function csp_should_not_allow_unsafe_eval_after_alpine_csp_migration(): void
+    public function csp_does_not_contain_unsafe_eval_in_non_local_env(): void
     {
-        // Mozilla Observatory penalty -10 if unsafe-eval is allowed.
-        // Currently still set because Alpine.js v3 default build needs eval()
-        // for x-data/x-on expressions. Tracked work to switch to @alpinejs/csp;
-        // remove the markTestSkipped after migration completes.
-        $this->markTestSkipped('Alpine CSP migration in progress — pas test aan na switch naar @alpinejs/csp');
+        // After @alpinejs/csp switch: Mozilla Observatory penalty -10 gone.
+        $response = $this->get('/');
 
-        $csp = $this->get('/')->headers->get('Content-Security-Policy');
-        $this->assertStringNotContainsString('unsafe-eval', (string) $csp);
+        $csp = $response->headers->get('Content-Security-Policy');
+        $this->assertNotNull($csp);
+        $this->assertStringNotContainsString("'unsafe-eval'", $csp);
+        $this->assertStringContainsString("'nonce-", $csp);
     }
 
     #[Test]

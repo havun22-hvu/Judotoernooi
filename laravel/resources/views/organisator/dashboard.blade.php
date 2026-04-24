@@ -17,13 +17,13 @@
                 <div class="flex items-center space-x-4">
                     {{-- Language switcher --}}
                     <div class="relative" x-data="toggle">
-                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
                             <form action="{{ route('locale.switch', 'nl') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'nl' ? 'font-bold' : '' }}">
@@ -40,8 +40,8 @@
                     </div>
 
                     {{-- User dropdown (same as app.blade.php) --}}
-                    <div class="relative" x-data="userDropdown">
-                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                    <div class="relative" x-data="modalWithAbout">
+                        <button @click="toggle()" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if($organisator->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -50,7 +50,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if($organisator->isSitebeheerder())
                             <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Admin Dashboard') }}</a>
                             @endif
@@ -59,7 +59,7 @@
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
                             <hr class="my-1">
                             <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
-                            <button type="button" @click="openAbout" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
+                            <button type="button" @click="openAbout()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
@@ -69,11 +69,11 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="closeAbout"
-                             @keydown.escape.window="closeAbout">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout">
+                             @click.self="closeAbout()"
+                             @keydown.escape.window="closeAbout()">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout()">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
-                                    <button type="button" @click="closeAbout"
+                                    <button type="button" @click="closeAbout()"
                                             class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
@@ -100,7 +100,7 @@
                                     </button>
                                 </div>
                                 <div class="px-6 py-3 bg-gray-50 text-center">
-                                    <button type="button" @click="closeAbout" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                    <button type="button" @click="closeAbout()" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -143,27 +143,27 @@
         </div>
 
         {{-- Templates Section --}}
-        <div x-data="templateManager()" class="mb-8">
+        <div x-data="templateManager" class="mb-8">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">{{ __('Mijn Templates') }}</h3>
-                <button @click="toggle" class="text-blue-600 hover:text-blue-800 text-sm">
-                    <span x-show="!open">{{ __('Toon templates') }}</span>
+                <button @click="toggle()" class="text-blue-600 hover:text-blue-800 text-sm">
+                    <span x-show="notOpen">{{ __('Toon templates') }}</span>
                     <span x-show="open">{{ __('Verberg') }}</span>
                 </button>
             </div>
 
             <div x-show="open" x-collapse class="bg-white rounded-lg shadow p-4">
-                <template x-if="templates.length === 0">
+                <template x-if="isEmpty">
                     <p class="text-gray-500 text-sm">{{ __('Nog geen templates. Sla instellingen op vanuit een bestaand toernooi.') }}</p>
                 </template>
-                <template x-if="templates.length > 0">
+                <template x-if="hasTemplates">
                     <div class="space-y-3">
                         <template x-for="template in templates" :key="template.id">
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded border">
                                 <div>
                                     <span class="font-medium" x-text="template.naam"></span>
-                                    <span x-show="template.beschrijving" class="text-gray-500 text-sm ml-2" x-text="'- ' + template.beschrijving"></span>
-                                    <span x-show="template.max_judokas" class="text-gray-400 text-xs ml-2" x-text="'(max ' + template.max_judokas + ' judokas)'"></span>
+                                    <span x-show="template.beschrijving" class="text-gray-500 text-sm ml-2" x-text="beschrijvingLabel(template)"></span>
+                                    <span x-show="template.max_judokas" class="text-gray-400 text-xs ml-2" x-text="maxJudokasLabel(template)"></span>
                                 </div>
                                 <button @click="deleteTemplate(template.id)" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijderen') }}</button>
                             </div>
@@ -174,26 +174,33 @@
         </div>
 
         <script @nonce>
-            const __t = { confirmDeleteTemplate: @json(__('Weet je zeker dat je deze template wilt verwijderen?')) };
-            function templateManager() {
-                return {
+            document.addEventListener('alpine:init', () => {
+                const __t = { confirmDeleteTemplate: @json(__('Weet je zeker dat je deze template wilt verwijderen?')) };
+
+                Alpine.data('templateManager', () => ({
                     open: false,
                     templates: @json($organisator->toernooiTemplates ?? []),
+                    get notOpen() { return !this.open; },
+                    get isEmpty() { return this.templates.length === 0; },
+                    get hasTemplates() { return this.templates.length > 0; },
+                    beschrijvingLabel(template) { return `- ${template.beschrijving}`; },
+                    maxJudokasLabel(template) { return `(max ${template.max_judokas} judokas)`; },
+                    toggle() { this.open = !this.open; },
                     async deleteTemplate(id) {
                         if (!confirm(__t.confirmDeleteTemplate)) return;
                         const response = await fetch(`/{{ $organisator->slug }}/templates/${id}`, {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            }
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
                         });
                         if (response.ok) {
                             this.templates = this.templates.filter(t => t.id !== id);
                         }
-                    }
-                }
-            }
+                    },
+                }));
+            });
         </script>
 
         @if($toernooien->isEmpty())
@@ -320,8 +327,8 @@
         {{-- Archief sectie --}}
         @if($gearchiveerd->isNotEmpty())
         <div x-data="toggle" class="mt-8">
-            <button @click="toggle" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
-                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button @click="toggle()" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
+                <svg class="w-4 h-4 transition-transform" :class="rotate90Class" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -195,22 +195,22 @@
             $finaleUitslagUrl = route('toernooi.mat.finale-uitslag', $toernooi->routeParams());
         }
     @endphp
-<div id="mat-interface" x-data="matInterface()" x-init="init()">
+<div id="mat-interface" x-data="matInterface" x-init="init()">
     <!-- Build: v2026.02.10-D (Blade bracket) -->
     <!-- Huidige selectie + Legenda -->
     <div class="mb-1" x-show="blokId && matId">
         <div class="flex items-center justify-between flex-wrap gap-x-4 gap-y-0.5">
             <!-- Blok/Mat selectie -->
             <div class="text-sm text-gray-600 flex items-center gap-2">
-                <span class="font-bold">Blok <span x-text="blokkenData.find(b => b.id == blokId)?.nummer"></span></span>
+                <span class="font-bold">Blok <span x-text="huidigBlokNummer"></span></span>
                 &bull;
-                <span class="font-bold">Mat <span x-text="mattenData.find(m => m.id == matId)?.nummer"></span></span>
+                <span class="font-bold">Mat <span x-text="huidigMatNummer"></span></span>
                 <a href="#blok-mat-keuze" class="text-purple-600 hover:underline text-xs">({{ __('wijzig') }})</a>
                 @if(!isset($isDeviceBound) || !$isDeviceBound)
-                <button @click="refreshAll()" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1" :class="{ 'animate-spin': isRefreshing }">
-                    <svg x-show="!isRefreshing" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <button @click="refreshAll()" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1" :class="refreshingClass">
+                    <svg x-show="notRefreshing" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     <span x-show="isRefreshing">...</span>
-                    <span x-show="!isRefreshing">Update</span>
+                    <span x-show="notRefreshing">Update</span>
                 </button>
                 @endif
             </div>
@@ -236,10 +236,10 @@
     <template x-for="poule in poules" :key="poule.poule_id">
         <div class="bg-white rounded-lg shadow mb-3">
             <!-- Header -->
-            <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
+            <div :class="pouleHeaderClass(poule)" class="text-white px-3 py-1.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
-                        <span x-text="'P#' + poule.poule_nummer + ' ' + (poule.type === 'eliminatie' ? __eliminatie : __poule) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
+                        <span x-text="pouleTitel(poule)"></span>
                         (<span x-text="poule.judoka_count"></span> judoka's, <span x-text="poule.wedstrijden?.length ?? 0"></span>w)
                     </h2>
                 </div>
@@ -250,12 +250,12 @@
                     </div>
 
                     <!-- Afgerond: toon klaar tijdstip -->
-                    <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'">
+                    <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="pouleTextClass(poule)">
                         ✓ {{ __('Klaar om:') }} <span x-text="poule.spreker_klaar_tijd"></span>
                     </div>
                     <!-- Barrage knop: toon als er een 3-weg gelijkspel is -->
                     <button
-                        x-show="heeftBarrageNodig(poule) && !poule.spreker_klaar"
+                        x-show="toonBarrage(poule)"
                         @click="maakBarrage(poule)"
                         class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold"
                         title="3+ judoka's met gelijke stand - maak barrage poule"
@@ -265,7 +265,7 @@
 
                     <!-- Nog niet klaar maar wel afgerond: toon knop -->
                     <button
-                        x-show="isPouleAfgerond(poule) && !poule.spreker_klaar && !heeftBarrageNodig(poule)"
+                        x-show="toonAfronden(poule)"
                         @click="markeerKlaar(poule)"
                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse"
                     >
@@ -275,27 +275,27 @@
             </div>
 
             <!-- ELIMINATIE WEERGAVE - Drag & Drop Bracket met A/B Tabs -->
-            <template x-if="poule.type === 'eliminatie'">
-                <div class="p-1" x-data="{ activeTab: poule.groep_filter || 'A' }">
+            <template x-if="isEliminatie(poule)">
+                <div class="p-1" x-data="bracketTabs" :data-initial="poule.groep_filter || 'A'">
                     <!-- Tabs + Swap Ruimte -->
                     <div class="flex mb-1 border-b border-gray-200 justify-between">
                         <div class="flex">
-                            <button x-show="!poule.groep_filter || poule.groep_filter === 'A'"
-                                    @click="activeTab = 'A'; $nextTick(() => { laadBracketHtml(poule.poule_id, 'A'); })"
-                                    :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            <button x-show="toonGroepA(poule)"
+                                    @click="switchTab('A', poule.poule_id)"
+                                    :class="tabClass('A')"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                {{ __('Groep A (Hoofdboom)') }} <span x-text="'(' + poule.judoka_count + ')'"></span>
+                                {{ __('Groep A (Hoofdboom)') }} <span x-text="groepACountLabel(poule)"></span>
                             </button>
-                            <template x-if="heeftHerkansing(poule) && (!poule.groep_filter || poule.groep_filter === 'B')">
-                                <button @click="activeTab = 'B'; $nextTick(() => { laadBracketHtml(poule.poule_id, 'B'); })"
-                                        :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            <template x-if="toonGroepB(poule)">
+                                <button @click="switchTab('B', poule.poule_id)"
+                                        :class="tabClass('B')"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                    {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.eliminatie_type === 'ijf' ? Math.min(6, poule.judoka_count) : poule.judoka_count - 2) + ')'"></span>
+                                    {{ __('Groep B (Herkansing)') }} <span x-text="groepBCountLabel(poule)"></span>
                                 </button>
                             </template>
                         </div>
                         <!-- Swap Ruimte - alleen zichtbaar tijdens seeding (voor eerste wedstrijd) -->
-                        <div x-show="!isBracketLocked(poule) && activeTab !== 'B'" class="flex items-center gap-2 px-2">
+                        <div x-show="toonSwapRuimte(poule)" class="flex items-center gap-2 px-2">
                             <span class="text-sm font-medium text-gray-600">
                                 Swap:
                             </span>
@@ -353,7 +353,7 @@
                         </div>
                         <div class="bracket-container overflow-auto pb-2 max-h-[calc(100vh-180px)]"
                              :id="'bracket-container-' + poule.poule_id + '-A'"
-                             x-init="$nextTick(() => laadBracketHtml(poule.poule_id, 'A'))">
+                             x-init="initBracketA(poule)">
                             <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
                         </div>
                     </div>
@@ -1259,7 +1259,8 @@ window.updateBracketNav = function(pouleId, groep) {
     if (label) label.textContent = startRonde === 0 ? __t.allRounds : __t.fromRound.replace(':nummer', startRonde + 1);
 };
 
-function matInterface() {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('matInterface', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const blokNummer = urlParams.get('blok');
     const blokkenData = @json($blokken->map(fn($b) => ['id' => $b->id, 'nummer' => $b->nummer]));
@@ -1315,6 +1316,7 @@ function matInterface() {
         _pendingReload: false, // Herlaad na afloop van huidige load
 
         init() {
+            window.__matInterface = this;
             console.log('[Mat] Build v2026.02.10-D (Blade bracket)');
             // Device-bound: always pre-select the bound mat (but allow switching)
             if (isDeviceBound && forcedMatId && !savedMatId) {
@@ -2494,8 +2496,48 @@ function matInterface() {
             return poule.wedstrijden.some(w => w.groep === 'B');
         },
 
-    }
-}
+        // --- CSP-safe getters/helpers ---
+        get refreshingClass() { return this.isRefreshing ? 'animate-spin' : ''; },
+        get notRefreshing() { return !this.isRefreshing; },
+        get huidigBlokNummer() {
+            const b = this.blokkenData.find(x => x.id == this.blokId);
+            return b ? b.nummer : '';
+        },
+        get huidigMatNummer() {
+            const m = this.mattenData.find(x => x.id == this.matId);
+            return m ? m.nummer : '';
+        },
+        initBracketA(poule) {
+            this.$nextTick(() => this.laadBracketHtml(poule.poule_id, 'A'));
+        },
+        pouleHeaderClass(poule) { return poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'; },
+        pouleTextClass(poule) { return poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'; },
+        pouleTitel(poule) {
+            const typeLabel = poule.type === 'eliminatie' ? __eliminatie : __poule;
+            return `P#${poule.poule_nummer} ${typeLabel} - ${poule.leeftijdsklasse} ${poule.gewichtsklasse} | Blok ${poule.blok_nummer} - Mat ${poule.mat_nummer}`;
+        },
+        isEliminatie(poule) { return poule.type === 'eliminatie'; },
+        toonBarrage(poule) { return this.heeftBarrageNodig(poule) && !poule.spreker_klaar; },
+        toonAfronden(poule) {
+            return this.isPouleAfgerond(poule) && !poule.spreker_klaar && !this.heeftBarrageNodig(poule);
+        },
+        toonGroepA(poule) { return !poule.groep_filter || poule.groep_filter === 'A'; },
+        toonGroepB(poule) {
+            return this.heeftHerkansing(poule) && (!poule.groep_filter || poule.groep_filter === 'B');
+        },
+        toonSwapRuimte(poule, activeTab) {
+            return !this.isBracketLocked(poule) && activeTab !== 'B';
+        },
+        groepACountLabel(poule) { return `(${poule.judoka_count})`; },
+        groepBCountLabel(poule) {
+            const count = poule.eliminatie_type === 'ijf'
+                ? Math.min(6, poule.judoka_count)
+                : poule.judoka_count - 2;
+            return `(${count})`;
+        },
+    };
+    });
+});
 
 // Clock
 function updateClock() {

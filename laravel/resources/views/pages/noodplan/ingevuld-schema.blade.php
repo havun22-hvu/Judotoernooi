@@ -186,16 +186,16 @@
 
 @section('toolbar')
 @if(!$poulesMetSchema->isEmpty())
-<div class="bg-gray-100 px-4 py-3 border-b">
+<div x-data="noodplanPrint" data-total-poules="{{ $poulesMetSchema->count() }}" class="bg-gray-100 px-4 py-3 border-b">
     <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
             <span class="font-medium text-gray-700">{{ __("Selecteer schema's om te printen") }}:</span>
-            <button onclick="selectAllPoules(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">{{ __('Alles aan') }}</button>
-            <button onclick="selectAllPoules(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">{{ __('Alles uit') }}</button>
+            <button x-on:click="selectAll(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">{{ __('Alles aan') }}</button>
+            <button x-on:click="selectAll(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">{{ __('Alles uit') }}</button>
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-500" id="print-counter">{{ $poulesMetSchema->count() }} {{ __('van') }} {{ $poulesMetSchema->count() }} {{ __('geselecteerd') }}</span>
-            <button onclick="window.print()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
+            <span class="text-sm text-gray-500"><span x-text="selected"></span> {{ __('van') }} <span x-text="total"></span> {{ __('geselecteerd') }}</span>
+            <button x-on:click="print()" type="button" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
                 {{ __('Print geselecteerde') }}
             </button>
         </div>
@@ -302,8 +302,7 @@ function abbreviateClubName($name, $maxLength = 15) {
     $totalCols = 5 + (count($schema) * 2);
 @endphp
 <div class="poule-page {{ $isLandscape ? 'landscape' : '' }}"
-     x-data="pouleSelect()"
-     :class="{ 'print-exclude': !printInclude, 'opacity-50': !printInclude }"
+     x-data="pouleSelect"
      data-poule-id="{{ $poule->id }}">
 
     <!-- Header boven tabel (selectie checkbox alleen op scherm) -->
@@ -436,50 +435,5 @@ function abbreviateClubName($name, $maxLength = 15) {
     </p>
 </div>
 
-<script @nonce>
-const totalPoules = {{ $poulesMetSchema->count() }};
-
-function pouleSelect() {
-    return {
-        printInclude: true,
-        init() {
-            // Direct class manipulation voor print CSS
-            this.$watch('printInclude', (value) => {
-                if (value) {
-                    this.$el.classList.remove('print-exclude');
-                    this.$el.classList.remove('opacity-50');
-                } else {
-                    this.$el.classList.add('print-exclude');
-                    this.$el.classList.add('opacity-50');
-                }
-                this.$nextTick(() => updatePrintCounter());
-            });
-        }
-    };
-}
-
-function selectAllPoules(checked) {
-    document.querySelectorAll('.poule-page').forEach(el => {
-        const checkbox = el.querySelector('input[type="checkbox"]');
-        if (checkbox) {
-            checkbox.checked = checked;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-            // Trigger Alpine update
-            checkbox.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
-    // Force class update
-    setTimeout(updatePrintCounter, 100);
-}
-
-function updatePrintCounter() {
-    const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
-    const counter = document.getElementById('print-counter');
-    if (counter) {
-        counter.textContent = selected + ' {{ __('van') }} ' + totalPoules + ' {{ __('geselecteerd') }}';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => setTimeout(updatePrintCounter, 200));
-</script>
+{{-- VP-18: pouleSelect + noodplanPrint components geëxtraheerd naar resources/js/alpine-components.js --}}
 @endsection

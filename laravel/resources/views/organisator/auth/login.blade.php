@@ -12,13 +12,13 @@
         {{-- Language switcher --}}
         <div class="flex justify-end mb-2" x-data="toggle">
             <div class="relative">
-                <button @click="toggle" @click.away="close" class="flex items-center text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
+                <button @click="toggle()" class="flex items-center text-gray-500 hover:text-gray-700 text-sm focus:outline-none">
                     @include('partials.flag-icon', ['lang' => app()->getLocale()])
                     <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
-                <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50 border">
+                <div x-show="open" @click.outside="close()" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50 border">
                     <form action="{{ route('locale.switch', 'nl') }}" method="POST">
                         @csrf
                         <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'nl' ? 'font-bold' : '' }}">

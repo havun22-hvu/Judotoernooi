@@ -112,10 +112,10 @@
 
         <!-- Add Judoka Form -->
         @if($inschrijvingOpen && !$maxBereikt && ($magInschrijven ?? true))
-        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm()">
-            <button @click="toggle" class="flex justify-between items-center w-full text-left">
+        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm">
+            <button @click="toggle()" class="flex justify-between items-center w-full text-left">
                 <h2 class="text-xl font-bold text-gray-800">+ {{ __('Nieuwe Judoka Toevoegen') }}</h2>
-                <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
+                <span x-text="openLabel" class="text-2xl text-gray-500"></span>
             </button>
 
             <form action="{{ route('coach.portal.judoka.store', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST"
@@ -163,11 +163,11 @@
                         <select name="gewichtsklasse" x-model="gewichtsklasse" class="w-full border rounded px-3 py-2">
                             <option value="">{{ __('Automatisch bepaald') }}</option>
                             <template x-for="gw in gewichtsopties" :key="gw">
-                                <option :value="gw" x-text="gw + ' kg'"></option>
+                                <option :value="gw" x-text="gwLabel(gw)"></option>
                             </template>
                         </select>
                         <p x-show="leeftijdsklasse" class="text-xs mt-1">
-                            <span class="text-blue-600" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></span>
+                            <span class="text-blue-600" x-text="leeftijdsklasseLabel"></span>
                             <span x-show="isElim" class="ml-1 text-orange-600 font-medium">(Eliminatie)</span>
                         </p>
                     </div>
@@ -209,39 +209,39 @@
         @endphp
 
         <!-- Sync Status Box -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSearch" @filter-changed.window="onFilterChanged">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSwitch" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
-                    <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
-                            :class="filter === 'alle' ? 'bg-gray-200 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('alle')"
+                            :class="filterButtonClass('alle', 'bg-gray-200 font-medium')"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="text-gray-600">Alle ({{ $judokas->count() }})</span>
                     </button>
-                    <button @click="filter = 'synced'; $dispatch('filter-changed', 'synced')"
-                            :class="filter === 'synced' ? 'bg-green-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('synced')"
+                            :class="filterButtonClass('synced', 'bg-green-100 font-medium')"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-green-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $syncedJudokas->count() }} {{ __('gesynced') }}</span>
                     </button>
                     @if($gewijzigdJudokas->count() > 0)
-                    <button @click="filter = 'gewijzigd'; $dispatch('filter-changed', 'gewijzigd')"
-                            :class="filter === 'gewijzigd' ? 'bg-orange-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('gewijzigd')"
+                            :class="filterButtonClass('gewijzigd', 'bg-orange-100 font-medium')"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $gewijzigdJudokas->count() }} {{ __('gewijzigd') }}</span>
                     </button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
-                    <button @click="filter = 'incompleet'; $dispatch('filter-changed', 'incompleet')"
-                            :class="filter === 'incompleet' ? 'bg-yellow-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('incompleet')"
+                            :class="filterButtonClass('incompleet', 'bg-yellow-100 font-medium')"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} {{ __('incompleet') }}</span>
                     </button>
                     @endif
                     @if($nietSyncedVolledig->count() > 0)
-                    <button @click="filter = 'klaar'; $dispatch('filter-changed', 'klaar')"
-                            :class="filter === 'klaar' ? 'bg-gray-300 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('klaar')"
+                            :class="filterButtonClass('klaar', 'bg-gray-300 font-medium')"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
                         <span class="text-gray-600">{{ $nietSyncedVolledig->count() }} {{ __('klaar om te syncen') }}</span>
@@ -317,25 +317,25 @@
 
         {{-- Payment Box --}}
         @if($betalingActief ?? false)
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSearch" @filter-changed.window="onFilterChanged">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSwitch" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
-                    <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
-                            :class="filter === 'alle' ? 'bg-gray-200 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('alle')"
+                            :class="filterButtonClass('alle', 'bg-gray-200 font-medium')"
                             class="px-3 py-1.5 rounded transition-colors">Alle ({{ $judokas->count() }})</button>
-                    <button @click="filter = 'betaald'; $dispatch('filter-changed', 'betaald')"
-                            :class="filter === 'betaald' ? 'bg-green-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('betaald')"
+                            :class="filterButtonClass('betaald', 'bg-green-100 font-medium')"
                             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors">
                         <span class="w-3 h-3 bg-green-500 rounded-full"></span>{{ $aantalBetaald ?? 0 }} betaald</button>
                     @if(($volledigeOnbetaald ?? collect())->count() > 0)
-                    <button @click="filter = 'klaar_betaling'; $dispatch('filter-changed', 'klaar_betaling')"
-                            :class="filter === 'klaar_betaling' ? 'bg-blue-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('klaar_betaling')"
+                            :class="filterButtonClass('klaar_betaling', 'bg-blue-100 font-medium')"
                             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors">
                         <span class="w-3 h-3 bg-blue-500 rounded-full"></span>{{ $volledigeOnbetaald->count() }} klaar</button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
-                    <button @click="filter = 'incompleet'; $dispatch('filter-changed', 'incompleet')"
-                            :class="filter === 'incompleet' ? 'bg-yellow-100 font-medium' : 'hover:bg-gray-100'"
+                    <button @click="selectFilter('incompleet')"
+                            :class="filterButtonClass('incompleet', 'bg-yellow-100 font-medium')"
                             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors">
                         <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>{{ $onvolledigeJudokas->count() }} incompleet</button>
                     @endif
@@ -351,7 +351,7 @@
         </div>
         @endif
 
-        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="filterSearch" @filter-changed.window="onFilterChanged">
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="filterSearch" @filter-changed.window="filter = $event.detail">
             <div class="px-4 py-3 border-b bg-gray-50">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">Judoka's</span>
@@ -401,10 +401,10 @@
                     }
                 @endphp
                 <div class="px-4 py-3 hover:bg-gray-50 {{ $pastNietInCategorie ? 'bg-red-50 border-l-4 border-red-400' : ($isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig && !$pastNietInCategorie ? 'bg-orange-50' : '') }}"
-                     x-data="editingToggle"
-                     x-show="(search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())) && (filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }}))">
+                     x-data="inlineEdit"
+                     x-show="matchesFilter(filter, search, {{ Js::from(strtolower($judoka->naam)) }}, {{ $isSynced ? 'true' : 'false' }}, {{ $isGewijzigd ? 'true' : 'false' }}, {{ $isOnvolledig ? 'true' : 'false' }}, {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}, {{ $isBetaald ? 'true' : 'false' }}, {{ $isKlaarVoorBetaling ? 'true' : 'false' }})">
                     <!-- View mode -->
-                    <div x-show="!editing" class="flex justify-between items-center">
+                    <div x-show="notEditing" class="flex justify-between items-center">
                         <div class="flex items-center gap-3 min-w-0">
                             @if($betalingActief ?? false)
                                 @if($isBetaald)<span class="text-green-600 text-lg">€</span>
@@ -432,7 +432,7 @@
                         @if($inschrijvingOpen && (($magWijzigen ?? true) || ($magInschrijven ?? true)))
                         <div class="flex items-center gap-3 shrink-0">
                             @if($judoka->telefoon)<a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800 text-sm">WA</a>@endif
-                            @if($magWijzigen ?? true)<button @click="startEdit" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
+                            @if($magWijzigen ?? true)<button @click="startEdit()" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
                             <form action="{{ route('coach.portal.judoka.destroy', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
@@ -456,18 +456,18 @@
                                 </select>
                                 <select name="band" x-model="band" class="border rounded px-3 py-2">
                                     <option value="">Band</option>
-                                    <option value="wit" :selected="band === 'wit'">Wit</option>
-                                    <option value="geel" :selected="band === 'geel'">Geel</option>
-                                    <option value="oranje" :selected="band === 'oranje'">Oranje</option>
-                                    <option value="groen" :selected="band === 'groen'">Groen</option>
-                                    <option value="blauw" :selected="band === 'blauw'">Blauw</option>
-                                    <option value="bruin" :selected="band === 'bruin'">Bruin</option>
-                                    <option value="zwart" :selected="band === 'zwart'">Zwart</option>
+                                    <option value="wit">Wit</option>
+                                    <option value="geel">Geel</option>
+                                    <option value="oranje">Oranje</option>
+                                    <option value="groen">Groen</option>
+                                    <option value="blauw">Blauw</option>
+                                    <option value="bruin">Bruin</option>
+                                    <option value="zwart">Zwart</option>
                                 </select>
                                 <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" class="border rounded px-3 py-2" placeholder="Gewicht (kg)">
                                 <select name="gewichtsklasse" x-model="gewichtsklasse" class="border rounded px-3 py-2">
                                     <option value="">Gewichtsklasse (auto)</option>
-                                    <template x-for="gw in gewichtsopties" :key="gw"><option :value="gw" x-text="gw + ' kg'"></option></template>
+                                    <template x-for="gw in gewichtsopties" :key="gw"><option :value="gw" x-text="gwLabel(gw)"></option></template>
                                 </select>
                                 <input type="tel" name="telefoon" value="{{ $judoka->telefoon }}" class="border rounded px-3 py-2" placeholder="Telefoon">
                                 @if($toernooi->danpunten_actief)
@@ -476,7 +476,7 @@
                             </div>
                             <div class="mt-3 flex items-center gap-3">
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Opslaan</button>
-                                <button type="button" @click="cancelEdit" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
+                                <button type="button" @click="stopEdit()" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
                                 <span x-show="leeftijdsklasse" class="text-sm text-blue-600" x-text="leeftijdsklasse"></span>
                             </div>
                         </form>
@@ -580,10 +580,14 @@
             return sorted[sorted.length - 1] || '';
         }
 
+        document.addEventListener('alpine:init', () => {
         // Alpine.js component voor nieuw judoka formulier
-        function judokaForm() {
-            return {
+        Alpine.data('judokaForm', () => ({
                 open: false,
+                toggle() { this.open = !this.open; },
+                get openLabel() { return this.open ? '−' : '+'; },
+                get leeftijdsklasseLabel() { return `Leeftijdsklasse: ${this.leeftijdsklasse}`; },
+                gwLabel(gw) { return `${gw} kg`; },
                 geboortejaar: '',
                 geslacht: '',
                 gewicht: '',
@@ -620,13 +624,12 @@
 
                 updateIsElim() {
                     this.isElim = isEliminatieCategorie(this.leeftijdsklasseKey, this.gewichtsklasse);
-                }
-            }
-        }
+                },
+        }));
 
         // Alpine.js component voor bewerk formulier
-        function judokaEditForm(geboortejaar, geslacht, gewichtsklasse, gewicht, band) {
-            return {
+        Alpine.data('judokaEditForm', (geboortejaar, geslacht, gewichtsklasse, gewicht, band) => ({
+                gwLabel(gw) { return `${gw} kg`; },
                 geboortejaar: geboortejaar,
                 geslacht: geslacht,
                 gewicht: gewicht,
@@ -667,9 +670,9 @@
 
                 updateIsElim() {
                     this.isElim = isEliminatieCategorie(this.leeftijdsklasseKey, this.gewichtsklasse);
-                }
-            }
-        }
+                },
+        }));
+        });
     </script>
 </body>
 </html>

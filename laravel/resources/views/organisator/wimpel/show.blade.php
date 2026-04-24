@@ -3,7 +3,7 @@
 @section('title', $stamJudoka->naam . ' - Wimpeltoernooi')
 
 @section('content')
-<div class="max-w-4xl mx-auto" x-data="judokaDetail()">
+<div class="max-w-4xl mx-auto" x-data="judokaDetail">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -81,7 +81,7 @@
 
         {{-- Feedback --}}
         <div x-show="sprekerFeedback" x-transition x-cloak
-             :class="sprekerFeedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+             :class="alertClass(sprekerFeedbackType)"
              class="border rounded px-4 py-3 mb-3">
             <span x-text="sprekerFeedback"></span>
         </div>
@@ -109,7 +109,7 @@
         <p class="text-sm text-gray-500 mb-3">Voeg een historische milestone toe die al eerder is uitgereikt.</p>
 
         <div x-show="handmatigFeedback" x-transition x-cloak
-             :class="handmatigFeedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+             :class="alertClass(handmatigFeedbackType)"
              class="border rounded px-4 py-3 mb-3">
             <span x-text="handmatigFeedback"></span>
         </div>
@@ -145,7 +145,7 @@
 
         {{-- Feedback --}}
         <div x-show="feedback" x-transition x-cloak
-             :class="feedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+             :class="alertClass(feedbackType)"
              class="border rounded px-4 py-3 mb-3">
             <span x-text="feedback"></span>
         </div>
@@ -221,16 +221,25 @@
 </div>
 
 <script @nonce>
-const __t = {
-    errorAdjusting: @json(__('Fout bij aanpassen')),
-    somethingWentWrong: @json(__('Er ging iets mis')),
-    connectionError: @json(__('Verbindingsfout')),
-    confirmAdjustAdd: @json(__('+:punten punten bijschrijven?')),
-    confirmAdjustSubtract: @json(__(':punten punten aftrekken?')),
-    confirmSendToSpeaker: @json(__('" :omschrijving" naar spreker sturen?')),
-};
-function judokaDetail() {
-    return {
+document.addEventListener('alpine:init', () => {
+    const __t = {
+        errorAdjusting: @json(__('Fout bij aanpassen')),
+        somethingWentWrong: @json(__('Er ging iets mis')),
+        connectionError: @json(__('Verbindingsfout')),
+        confirmAdjustAdd: @json(__('+:punten punten bijschrijven?')),
+        confirmAdjustSubtract: @json(__(':punten punten aftrekken?')),
+        confirmSendToSpeaker: @json(__('" :omschrijving" naar spreker sturen?')),
+    };
+
+    Alpine.data('judokaDetail', () => ({
+        alertClass(type) {
+            return type === 'success'
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-red-100 border-red-400 text-red-700';
+        },
+        _csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        },
         puntenTotaal: {{ $stamJudoka->wimpel_punten_totaal }},
         aantalPunten: '',
         notitie: '',
@@ -351,9 +360,9 @@ function judokaDetail() {
         showFeedback(msg, type) {
             this.feedback = msg;
             this.feedbackType = type;
-            setTimeout(() => this.feedback = '', 3000);
-        }
-    }
-}
+            setTimeout(() => { this.feedback = ''; }, 3000);
+        },
+    }));
+});
 </script>
 @endsection
