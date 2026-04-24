@@ -55,4 +55,43 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('X-Frame-Options');
         $response->assertHeader('X-Content-Type-Options');
     }
+
+    #[Test]
+    public function csp_should_not_allow_unsafe_eval_after_alpine_csp_migration(): void
+    {
+        // Mozilla Observatory penalty -10 if unsafe-eval is allowed.
+        // Currently still set because Alpine.js v3 default build needs eval()
+        // for x-data/x-on expressions. Tracked work to switch to @alpinejs/csp;
+        // remove the markTestSkipped after migration completes.
+        $this->markTestSkipped('Alpine CSP migration in progress — pas test aan na switch naar @alpinejs/csp');
+
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+        $this->assertStringNotContainsString('unsafe-eval', (string) $csp);
+    }
+
+    #[Test]
+    public function csp_does_not_allow_unsafe_inline_in_script_src(): void
+    {
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+        $script = preg_match('/script-src\s+([^;]+)/', (string) $csp, $m) ? $m[1] : '';
+        $this->assertStringNotContainsString(
+            'unsafe-inline',
+            $script,
+            'script-src must NOT allow unsafe-inline — use nonces instead'
+        );
+    }
+
+    #[Test]
+    public function hsts_header_includes_preload_over_https(): void
+    {
+        // HSTS only emitted on secure requests in production env.
+        \Illuminate\Support\Facades\URL::forceScheme('https');
+        $this->app->detectEnvironment(fn () => 'production');
+        $hsts = $this->get('/')->headers->get('Strict-Transport-Security');
+
+        $this->assertNotNull($hsts, 'HSTS must be set on HTTPS in production');
+        $this->assertStringContainsString('max-age=31536000', $hsts);
+        $this->assertStringContainsString('includeSubDomains', $hsts);
+        $this->assertStringContainsString('preload', $hsts, 'preload required for hstspreload.org submission');
+    }
 }
