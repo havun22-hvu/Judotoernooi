@@ -140,7 +140,7 @@
             </div>
 
             <!-- Weegkaarten -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="toggle">
                 <div>
                     <h3 class="font-medium">{{ __('Weegkaarten') }}</h3>
                     <p class="text-sm text-gray-500">{{ __('Per judoka (QR + gegevens)') }}</p>
@@ -151,11 +151,11 @@
                         {{ __('Alle') }}
                     </a>
                     <div class="relative">
-                        <button @click="open = !open" type="button"
+                        <button @click="toggle" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                             {{ __('Per club') }} ▼
                         </button>
-                        <div x-show="open" @click.away="open = false" x-cloak
+                        <div x-show="open" @click.away="close" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
@@ -169,7 +169,7 @@
             </div>
 
             <!-- Coachkaarten -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="toggle">
                 <div>
                     <h3 class="font-medium">{{ __('Coachkaarten') }}</h3>
                     <p class="text-sm text-gray-500">{{ __('Toegang dojo') }}</p>
@@ -180,11 +180,11 @@
                         {{ __('Alle') }}
                     </a>
                     <div class="relative">
-                        <button @click="open = !open" type="button"
+                        <button @click="toggle" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                             {{ __('Per club') }} ▼
                         </button>
-                        <div x-show="open" @click.away="open = false" x-cloak
+                        <div x-show="open" @click.away="close" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"

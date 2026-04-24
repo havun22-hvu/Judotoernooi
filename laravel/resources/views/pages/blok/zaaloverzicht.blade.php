@@ -98,7 +98,7 @@
         : {{ $loop->first ? 'true' : 'false' }}
 }" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
-        <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
+        <button @click="toggle" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
                 <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                 @php

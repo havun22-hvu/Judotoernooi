@@ -16,8 +16,8 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     {{-- Language switcher --}}
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                    <div class="relative" x-data="toggle">
+                        <button @click="toggle" @click.away="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
                             @include('partials.flag-icon', ['lang' => app()->getLocale()])
                             <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -41,7 +41,7 @@
 
                     {{-- User dropdown (same as app.blade.php) --}}
                     <div class="relative" x-data="{ open: false, showAbout: false }">
-                        <button @click="open = !open" @click.outside="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if($organisator->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
                             @endif
@@ -146,7 +146,7 @@
         <div x-data="templateManager()" class="mb-8">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">{{ __('Mijn Templates') }}</h3>
-                <button @click="open = !open" class="text-blue-600 hover:text-blue-800 text-sm">
+                <button @click="toggle" class="text-blue-600 hover:text-blue-800 text-sm">
                     <span x-show="!open">{{ __('Toon templates') }}</span>
                     <span x-show="open">{{ __('Verberg') }}</span>
                 </button>
@@ -319,8 +319,8 @@
 
         {{-- Archief sectie --}}
         @if($gearchiveerd->isNotEmpty())
-        <div x-data="{ open: false }" class="mt-8">
-            <button @click="open = !open" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
+        <div x-data="toggle" class="mt-8">
+            <button @click="toggle" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium mb-4">
                 <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
