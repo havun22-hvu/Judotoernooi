@@ -20,11 +20,20 @@ Alpine.data('toggle', (initial = {}) => ({
 
 // Show/hide toggle — covers x-data="{ show: false }" / "{ show: true }".
 // Methods: showIt / hideIt / toggleShow.
+// Optional flashClass + flashMs: removes a CSS class after delay (used for
+// error-blink banners in toernooi/edit to stop the animation after 1.5s).
 Alpine.data('showToggle', (initial = {}) => ({
     show: initial.show ?? false,
     showIt()     { this.show = true; },
     hideIt()     { this.show = false; },
     toggleShow() { this.show = !this.show; },
+    init() {
+        if (initial.flashClass && initial.flashMs) {
+            setTimeout(() => {
+                if (this.$el) this.$el.classList.remove(initial.flashClass);
+            }, initial.flashMs);
+        }
+    },
 }));
 
 // Auto-hide banner — covers x-data="{ show: true }" + x-init="setTimeout(() => show = false, 4000)"
@@ -66,6 +75,8 @@ Alpine.data('tabPanel', (config = {}) => ({
 Alpine.data('filterSearch', (config = {}) => ({
     filter: config.filter ?? 'alle',
     search: config.search ?? '',
+    setFilter(newFilter) { this.filter = newFilter; },
+    onFilterChanged(event) { this.filter = event.detail; },
 }));
 
 // Copy ID state — covers x-data="{ copiedId: null, search: '' }".
@@ -76,17 +87,21 @@ Alpine.data('copyIdSearch', (config = {}) => ({
         this.copiedId = id;
         setTimeout(() => { this.copiedId = null; }, 2000);
     },
+    copyId(text, id) {
+        navigator.clipboard.writeText(text);
+        this.markCopied(id);
+    },
 }));
 
 // Single-value selector — covers x-data="{ openGewicht: null }" /
-// "{ activeFavoriet: null }" / "{ lightbox: null }" — generic "what's
-// currently active" tracker.
-// Use: x-data="activeSelector" (state on `active`)
+// "{ activeFavoriet: null }" — generic "what's currently active" tracker.
+// Use: x-data="activeSelector" (state on `active`).
 Alpine.data('activeSelector', () => ({
     active: null,
     set(id) { this.active = id; },
     clear() { this.active = null; },
     is(id) { return this.active === id; },
+    toggle(id) { this.active = this.active === id ? null : id; },
 }));
 
 // History + copied — covers x-data="{ showHistory: false, copied: false }".
@@ -98,6 +113,10 @@ Alpine.data('historyCopy', () => ({
         this.copied = true;
         setTimeout(() => { this.copied = false; }, 2000);
     },
+    copyText(text) {
+        navigator.clipboard.writeText(text);
+        this.markCopied();
+    },
 }));
 
 // Zoom toggle — for image lightbox style x-data="{ zoomed: false }".
@@ -105,6 +124,15 @@ Alpine.data('zoomToggle', () => ({
     zoomed: false,
     toggleZoom() { this.zoomed = !this.zoomed; },
     unzoom() { this.zoomed = false; },
+}));
+
+// Lightbox manager — home-page screenshot viewer combining lightbox + zoom.
+Alpine.data('lightboxManager', () => ({
+    lightbox: null,
+    zoomed: false,
+    open(src) { this.lightbox = src; this.zoomed = false; },
+    close()   { this.lightbox = null; this.zoomed = false; },
+    toggleZoom() { this.zoomed = !this.zoomed; },
 }));
 
 // Font-size adjustable display (notities tab op publiek-scherm).
@@ -155,21 +183,56 @@ Alpine.data('qrToggle', () => ({
 }));
 
 // Judoka-row combo — show-flash + open toggle for page-level judoka details.
+// `toggle()` method matches the generic naming convention so @click="toggle" works.
 Alpine.data('judokaRow', () => ({
     show: true,
     open: false,
-    toggleOpen() { this.open = !this.open; },
-    closeOpen()  { this.open = false; },
+    toggle() { this.open = !this.open; },
+    close()  { this.open = false; },
 }));
 
 // Aanmeldingsformulier (publiek/index toernooi aanmelden).
-Alpine.data('aanmeldForm', () => ({
+// Use: x-data="aanmeldForm({ url: '...', csrfToken: '...',
+//                            errorMsg: '...', connectionError: '...' })"
+Alpine.data('aanmeldForm', (config = {}) => ({
     aanmeldOpen: false,
     aanmeldVerstuurd: false,
     aanmeldError: '',
     aanmeldLoading: false,
-    openForm()  { this.aanmeldOpen = true; this.aanmeldError = ''; },
-    closeForm() { this.aanmeldOpen = false; },
+    url: config.url ?? '',
+    csrfToken: config.csrfToken ?? '',
+    errorMsg: config.errorMsg ?? 'Er ging iets mis.',
+    connectionError: config.connectionError ?? 'Verbindingsfout. Probeer opnieuw.',
+    toggleOpen() { this.aanmeldOpen = !this.aanmeldOpen; },
+    openForm()   { this.aanmeldOpen = true; this.aanmeldError = ''; },
+    closeForm()  { this.aanmeldOpen = false; },
+    async submit() {
+        this.aanmeldLoading = true;
+        this.aanmeldError = '';
+        try {
+            const response = await fetch(this.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': this.csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    club_naam: this.$refs.clubNaam.value,
+                    contact_naam: this.$refs.contactNaam.value,
+                    email: this.$refs.email.value,
+                    telefoon: this.$refs.telefoon.value,
+                }),
+            });
+            const data = await response.json();
+            this.aanmeldLoading = false;
+            if (data.success) this.aanmeldVerstuurd = true;
+            else this.aanmeldError = data.error || this.errorMsg;
+        } catch (e) {
+            this.aanmeldLoading = false;
+            this.aanmeldError = this.connectionError;
+        }
+    },
 }));
 
 // Warnings banner — covers x-data="{ showWarnings: true }".
@@ -186,7 +249,15 @@ Alpine.data('deleteConfirm', () => ({
     closeConfirm() { this.showConfirm = false; this.wachtwoord = ''; },
 }));
 
-// Menu + help combo (used in some tool layouts, e.g. tv-koppel page).
+// Help collapsible panel — covers x-data="{ showHelp: false }" solo usage
+// (distinct from menuHelp which couples with a menuOpen state).
+Alpine.data('helpToggle', () => ({
+    showHelp: false,
+    toggleHelp() { this.showHelp = !this.showHelp; },
+    closeHelp()  { this.showHelp = false; },
+}));
+
+// Menu + help combo (mat/interface, tv/koppel).
 Alpine.data('menuHelp', () => ({
     menuOpen: false,
     showHelp: false,
@@ -194,4 +265,16 @@ Alpine.data('menuHelp', () => ({
     closeMenu()  { this.menuOpen = false; },
     toggleHelp() { this.showHelp = !this.showHelp; },
     closeHelp()  { this.showHelp = false; },
+    openHelpFromMenu() { this.menuOpen = false; this.showHelp = true; },
+    // Side-effecting helpers used from mat/interface specifically.
+    refreshMatInterface() {
+        this.menuOpen = false;
+        const el = document.getElementById('mat-interface');
+        if (el && window.Alpine) window.Alpine.$data(el).refreshAll();
+    },
+    openPwaSettings() {
+        this.menuOpen = false;
+        const el = document.getElementById('pwa-settings-modal');
+        if (el) el.classList.remove('hidden');
+    },
 }));

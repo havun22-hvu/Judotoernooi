@@ -21,12 +21,11 @@
     $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
 @endphp
 @if($nietGecategoriseerdAantal > 0 || (isset($overlapWarning) && $overlapWarning))
-<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
+<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="warningsBanner" x-show="showWarnings">
     @if($nietGecategoriseerdAantal > 0)
     <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
-         x-data="{ show: true }"
-         x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
+         x-data="showToggle({ show: true, flashClass: 'animate-error-blink', flashMs: 1500 })"
+         x-show="show">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
@@ -40,7 +39,7 @@
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     {{ __('Bekijk lijst') }}
                 </a>
-                <button type="button" @click="show = false" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+                <button type="button" @click="hideIt" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
             </div>
         </div>
     </div>
@@ -48,9 +47,8 @@
 
     @if(isset($overlapWarning) && $overlapWarning)
     <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
-         x-data="{ show: true }"
-         x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
+         x-data="showToggle({ show: true, flashClass: 'animate-error-blink', flashMs: 1500 })"
+         x-show="show">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
@@ -59,7 +57,7 @@
                     <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
                 </div>
             </div>
-            <button type="button" @click="show = false" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+            <button type="button" @click="hideIt" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
         </div>
     </div>
     @endif
@@ -68,7 +66,7 @@
 <div class="h-16"></div>
 @endif
 
-<div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
+<div class="max-w-4xl mx-auto" x-data="tabPanel({ activeTab: {{ Js::from(request('tab', 'toernooi')) }} })">
     <!-- Sticky header met titel en tabs -->
     <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
         <div class="flex justify-between items-center mb-4">
@@ -85,26 +83,26 @@
         <!-- TABS -->
         <div class="flex border-b items-end">
         <button type="button"
-                @click="activeTab = 'toernooi'"
+                @click="setTab('toernooi')"
                 :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Toernooi') }}
         </button>
         <button type="button"
-                @click="activeTab = 'organisatie'"
+                @click="setTab('organisatie')"
                 :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Organisatie') }}
         </button>
         <button type="button"
-                @click="activeTab = 'noodplan'"
+                @click="setTab('noodplan')"
                 :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Noodplan') }}
         </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
-                @click="activeTab = 'admin'"
+                @click="setTab('admin')"
                 :class="activeTab === 'admin' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             {{ __('Admin') }}
@@ -2689,7 +2687,7 @@
 
     <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
     @if($toernooi->weegkaarten_gemaakt_op)
-    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">
+    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="deleteConfirm">
         <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
             <span class="text-2xl">⚠️</span> {{ __('Noodknop: Heropen Voorbereiding') }}
         </h2>
@@ -3035,7 +3033,7 @@
         </div>
 
         <!-- IP Adressen configuratie -->
-        <div class="mb-6" x-data="{ showHelp: false }">
+        <div class="mb-6" x-data="helpToggle">
             <h3 class="font-bold text-gray-800 mb-3">{{ __('IP-adressen configureren') }}</h3>
 
             <div class="grid md:grid-cols-3 gap-4">
@@ -3078,7 +3076,7 @@
             </div>
             <div class="flex items-center gap-4 mt-2">
                 <p class="text-xs text-gray-500">{{ __('Tip: Noteer deze IP\'s ook op papier voor noodgevallen') }}</p>
-                <button type="button" @click="showHelp = !showHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                <button type="button" @click="toggleHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
                     {{ __('Hoe vind ik mijn IP?') }}
                 </button>
             </div>

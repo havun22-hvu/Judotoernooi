@@ -127,7 +127,7 @@
                                  class="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <p class="text-sm font-medium text-gray-700 mb-2">{{ __('Koppel TV aan Mat') }} <span x-text="toegang.mat_nummer"></span></p>
                                 <p class="text-xs text-gray-500 mb-3">{{ __('Open') }} <strong>{{ url('/tv') }}</strong> {{ __('op de TV. Voer de code in die op het TV-scherm verschijnt:') }}</p>
-                                <div class="flex items-center gap-2" x-data="{ tvCode: '' }">
+                                <div class="flex items-center gap-2" x-data="tvCodeInput">
                                     <input type="text" maxlength="4" placeholder="0000"
                                            x-model="tvCode"
                                            class="font-mono text-lg font-bold text-center w-24 border border-gray-300 rounded px-2 py-1.5 tracking-widest"

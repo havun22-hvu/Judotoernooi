@@ -209,7 +209,7 @@
         @endphp
 
         <!-- Sync Status Box -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSearch" @filter-changed.window="onFilterChanged">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                     <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
@@ -317,7 +317,7 @@
 
         {{-- Payment Box --}}
         @if($betalingActief ?? false)
-        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="filterSearch" @filter-changed.window="onFilterChanged">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                     <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
@@ -351,7 +351,7 @@
         </div>
         @endif
 
-        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ filter: 'alle', search: '' }" @filter-changed.window="filter = $event.detail">
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="filterSearch" @filter-changed.window="onFilterChanged">
             <div class="px-4 py-3 border-b bg-gray-50">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">Judoka's</span>
@@ -401,7 +401,7 @@
                     }
                 @endphp
                 <div class="px-4 py-3 hover:bg-gray-50 {{ $pastNietInCategorie ? 'bg-red-50 border-l-4 border-red-400' : ($isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig && !$pastNietInCategorie ? 'bg-orange-50' : '') }}"
-                     x-data="{ editing: false }"
+                     x-data="editingToggle"
                      x-show="(search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())) && (filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }}))">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
@@ -432,7 +432,7 @@
                         @if($inschrijvingOpen && (($magWijzigen ?? true) || ($magInschrijven ?? true)))
                         <div class="flex items-center gap-3 shrink-0">
                             @if($judoka->telefoon)<a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800 text-sm">WA</a>@endif
-                            @if($magWijzigen ?? true)<button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
+                            @if($magWijzigen ?? true)<button @click="startEdit" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
                             <form action="{{ route('coach.portal.judoka.destroy', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
@@ -476,7 +476,7 @@
                             </div>
                             <div class="mt-3 flex items-center gap-3">
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Opslaan</button>
-                                <button type="button" @click="editing = false" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
+                                <button type="button" @click="cancelEdit" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuleren</button>
                                 <span x-show="leeftijdsklasse" class="text-sm text-blue-600" x-text="leeftijdsklasse"></span>
                             </div>
                         </form>

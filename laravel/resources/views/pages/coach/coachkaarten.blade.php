@@ -99,7 +99,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 @foreach($coachKaarten as $index => $kaart)
                 <div class="border rounded-lg overflow-hidden bg-white shadow-sm"
-                     x-data="{ showHistory: false, copied: false }">
+                     x-data="historyCopy">
                     <!-- Card Header with status indicator -->
                     <div class="px-4 py-2 bg-gray-50 border-b flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600">{{ __('Kaart') }} #{{ $index + 1 }}</span>
@@ -177,14 +177,14 @@
                         <!-- Action buttons -->
                         <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t">
                             @if($kaart->wisselingen->count() > 0)
-                            <button @click="showHistory = !showHistory"
+                            <button @click="toggleHistory"
                                     class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm">
                                 {{ __('Geschiedenis') }}
                             </button>
                             @endif
 
                             <button
-                                @click="navigator.clipboard.writeText('Coach kaart {{ $club->naam }}\nLink: {{ $kaart->getShowUrl() }}\nPIN: {{ $kaart->pincode }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                @click="copyText({{ Js::from('Coach kaart ' . $club->naam . "\nLink: " . $kaart->getShowUrl() . "\nPIN: " . $kaart->pincode) }})"
                                 class="px-3 py-1.5 rounded text-sm"
                                 :class="copied ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'"
                             >

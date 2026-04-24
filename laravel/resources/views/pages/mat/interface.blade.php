@@ -32,16 +32,16 @@
         </div>
         <div class="flex items-center gap-3">
             <div class="text-2xl font-mono" id="clock"></div>
-            <div x-data="{ menuOpen: false, showHelp: false }" class="relative">
-                <button @click="menuOpen = !menuOpen" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
+            <div x-data="menuHelp" class="relative">
+                <button @click="toggleMenu" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
                 {{-- Dropdown menu --}}
-                <div x-show="menuOpen" @click.away="menuOpen = false" x-transition
+                <div x-show="menuOpen" @click.away="closeMenu" x-transition
                      class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 text-sm">
-                    <button type="button" @click="menuOpen = false; document.getElementById('mat-interface') && Alpine.$data(document.getElementById('mat-interface')).refreshAll()"
+                    <button type="button" @click="refreshMatInterface"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         {{ __('Ververs gegevens') }}
@@ -57,12 +57,12 @@
                     @endif
                     @endif
                     <hr class="my-1">
-                    <button type="button" @click="menuOpen = false; showHelp = true"
+                    <button type="button" @click="openHelpFromMenu"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {{ __('Help') }}
                     </button>
-                    <button type="button" @click="menuOpen = false; document.getElementById('pwa-settings-modal').classList.remove('hidden')"
+                    <button type="button" @click="openPwaSettings"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {{ __('Over') }}
@@ -70,7 +70,7 @@
                 </div>
 
                 {{-- Help modal --}}
-                <div x-show="showHelp" x-cloak @click.self="showHelp = false"
+                <div x-show="showHelp" x-cloak @click.self="closeHelp"
                      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
                         <div class="bg-blue-800 text-white px-5 py-3">
@@ -100,7 +100,7 @@
                             </div>
                         </div>
                         <div class="px-5 py-3 bg-gray-50 text-right">
-                            <button @click="showHelp = false" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
+                            <button @click="closeHelp" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Sluiten') }}</button>
                         </div>
                     </div>
                 </div>

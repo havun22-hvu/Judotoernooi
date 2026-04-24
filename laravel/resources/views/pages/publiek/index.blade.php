@@ -305,8 +305,8 @@
 
             {{-- Club aanmelding formulier --}}
             @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
-            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="{ aanmeldOpen: false, aanmeldVerstuurd: false, aanmeldError: '', aanmeldLoading: false }">
-                <div class="flex items-center justify-between cursor-pointer" @click="aanmeldOpen = !aanmeldOpen">
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-6" x-data="aanmeldForm({ url: {{ Js::from(route('publiek.club-aanmelding', $toernooi->routeParams())) }}, csrfToken: {{ Js::from(csrf_token()) }}, errorMsg: {{ Js::from(__('Er ging iets mis.')) }}, connectionError: {{ Js::from(__('Verbindingsfout. Probeer opnieuw.')) }} })">
+                <div class="flex items-center justify-between cursor-pointer" @click="toggleOpen">
                     <div>
                         <h3 class="text-lg font-bold text-gray-800">{{ __('Deelnemen met jouw club?') }}</h3>
                         <p class="text-sm text-gray-500">{{ __('Meld je club aan en de organisator neemt contact met je op.') }}</p>
@@ -325,19 +325,7 @@
                     </template>
 
                     <template x-if="!aanmeldVerstuurd">
-                        <form @submit.prevent="
-                            aanmeldLoading = true;
-                            aanmeldError = '';
-                            fetch('{{ route('publiek.club-aanmelding', $toernooi->routeParams()) }}', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                                body: JSON.stringify({ club_naam: $refs.clubNaam.value, contact_naam: $refs.contactNaam.value, email: $refs.email.value, telefoon: $refs.telefoon.value })
-                            }).then(r => r.json()).then(data => {
-                                aanmeldLoading = false;
-                                if (data.success) { aanmeldVerstuurd = true; }
-                                else { aanmeldError = data.error || '{{ __('Er ging iets mis.') }}'; }
-                            }).catch(() => { aanmeldLoading = false; aanmeldError = '{{ __('Verbindingsfout. Probeer opnieuw.') }}'; })
-                        ">
+                        <form @submit.prevent="submit">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Clubnaam') }} *</label>
@@ -587,7 +575,7 @@
                 $isDynamisch = $gewichtsklassen->count() === 1 && $gewichtsklassen->has('Alle');
                 $alleJudokas = $gewichtsklassen->flatten();
             @endphp
-            <div class="mb-6" x-data="{ openGewicht: null }">
+            <div class="mb-6" x-data="activeSelector">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
                     <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
@@ -639,11 +627,11 @@
                 <div class="flex flex-wrap gap-2 mb-3">
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                     @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
-                    <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
+                    <button @click="toggle('{{ $gewichtId }}')"
                             class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
-                            :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
+                            :class="is('{{ $gewichtId }}') ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
                         <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }}</span>
-                        <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
+                        <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="is('{{ $gewichtId }}') ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
                     </button>
                     @endforeach
                 </div>
@@ -651,11 +639,11 @@
                 {{-- Gewichtsklassen panels --}}
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                 @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
-                <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
+                <div x-show="is('{{ $gewichtId }}')" x-collapse x-cloak
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} {{ __("judoka's") }}</span>
-                        <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
+                        <button @click="clear()" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
                         @foreach($judokas as $judoka)
