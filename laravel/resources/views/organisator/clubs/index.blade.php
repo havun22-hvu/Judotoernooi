@@ -208,14 +208,17 @@ document.addEventListener('alpine:init', () => {
         confirmDeleteWithJudokas: @json(__('LET OP: ":naam" heeft :count judoka(s). Deze worden ook verwijderd! Doorgaan?')),
         confirmDelete: @json(__('Weet je zeker dat je ":naam" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')),
     };
-    const clubsLookup = @json($clubs->keyBy('id')->map(fn($c) => [
-        'naam' => $c->naam,
-        'plaats' => $c->plaats,
-        'contact_naam' => $c->contact_naam,
-        'email' => $c->email,
-        'telefoon' => $c->telefoon,
-        'website' => $c->website,
-    ]));
+    @php
+        $clubsLookupJson = $clubs->keyBy('id')->map(fn($c) => [
+            'naam' => $c->naam,
+            'plaats' => $c->plaats,
+            'contact_naam' => $c->contact_naam,
+            'email' => $c->email,
+            'telefoon' => $c->telefoon,
+            'website' => $c->website,
+        ])->toJson();
+    @endphp
+    const clubsLookup = {!! $clubsLookupJson !!};
     const updateUrlTemplate = '{{ route("organisator.clubs.update", [$organisator, "__ID__"]) }}';
 
     Alpine.data('clubsPage', () => ({
