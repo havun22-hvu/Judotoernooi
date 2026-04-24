@@ -3,7 +3,7 @@
 @section('title', __('Clubs uitnodigen'))
 
 @section('content')
-<div x-data="{ copiedUrl: null }">
+<div x-data="urlCopy">
 
 <div class="flex justify-between items-center mb-6">
     <div>
@@ -181,7 +181,7 @@
                             <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600 max-w-[180px] truncate" title="{{ $portalUrl }}">
                                 {{ $portalUrl }}
                             </code>
-                            <button @click="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <button @click="copy({{ Js::from($portalUrl) }}, 'url-{{ $club->id }}')"
                                     class="p-1 rounded flex-shrink-0"
                                     :class="copiedUrl === 'url-{{ $club->id }}' ? 'text-green-600' : 'text-gray-400 hover:text-blue-600'"
                                     title="{{ __('Kopieer URL') }}">
@@ -190,7 +190,7 @@
                         </div>
                         <div class="flex items-center gap-1">
                             <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $pivotPincode }}</span>
-                            <button @click="navigator.clipboard.writeText('{{ $pivotPincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <button @click="copy({{ Js::from($pivotPincode) }}, 'pin-{{ $club->id }}')"
                                     class="p-1 rounded flex-shrink-0"
                                     :class="copiedUrl === 'pin-{{ $club->id }}' ? 'text-green-600' : 'text-gray-400 hover:text-amber-600'"
                                     title="{{ __('Kopieer PIN') }}">

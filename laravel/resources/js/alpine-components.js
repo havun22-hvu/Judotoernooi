@@ -130,6 +130,62 @@ Alpine.data('userDropdown', () => ({
     closeAbout()  { this.showAbout = false; },
 }));
 
+// URL copy — covers x-data="{ copiedUrl: null }" (club/index).
+// Methods: copy(url, marker) stores marker as copiedUrl for 2s, else stores url itself.
+Alpine.data('urlCopy', () => ({
+    copiedUrl: null,
+    copy(url, marker = null) {
+        navigator.clipboard.writeText(url);
+        this.copiedUrl = marker ?? url;
+        setTimeout(() => { this.copiedUrl = null; }, 2000);
+    },
+}));
+
+// Ranking reveal — covers x-data="{ showRanking: false }" (coach/resultaten).
+Alpine.data('rankingToggle', () => ({
+    showRanking: false,
+    toggleRanking() { this.showRanking = !this.showRanking; },
+}));
+
+// QR visibility — covers x-data="{ showQr: false }" (coach/weegkaarten rows).
+Alpine.data('qrToggle', () => ({
+    showQr: false,
+    toggleQr() { this.showQr = !this.showQr; },
+    closeQr()  { this.showQr = false; },
+}));
+
+// Judoka-row combo — show-flash + open toggle for page-level judoka details.
+Alpine.data('judokaRow', () => ({
+    show: true,
+    open: false,
+    toggleOpen() { this.open = !this.open; },
+    closeOpen()  { this.open = false; },
+}));
+
+// Aanmeldingsformulier (publiek/index toernooi aanmelden).
+Alpine.data('aanmeldForm', () => ({
+    aanmeldOpen: false,
+    aanmeldVerstuurd: false,
+    aanmeldError: '',
+    aanmeldLoading: false,
+    openForm()  { this.aanmeldOpen = true; this.aanmeldError = ''; },
+    closeForm() { this.aanmeldOpen = false; },
+}));
+
+// Warnings banner — covers x-data="{ showWarnings: true }".
+Alpine.data('warningsBanner', () => ({
+    showWarnings: true,
+    dismiss() { this.showWarnings = false; },
+}));
+
+// Delete confirm dialog (toernooi/edit) — x-data="{ showConfirm: false, wachtwoord: '' }".
+Alpine.data('deleteConfirm', () => ({
+    showConfirm: false,
+    wachtwoord: '',
+    openConfirm()  { this.showConfirm = true; },
+    closeConfirm() { this.showConfirm = false; this.wachtwoord = ''; },
+}));
+
 // Menu + help combo (used in some tool layouts, e.g. tv-koppel page).
 Alpine.data('menuHelp', () => ({
     menuOpen: false,

@@ -40,7 +40,7 @@
                     </div>
 
                     {{-- User dropdown (same as app.blade.php) --}}
-                    <div class="relative" x-data="{ open: false, showAbout: false }">
+                    <div class="relative" x-data="userDropdown">
                         <button @click="toggle" @click.outside="close" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if($organisator->isSitebeheerder())
                                 <svg class="w-4 h-4 mr-1 inline text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5.5L18 8.5l-4 4 1 5.5L10 15.5 4.5 18l1-5.5-4-4 5.5-1z"/></svg>
@@ -59,7 +59,7 @@
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
                             <hr class="my-1">
                             <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
-                            <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
+                            <button type="button" @click="openAbout" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
@@ -69,11 +69,11 @@
                         {{-- About modal --}}
                         <div x-show="showAbout" x-cloak
                              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                             @click.self="showAbout = false"
-                             @keydown.escape.window="showAbout = false">
-                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="showAbout = false">
+                             @click.self="closeAbout"
+                             @keydown.escape.window="closeAbout">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden" @click.outside="closeAbout">
                                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center relative">
-                                    <button type="button" @click="showAbout = false"
+                                    <button type="button" @click="closeAbout"
                                             class="absolute top-2 right-2 text-white/70 hover:text-white text-xl leading-none">&times;</button>
                                     <h2 class="text-xl font-bold">{{ __('JudoToernooi') }}</h2>
                                     <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
@@ -100,7 +100,7 @@
                                     </button>
                                 </div>
                                 <div class="px-6 py-3 bg-gray-50 text-center">
-                                    <button type="button" @click="showAbout = false" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                    <button type="button" @click="closeAbout" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
                                 </div>
                             </div>
                         </div>
