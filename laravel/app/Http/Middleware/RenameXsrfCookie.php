@@ -18,12 +18,15 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RenameXsrfCookie
 {
+    private const ORIGINAL = 'XSRF-TOKEN';
+    private const PREFIXED = '__Secure-XSRF-TOKEN';
+
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
         foreach ($response->headers->getCookies() as $cookie) {
-            if ($cookie->getName() !== 'XSRF-TOKEN') {
+            if ($cookie->getName() !== self::ORIGINAL) {
                 continue;
             }
 
@@ -34,7 +37,7 @@ class RenameXsrfCookie
             );
 
             $response->headers->setCookie(new Cookie(
-                '__Secure-XSRF-TOKEN',
+                self::PREFIXED,
                 $cookie->getValue(),
                 $cookie->getExpiresTime(),
                 $cookie->getPath() ?: '/',
