@@ -48,6 +48,22 @@ class SecurityHeadersTest extends TestCase
     }
 
     #[Test]
+    public function corp_is_cross_origin_for_social_sharing(): void
+    {
+        // Public tournament site — international participants share via social
+        // media (FB/LinkedIn/X). same-origin would break OG-image previews.
+        $this->get('/')->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+
+    #[Test]
+    public function coop_allows_popups_for_share_flows(): void
+    {
+        // Preserve window.opener for share/OAuth popups while isolating
+        // cross-origin attacks.
+        $this->get('/')->assertHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    }
+
+    #[Test]
     public function health_endpoint_has_security_headers(): void
     {
         $response = $this->get('/health');

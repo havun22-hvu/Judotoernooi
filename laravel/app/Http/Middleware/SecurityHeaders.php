@@ -78,6 +78,13 @@ class SecurityHeaders
             'payment=()',
         ]));
 
+        // Cross-Origin Isolation: public tournament site with international
+        // sharing. CORP cross-origin keeps OG-images fetchable by social media.
+        // COOP same-origin-allow-popups preserves opener for share/OAuth popups.
+        // COEP omitted: require-corp would break external Pusher/CDN scripts.
+        $response->headers->set('Cross-Origin-Resource-Policy', 'cross-origin');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+
         return $response;
     }
 }
