@@ -32,11 +32,10 @@ class SecurityHeadersTest extends TestCase
     }
 
     #[Test]
-    public function response_has_referrer_policy_header(): void
+    public function response_has_referrer_policy_same_origin(): void
     {
-        $response = $this->get('/');
-
-        $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // same-origin avoids referrer leak to third parties (internet.nl "Goed").
+        $this->get('/')->assertHeader('Referrer-Policy', 'same-origin');
     }
 
     #[Test]

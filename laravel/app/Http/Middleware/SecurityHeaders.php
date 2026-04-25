@@ -34,8 +34,9 @@ class SecurityHeaders
         // Enable XSS filter in older browsers
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 
-        // Control referrer information
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // Referrer-Policy: same-origin — no referrer to third parties.
+        // internet.nl "Goed" category (strict-origin-when-cross-origin = "Waarschuwing").
+        $response->headers->set('Referrer-Policy', 'same-origin');
 
         // Prevent information disclosure
         $response->headers->remove('X-Powered-By');
