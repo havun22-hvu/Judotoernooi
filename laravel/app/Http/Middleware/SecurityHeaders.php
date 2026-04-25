@@ -31,8 +31,9 @@ class SecurityHeaders
         // Prevent MIME type sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
-        // Enable XSS filter in older browsers
-        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        // X-XSS-Protection: 0 — explicitly disable the legacy XSS Auditor
+        // (Hardenize recommendation). CSP nonce-based defense replaces it.
+        $response->headers->set('X-XSS-Protection', '0');
 
         // Referrer-Policy: same-origin — no referrer to third parties.
         // internet.nl "Goed" category (strict-origin-when-cross-origin = "Waarschuwing").

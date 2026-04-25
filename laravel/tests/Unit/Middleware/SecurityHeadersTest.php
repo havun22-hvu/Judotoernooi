@@ -31,7 +31,7 @@ class SecurityHeadersTest extends TestCase
 
         $this->assertSame('SAMEORIGIN', $response->headers->get('X-Frame-Options'));
         $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
-        $this->assertSame('1; mode=block', $response->headers->get('X-XSS-Protection'));
+        $this->assertSame('0', $response->headers->get('X-XSS-Protection'));
         $this->assertSame('same-origin', $response->headers->get('Referrer-Policy'));
     }
 

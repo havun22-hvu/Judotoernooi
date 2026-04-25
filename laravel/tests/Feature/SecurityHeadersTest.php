@@ -28,7 +28,7 @@ class SecurityHeadersTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertHeader('X-XSS-Protection', '1; mode=block');
+        $response->assertHeader('X-XSS-Protection', '0');
     }
 
     #[Test]
