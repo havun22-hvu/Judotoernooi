@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Global middleware - runs on every request
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(\App\Http\Middleware\RenameXsrfCookie::class);
 
         // Web middleware group additions (session is available here)
         $middleware->web(\App\Http\Middleware\SetLocale::class);

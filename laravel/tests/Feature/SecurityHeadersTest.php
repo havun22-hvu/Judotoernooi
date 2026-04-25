@@ -64,6 +64,16 @@ class SecurityHeadersTest extends TestCase
     }
 
     #[Test]
+    public function xsrf_cookie_uses_secure_prefix(): void
+    {
+        $cookies = $this->get('/')->headers->getCookies();
+        $names = array_map(fn ($c) => $c->getName(), $cookies);
+
+        $this->assertContains('__Secure-XSRF-TOKEN', $names);
+        $this->assertNotContains('XSRF-TOKEN', $names);
+    }
+
+    #[Test]
     public function health_endpoint_has_security_headers(): void
     {
         $response = $this->get('/health');

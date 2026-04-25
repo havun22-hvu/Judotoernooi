@@ -50,7 +50,7 @@
                                             <td class="px-4 py-2 text-sm">{{ __('2 uur') }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="px-4 py-2 text-sm font-mono">XSRF-TOKEN</td>
+                                            <td class="px-4 py-2 text-sm font-mono">__Secure-XSRF-TOKEN</td>
                                             <td class="px-4 py-2 text-sm">{{ __('Beveiliging tegen CSRF aanvallen') }}</td>
                                             <td class="px-4 py-2 text-sm">{{ __('2 uur') }}</td>
                                         </tr>
