@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\SystemAlert;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -45,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('nonce', function () {
             return '<?php echo "nonce=\"" . app("csp-nonce") . "\""; ?>';
         });
+
+        // Emit integrity="sha384-..." on @vite-generated script/style tags.
+        // Hash key matches the field added by vite-plugin-manifest-sri to
+        // public/build/manifest.json. Mozilla Observatory SRI bonus.
+        Vite::useIntegrityKey('integrity');
 
         // Register sync queue observer for local server sync
         // Only observes score/weight changes to push to cloud
