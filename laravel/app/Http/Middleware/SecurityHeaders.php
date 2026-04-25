@@ -46,9 +46,11 @@ class SecurityHeaders
         if (!app()->environment('local')) {
             // script-src without 'unsafe-eval': relies on @alpinejs/csp build +
             // Alpine.data() components — no runtime eval of x-* expressions.
+            // 'strict-dynamic': CSP3 trust via nonce + dynamic; host list is
+            // fallback for older browsers. Observatory bonus.
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'none'",
-                "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://js.pusher.com",
+                "script-src 'self' 'nonce-{$nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://js.pusher.com",
                 "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
