@@ -1,7 +1,74 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 17 april 2026
+> **Laatste update:** 26 april 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
+
+---
+
+## Laatste Sessie: 26 april 2026
+
+### Wat is gedaan:
+
+**QR-popup verbeteringen in Device Toegangen** (`resources/views/pages/toernooi/partials/device-toegangen.blade.php`)
+
+Aanleiding: gebruiker liet QR-screenshots zien — Mat Interface popup had verkeerde caption ("Scan met telefoon of open op de TV browser") en geen mat-nummer in titel.
+
+Wijzigingen (4 edits, 1 file, niet gecommit):
+1. Nieuwe `teksten.*` keys: `labelMatPrefix`, `captionLcd`, `captionMat` (regel 304-306)
+2. `qrPopupTitel()` → `qrPopupTitel(toegang)` — toont nu "Mat 1 — LCD Scorebord" / "Mat 2 — Mat Interface" (regel 345-353)
+3. Nieuwe `qrPopupCaption()` — kiest juiste tekst per QR-type (regel 354-357)
+4. Blade x-text bindings bijgewerkt (regel 113 + 123)
+
+CSP-safe: geen arrow functions in x-* attributes, geen optional chaining, alle logica in Alpine.data() body.
+
+Tests draaien (sequentieel) op het moment van /end — output: `C:\Users\henkv\AppData\Local\Temp\claude\D--GitHub-JudoToernooi\c4c72b71-1fe9-48b2-90fd-e040e638e645\tasks\b84b6tivb.output`. Status morgen verifiëren.
+
+### Onderzoek voor scanner-integratie (geen code geschreven):
+
+Verkenning van `D:\GitHub\JudoScoreBoard` (Expo React Native app):
+- **Geen camera/QR-scanner dependency** in package.json
+- **Plakken van mat-URL werkt al** via `parseLoginInput()` in `src/utils/loginInput.ts:8` — herkent `.../toegang/{12-char}` met regex, haalt code+baseUrl eruit
+- **TV-URL als tekst getoond** in `ControlScreen.tsx:1036` (`TV: judotournament.org/tv/{display_code}`) — geen scan-actie
+- Backend endpoints staan klaar:
+  - `POST /api/scoreboard/auth` (mat login: code + pincode)
+  - `POST /api/scoreboard/tv-link` (TV koppel: body `{ code }`, mat uit Bearer token)
+
+URL-paden zijn duidelijk verschillend (`/toegang/{12-token}` vs `/tv/{4-pincode}`) → één scanner kan beide afhandelen via pad-classificatie.
+
+### Openstaande items voor morgen:
+
+**Wachtend op gebruikersbeslissing (4 voorstellen, gebruiker zei "morgen verder"):**
+
+- [ ] **A — KLAAR (te committen)**: caption + mat-nummer per QR-popup
+- [ ] **B — KLAAR (in A meegenomen)**: mat-nummer in titel
+- [ ] **C — Wachten op ja/nee**: print-overzicht alle QR's per toernooi
+  - Voorstel: route `/{org}/{toernooi}/qr-overzicht`, knop boven Device Toegangen tabel, HTML print-view (geen PDF lib), per mat 2 QR's naast elkaar met "Mat X" labels
+- [ ] **D — Wachten op ja/nee op 4 vragen**: QR scanner in JudoScoreBoard app
+  1. Permissie-tekst NL: *"Scan QR codes om te koppelen aan een mat of TV"*?
+  2. Host-check (alleen QR voor zelfde server accepteren)?
+  3. Na succesvolle TV-koppel: 3s "Gekoppeld!" tonen, dan terug?
+  4. EAS build: ik commit + push, jij triggert `eas build --platform android`?
+
+**Plan voor D (klaar, wacht op start):**
+- Stap 1: `expo-camera` toevoegen + app.json plugin-config
+- Stap 2: Generieke `<QrScanner>` component in `src/components/QrScanner.tsx`
+- Stap 3: URL-router util `src/utils/qrRouter.ts` (mat/tv/unknown classificatie)
+- Stap 4: "📷 Scan QR" knop in `LoginScreen.tsx` (vult code+baseUrl, focus pincode)
+- Stap 5: "📷 Scan TV QR" knop in `ControlScreen.tsx` (POST /api/scoreboard/tv-link)
+- Stap 6: Tests >80% coverage op qrRouter + QrScanner component
+
+### Belangrijke context voor volgende keer:
+
+- **Mat QR URL-formaat**: `https://{host}/{organisator-slug}/{toernooi-slug}/toegang/{12-cijferig-token}` ([DeviceToegang.php:76-85](D:\GitHub\JudoToernooi\laravel\app\Models\DeviceToegang.php#L76))
+- **LCD QR URL-formaat**: `https://{host}/tv/{4-cijferige-pincode}` (eerste 4 chars van token)
+- **TV koppel-pagina** `/tv` toont eigen QR + 4-cijferige code, luistert via Reverb op `tv-koppeling.{code}` voor automatische redirect
+- **3 koppel-flows** in [SCOREBORD-APP.md:226-247](D:\GitHub\JudoToernooi\laravel\docs\2-FEATURES\SCOREBORD-APP.md#L226): code-handmatig, QR-met-telefoon, QR-met-scorebord-app — laatste nog niet ingebouwd in app
+- **Scoreboard app is apart project** in `D:\GitHub\JudoScoreBoard` (Expo React Native, TypeScript) — frontend werk daar, backend hier
+
+### Niet-gecommitte wijzigingen working tree:
+- `M resources/views/pages/toernooi/partials/device-toegangen.blade.php` (sessie 26 apr — QR popup fixes)
+- `M public/build/assets/app-*.css|js` + `manifest.json` (build artefacten — vermoedelijk vergeten te committen na asset build)
+- `D` + `??` `storage/framework/testing/disks/public/coach-fotos/*` (test-artefacten, normaal genegeerd)
 
 ---
 
