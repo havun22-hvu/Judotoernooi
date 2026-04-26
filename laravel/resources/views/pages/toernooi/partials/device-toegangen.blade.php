@@ -342,18 +342,17 @@ document.addEventListener('alpine:init', () => {
         qrVisibleVoor(toegang) {
             return this.showQr === `mat_${toegang.id}` || this.showQr === `lcd_${toegang.id}`;
         },
+        get qrIsLcd() { return !!this.showQr && this.showQr.startsWith('lcd_'); },
         qrPopupTitel(toegang) {
             if (!this.showQr) return '';
-            const isLcd = this.showQr.startsWith('lcd_');
-            const type = isLcd ? this.teksten.labelLcd : this.teksten.labelMatInterface;
-            if (toegang && toegang.mat_nummer) {
+            const type = this.qrIsLcd ? this.teksten.labelLcd : this.teksten.labelMatInterface;
+            if (toegang.mat_nummer) {
                 return `${this.teksten.labelMatPrefix} ${toegang.mat_nummer} — ${type}`;
             }
             return type;
         },
         qrPopupCaption() {
-            if (!this.showQr) return '';
-            return this.showQr.startsWith('lcd_') ? this.teksten.captionLcd : this.teksten.captionMat;
+            return this.qrIsLcd ? this.teksten.captionLcd : this.teksten.captionMat;
         },
         qrImageUrl() { return `${this.urls.qr}?url=${encodeURIComponent(this.qrUrl)}`; },
         tvLinkVisible(toegang) { return this.showTvLink === toegang.id; },
