@@ -6,10 +6,10 @@
     "integrity": "sha384-Hpxdbyda6vv+v/JRSD0DcdALqT65APkEAUQYOuSdVYAIT8PmjjRNt+ZYtyd3SBwI"
   },
   "resources/js/app.js": {
-    "file": "assets/app-C0RoAtoJ.js",
+    "file": "assets/app-BAawq0SU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
-    "integrity": "sha384-5WBFcLRXmOU2FVgg5TjdPDYMe2qJIy16R8NBh6YEPbo6ZYun1giok0GV15+6p8E/"
+    "integrity": "sha384-HjYBeewUgJrBytcDekGun3zFoYLqS8298Ixm39VgDTM7y8N6nNU7gUdtKtiBawt2"
   }
 }
