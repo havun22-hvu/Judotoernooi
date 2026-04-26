@@ -2,12 +2,14 @@
   "resources/css/app.css": {
     "file": "assets/app-4WGNggDy.css",
     "src": "resources/css/app.css",
-    "isEntry": true
+    "isEntry": true,
+    "integrity": "sha384-Hpxdbyda6vv+v/JRSD0DcdALqT65APkEAUQYOuSdVYAIT8PmjjRNt+ZYtyd3SBwI"
   },
   "resources/js/app.js": {
-    "file": "assets/app-CKIOWJak.js",
+    "file": "assets/app-C0RoAtoJ.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "integrity": "sha384-5WBFcLRXmOU2FVgg5TjdPDYMe2qJIy16R8NBh6YEPbo6ZYun1giok0GV15+6p8E/"
   }
 }

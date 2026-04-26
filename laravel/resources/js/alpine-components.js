@@ -220,6 +220,8 @@ export function registerAlpineComponents(Alpine) {
     Alpine.data('modalWithAbout', () => ({
         open: false,
         showAbout: false,
+        toggle() { this.open = !this.open; },
+        close() { this.open = false; this.showAbout = false; },
         openModal() { this.open = true; },
         closeModal() { this.open = false; this.showAbout = false; },
         toggleAbout() { this.showAbout = !this.showAbout; },
