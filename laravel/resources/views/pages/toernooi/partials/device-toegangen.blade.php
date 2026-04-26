@@ -110,7 +110,7 @@
                             {{-- QR popup --}}
                             <template x-if="qrVisibleVoor(toegang)">
                                 <div class="mt-2 p-4 bg-gray-50 rounded-lg border text-center">
-                                    <p class="text-sm font-medium text-gray-700 mb-2" x-text="qrPopupTitel()"></p>
+                                    <p class="text-sm font-medium text-gray-700 mb-2" x-text="qrPopupTitel(toegang)"></p>
                                     <img :src="qrImageUrl()" class="w-36 h-36 mx-auto rounded mb-2">
                                     <div class="flex items-center gap-2 bg-white rounded p-2 text-xs">
                                         <input type="text" :value="qrUrl" readonly class="flex-1 bg-transparent text-gray-600 border-0 outline-none truncate text-xs">
@@ -120,7 +120,7 @@
                                             <span x-show="isCopied('qr', toegang)" x-cloak>✓</span>
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-2">{{ __('Scan met telefoon of open op de TV browser') }}</p>
+                                    <p class="text-xs text-gray-400 mt-2" x-text="qrPopupCaption()"></p>
                                 </div>
                             </template>
                             {{-- TV Koppel popup --}}
@@ -301,6 +301,9 @@ document.addEventListener('alpine:init', () => {
             labelInterface: '{{ __("Interface") }}',
             labelLcd: '{{ __("LCD Scorebord") }}',
             labelMatInterface: '{{ __("Mat Interface") }}',
+            labelMatPrefix: '{{ __("Mat") }}',
+            captionLcd: '{{ __("Scan met telefoon of open op de TV browser") }}',
+            captionMat: '{{ __("Scan met scorebord-app of open op de tablet") }}',
             toevoegenSuffix: '{{ __("toegang toevoegen") }}',
         },
 
@@ -339,8 +342,18 @@ document.addEventListener('alpine:init', () => {
         qrVisibleVoor(toegang) {
             return this.showQr === `mat_${toegang.id}` || this.showQr === `lcd_${toegang.id}`;
         },
-        qrPopupTitel() {
-            return (this.showQr && this.showQr.startsWith('lcd_')) ? this.teksten.labelLcd : this.teksten.labelMatInterface;
+        qrPopupTitel(toegang) {
+            if (!this.showQr) return '';
+            const isLcd = this.showQr.startsWith('lcd_');
+            const type = isLcd ? this.teksten.labelLcd : this.teksten.labelMatInterface;
+            if (toegang && toegang.mat_nummer) {
+                return `${this.teksten.labelMatPrefix} ${toegang.mat_nummer} — ${type}`;
+            }
+            return type;
+        },
+        qrPopupCaption() {
+            if (!this.showQr) return '';
+            return this.showQr.startsWith('lcd_') ? this.teksten.captionLcd : this.teksten.captionMat;
         },
         qrImageUrl() { return `${this.urls.qr}?url=${encodeURIComponent(this.qrUrl)}`; },
         tvLinkVisible(toegang) { return this.showTvLink === toegang.id; },
