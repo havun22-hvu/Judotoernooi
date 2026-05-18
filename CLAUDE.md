@@ -14,6 +14,15 @@
 | **Technische beslissing** | Zelf beslissen, kort melden wat er gedaan is — NOOIT vragen aan Henk. |
 | **MD bijwerken** (handover/context/KB) | Gewoon doen — NOOIT "mag ik dit documenteren?" vragen. |
 
+## Rolverdeling & Werkwijze (Havun-standaard)
+
+| Situatie | Wat Claude doet |
+|----------|----------------|
+| **Rolverdeling** | Henk = architect + tester. Claude = implementer (code, docs, geautom. tests, commits, deploys). |
+| **Vragen** | UITSLUITEND in planningsfase (MD/plan). Na "ga maar" → volledig autonoom. Nooit vragen: "Mag ik X?", "Zal ik Y doen?" |
+| **Per-agendapunt** | Na elk punt: geautom. tests draaien → V&K check → /simplify → MD docs+planning+handover bijwerken → commit+push → volgende punt. |
+| **Issues** | Direct oplossen bij /start. HIGH=fixen, MEDIUM=evalueren, LOW=auto-ignore. Nooit laten ophopen. |
+| **Testen** | Claude draait geautomatiseerde tests (PHPUnit/Jest). Praktische browser-test = Henk, op zijn eigen moment. |
 
 ## De 5 Onschendbare Regels
 
