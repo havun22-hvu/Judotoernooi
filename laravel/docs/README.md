@@ -48,7 +48,6 @@ docs/
 **Interfaces & devices**
 - [Interfaces](./2-FEATURES/INTERFACES.md) — PWA's + device binding
 - [Scorebord App](./2-FEATURES/SCOREBORD-APP.md) — Android + LCD display
-- [Chromecast](./2-FEATURES/CHROMECAST.md)
 - [Chat](./2-FEATURES/CHAT.md) — Reverb realtime
 - [Judoka Self-Check](./2-FEATURES/JUDOKA-SELFCHECK.md)
 - [Judoka Database](./2-FEATURES/JUDOKA-DATABASE.md) — stambestand import

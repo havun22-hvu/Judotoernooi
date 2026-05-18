@@ -64,7 +64,7 @@ Bij verificatie ("Verifieer poules" knop) worden eliminatie poules apart behande
 - **Eliminatie: min. 8 judoka's** (geen maximum)
 - Kruisfinale: geen grootte validatie
 
-Zie ook: [CLASSIFICATIE.md](../CLASSIFICATIE.md#verificatie-poule-grootte-per-type)
+Zie ook: [CLASSIFICATIE.md](../CLASSIFICATIE.md)
 
 ### Kernformules
 
