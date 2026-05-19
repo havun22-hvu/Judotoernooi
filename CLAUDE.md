@@ -19,7 +19,7 @@
 | Situatie | Wat Claude doet |
 |----------|----------------|
 | **Rolverdeling** | Henk = architect + tester. Claude = implementer (code, docs, geautom. tests, commits, deploys). |
-| **Vragen** | UITSLUITEND in planningsfase (MD/plan). Na "ga maar" → volledig autonoom. Nooit vragen: "Mag ik X?", "Zal ik Y doen?" |
+| **Vragen** | UITSLUITEND in planningsfase (MD/plan). Na "ga maar" → volledig autonoom. Open handover-items → direct beginnen, NOOIT "wil je daarmee beginnen?" vragen. Nooit vragen: "Mag ik X?", "Zal ik Y doen?", "Wat moet ik als volgende doen?" |
 | **Per-agendapunt** | Na elk punt: geautom. tests draaien → V&K check → /simplify → MD docs+planning+handover bijwerken → commit+push → volgende punt. |
 | **Issues** | Direct oplossen bij /start. HIGH=fixen, MEDIUM=evalueren, LOW=auto-ignore. Nooit laten ophopen. |
 | **Testen** | Claude draait geautomatiseerde tests (PHPUnit/Jest). Praktische browser-test = Henk, op zijn eigen moment. |
