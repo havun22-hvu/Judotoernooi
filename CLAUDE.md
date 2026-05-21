@@ -1,6 +1,19 @@
 ⛔ STOP: Bij brainstorm/planning-vragen schrijf je NOOIT code en voer je GEEN acties uit tot Henk expliciet "ga maar" typt. Eerst luisteren en plannen.
 📍 SCOPE: Alleen JudoToernooi. Ga je naar een ander project? Kill deze sessie (Ctrl+C) en start een nieuwe.
 
+## ✅ Verplicht bij sessiestart
+
+1. Lees `.claude/handover.md` — staat WAT er nu speelt en wat de volgende stap is
+2. Als `.claude/blueprint.md` bestaat → lees het, dat IS het implementatieplan
+3. Zoek KB: `cd D:/GitHub/HavunCore && php artisan docs:search "<onderwerp>" --project=judotoernooi`
+
+## Grote taken → Gemini first
+
+```bash
+/arch --project=judotoernooi "beschrijving"
+```
+Blueprint landt in `D:\GitHub\JudoToernooi\.claude\blueprint.md`. Daarna `/mpc` + "ga maar".
+
 # JudoToernooi
 
 **Stack:** Laravel 11 + Blade + Alpine.js + Tailwind — https://judotournament.org
