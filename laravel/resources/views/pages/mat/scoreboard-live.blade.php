@@ -642,11 +642,10 @@
         const channel = pusher.subscribe(channelName);
 
         channel.bind('scoreboard.event', (payload) => {
-            console.log('[LCD] Event ontvangen:', JSON.stringify(payload).substring(0, 200));
             handleEvent(payload.data || payload);
         });
 
-        pusher.connection.bind('connected', () => console.log('[LCD] Reverb verbonden op kanaal:', channelName));
+        pusher.connection.bind('connected', () => {});
         pusher.connection.bind('error', (err) => console.error('[LCD] Reverb fout:', err));
 
         function loadMatch(data, removeWinnerOverlay) {
