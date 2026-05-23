@@ -13,5 +13,11 @@
       "Bash(git push --force origin master)"
     ],
     "defaultMode": "bypassPermissions"
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(php artisan havun:gemini *)"
+    ]
   }
 }
