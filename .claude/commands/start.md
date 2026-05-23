@@ -114,7 +114,16 @@ Lees deze bestanden in volgorde en bevestig aan de gebruiker:
 1. CLAUDE.md                    ← Project regels en context
 2. .claude/context.md           ← Project-specifieke details
 3. .claude/rules.md             ← Security regels (indien aanwezig)
+4. `.claude/blueprint.md` (indien aanwezig) -> zie hieronder
 ```
+### Blueprint check
+
+Als `.claude/blueprint.md` bestaat:
+- Toon de timestamp uit de blockquote header bovenaan
+- Meld: "Blauwdruk aanwezig van [timestamp] — implementeren? Typ `/mpc` + 'ga maar'."
+- Ga NIET zelf implementeren zonder "ga maar"
+
+
 
 ## Stap 2: Kennisbank (KB-first, NIET alles laden)
 
