@@ -32,6 +32,18 @@ Handover, context.md, KB-docs, smallwork.md: gewoon bijwerken.
 
 ---
 
+## Memory opfrissen (VERPLICHT — EERST)
+
+Voer `/mem` uit **voordat je iets anders doet**:
+1. Lees het geheugenindex-bestand voor dit project (`C:/Users/henkv/.claude/projects/[SLUG]/memory/MEMORY.md`)
+2. Lees elk geheugenbestand dat daarin gelinkt is
+3. Toon een korte samenvatting van actieve feedback + projectcontext
+
+> Dit voorkomt dat eerder gemaakte fouten herhaald worden.
+
+---
+
+
 
 ## Stap 0: Sync lokale code + AutoFix detectie (VERPLICHT)
 
