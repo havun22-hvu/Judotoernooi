@@ -6,7 +6,12 @@
 <div class="flex justify-between items-center mb-8">
     <div>
         <h1 class="text-3xl font-bold text-gray-800">Scoreboard Errors</h1>
-        <p class="text-gray-500 mt-1">Foutmeldingen ontvangen van de JudoScoreBoard app</p>
+        <div class="flex items-center gap-3 mt-1">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                📱 JudoScoreBoard Android app
+            </span>
+            <span class="text-gray-400 text-sm">— niet van JudoToernooi</span>
+        </div>
     </div>
     <a href="{{ route('admin.index') }}" class="text-blue-600 hover:text-blue-800">
         &larr; Terug naar Dashboard
