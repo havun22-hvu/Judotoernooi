@@ -218,6 +218,24 @@ class AdminController extends Controller
     /**
      * Impersonate: log in as another organisator (sitebeheerder only)
      */
+    public function scoreboardErrors(): View
+    {
+        $this->checkSitebeheerder();
+
+        $logs = \App\Models\ScoreboardErrorLog::with('deviceToegang')
+            ->orderByDesc('created_at')
+            ->limit(500)
+            ->get();
+
+        $stats = [
+            'total' => $logs->count(),
+            'fatal' => $logs->where('fatal', true)->count(),
+            'today' => $logs->where('created_at', '>=', now()->startOfDay())->count(),
+        ];
+
+        return view('pages.admin.scoreboard-errors', compact('logs', 'stats'));
+    }
+
     public function impersonate(Organisator $klant): RedirectResponse
     {
         $this->checkSitebeheerder();

@@ -332,6 +332,9 @@ Route::middleware('auth:organisator')->group(function () {
     // AutoFix overzicht (sitebeheerder only)
     Route::get('admin/autofix', [AdminController::class, 'autofix'])->name('admin.autofix');
 
+    // Scoreboard error logs (sitebeheerder only)
+    Route::get('admin/scoreboard-errors', [AdminController::class, 'scoreboardErrors'])->name('admin.scoreboard-errors');
+
     // System Alerts (sitebeheerder only)
     Route::get('admin/alerts', [AlertsController::class, 'index'])->name('admin.alerts');
     Route::post('admin/alerts/{alert}/read', [AlertsController::class, 'markRead'])->name('admin.alerts.markRead');

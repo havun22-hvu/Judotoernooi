@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeviceToegang;
 use App\Models\Judoka;
 use App\Models\Mat;
+use App\Models\ScoreboardErrorLog;
 use App\Models\Toernooi;
 use App\Models\TvKoppeling;
 use App\Models\Wedstrijd;
@@ -335,6 +336,45 @@ class ScoreboardController extends Controller
             'success' => true,
             'mat_nummer' => $toegang->mat_nummer,
         ]);
+    }
+
+    /**
+     * Receive error reports from the app.
+     * No auth required — app may flush errors before logging in.
+     */
+    public function errorReport(Request $request): JsonResponse
+    {
+        $errors = $request->input('errors', []);
+        if (empty($errors) || !is_array($errors)) {
+            return response()->json(['ok' => true]);
+        }
+
+        // Optionally resolve device via Bearer token if present
+        $deviceToegang = null;
+        $token = $request->bearerToken();
+        if ($token) {
+            $deviceToegang = DeviceToegang::where('api_token', $token)->first();
+        }
+
+        $device = $request->input('device');
+        $platformVersion = (string) $request->input('platform_version', '');
+
+        foreach (array_slice($errors, 0, 50) as $error) {
+            if (empty($error['message'])) continue;
+            ScoreboardErrorLog::create([
+                'message'           => substr($error['message'] ?? '', 0, 500),
+                'stack'             => isset($error['stack']) ? substr($error['stack'], 0, 3000) : null,
+                'screen'            => $error['screen'] ?? null,
+                'app_timestamp'     => $error['timestamp'] ?? null,
+                'app_version'       => $error['app_version'] ?? null,
+                'fatal'             => (bool) ($error['fatal'] ?? false),
+                'device'            => $device,
+                'platform_version'  => $platformVersion ?: null,
+                'device_toegang_id' => $deviceToegang?->id,
+            ]);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /**

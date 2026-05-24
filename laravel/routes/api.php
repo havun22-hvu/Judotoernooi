@@ -25,6 +25,11 @@ Route::get('/scoreboard/version', function () {
     ]);
 })->name('api.scoreboard.version');
 
+// Public: receive error reports from the app (no auth — app may send before login)
+Route::post('/scoreboard/error-report', [ScoreboardController::class, 'errorReport'])
+    ->middleware('throttle:60,1')
+    ->name('api.scoreboard.error-report');
+
 // Public: authenticate with the 12-character role code to receive a Bearer token.
 // The `throttle:login` middleware mitigates brute-force of the code itself.
 Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
