@@ -195,7 +195,9 @@
             $finaleUitslagUrl = route('toernooi.mat.finale-uitslag', $toernooi->routeParams());
         }
     @endphp
-<div id="mat-interface" x-data="matInterface" x-init="init()">
+<div id="mat-interface" x-data="matInterface" x-init="init()"
+     x-on:mat-score-update.window="laadWedstrijden()"
+     x-on:mat-poule-klaar.window="laadWedstrijden()">
     <!-- Build: v2026.02.10-D (Blade bracket) -->
     <!-- Huidige selectie + Legenda -->
     <div class="mb-1" x-show="blokId && matId">
@@ -2548,15 +2550,6 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
-
-// Reverb push events → refresh bracket/poule data (vervangt 30sec polling)
-['mat-score-update', 'mat-poule-klaar'].forEach(evt => {
-    window.addEventListener(evt, () => {
-        const el = document.getElementById('mat-interface');
-        const comp = el ? Alpine.$data(el) : null;
-        if (comp) comp.laadWedstrijden();
-    });
-});
 
 // Beurt update: update matSelectie direct uit event data + herlaad wedstrijden
 window.addEventListener('mat-beurt-update', (e) => {
