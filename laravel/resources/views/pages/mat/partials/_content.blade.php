@@ -2553,7 +2553,8 @@ setInterval(updateClock, 1000);
 ['mat-score-update', 'mat-poule-klaar'].forEach(evt => {
     window.addEventListener(evt, () => {
         const el = document.getElementById('mat-interface');
-        if (el) Alpine.evaluate(el, 'laadWedstrijden()');
+        const comp = el ? Alpine.$data(el) : null;
+        if (comp) comp.laadWedstrijden();
     });
 });
 
