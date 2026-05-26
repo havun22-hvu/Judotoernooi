@@ -58,12 +58,15 @@
                                         ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
-                                {{-- App code --}}
-                                <div class="text-center">
-                                    <span class="text-xs text-gray-500 block">App code</span>
-                                    <span class="font-mono font-bold text-lg text-gray-400" x-text="tokenPrefix(toegang)"></span>
-                                    <div class="flex items-center gap-1 mt-0.5">
-                                        <span class="font-mono text-xs text-gray-400" x-text="toegang.code"></span>
+                                {{-- Codes --}}
+                                <div class="text-left space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-400 w-20">LCD</span>
+                                        <span class="font-mono font-bold text-gray-500" x-text="tokenPrefix(toegang)"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-400 w-20">{{ __('Mat interface') }}</span>
+                                        <span class="font-mono text-xs text-gray-500" x-text="toegang.code"></span>
                                         <button type="button" @click="copyCode(toegang)" class="text-gray-400 hover:text-gray-600 text-xs" title="{{ __('Kopieer code') }}">
                                             <span x-show="notCopied('code', toegang)">⎘</span>
                                             <span x-show="isCopied('code', toegang)" x-cloak class="text-green-500">✓</span>
