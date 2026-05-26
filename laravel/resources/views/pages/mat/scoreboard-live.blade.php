@@ -306,6 +306,30 @@
             flex-direction: column;
         }
         .winner-overlay.active { display: flex; }
+
+        .disconnect-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .disconnect-overlay.active { display: flex; }
+        .disconnect-overlay .dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #EF4444;
+            box-shadow: 0 0 12px #EF4444;
+            animation: pulse-red 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
         .winner-name {
             font-size: clamp(36px, 8vw, 80px);
             font-weight: 900;
@@ -447,6 +471,13 @@
             <div class="winner-name" id="winner-name"></div>
             <div class="winner-title">WINNAAR</div>
             <div class="winner-type" id="winner-type"></div>
+        </div>
+
+        {{-- Disconnect overlay — shown when WebSocket drops --}}
+        <div class="disconnect-overlay" id="disconnect-overlay">
+            <div class="dot"></div>
+            <div style="color:#EF4444;font-size:clamp(18px,3vh,32px);font-weight:800;">GEEN VERBINDING</div>
+            <div style="color:#9CA3AF;font-size:clamp(12px,2vh,20px);" id="disconnect-countdown"></div>
         </div>
     </div>
 
@@ -642,8 +673,53 @@
             handleEvent(payload.data || payload);
         });
 
-        pusher.connection.bind('connected', () => {});
-        pusher.connection.bind('error', (err) => console.error('[LCD] Reverb fout:', err));
+        const disconnectOverlay = document.getElementById('disconnect-overlay');
+        const disconnectCountdown = document.getElementById('disconnect-countdown');
+        let disconnectTimer = null;
+        let reloadCountdown = null;
+        const RELOAD_AFTER_MS = 60000;
+
+        function showDisconnect() {
+            disconnectOverlay.classList.add('active');
+            let remaining = Math.round(RELOAD_AFTER_MS / 1000);
+            disconnectCountdown.textContent = `Herladen in ${remaining}s`;
+            reloadCountdown = setInterval(() => {
+                remaining--;
+                disconnectCountdown.textContent = `Herladen in ${remaining}s`;
+                if (remaining <= 0) {
+                    clearInterval(reloadCountdown);
+                    window.location.reload();
+                }
+            }, 1000);
+        }
+
+        function hideDisconnect() {
+            disconnectOverlay.classList.remove('active');
+            clearTimeout(disconnectTimer);
+            clearInterval(reloadCountdown);
+            disconnectCountdown.textContent = '';
+        }
+
+        pusher.connection.bind('connected', () => {
+            clearTimeout(disconnectTimer);
+            hideDisconnect();
+        });
+
+        pusher.connection.bind('disconnected', () => {
+            disconnectTimer = setTimeout(showDisconnect, 5000);
+        });
+
+        pusher.connection.bind('unavailable', () => {
+            disconnectTimer = setTimeout(showDisconnect, 5000);
+        });
+
+        pusher.connection.bind('failed', () => {
+            showDisconnect();
+        });
+
+        pusher.connection.bind('error', (err) => {
+            console.error('[LCD] Reverb fout:', err);
+        });
 
         function loadMatch(data, removeWinnerOverlay) {
             if (removeWinnerOverlay) els.winnerOverlay.classList.remove('active');

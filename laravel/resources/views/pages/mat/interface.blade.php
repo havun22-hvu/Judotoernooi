@@ -31,6 +31,14 @@
             <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
         <div class="flex items-center gap-3">
+            <div x-data="{ connected: false }"
+                 @ws-connected.window="connected = true"
+                 @ws-disconnected.window="connected = false"
+                 @reverb-disconnected.window="connected = false">
+                <span :class="connected ? 'bg-green-400' : 'bg-red-400'"
+                      class="w-2.5 h-2.5 rounded-full inline-block transition-colors duration-500"
+                      :title="connected ? 'Verbonden' : 'Geen verbinding'"></span>
+            </div>
             <div class="text-2xl font-mono" id="clock"></div>
             <div x-data="menuWithHelp" class="relative">
                 <button @click="toggleMenu()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
