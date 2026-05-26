@@ -58,10 +58,17 @@
                                         ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
-                                {{-- Token (eerste 4 tekens) --}}
+                                {{-- App code --}}
                                 <div class="text-center">
-                                    <span class="text-xs text-gray-500 block">Token</span>
+                                    <span class="text-xs text-gray-500 block">App code</span>
                                     <span class="font-mono font-bold text-lg text-gray-400" x-text="tokenPrefix(toegang)"></span>
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <span class="font-mono text-xs text-gray-400" x-text="toegang.code"></span>
+                                        <button type="button" @click="copyCode(toegang)" class="text-gray-400 hover:text-gray-600 text-xs" title="{{ __('Kopieer code') }}">
+                                            <span x-show="notCopied('code', toegang)">⎘</span>
+                                            <span x-show="isCopied('code', toegang)" x-cloak class="text-green-500">✓</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <table class="text-sm">
@@ -404,6 +411,10 @@ document.addEventListener('alpine:init', () => {
         copyUrl(toegang) {
             navigator.clipboard.writeText(toegang.url);
             this.flashCopied(`url_${toegang.id}`);
+        },
+        copyCode(toegang) {
+            navigator.clipboard.writeText(toegang.code);
+            this.flashCopied(`code_${toegang.id}`);
         },
         copyTvUrl(toegang) {
             const suffix = toegang.code ? toegang.code.substring(0, 4) : '';
