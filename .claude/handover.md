@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-05-27
+last_updated: 2026-05-28
 ---
 
 # JudoToernooi — Handover
@@ -17,8 +17,8 @@ last_updated: 2026-05-27
 
 ## Openstaande items
 
-- [ ] **phpoffice/phpspreadsheet security update**: v1.30.1 heeft 1 critical + 2 high CVE's — `cd laravel && composer update phpoffice/phpspreadsheet` (nog niet gedaan)
-- [ ] **ShouldQueue voor MatUpdate/ScoreboardEvent**: optioneel — converteren van `ShouldBroadcastNow` naar queued broadcast voor retry bij tijdelijk Reverb-uitval (lage prioriteit)
+- [x] **phpoffice/phpspreadsheet security update**: opgelost 2026-05-28 → v1.30.4
+- [ ] **ShouldQueue voor MatUpdate/ScoreboardEvent**: optioneel — converteren van `ShouldBroadcastNow` naar queued broadcast voor retry bij tijdelijk Reverb-uitval. Voordeel: events niet verloren bij Reverb-herstart, HTTP-response iets sneller. Nadeel: kleine vertraging in live updates. Beslissing: lage prioriteit, bewust uitgesteld.
 
 ## Kritieke context voor volgende sessie
 
@@ -46,3 +46,12 @@ last_updated: 2026-05-27
 **Sessie afsluiting:**
 - Dashboard dropdown menu fix — `modalWithAbout` Alpine component miste `toggle()`/`close()` methods (deployed)
 - "Geen wedstrijden" badge op mat interface uitgelegd (geen bug): poule flow = wedstrijddag doorsturen → zaaloverzicht chip klikken → wedstrijden gegenereerd → mat interface. Bij test-toernooi was stap 2 (zaaloverzicht chip) niet uitgevoerd.
+
+### 2026-05-28
+
+**Security updates geïnstalleerd en gedeployd:**
+- `phpoffice/phpspreadsheet` 1.30.1 → 1.30.4 (critical SSRF/RCE CVE-2026-34084 + 2x high CPU DoS)
+- `symfony/*` 7.4.0 → 7.4.12/7.4.13 (SMTP injection, URL injection, YAML DoS, diverse CVEs)
+- 24 packages geüpdated in één `composer update`
+- Alle 3467 tests groen na update
+- Gedeployd naar production én staging
