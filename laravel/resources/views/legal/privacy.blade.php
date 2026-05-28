@@ -182,6 +182,39 @@
                     </div>
                 </section>
 
+                <!-- 10. JudoScoreBoard Android App -->
+                <section>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('10. JudoScoreBoard Android App') }}</h2>
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        <p class="mb-3">
+                            {{ __('De JudoScoreBoard app is een gratis Android-applicatie voor het bijhouden van judowedstrijden, beschikbaar via Google Play.') }}
+                        </p>
+
+                        <p class="mb-2"><strong>{{ __('Verzamelde gegevens:') }}</strong></p>
+                        <ul class="list-disc pl-6 space-y-1 mb-4">
+                            <li>{{ __('Verbindingscode (12 tekens) — voor authenticatie met JudoToernooi (alleen bij gekoppelde modus)') }}</li>
+                            <li>{{ __('Bearer token — tijdelijk sessietoken, opgeslagen op het apparaat') }}</li>
+                            <li>{{ __('App-foutmeldingen — anonieme crashrapportages voor probleemoplossing') }}</li>
+                        </ul>
+
+                        <p class="mb-2"><strong>{{ __('Niet verzameld:') }}</strong></p>
+                        <ul class="list-disc pl-6 space-y-1 mb-4">
+                            <li>{{ __('Persoonlijk identificeerbare informatie') }}</li>
+                            <li>{{ __('Locatiegegevens') }}</li>
+                            <li>{{ __('Contacten, camera of microfoon') }}</li>
+                            <li>{{ __('Advertentie-ID') }}</li>
+                        </ul>
+
+                        <p class="mb-3">
+                            {{ __('De app werkt ook volledig offline (standalone modus) zonder enige dataverbinding. In gekoppelde modus communiceert de app uitsluitend met de JudoToernooi server van de organisator.') }}
+                        </p>
+
+                        <p>
+                            {{ __('Gegevens worden niet gedeeld met derden en worden niet gebruikt voor reclame of tracking.') }}
+                        </p>
+                    </div>
+                </section>
+
                 <!-- Contact -->
                 <section class="pt-6 border-t border-gray-200">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Contact') }}</h2>
