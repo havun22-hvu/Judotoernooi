@@ -164,6 +164,29 @@
         </div>
     </template>
 
+    {{-- Scorebord weergave --}}
+    <form action="{{ route('toernooi.scorebord', $toernooi->routeParams()) }}" method="POST" class="mt-6 pt-4 border-t">
+        @csrf
+        @method('PUT')
+        <h3 class="text-base font-semibold text-gray-800 mb-1">{{ __('Scorebord weergave') }}</h3>
+        <p class="text-sm text-gray-500 mb-3">{{ __('Positie van blauw op het LCD scorebord. Wijziging geldt vanaf de volgende wedstrijd.') }}</p>
+        <div class="flex items-center gap-6">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="blauw_rechts" value="0"
+                       {{ !($toernooi->mat_voorkeuren['blauw_rechts'] ?? false) ? 'checked' : '' }}
+                       class="w-4 h-4 text-blue-600">
+                <span class="text-gray-700 font-medium">{{ __('Blauw links') }}</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="blauw_rechts" value="1"
+                       {{ ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false) ? 'checked' : '' }}
+                       class="w-4 h-4 text-blue-600">
+                <span class="text-gray-700 font-medium">{{ __('Blauw rechts') }}</span>
+            </label>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">{{ __('Opslaan') }}</button>
+        </div>
+    </form>
+
     {{-- Reset All Button --}}
     <div class="mt-6 pt-4 border-t">
         <button type="button"

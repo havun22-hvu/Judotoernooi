@@ -430,6 +430,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::put('bloktijden', [ToernooiInstellingenController::class, 'updateBloktijden'])->name('bloktijden');
     Route::put('betalingen', [ToernooiInstellingenController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
     Route::put('portaal', [ToernooiInstellingenController::class, 'updatePortaalInstellingen'])->name('portaal.instellingen');
+    Route::put('scorebord', [ToernooiInstellingenController::class, 'updateScoreboardInstelling'])->name('scorebord');
     Route::put('local-server-ips', [ToernooiInstellingenController::class, 'updateLocalServerIps'])->name('local-server-ips');
     Route::get('detect-my-ip', [ToernooiInstellingenController::class, 'detectMyIp'])->name('detect-my-ip');
     Route::post('heropen-voorbereiding', [ToernooiInstellingenController::class, 'heropenVoorbereiding'])->name('heropen-voorbereiding');

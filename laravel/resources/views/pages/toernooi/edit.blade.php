@@ -256,25 +256,6 @@
                 </div>
             </div>
 
-            <div class="mt-4 pt-4 border-t">
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ __('Scorebord weergave') }}</h3>
-                <p class="text-sm text-gray-500 mb-3">{{ __('Positie van blauw op het LCD scorebord. Wijziging geldt vanaf de volgende wedstrijd.') }}</p>
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="mat_voorkeuren[blauw_rechts]" value="0"
-                               {{ !old('mat_voorkeuren.blauw_rechts', $toernooi->mat_voorkeuren['blauw_rechts'] ?? false) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600">
-                        <span class="text-gray-700 font-medium">{{ __('Blauw links') }}</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="mat_voorkeuren[blauw_rechts]" value="1"
-                               {{ old('mat_voorkeuren.blauw_rechts', $toernooi->mat_voorkeuren['blauw_rechts'] ?? false) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600">
-                        <span class="text-gray-700 font-medium">{{ __('Blauw rechts') }}</span>
-                    </label>
-                </div>
-            </div>
-
         </div>
 
         <!-- POULE INSTELLINGEN -->

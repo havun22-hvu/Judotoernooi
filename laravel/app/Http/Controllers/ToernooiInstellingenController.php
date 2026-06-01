@@ -165,6 +165,18 @@ class ToernooiInstellingenController extends Controller
         ]);
     }
 
+    public function updateScoreboardInstelling(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $request->validate(['blauw_rechts' => 'nullable|boolean']);
+        $voorkeuren = $toernooi->mat_voorkeuren ?? [];
+        $voorkeuren['blauw_rechts'] = (bool) $request->input('blauw_rechts', false);
+        $toernooi->update(['mat_voorkeuren' => $voorkeuren]);
+
+        return redirect()
+            ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
+            ->with('success', __('Scorebord instelling bijgewerkt'));
+    }
+
     /**
      * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
      */
