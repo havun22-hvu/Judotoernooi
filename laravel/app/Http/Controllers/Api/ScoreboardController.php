@@ -379,14 +379,16 @@ class ScoreboardController extends Controller
 
     /**
      * Convert uitslag_type to judopunten (JP) for the winner.
-     * Ippon (incl. awasete/hansoku) = 10, Waza-ari = 7, Yuko/Hantei = 5
+     * Ippon / hansoku-make = 10, Waza-ari = 7, Yuko = 5, Hantei = 0 (referee decision, no technical score)
      */
     private function uitslagTypeToJP(string $uitslagType): int
     {
         return match ($uitslagType) {
             'ippon', 'hansoku-make' => 10,
             'wazaari' => 7,
-            default => 5, // yuko, hantei, etc.
+            'yuko' => 5,
+            'hantei' => 0,
+            default => 0,
         };
     }
 
