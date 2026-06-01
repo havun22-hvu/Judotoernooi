@@ -2,117 +2,87 @@
 title: Feature: Wedstrijdinstellingen per Categorie
 type: reference
 scope: judotoernooi
-last_check: 2026-04-22
+last_check: 2026-06-01
 ---
 
 # Feature: Wedstrijdinstellingen per Categorie
 
-> **Status:** OPEN
-> **Prioriteit:** Hoog — nodig voor correcte scoreboard/LCD werking
+## Fase 1: shiai_time / shime_waza / kansetsu_waza
+
+> **Status:** GEÏMPLEMENTEERD
 > **Aanleiding:** LCD toonde 4:00 ipv 3:00, hardcoded waarden vervangen door config
 
-## Doel
-
-Per categorie in `gewichtsklassen` JSON drie extra velden:
+Per categorie in `gewichtsklassen` JSON:
 
 | Veld | Type | Default | Beschrijving |
-|------|------|---------|-------------|
-| `shiai_time` | int (seconden) | 180 | Wedstrijdtijd (bv. 120 voor mini's, 180 voor pupillen, 240 voor senioren) |
+|------|------|---------|--------------|
+| `shiai_time` | int (seconden) | 180 | Wedstrijdtijd |
 | `shime_waza` | bool | false | Wurging toegestaan |
 | `kansetsu_waza` | bool | false | Armklem toegestaan |
 
-## IJF Standaard (referentie)
+### IJF Standaard (referentie)
 
-| Categorie | Leeftijd | Wedstrijdtijd | Shime waza | Kansetsu waza |
-|-----------|----------|--------------|------------|---------------|
-| Mini's | 4-6 | 2:00 (120s) | Nee | Nee |
-| Pupillen | 7-9 | 2:00 (120s) | Nee | Nee |
-| Aspiranten | 10-11 | 3:00 (180s) | Nee | Nee |
-| Cadetten | 12-14 | 3:00 (180s) | Ja (≥13) | Nee |
-| Junioren | 15-17 | 4:00 (240s) | Ja | Ja |
-| Senioren | 18+ | 4:00 (240s) | Ja | Ja |
+| Categorie | Leeftijd | Tijd | Shime | Kansetsu |
+|-----------|----------|------|-------|----------|
+| Mini's | 4-6 | 2:00 | Nee | Nee |
+| Pupillen | 7-9 | 2:00 | Nee | Nee |
+| Aspiranten | 10-11 | 3:00 | Nee | Nee |
+| Cadetten | 12-14 | 3:00 | Ja (≥13) | Nee |
+| Junioren | 15-17 | 4:00 | Ja | Ja |
+| Senioren | 18+ | 4:00 | Ja | Ja |
 
-## Implementatie
-
-### 1. Edit form (`edit.blade.php`)
-
-In het categorie blok, na de bestaande velden (max kg, max leeftijd, band grens):
-
-```html
-<!-- Wedstrijdtijd -->
-<select class="shiai-time-select">
-    <option value="120">2:00 min</option>
-    <option value="180" selected>3:00 min</option>
-    <option value="240">4:00 min</option>
-    <option value="300">5:00 min</option>
-</select>
-
-<!-- Wurging (shime waza) -->
-<input type="checkbox" class="shime-waza-checkbox">
-<label>Shime waza</label>
-
-<!-- Armklem (kansetsu waza) -->
-<input type="checkbox" class="kansetsu-waza-checkbox">
-<label>Kansetsu waza</label>
-```
-
-### 2. Save logica (`edit.blade.php` JS)
-
-In de `updateGewichtsklassenJson()` functie, toevoegen aan `entry`:
-```javascript
-entry.shiai_time = parseInt(item.querySelector('.shiai-time-select')?.value) || 180;
-entry.shime_waza = item.querySelector('.shime-waza-checkbox')?.checked || false;
-entry.kansetsu_waza = item.querySelector('.kansetsu-waza-checkbox')?.checked || false;
-```
-
-### 3. Render logica (`edit.blade.php` JS)
-
-In de `renderCategorieItem()` sectie, waarden uitlezen:
-```javascript
-const shiaiTime = item.shiai_time || 180;
-const shimeWaza = item.shime_waza || false;
-const kansetsuWaza = item.kansetsu_waza || false;
-```
-
-### 4. Toernooi model
-
-`getMatchDuration()` moet per categorie werken:
-```php
-public function getMatchDurationForCategorie(?string $categorieKey): int
-{
-    $klassen = $this->gewichtsklassen ?? [];
-    return $klassen[$categorieKey]['shiai_time'] ?? 180;
-}
-```
-
-### 5. Doorvoeren naar scoreboard
-
-De `match_duration` in ScoreboardController en MatController moet de categorie van de wedstrijd meenemen:
-```php
-'match_duration' => $toernooi->getMatchDurationForCategorie($wedstrijd->poule?->categorie_key),
-```
-
-De `shime_waza` en `kansetsu_waza` moeten meegestuurd worden zodat de scoreboard app weet welke technieken zijn toegestaan:
-```php
-'shime_waza' => $toernooi->gewichtsklassen[$categorieKey]['shime_waza'] ?? false,
-'kansetsu_waza' => $toernooi->gewichtsklassen[$categorieKey]['kansetsu_waza'] ?? false,
-```
-
-### 6. LCD display
-
-`scoreboard-live.blade.php` ontvangt `match_duration` al — dat werkt automatisch.
-Optioneel: toon iconen voor shime/kansetsu waza status op het display.
-
-## Bestanden
+### Geïmplementeerde bestanden
 
 | Bestand | Wijziging |
 |---------|-----------|
-| `resources/views/pages/toernooi/edit.blade.php` | 3 form velden per categorie |
-| `app/Models/Toernooi.php` | `getMatchDurationForCategorie()` method |
-| `app/Http/Controllers/MatController.php` | Lees categorie-specifieke duration |
-| `app/Http/Controllers/Api/ScoreboardController.php` | Idem + shime/kansetsu meesturen |
-| `resources/views/pages/mat/scoreboard-live.blade.php` | Optioneel: shime/kansetsu iconen |
+| `resources/views/pages/toernooi/edit.blade.php` | UI controls (shiai-time-select, shime-waza-checkbox, kansetsu-waza-checkbox) |
+| `app/Models/Toernooi.php` | `getMatchDurationForCategorie()` + `getMatchRulesForCategorie()` |
+| `app/Http/Controllers/MatController.php` | Spreads `getMatchRulesForCategorie()` in match payload |
+| `app/Http/Controllers/Api/ScoreboardController.php` | Idem + `match_duration` |
 
-## Geen migratie nodig
+---
 
-Alles zit in de bestaande `gewichtsklassen` JSON kolom.
+## Fase 2: Hantei (winnaar aanwijzen) en Gelijkspel
+
+> **Status:** TODO
+> **Aanleiding:** Scheids beslist de winnaar op basis van toernooi-/categorie-regels — het systeem registreert alleen de uitkomst.
+
+### Scoring-afspraken
+
+| Uitslag | WP winnaar | WP verliezer | JP | uitslag_type |
+|---------|------------|--------------|-----|--------------|
+| Ippon / Hansoku-make | 2 | 0 | 10 | `ippon` / `hansoku-make` |
+| Waza-ari | 2 | 0 | 7 | `wazaari` |
+| Winnaar aanwijzen (Hantei) | 2 | 0 | 0 | `hantei` |
+| Gelijkspel | 1 | 1 | 0 | `gelijkspel` |
+
+WP-telling: `gewonnen * 10 + gelijk * 5` (intern) — gelijkspel telt al correct via `winnaar_id = null`.
+
+### Gelijkspel (al werkend)
+
+- Web mat interface: JP=0 selecteren → beide WP=1, `winnaar_id=null`, scores 0-0 → opgeslagen als draw ✓
+- Poule standings: `$gelijk` counter + 5 punten ✓
+
+### Hantei (ontbreekt)
+
+**Probleem in web mat interface:**
+`updateJP(judokaId, jp=0)` forceert altijd gelijkspel (beide WP=1). Er is geen manier om WP=2 met JP=0 op te slaan voor één judoka.
+
+**Oplossing:** "W" (Winnaar) als extra JP-optie in de dropdown. Wanneer geselecteerd voor judoka X:
+- judoka X: WP=2, JP=0
+- opponent: WP=0, JP=0
+- `uitslag_type = 'hantei'`
+
+**Probleem in Android API (ScoreboardController):**
+`uitslagTypeToJP('hantei')` geeft 5 terug (default). Moet 0 zijn.
+
+### Implementatieplan
+
+| # | Bestand | Wijziging |
+|---|---------|-----------|
+| 1 | `app/Http/Controllers/Api/ScoreboardController.php` | `uitslagTypeToJP()`: voeg `'hantei' => 0` toe |
+| 2 | `resources/views/pages/mat/partials/_content.blade.php` | JP dropdown: voeg `<option value="hantei">W</option>` toe |
+| 3 | `resources/views/pages/mat/partials/_content.blade.php` | `updateJP()`: handle `jp === 'hantei'` → winnaar WP=2, JP=0 |
+| 4 | `resources/views/pages/mat/partials/_content.blade.php` | `saveScore()`: stuur `uitslag_type='hantei'` mee als jp-waarde hantei is |
+
+**Geen migratie nodig.** `uitslag_type` is al een vrije string (max 20). `WedstrijdUitslagRequest` heeft geen `in:`-validatie.

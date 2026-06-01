@@ -478,10 +478,11 @@
                                                     @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
                                                 >
                                                     <option value=""></option>
-                                                    <option value="0">0</option>
+                                                    <option value="0">G</option>
                                                     <option value="5">5</option>
                                                     <option value="7">7</option>
                                                     <option value="10">10</option>
+                                                    <option value="hantei">W</option>
                                                 </select>
                                             </div>
                                         </td>
@@ -1474,6 +1475,7 @@ document.addEventListener('alpine:init', () => {
                 poule.wedstrijden = poule.wedstrijden.map(w => {
                     w.wpScores = {};
                     w.jpScores = {};
+                    w.hanteiWinnaarId = null;
 
                     // Initialize from saved scores (only for poule matches with both judokas)
                     if (w.wit && w.blauw && (w.is_gespeeld || w.score_wit || w.score_blauw)) {
@@ -1793,13 +1795,22 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            // Hantei (W): winnaar aanwijzen — WP=2, JP=0 voor beide
+            if (value === 'hantei') {
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0, [opponentId]: 0 };
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 2, [opponentId]: 0 };
+                wedstrijd.hanteiWinnaarId = judokaId;
+                return;
+            }
+
             const jp = parseInt(value);
 
             // Reassign objects voor Alpine reactivity
             wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: jp };
+            wedstrijd.hanteiWinnaarId = null;
 
             if (jp === 0) {
-                // JP=0 betekent gelijkspel: beide WP=1, beide JP=0
+                // JP=G betekent gelijkspel: beide WP=1, beide JP=0
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 1, [opponentId]: 1 };
                 wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
             } else if (jp > 0) {
@@ -1830,20 +1841,28 @@ document.addEventListener('alpine:init', () => {
                 winnaarId = wedstrijd.blauw.id;
             }
 
+            // Determine uitslag_type
+            let uitslagType = 'punten';
+            if (wedstrijd.hanteiWinnaarId && wedstrijd.hanteiWinnaarId === winnaarId) {
+                uitslagType = 'hantei';
+            } else if (winnaarId === null) {
+                uitslagType = 'gelijkspel';
+            }
+
             // Save to backend
             const uitslagResponse = await csrfFetch(`{{ $uitslagUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-    
+
                 },
                 body: JSON.stringify({
                     wedstrijd_id: wedstrijd.id,
                     winnaar_id: winnaarId,
                     score_wit: wedstrijd.jpScores[wedstrijd.wit.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.wit.id]) : '',
                     score_blauw: wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.blauw.id]) : '',
-                    uitslag_type: 'punten',
+                    uitslag_type: uitslagType,
                     updated_at: wedstrijd.updated_at || null
                 })
             });
