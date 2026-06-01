@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-05-28
+last_updated: 2026-06-02
 ---
 
 # JudoToernooi — Handover
@@ -18,7 +18,10 @@ last_updated: 2026-05-28
 ## Openstaande items
 
 - [x] **phpoffice/phpspreadsheet security update**: opgelost 2026-05-28 → v1.30.4
-- [ ] **ShouldQueue voor MatUpdate/ScoreboardEvent**: optioneel — converteren van `ShouldBroadcastNow` naar queued broadcast voor retry bij tijdelijk Reverb-uitval. Voordeel: events niet verloren bij Reverb-herstart, HTTP-response iets sneller. Nadeel: kleine vertraging in live updates. Beslissing: lage prioriteit, bewust uitgesteld.
+- [ ] **ShouldQueue voor MatUpdate/ScoreboardEvent**: optioneel — converteren van `ShouldBroadcastNow` naar queued broadcast voor retry bij tijdelijk Reverb-uitval. Lage prioriteit, bewust uitgesteld.
+- [ ] **Blauw-positie scorebord op staging bekijken**: verplaatst naar Device Toegangen (Organisatie-tab) — Henk moet nog goedkeuren.
+- [ ] **Gear-icoontje header op staging bekijken**: instellingen-icon links naast taalvlag — Henk moet nog goedkeuren.
+- [ ] **Hantei (W) en Gelijkspel (G) in mat interface op staging bekijken**: JP-dropdown uitgebreid, Henk moet nog goedkeuren.
 
 ## Kritieke context voor volgende sessie
 
@@ -55,3 +58,18 @@ last_updated: 2026-05-28
 - 24 packages geüpdated in één `composer update`
 - Alle 3467 tests groen na update
 - Gedeployd naar production én staging
+
+### 2026-06-02
+
+**UI verbeteringen (op staging, wachten op goedkeuring):**
+- **Blauw-positie scorebord verplaatst**: van "Matten & Tijdsblokken" naar "Device Toegangen" sectie (Organisatie-tab). Eigen `PUT /scorebord` route + `updateScoreboardInstelling()` in `ToernooiInstellingenController`. Bewaart setting via `mat_voorkeuren['blauw_rechts']` op toernooi.
+- **Gear-icoontje in header**: tandwiel-icon toegevoegd links naast taalvlag, zichtbaar in toernooi-context, linkt naar `toernooi.edit`.
+
+**Hantei & Gelijkspel in mat interface:**
+- JP-dropdown uitgebreid met `G` (gelijkspel, beide WP=1, JP=0) en `W` (hantei/winnaar aanwijzen, WP=2, JP=0)
+- `updateJP()` in `_content.blade.php` handelt `value='hantei'` af
+- `saveScore()` stuurt `uitslag_type='hantei'` of `uitslag_type='gelijkspel'` naar backend
+- `ScoreboardController::uitslagTypeToJP('hantei')` stond al op 0
+- Bewuste keuze: geen per-categorie regels opslaan — scheids beslist zelf op basis van toernooi-regels
+
+**Architectuurkeuze vastgelegd:** Hantei/GS-regels per categorie zijn NIET geconfigureerd in toernooi-instellingen. De scheids kent de regels. Systeem registreert alleen de uitkomst.
