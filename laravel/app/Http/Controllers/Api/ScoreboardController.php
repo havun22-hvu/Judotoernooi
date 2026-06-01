@@ -114,7 +114,7 @@ class ScoreboardController extends Controller
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
-            'winnaar_id' => 'required|exists:judokas,id',
+            'winnaar_id' => 'nullable|exists:judokas,id',
             'score_wit' => 'nullable|array',
             'score_wit.yuko' => 'nullable|integer|min:0',
             'score_wit.wazaari' => 'nullable|integer|min:0|max:2',
@@ -146,8 +146,12 @@ class ScoreboardController extends Controller
             }
         }
 
-        // Validate winnaar is participant
-        if ($validated['winnaar_id'] != $wedstrijd->judoka_wit_id &&
+        // Gelijkspel: winnaar_id is null → both judokas get 1 WP and 0 JP
+        $isGelijkspel = $validated['winnaar_id'] === null;
+
+        // Validate winnaar is participant (skip for gelijkspel)
+        if (!$isGelijkspel &&
+            $validated['winnaar_id'] != $wedstrijd->judoka_wit_id &&
             $validated['winnaar_id'] != $wedstrijd->judoka_blauw_id) {
             return response()->json([
                 'success' => false,
@@ -155,11 +159,11 @@ class ScoreboardController extends Controller
             ], 400);
         }
 
-        // Convert to judopunten (JP) for storage: winner gets JP based on uitslag_type, loser gets 0
-        $isWitWinnaar = $validated['winnaar_id'] == $wedstrijd->judoka_wit_id;
-        $jp = $this->uitslagTypeToJP($validated['uitslag_type']);
-        $scoreWit = $isWitWinnaar ? $jp : 0;
-        $scoreBlauw = $isWitWinnaar ? 0 : $jp;
+        // Convert to judopunten (JP): gelijkspel → 0 JP each; otherwise winner gets JP, loser 0
+        $isWitWinnaar = !$isGelijkspel && $validated['winnaar_id'] == $wedstrijd->judoka_wit_id;
+        $jp = $isGelijkspel ? 0 : $this->uitslagTypeToJP($validated['uitslag_type']);
+        $scoreWit = $isGelijkspel ? 0 : ($isWitWinnaar ? $jp : 0);
+        $scoreBlauw = $isGelijkspel ? 0 : ($isWitWinnaar ? 0 : $jp);
 
         // Handle elimination vs pool match
         if ($wedstrijd->groep) {
@@ -379,7 +383,7 @@ class ScoreboardController extends Controller
 
     /**
      * Convert uitslag_type to judopunten (JP) for the winner.
-     * Ippon / hansoku-make = 10, Waza-ari = 7, Yuko = 5, Hantei = 0 (referee decision, no technical score)
+     * Ippon / hansoku-make = 10, Waza-ari = 7, Yuko = 5, Hantei = 0, Gelijkspel = 0
      */
     private function uitslagTypeToJP(string $uitslagType): int
     {
@@ -387,8 +391,7 @@ class ScoreboardController extends Controller
             'ippon', 'hansoku-make' => 10,
             'wazaari' => 7,
             'yuko' => 5,
-            'hantei' => 0,
-            default => 0,
+            default => 0, // hantei, gelijkspel, etc.
         };
     }
 
