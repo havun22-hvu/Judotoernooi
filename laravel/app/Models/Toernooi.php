@@ -523,15 +523,20 @@ class Toernooi extends Model
     }
 
     /**
-     * Get match rules for a category (shime_waza, kansetsu_waza).
+     * Get match rules for a category (shime_waza, kansetsu_waza, eind_optie, golden_score_duur).
      */
     public function getMatchRulesForCategorie(?string $categorieKey): array
     {
         $klassen = $this->gewichtsklassen ?? [];
         $cat = $klassen[$categorieKey] ?? [];
+        $goldenScoreDuur = isset($cat['golden_score_duur']) && $cat['golden_score_duur'] !== '' && $cat['golden_score_duur'] !== null
+            ? (int) $cat['golden_score_duur']
+            : null;
         return [
             'shime_waza' => $cat['shime_waza'] ?? false,
             'kansetsu_waza' => $cat['kansetsu_waza'] ?? false,
+            'eind_optie' => $cat['eind_optie'] ?? 'golden_score',
+            'golden_score_duur' => $goldenScoreDuur,
         ];
     }
 

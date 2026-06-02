@@ -1117,7 +1117,9 @@
                     const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
                     const bandGrens = item.querySelector('.band-grens-select')?.value || '';
                     const bandVerschil1 = parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1;
-                    const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem, shiai_time: parseInt(item.querySelector('.shiai-time-select')?.value) || 180, shime_waza: item.querySelector('.shime-waza-checkbox')?.checked || false, kansetsu_waza: item.querySelector('.kansetsu-waza-checkbox')?.checked || false };
+                    const eindOptieVal = item.querySelector('.eind-optie-select')?.value || 'golden_score';
+                    const gsDuurVal = parseInt(item.querySelector('.golden-score-duur-input')?.value) || null;
+                    const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem, shiai_time: parseInt(item.querySelector('.shiai-time-select')?.value) || 180, shime_waza: item.querySelector('.shime-waza-checkbox')?.checked || false, kansetsu_waza: item.querySelector('.kansetsu-waza-checkbox')?.checked || false, eind_optie: eindOptieVal, golden_score_duur: eindOptieVal === 'golden_score' ? gsDuurVal : null };
                     if (systeem === 'punten_competitie') {
                         entry.punten_competitie_wedstrijden = pcAantal;
                     }
@@ -1165,6 +1167,18 @@
             }
 
             // Toggle gewichtsklassen visibility based on max_kg_verschil
+            window.toggleGoldenScoreDuur = function(select) {
+                const item = select.closest('.bg-blue-50');
+                const duurInput = item?.querySelector('.golden-score-duur-input');
+                if (!duurInput) return;
+                if (select.value === 'golden_score') {
+                    duurInput.style.display = '';
+                } else {
+                    duurInput.style.display = 'none';
+                    duurInput.value = '';
+                }
+            };
+
             window.toggleGewichtsklassen = function(input) {
                 const item = input.closest('.gewichtsklasse-item');
                 const gewichtenContainer = item.querySelector('.gewichten-container');
@@ -1348,6 +1362,8 @@
                 const shiaiTime = item.shiai_time || 180;
                 const shimeWaza = item.shime_waza || false;
                 const kansetsuWaza = item.kansetsu_waza || false;
+                const eindOptie = item.eind_optie || 'golden_score';
+                const goldenScoreDuur = item.golden_score_duur ?? '';
 
                 // Support both old band_tot and new band_filter
                 let bandFilter = item.band_filter || item.band_tot || '';
@@ -1472,6 +1488,20 @@
                                        onchange="updateJsonInput()">
                                 {{ __('Kansetsu') }}
                             </label>
+                            <label class="text-gray-500 text-xs whitespace-nowrap" title="{{ __('Eindfase bij gelijkstand') }}">{{ __('Eind:') }}</label>
+                            <select class="eind-optie-select border rounded px-1 py-1 text-sm bg-white"
+                                    title="{{ __('Eindoptie bij gelijkstand') }}"
+                                    onchange="toggleGoldenScoreDuur(this); updateJsonInput()">
+                                <option value="golden_score" ${eindOptie === 'golden_score' ? 'selected' : ''}>{{ __('GS') }}</option>
+                                <option value="hantei" ${eindOptie === 'hantei' ? 'selected' : ''}>{{ __('Hantei') }}</option>
+                                <option value="hikiwake" ${eindOptie === 'hikiwake' ? 'selected' : ''}>{{ __('Hikiwake') }}</option>
+                            </select>
+                            <input type="number" class="golden-score-duur-input w-14 border rounded px-2 py-1.5 text-center text-sm"
+                                   value="${goldenScoreDuur}"
+                                   min="1" max="10" placeholder="∞"
+                                   title="{{ __('Golden Score duur in minuten (leeg = onbeperkt)') }}"
+                                   style="${eindOptie !== 'golden_score' ? 'display:none' : ''}"
+                                   onchange="updateJsonInput()">
                         </div>
                         <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
                             <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
@@ -1689,6 +1719,8 @@
                         shiai_time: parseInt(item.querySelector('.shiai-time-select')?.value) || 180,
                         shime_waza: item.querySelector('.shime-waza-checkbox')?.checked || false,
                         kansetsu_waza: item.querySelector('.kansetsu-waza-checkbox')?.checked || false,
+                        eind_optie: item.querySelector('.eind-optie-select')?.value || 'golden_score',
+                        golden_score_duur: (() => { const sel = item.querySelector('.eind-optie-select')?.value; const v = parseInt(item.querySelector('.golden-score-duur-input')?.value) || null; return sel === 'golden_score' ? v : null; })(),
                     };
                 });
                 return configuratie;
@@ -1870,7 +1902,9 @@
                     toon_label_in_titel: true,
                     shiai_time: 180,
                     shime_waza: false,
-                    kansetsu_waza: false
+                    kansetsu_waza: false,
+                    eind_optie: 'golden_score',
+                    golden_score_duur: null
                 };
                 container.appendChild(createCategorieElement(newKey, newItem));
                 updateJsonInput();
