@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-02
+last_updated: 2026-06-03
 ---
 
 # JudoToernooi — Handover
@@ -73,3 +73,9 @@ last_updated: 2026-06-02
 - Bewuste keuze: geen per-categorie regels opslaan — scheids beslist zelf op basis van toernooi-regels
 
 **Architectuurkeuze vastgelegd:** Hantei/GS-regels per categorie zijn NIET geconfigureerd in toernooi-instellingen. De scheids kent de regels. Systeem registreert alleen de uitkomst.
+
+### 2026-06-03
+
+**Sessieterugblik (geen nieuwe code):** Sessie bestond uitsluitend uit terugblik op vorige sessie (vergeten `/end` te doen). Twee commits waren al gepushed na de handover van 2026-06-02:
+- `feat(categories)`: `eind_optie` en `golden_score_duur` velden toegevoegd aan categorieën (ondersteuning Hantei/GS per categorie)
+- `fix(scoreboard)`: mat interface update werkt nu correct bij resultaat vanuit JudoScoreBoard Android app
