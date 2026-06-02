@@ -213,11 +213,18 @@ class ScoreboardController extends Controller
             ]);
         }
 
-        // Broadcast score update
+        // Auto-advance green slot: clear active match after result
+        $toegang = $request->get('device_toegang');
+        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
+            ->where('nummer', $toegang->mat_nummer)
+            ->first();
+
+        // Broadcast score update — use device mat as fallback for elimination poules (no mat_id)
         $wedstrijd->load('poule.blok');
-        if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
-            $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
-            MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+        $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule?->toernooi_id ?? $toegang->toernooi_id;
+        $broadcastMatId = $wedstrijd->poule?->mat_id ?? $mat?->id;
+        if ($broadcastMatId) {
+            MatUpdate::dispatch($toernooiId, $broadcastMatId, 'score', [
                 'wedstrijd_id' => $wedstrijd->id,
                 'poule_id' => $wedstrijd->poule_id,
                 'winnaar_id' => $validated['winnaar_id'],
@@ -228,12 +235,6 @@ class ScoreboardController extends Controller
             ]);
         }
 
-        // Auto-advance green slot: clear active match after result
-        $toegang = $request->get('device_toegang');
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->first();
-
         if ($mat && $mat->actieve_wedstrijd_id === $wedstrijd->id) {
             $mat->update([
                 'actieve_wedstrijd_id' => $mat->volgende_wedstrijd_id,
@@ -243,7 +244,7 @@ class ScoreboardController extends Controller
 
             $mat->refresh();
             MatUpdate::dispatch(
-                $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id,
+                $toernooiId,
                 $mat->id,
                 'beurt',
                 [

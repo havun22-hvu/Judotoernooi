@@ -197,6 +197,7 @@
     @endphp
 <div id="mat-interface" x-data="matInterface" x-init="init()"
      x-on:mat-score-update.window="laadWedstrijden()"
+     x-on:mat-beurt-update.window="laadWedstrijden()"
      x-on:mat-poule-klaar.window="laadWedstrijden()"
      x-on:ws-connected.window="laadWedstrijden()">
     <!-- Build: v2026.02.10-D (Blade bracket) -->
