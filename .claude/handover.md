@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-03
+last_updated: 2026-06-04
 ---
 
 # JudoToernooi — Handover
@@ -22,6 +22,7 @@ last_updated: 2026-06-03
 - [ ] **Blauw-positie scorebord op staging bekijken**: verplaatst naar Device Toegangen (Organisatie-tab) — Henk moet nog goedkeuren.
 - [ ] **Gear-icoontje header op staging bekijken**: instellingen-icon links naast taalvlag — Henk moet nog goedkeuren.
 - [ ] **Hantei (W) en Gelijkspel (G) in mat interface op staging bekijken**: JP-dropdown uitgebreid, Henk moet nog goedkeuren.
+- [ ] **Scoreboard testen**: Henk wilde controleren of het scoreboard correct werkt — nog niet gedaan in deze sessie.
 
 ## Kritieke context voor volgende sessie
 
@@ -32,6 +33,7 @@ last_updated: 2026-06-03
 - AutoFix kan server-wijzigingen maken vóór sessiestart → altijd `git pull` na `git push` server → lokaal
 - Deploy: `git pull` in repo-pad (`/var/www/judotoernooi/repo-prod`), NIET in symlink
 - Alpine.js gebruikt `@alpinejs/csp` build — GEEN `Alpine.evaluate(el, string)`, wél `Alpine.$data(el).method()` of `x-on:event.window`
+- Alpine CSP verbiedt ook compound `@click` expressies (`x = 1; method()`) → altijd een aparte methode in de component
 
 ## Sessie-log
 
@@ -79,3 +81,14 @@ last_updated: 2026-06-03
 **Sessieterugblik (geen nieuwe code):** Sessie bestond uitsluitend uit terugblik op vorige sessie (vergeten `/end` te doen). Twee commits waren al gepushed na de handover van 2026-06-02:
 - `feat(categories)`: `eind_optie` en `golden_score_duur` velden toegevoegd aan categorieën (ondersteuning Hantei/GS per categorie)
 - `fix(scoreboard)`: mat interface update werkt nu correct bij resultaat vanuit JudoScoreBoard Android app
+
+### 2026-06-04
+
+**LCD kort URL:** Device Toegangen toont nu `havun.nl/tv/{code}` i.p.v. lange `judotournament.org/tv` URL (makkelijker typen met TV-afstandsbediening). Zowel kopieer-knop als QR als popup-tekst bijgewerkt.
+
+**Home page verbeterd:**
+- Lightbox popup navigeerbaar met ‹ › pijltjes + toetsenbord ←→ + teller "1/4"
+- Bouncing scroll-link "Bekijk screenshots ↓" toegevoegd in hero-sectie
+- JudoScoreBoard callout (al op production aanwezig maar niet in repo) gecommit
+
+**Bug fix:** "MET eigen router (Deco)" niet selecteerbaar in Instellingen → Noodplan. Oorzaak: `@click="heeftEigenRouter = true; saveNetwerkConfig()"` is een compound expressie — verboden door `@alpinejs/csp`. Fix: `setMetRouter()` / `setZonderRouter()` methodes toegevoegd aan `netwerkConfig` component. Test toegevoegd in `ToernooiControllerCoverageTest`.
