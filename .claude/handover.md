@@ -37,6 +37,12 @@ last_updated: 2026-06-04
 
 ## Sessie-log
 
+### 2026-06-04
+
+**Helpfile en docs bijgewerkt:** vrijwilliger PIN-vermeldingen verwijderd uit `pages/help.blade.php`, `GEBRUIKERSHANDLEIDING.md`, `INTERFACES.md`, `URL-STRUCTUUR.md`, `ROLLEN_HIERARCHIE.md`, `NOODPLAN-HANDLEIDING.md`. Vrijwilliger PWA's (mat/weging/spreker/dojo) krijgen toegang via unieke URL + auto device binding bij eerste keer. **PIN blijft wel** voor coach portal (clubs) en LCD scorebord koppeling.
+
+**Openstaand:** `SCOREBORD-APP.md` (regel 137-157) documenteert nog `code + pincode` auth voor Android scorebord app — is dit een code-change nodig in backend API of alleen docs-aanpassing? Wacht op besluit gebruiker.
+
 ### 2026-05-27
 
 **Bug gefixt:** Mat interface (WP/JP grid) werd niet bijgewerkt nadat JudoScoreBoard Android app een wedstrijd beëindigde. Oorzaak: `Alpine.evaluate(el, 'laadWedstrijden()')` werkt niet met `@alpinejs/csp` build (geen runtime string evaluatie). Fix: vervangen door idiomatische `x-on:mat-score-update.window="laadWedstrijden()"` directive op het `mat-interface` div.

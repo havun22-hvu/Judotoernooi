@@ -249,7 +249,7 @@ Oude URLs die doorverwijzen naar nieuwe structuur.
         │   ├── weegkaarten
         │   └── afrekenen
         │
-        └── toegang/{code}                 ← [PIN+DEVICE] Vrijwilligers
+        └── toegang/{code}                 ← [DEVICE] Vrijwilligers (device binding, geen PIN)
             ├── weging/{toegang}
             ├── mat/{toegang}
             ├── jury/{toegang}

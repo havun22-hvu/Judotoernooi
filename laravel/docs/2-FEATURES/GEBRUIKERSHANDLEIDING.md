@@ -590,7 +590,7 @@ Het systeem houdt **twee aparte gewichten** bij per judoka:
 
 ### Weging Scanner (Vrijwilliger PWA)
 
-1. Open de toegangs-URL + PIN (via Instellingen → Organisatie)
+1. Open de toegangs-URL (via Instellingen → Organisatie). Bij de eerste keer openen wordt het device automatisch gekoppeld — geen PIN nodig.
 2. **Zoeken**: Typ naam of scan QR-code
 3. **Registreren**: Vul gewicht in via numpad en bevestig
 

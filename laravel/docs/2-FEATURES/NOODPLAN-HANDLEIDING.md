@@ -315,7 +315,7 @@ Dat is alles! Alleen stroom, geen kabels tussen Deco's nodig.
 7. Open de browser (Chrome of Safari)
 8. Typ: 192.168.1.100:8000
 9. Je ziet nu de toernooi app
-10. Log in met je mat-PIN
+10. Open je mat-URL — device wordt automatisch gebonden
 ```
 
 ### Printer Aansluiten
@@ -477,7 +477,7 @@ TOTAAL:            6 stopcontacten
 2. Verbind met Deco wifi
 3. Open browser
 4. Ga naar: 192.168.1.100:8000
-5. Log in met mat PIN
+5. Open mat-URL — device wordt automatisch gebonden
 6. Herhaal voor alle tablets
 ```
 

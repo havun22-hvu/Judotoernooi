@@ -18,10 +18,10 @@ last_check: 2026-04-22
 | **Organisator** | layouts.app | Volledig + financieel | Email + wachtwoord |
 | **Beheerders** | layouts.app | Volledig (geen financieel) | Email + wachtwoord |
 | **Hoofdjury** | layouts.app | Volledig (geen financieel) | URL + PIN + device |
-| **Weging** | Standalone PWA | Geen | URL + PIN + device |
-| **Mat** | Standalone PWA | Geen | URL + PIN + device |
-| **Spreker** | Standalone PWA | Geen | URL + PIN + device |
-| **Dojo** | Standalone PWA | Geen | URL + PIN + device |
+| **Weging** | Standalone PWA | Geen | URL + device binding |
+| **Mat** | Standalone PWA | Geen | URL + device binding |
+| **Spreker** | Standalone PWA | Geen | URL + device binding |
+| **Dojo** | Standalone PWA | Geen | URL + device binding |
 | **Organisator (mobiel)** | Responsive dashboard | Quick-actions | Email + wachtwoord (bestaande login) |
 
 ### Admin vs Device-bound
@@ -35,7 +35,7 @@ De interfaces Mat, Spreker en Weging hebben elk **2 versies**:
 | **Weging** | layouts.app (met menu) | Standalone PWA |
 
 - **Admin/Organisator/Hoofdjury** → via menu → zien `layouts.app` met volledig menu
-- **Device-bound vrijwilliger** → via speciale URL + PIN → zien Standalone PWA zonder menu
+- **Device-bound vrijwilliger** → via unieke URL (device binding bij eerste keer) → zien Standalone PWA zonder menu
 
 Zie de specifieke interface secties voor routes en views.
 
@@ -104,8 +104,8 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 ### Flow
 1. Organisator/Hoofdjury maakt toegang aan (Instellingen → Organisatie)
 2. **Optioneel:** Selecteer vrijwilliger uit database → naam + WhatsApp link
-3. Vrijwilliger ontvangt URL + PIN (via WhatsApp of handmatig)
-4. Eerste keer: opent URL → voert PIN in → device wordt gebonden
+3. Vrijwilliger ontvangt URL (via WhatsApp of handmatig)
+4. Eerste keer: opent URL → device wordt automatisch gebonden
 5. Daarna: device wordt herkend → direct naar interface
 
 ### Beheer (Instellingen → Organisatie)

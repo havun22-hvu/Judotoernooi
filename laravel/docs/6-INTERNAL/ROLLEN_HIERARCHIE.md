@@ -143,11 +143,11 @@ last_check: 2026-04-22
 ## Device Binding Systeem
 
 ### Werking
-1. Organisator/Hoofdjury maakt toegang aan (URL + PIN)
-2. Vrijwilliger opent URL, voert PIN in
-3. Device wordt gebonden (token in localStorage + server)
+1. Organisator/Hoofdjury maakt toegang aan (unieke URL)
+2. Vrijwilliger opent URL
+3. Device wordt automatisch gebonden bij eerste keer (token in localStorage + server)
 4. Alleen dat device heeft toegang
-5. Token verloren? → PIN opnieuw invoeren
+5. Token verloren? → organisator reset device binding
 
 ### Beheer (Instellingen → Organisatie)
 - Toegangen aanmaken per rol

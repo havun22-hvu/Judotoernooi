@@ -491,11 +491,11 @@
             </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
                 <h4 class="font-semibold text-gray-800">{{ __('Hoe werkt het?') }}</h4>
-                <p>{{ __('Vrijwilligers (mat, weging, spreker, dojo) krijgen toegang via URL + PIN:') }}</p>
+                <p>{{ __('Vrijwilligers (mat, weging, spreker, dojo) krijgen toegang via een unieke URL:') }}</p>
                 <ol class="list-decimal list-inside space-y-1">
                     <li>{!! __('Organisator maakt toegang aan via <strong>Instellingen &gt; Organisatie</strong>') !!}</li>
-                    <li>{{ __('Vrijwilliger ontvangt URL + PIN (via WhatsApp of email)') }}</li>
-                    <li>{{ __('Opent URL, voert PIN in, device wordt gebonden') }}</li>
+                    <li>{{ __('Vrijwilliger ontvangt URL (via WhatsApp of email)') }}</li>
+                    <li>{{ __('Opent URL — device wordt automatisch gebonden bij eerste keer') }}</li>
                     <li>{{ __('Daarna: device wordt herkend, direct naar interface') }}</li>
                 </ol>
                 <p class="mt-2">{!! __('<strong>Tip:</strong> De interface kan ook als app (PWA) geïnstalleerd worden op telefoon of tablet voor een volledig schermervaring.') !!}</p>
@@ -663,7 +663,7 @@
                 <h4 class="font-semibold text-gray-800">{{ __('Twee versies') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('<strong>Admin</strong> - Via menu (met navigatie)') !!}</li>
-                    <li>{!! __('<strong>Tafeljury</strong> - PWA via URL + PIN (standalone)') !!}</li>
+                    <li>{!! __('<strong>Tafeljury</strong> - PWA via URL (standalone, device binding bij eerste keer)') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Wedstrijdschema kleuren') }}</h4>
@@ -759,7 +759,7 @@
                 <h4 class="font-semibold text-gray-800">{{ __('Twee versies') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('<strong>Admin</strong> - Via menu (met navigatie)') !!}</li>
-                    <li>{!! __('<strong>Vrijwilliger</strong> - PWA via URL + PIN (standalone)') !!}</li>
+                    <li>{!! __('<strong>Vrijwilliger</strong> - PWA via URL (standalone, device binding bij eerste keer)') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Wachtrij') }}</h4>
@@ -789,7 +789,7 @@
                 <p>{{ __('QR scanner voor toegangscontrole bij de ingang van de dojo (wedstrijdruimte).') }}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Toegang') }}</h4>
-                <p>{{ __('Vrijwilliger via URL + PIN + device binding (Instellingen > Organisatie > Dojo toegangen).') }}</p>
+                <p>{{ __('Vrijwilliger via URL + device binding (Instellingen > Organisatie > Dojo toegangen).') }}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Werkwijze') }}</h4>
                 <ol class="list-decimal list-inside space-y-1">
