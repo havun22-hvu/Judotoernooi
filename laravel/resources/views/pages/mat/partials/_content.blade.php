@@ -479,7 +479,7 @@
                                                     @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
                                                 >
                                                     <option value=""></option>
-                                                    <option value="0">G</option>
+                                                    <option value="0">0</option>
                                                     <option value="5">5</option>
                                                     <option value="7">7</option>
                                                     <option value="10">10</option>
