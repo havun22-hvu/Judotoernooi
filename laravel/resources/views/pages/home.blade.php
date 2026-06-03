@@ -164,6 +164,10 @@
                     {{ __('Inloggen') }}
                 </a>
             </div>
+            <a href="#screenshots" class="inline-flex items-center gap-2 text-blue-300 hover:text-white text-sm mt-8 transition">
+                {{ __('Bekijk screenshots') }}
+                <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </a>
         </div>
     </section>
 
@@ -370,7 +374,7 @@
     @endif
 
     <!-- DO NOT REMOVE: Screenshot section with lightbox - shows real product screenshots -->
-    <section class="py-24 bg-gray-50">
+    <section id="screenshots" class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-14">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -381,15 +385,19 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6" x-data="lightboxWithZoom">
-                @foreach([
+            @php
+                $screenshots = [
                     ['img' => 'Poule-overzicht.png', 'label' => __('Poule-overzicht met automatische indeling')],
                     ['img' => 'Zaaloverzicht.png', 'label' => __('Zaaloverzicht met matten en blokken')],
                     ['img' => 'Mat-interface.png', 'label' => __('Live wedstrijdschema met beurtaanduiding')],
                     ['img' => 'Eliminatie-bracket.png', 'label' => __('Eliminatie-bracket met A en B groep')],
-                ] as $screenshot)
+                ];
+                $imgUrls = array_map(fn($s) => '/images/' . $s['img'], $screenshots);
+            @endphp
+            <div class="grid md:grid-cols-2 gap-6" x-data="lightboxWithZoom">
+                @foreach($screenshots as $screenshot)
                 <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow group"
-                     @click="open('/images/{{ $screenshot['img'] }}')">
+                     @click="open('/images/{{ $screenshot['img'] }}', {{ json_encode($imgUrls) }})">
                     <img src="/images/{{ $screenshot['img'] }}" alt="{{ $screenshot['label'] }}" class="w-full max-h-64 object-cover object-top group-hover:scale-[1.02] transition-transform duration-300" loading="lazy">
                     <div class="bg-white px-4 py-3 text-center">
                         <p class="font-medium text-gray-600 text-sm">{{ $screenshot['label'] }}</p>
@@ -399,15 +407,29 @@
 
                 <!-- Lightbox popup -->
                 <div x-show="lightbox" x-transition.opacity
-                     x-data="zoomable"
                      class="fixed inset-0 z-50 bg-black/80"
-                     :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center cursor-zoom-in'"
+                     :class="zoomed ? 'overflow-auto cursor-zoom-out' : 'flex items-center justify-center'"
                      @click="close()"
                      @keydown.escape.window="close()"
+                     @keydown.arrow-left.window="prev()"
+                     @keydown.arrow-right.window="next()"
                      x-cloak>
                     <img :src="lightbox"
-                         :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl'"
+                         :class="zoomed ? 'max-w-none rounded-lg shadow-2xl m-4' : 'max-w-full max-h-[90vh] rounded-lg shadow-2xl cursor-zoom-in'"
                          @click.stop="toggleZoom()">
+                    <!-- Vorige -->
+                    <button x-show="hasMultiple" @click.stop="prev()"
+                            class="fixed left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition z-10">
+                        &#8249;
+                    </button>
+                    <!-- Volgende -->
+                    <button x-show="hasMultiple" @click.stop="next()"
+                            class="fixed right-16 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition z-10">
+                        &#8250;
+                    </button>
+                    <!-- Teller -->
+                    <span x-show="hasMultiple" class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm z-10"
+                          x-text="(currentIndex + 1) + ' / ' + images.length"></span>
                     <button @click.stop="close()"
                             class="fixed top-4 right-4 text-white text-4xl leading-none hover:text-gray-300 z-10">&times;</button>
                 </div>

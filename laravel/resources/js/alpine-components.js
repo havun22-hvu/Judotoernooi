@@ -284,9 +284,30 @@ export function registerAlpineComponents(Alpine) {
     Alpine.data('lightboxWithZoom', () => ({
         lightbox: null,
         zoomed: false,
-        open(url) { this.lightbox = url; this.zoomed = false; },
+        images: [],
+        currentIndex: 0,
+        open(url, images) {
+            this.images = images || [url];
+            this.currentIndex = this.images.indexOf(url);
+            if (this.currentIndex === -1) this.currentIndex = 0;
+            this.lightbox = url;
+            this.zoomed = false;
+        },
         close() { this.lightbox = null; this.zoomed = false; },
         toggleZoom() { this.zoomed = !this.zoomed; },
+        prev() {
+            if (this.images.length <= 1) return;
+            this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+            this.lightbox = this.images[this.currentIndex];
+            this.zoomed = false;
+        },
+        next() {
+            if (this.images.length <= 1) return;
+            this.currentIndex = (this.currentIndex + 1) % this.images.length;
+            this.lightbox = this.images[this.currentIndex];
+            this.zoomed = false;
+        },
+        get hasMultiple() { return this.images.length > 1; },
     }));
 
     /**
