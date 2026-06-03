@@ -507,6 +507,21 @@ class ToernooiControllerCoverageTest extends TestCase
     }
 
     #[Test]
+    public function update_local_server_ips_can_disable_eigen_router(): void
+    {
+        [$org, $toernooi] = $this->createOrgWithToernooi();
+        $toernooi->update(['heeft_eigen_router' => true]);
+        $this->actingAs($org, 'organisator');
+
+        $response = $this->put("/{$org->slug}/toernooi/{$toernooi->slug}/local-server-ips", [
+            'heeft_eigen_router' => false,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertFalse((bool) $toernooi->fresh()->heeft_eigen_router);
+    }
+
+    #[Test]
     public function update_local_server_ips_validates_ip_format(): void
     {
         [$org, $toernooi] = $this->createOrgWithToernooi();
