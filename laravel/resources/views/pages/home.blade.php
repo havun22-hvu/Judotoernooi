@@ -277,6 +277,24 @@
         </div>
     </section>
 
+    <!-- JudoScoreBoard callout -->
+    <section class="py-6 bg-gray-50 border-t border-b border-gray-100">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl px-6 py-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <img src="https://judoscoreboard.havun.nl/jsicon.png" alt="JudoScoreBoard" class="w-10 h-10 rounded-xl flex-shrink-0">
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">{{ __('Gebruik JudoScoreBoard op de mat') }}</p>
+                        <p class="text-gray-500 text-xs">{{ __('Android app voor live scoreborden — koppelt via WebSocket aan dit systeem') }}</p>
+                    </div>
+                </div>
+                <a href="https://judoscoreboard.havun.nl" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap flex items-center gap-1">
+                    {{ __('Meer info') }} &rarr;
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Hoe werkt het? -->
     <section class="py-24 bg-white">
         <div class="max-w-5xl mx-auto px-6">
