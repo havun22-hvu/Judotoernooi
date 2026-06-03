@@ -2985,7 +2985,7 @@
         <div class="mb-6">
             <h3 class="font-bold text-gray-800 mb-3">{{ __('Welke setup gebruik je?') }}</h3>
             <div class="grid md:grid-cols-2 gap-4">
-                <div @click="heeftEigenRouter = true; saveNetwerkConfig()"
+                <div @click="setMetRouter()"
                      class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
                      :class="heeftEigenRouter === true ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
                     <div class="flex items-center gap-3">
@@ -2996,7 +2996,7 @@
                         </div>
                     </div>
                 </div>
-                <div @click="heeftEigenRouter = false; saveNetwerkConfig()"
+                <div @click="setZonderRouter()"
                      class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
                      :class="heeftEigenRouter === false ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'">
                     <div class="flex items-center gap-3">

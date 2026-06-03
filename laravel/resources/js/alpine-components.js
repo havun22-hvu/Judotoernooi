@@ -746,6 +746,8 @@ export function registerAlpineComponents(Alpine) {
             this.saveUrl = d.saveUrl || '';
             this.saveErrorLabel = d.saveErrorLabel || this.saveErrorLabel;
         },
+        setMetRouter() { this.heeftEigenRouter = true; this.saveNetwerkConfig(); },
+        setZonderRouter() { this.heeftEigenRouter = false; this.saveNetwerkConfig(); },
         async saveNetwerkConfig() {
             try {
                 await fetch(this.saveUrl, {
