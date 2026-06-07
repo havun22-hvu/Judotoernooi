@@ -98,6 +98,7 @@ Mat interface → Handmatig winnaar selecteren (wit/blauw)
 | Osaekomi milestone (5s, 10s) | Single low beep (440Hz) |
 | Ippon | Victory fanfare (C-E-G-C) |
 | 30 seconden warning | Timer kleurt rood |
+| **Awasete-ippon (2e waza-ari in osaekomi)** | **Bediening:** bestaande eenmalige osaekomi-toon. **Display (LCD):** eenmalig instelbaar signaal (piep/gong/sirene via WebAudio) + knipperende rode balk tot toketa — zie hieronder |
 
 ---
 
@@ -127,6 +128,7 @@ Het display draait zijn eigen timer lokaal. ~20-30 requests per wedstrijd totaal
 | `score.update` | Score wijzigt (Y/W/I/shido) | Bij actie |
 | `osaekomi.start` | Osaekomi start, met starttijd | 1x |
 | `osaekomi.stop` | Osaekomi stopt | 1x |
+| `osaekomi.warning` | 2e waza-ari tijdens osaekomi (awasete-ippon): balk aan/uit | Bij trigger + toketa |
 | `match.end` | Winnaar bepaald | 1x |
 
 **Vertraging:** ~200ms bij score wijziging — onmerkbaar voor publiek.
@@ -346,6 +348,13 @@ nooit uit het request body — voorkomt dat een gecompromitteerde app een andere
 { "event": "osaekomi.stop" }
 ```
 
+**osaekomi.warning:** (awasete-ippon — 2e waza-ari tijdens osaekomi)
+```json
+{ "event": "osaekomi.warning", "judoka": "blauw", "active": true }
+```
+`active: true` = balk aan bij de W-drempel als de houder al ≥1 waza-ari heeft;
+`active: false` = balk weg (toketa, overname, mate, timer.reset, match.end).
+
 **match.start:**
 ```json
 {
@@ -362,6 +371,38 @@ nooit uit het request body — voorkomt dat een gecompromitteerde app een andere
 ```json
 { "event": "match.end", "winner": "wit", "uitslag_type": "wazaari" }
 ```
+
+---
+
+## Awasete-ippon waarschuwing (2e waza-ari tijdens osaekomi)
+
+> **Status:** live (juni 2026). App `dda66c4`, backend+display `84a79367`.
+> **Doel:** andere systemen scoren bij een 2e waza-ari automatisch ippon — wij niet.
+> De app **waarschuwt de scheidsrechter via het LCD-display**; de scheids beslist, de
+> tafelofficial tekent. App scoort NOOIT zelf.
+
+### Trigger
+Osaekomi bereikt de **W-drempel** (default 10s) terwijl de houdende judoka **al ≥1 waza-ari**
+heeft (`scores[side].wazaari >= 1`). Een eerste waza-ari triggert dit niet.
+
+### Gedrag
+| Kant | Wat | Prioriteit |
+|------|-----|-----------|
+| **Display (LCD) — scheids** | Knipperende rode balk bovenin `⚠ 2e WAZA-ARI — IPPON? ⚠` + lopende houdtijd, **tot toketa** + **eenmalig** instelbaar geluid. Scores blijven zichtbaar. | **Hoofd** |
+| **Bediening (app) — tafel** | Bestaande **eenmalige** osaekomi-toon + knipperende osaekomi-tijd. Geen luid herhalend alarm. | Bijzaak |
+
+De balk gaat weer weg (`osaekomi.warning active:false`) bij toketa, overname, mate,
+`timer.reset` en `match.end` — dubbele dekking via ref-gestuurde exit + display-clear.
+Bij overname worden `osaekomiAlertedRef`/`osaekomiLiveIndexRef` gereset zodat de nieuwe
+houder zijn eigen waarschuwing krijgt.
+
+### LCD-geluid (instelbaar, per apparaat)
+Klein paneel op de LCD-pagina (tandwiel), opgeslagen in **localStorage** (LCD is publiek, geen login):
+- **Aan/uit**, **volume** (0-100%), **keuze** piep / gong / sirene (WebAudio `OscillatorNode`, geen assets) + testknop.
+- **Autoplay-policy:** browsers blokkeren geluid tot een user-gesture. De "🔊 Geluid aan"-knop
+  `resume()`t de `AudioContext`. Tot die klik: alleen de visuele balk, geen geluid.
+
+> Volledige spec: `JudoScoreBoard/.claude/context.md` → "Awasete-ippon waarschuwing" + plan in `JudoScoreBoard/.claude/plan-awasete-waarschuwing.md`.
 
 ---
 
@@ -413,4 +454,4 @@ nooit uit het request body — voorkomt dat een gecompromitteerde app een andere
 
 ---
 
-*Laatst bijgewerkt: 21 april 2026*
+*Laatst bijgewerkt: 8 juni 2026 (awasete-ippon waarschuwing toegevoegd)*
