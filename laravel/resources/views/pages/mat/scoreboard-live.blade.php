@@ -357,6 +357,51 @@
         .fullscreen-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; cursor: pointer; align-items: center; justify-content: center; flex-direction: column; }
         .fullscreen-overlay-title { font-size: clamp(24px,5vh,48px); font-weight: 800; color: #fff; margin-bottom: 2vh; }
         .fullscreen-overlay-subtitle { font-size: clamp(16px,3vh,32px); color: #9CA3AF; }
+        /* Awasete-ippon warning banner (2nd waza-ari) — referee alert */
+        .awasete-warning {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            gap: 2vw;
+            padding: 1.2vh 2vw;
+            background: #DC2626;
+            color: #fff;
+            font-weight: 900;
+            font-size: clamp(20px, 4.6vh, 64px);
+            letter-spacing: 0.04em;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+            animation: awasete-blink 0.6s steps(1) infinite;
+        }
+        .awasete-warning.active { display: flex; }
+        .awasete-warning .awasete-time { font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
+        @keyframes awasete-blink {
+            0%, 100% { background: #DC2626; opacity: 1; }
+            50% { background: #7F1D1D; opacity: 0.82; }
+        }
+        /* Per-device sound settings (localStorage) */
+        .snd-gear {
+            position: fixed; bottom: 10px; right: 10px; z-index: 60;
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.12); color: #fff;
+            border: none; cursor: pointer; font-size: 18px; opacity: 0.5;
+        }
+        .snd-gear:hover { opacity: 1; }
+        .snd-panel {
+            display: none; position: fixed; bottom: 52px; right: 10px; z-index: 60;
+            background: #1F2937; color: #fff; border: 1px solid #374151;
+            border-radius: 10px; padding: 14px 16px; width: 240px;
+            font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        }
+        .snd-panel.open { display: block; }
+        .snd-panel h4 { margin: 0 0 10px; font-size: 14px; }
+        .snd-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 10px; }
+        .snd-row label { flex: 1; }
+        .snd-panel select, .snd-panel input[type=range] { flex: 1; min-width: 0; }
+        .snd-test { width: 100%; margin-top: 10px; padding: 7px; border: none; border-radius: 6px; background: #DC2626; color: #fff; font-weight: 700; cursor: pointer; }
+        .snd-hint { font-size: 11px; color: #9CA3AF; margin-top: 8px; line-height: 1.3; }
     </style>
 </head>
 <body>
@@ -473,6 +518,30 @@
             <div class="winner-type" id="winner-type"></div>
         </div>
 
+        {{-- Awasete-ippon warning banner (2nd waza-ari) — alerts the referee --}}
+        <div class="awasete-warning" id="awasete-warning">
+            <span>⚠ 2e WAZA-ARI — IPPON?</span>
+            <span class="awasete-time" id="awasete-time">00</span>
+            <span>⚠</span>
+        </div>
+
+        {{-- Per-device sound settings for the awasete warning --}}
+        <button class="snd-gear" id="snd-gear" title="{{ __('Geluid') }}" onclick="toggleSndPanel()">🔊</button>
+        <div class="snd-panel" id="snd-panel">
+            <h4>{{ __('Waarschuwingsgeluid') }}</h4>
+            <div class="snd-row"><label for="snd-enabled">{{ __('Geluid aan') }}</label><input type="checkbox" id="snd-enabled"></div>
+            <div class="snd-row"><label for="snd-volume">{{ __('Volume') }}</label><input type="range" id="snd-volume" min="0" max="100"></div>
+            <div class="snd-row"><label for="snd-type">{{ __('Signaal') }}</label>
+                <select id="snd-type">
+                    <option value="piep">{{ __('Piep') }}</option>
+                    <option value="gong">{{ __('Gong') }}</option>
+                    <option value="sirene">{{ __('Sirene') }}</option>
+                </select>
+            </div>
+            <button class="snd-test" onclick="testAwaseteSound()">{{ __('Test geluid') }}</button>
+            <div class="snd-hint">{{ __('Klik één keer op het scherm om het geluid te activeren.') }}</div>
+        </div>
+
         {{-- Disconnect overlay — shown when WebSocket drops --}}
         <div class="disconnect-overlay" id="disconnect-overlay">
             <div class="dot"></div>
@@ -501,6 +570,80 @@
         var overlay = document.getElementById('fullscreen-overlay');
         if (overlay) overlay.style.display = 'flex';
     }
+    </script>
+    <script @nonce>
+    // Awasete-ippon warning sound — WebAudio (no assets), per-device settings in localStorage.
+    (function() {
+        var audioCtx = null;
+        var LS = { enabled: 'awasete_sound_enabled', volume: 'awasete_sound_volume', type: 'awasete_sound_type' };
+        var settings = {
+            enabled: localStorage.getItem(LS.enabled) !== '0', // default on
+            volume: parseInt(localStorage.getItem(LS.volume) || '70', 10),
+            type: localStorage.getItem(LS.type) || 'piep',
+        };
+
+        function ensureCtx() {
+            if (!audioCtx) {
+                var AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) audioCtx = new AC();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+        // Autoplay policy: unlock the AudioContext on the first user gesture anywhere.
+        document.addEventListener('click', ensureCtx);
+
+        function tone(freq, start, dur, type, vol) {
+            var t = audioCtx.currentTime + start;
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + dur);
+        }
+        function sweep(f1, f2, start, dur, vol) {
+            var t = audioCtx.currentTime + start;
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(f1, t);
+            osc.frequency.linearRampToValueAtTime(f2, t + dur);
+            gain.gain.setValueAtTime(vol, t);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + dur);
+        }
+        function play() {
+            if (!settings.enabled) return;
+            var ctx = ensureCtx();
+            if (!ctx) return;
+            var v = Math.max(0, Math.min(1, settings.volume / 100));
+            if (v <= 0) return;
+            if (settings.type === 'gong') {
+                tone(180, 0, 1.2, 'sine', v);
+            } else if (settings.type === 'sirene') {
+                sweep(520, 1100, 0, 0.4, v * 0.5);
+                sweep(1100, 520, 0.4, 0.4, v * 0.5);
+            } else { // piep
+                tone(1100, 0, 0.18, 'square', v * 0.6);
+                tone(1100, 0.25, 0.18, 'square', v * 0.6);
+            }
+        }
+        window.awaseteAudio = { play: play, ensureCtx: ensureCtx };
+
+        // Wire the settings panel (elements are above this script in the DOM).
+        var cb = document.getElementById('snd-enabled');
+        var vol = document.getElementById('snd-volume');
+        var typ = document.getElementById('snd-type');
+        if (cb) { cb.checked = settings.enabled; cb.addEventListener('change', function() { settings.enabled = cb.checked; localStorage.setItem(LS.enabled, cb.checked ? '1' : '0'); }); }
+        if (vol) { vol.value = settings.volume; vol.addEventListener('input', function() { settings.volume = parseInt(vol.value, 10); localStorage.setItem(LS.volume, vol.value); }); }
+        if (typ) { typ.value = settings.type; typ.addEventListener('change', function() { settings.type = typ.value; localStorage.setItem(LS.type, typ.value); }); }
+
+        window.toggleSndPanel = function() { ensureCtx(); var p = document.getElementById('snd-panel'); if (p) p.classList.toggle('open'); };
+        window.testAwaseteSound = function() { ensureCtx(); play(); };
+    })();
     </script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
     @php
@@ -545,7 +688,17 @@
             winnerName: document.getElementById('winner-name'),
             winnerType: document.getElementById('winner-type'),
             headerPoule: document.getElementById('header-poule'),
+            awaseteWarning: document.getElementById('awasete-warning'),
+            awaseteTime: document.getElementById('awasete-time'),
         };
+
+        function showAwaseteWarning() {
+            els.awaseteWarning.classList.add('active');
+            if (window.awaseteAudio) window.awaseteAudio.play();
+        }
+        function hideAwaseteWarning() {
+            els.awaseteWarning.classList.remove('active');
+        }
 
         // Load initial match data
         if (initialMatch) {
@@ -608,6 +761,10 @@
             else if (elapsed >= 5) zone = 'YUKO';
             els.osaekomiZone.textContent = zone;
 
+            if (els.awaseteWarning.classList.contains('active')) {
+                els.awaseteTime.textContent = elapsed.toString().padStart(2, '0');
+            }
+
             osaekomiAnimFrame = requestAnimationFrame(tickOsaekomi);
         }
 
@@ -653,6 +810,7 @@
             els.osaekomi.className = 'osaekomi-time';
             els.osaekomi.textContent = '00';
             els.osaekomiZone.textContent = '';
+            hideAwaseteWarning();
         }
 
         // Connect to Reverb via Pusher
@@ -811,6 +969,16 @@
                     if (data.osaekomi_times) {
                         osaekomiTimes = data.osaekomi_times;
                         renderOsaekomiTimes();
+                    }
+                    break;
+
+                case 'osaekomi.warning':
+                    // 2nd waza-ari during a hold — alert the referee (banner + single sound).
+                    if (data.active) {
+                        els.awaseteTime.textContent = els.osaekomi.textContent;
+                        showAwaseteWarning();
+                    } else {
+                        hideAwaseteWarning();
                     }
                     break;
 
