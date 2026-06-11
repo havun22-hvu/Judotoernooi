@@ -17,7 +17,7 @@
 
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "Organization",
         "name": "Havun",
         "url": "{{ config('app.url') }}",
@@ -32,7 +32,7 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "WebSite",
         "name": "JudoToernooi",
         "url": "{{ config('app.url') }}",
@@ -45,7 +45,7 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "JudoToernooi",
         "applicationCategory": "SportsApplication",
@@ -68,7 +68,7 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
             {
