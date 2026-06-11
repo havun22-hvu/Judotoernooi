@@ -844,7 +844,7 @@
                                              }">
                                             <div class="flex items-center gap-2">
                                                 <span class="w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                                                      :style="judoka.band_kleur ? 'background-color: ' + judoka.band_kleur : 'background-color: #e5e7eb'"></span>
+                                                      :style="{ backgroundColor: judoka.band_kleur || '#e5e7eb' }"></span>
                                                 <div>
                                                     <span class="font-medium text-sm" :class="judoka.id === activeFavoriet ? 'text-green-800' : 'text-gray-800'" x-text="judoka.naam"></span>
                                                     <span class="text-xs text-gray-500 block" x-text="judoka.club"></span>

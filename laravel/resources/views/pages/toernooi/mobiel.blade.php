@@ -347,7 +347,9 @@ document.addEventListener('alpine:init', () => {
         progressBarClass(mat) { return mat.resterend === 0 ? 'bg-green-500' : 'bg-blue-500'; },
         progressBarStyle(mat) {
             const pct = mat.totaal_wedstrijden > 0 ? Math.round(mat.gespeeld / mat.totaal_wedstrijden * 100) : 0;
-            return `width: ${pct}%`;
+            // Object (not a string) so Alpine applies it via CSSOM — a strict
+            // style-src CSP blocks string :style (inline style attribute) writes.
+            return { width: pct + '%' };
         },
         pouleNr(p) { return `P${p.nummer}`; },
         pouleGespeeldLabel(p) { return `${p.gespeeld}/${p.totaal}`; },
