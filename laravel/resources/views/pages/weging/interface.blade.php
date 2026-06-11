@@ -32,9 +32,13 @@
             <!-- Countdown voor actief blok -->
             @php $actieveBlok = $toernooi->blokken->where('weging_gesloten', false)->first(); @endphp
             @if($actieveBlok && $actieveBlok->weging_einde && $toernooi->datum?->isToday())
-            <div x-data="countdown('{{ $actieveBlok->weging_start?->toISOString() }}', '{{ $actieveBlok->weging_einde->toISOString() }}', {{ $actieveBlok->nummer }})" x-init="start()" class="text-right">
+            <div x-data="countdown"
+                 data-start="{{ $actieveBlok->weging_start?->toISOString() }}"
+                 data-end="{{ $actieveBlok->weging_einde->toISOString() }}"
+                 data-blok="{{ $actieveBlok->nummer }}"
+                 x-init="start()" class="text-right">
                 <div class="text-[10px] text-blue-300">Blok {{ $actieveBlok->nummer }}</div>
-                <div class="text-sm font-mono font-bold" :class="expired ? 'text-red-400 animate-pulse' : (warning ? 'text-yellow-400' : 'text-white')" x-text="display"></div>
+                <div class="text-sm font-mono font-bold" :class="displayClass" x-text="display"></div>
             </div>
             @elseif($actieveBlok && $actieveBlok->weging_einde)
             <div class="text-right">
@@ -43,7 +47,7 @@
             </div>
             @endif
             <div class="text-xl font-mono" id="clock"></div>
-            <button onclick="document.querySelector('[x-data]').__x.$data.showAbout = true" class="p-1 hover:bg-blue-700 rounded">
+            <button type="button" id="weging-about-btn" class="p-1 hover:bg-blue-700 rounded">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -72,24 +76,35 @@
         <div class="text-6xl mb-4">⏰</div>
         <h2 class="text-2xl font-bold text-red-600 mb-2">{{ __('Weegtijd voorbij!') }}</h2>
         <p class="text-gray-600 mb-4">{{ __('De weegtijd voor') }} <span id="alert-blok" class="font-bold">{{ __('Blok') }} X</span> {{ __('is verstreken.') }}</p>
-        <button onclick="sluitWeegtijdAlert()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
+        <button type="button" id="weegtijd-alert-sluit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
             {{ __('Begrepen') }}
         </button>
     </div>
 </div>
 
 <script @nonce>
-// Countdown timer met melding bij einde
-function countdown(starttijd, eindtijd, blokNummer) {
-    return {
-        start_time: starttijd ? new Date(starttijd) : null,
-        end: new Date(eindtijd),
-        blok: blokNummer,
+// Countdown timer met melding bij einde — CSP-build: via Alpine.data() i.p.v.
+// een globale functie, params via data-* attributen, class via getter.
+document.addEventListener('alpine:init', () => {
+    Alpine.data('countdown', () => ({
+        start_time: null,
+        end: null,
+        blok: 0,
         display: '',
         expired: false,
         warning: false,
         alerted: false,
         interval: null,
+        init() {
+            this.start_time = this.$el.dataset.start ? new Date(this.$el.dataset.start) : null;
+            this.end = new Date(this.$el.dataset.end);
+            this.blok = parseInt(this.$el.dataset.blok, 10) || 0;
+        },
+        get displayClass() {
+            if (this.expired) return 'text-red-400 animate-pulse';
+            if (this.warning) return 'text-yellow-400';
+            return 'text-white';
+        },
         start() {
             this.update();
             this.interval = setInterval(() => this.update(), 1000);
@@ -118,8 +133,8 @@ function countdown(starttijd, eindtijd, blokNummer) {
             const s = Math.floor((diff % 60000) / 1000);
             this.display = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
         }
-    }
-}
+    }));
+});
 
 function toonWeegtijdAlert(blokNummer) {
     document.getElementById('alert-blok').textContent = 'Blok ' + blokNummer;
@@ -141,6 +156,20 @@ function toonWeegtijdAlert(blokNummer) {
 function sluitWeegtijdAlert() {
     document.getElementById('weegtijd-alert').classList.add('hidden');
 }
+
+// CSP-safe knop-listeners (vervangt inline onclick).
+(function () {
+    var about = document.getElementById('weging-about-btn');
+    if (about) about.addEventListener('click', function () {
+        var root = document.querySelector('[x-data]');
+        if (root && window.Alpine) {
+            var data = Alpine.$data(root);
+            if (data) data.showAbout = true;
+        }
+    });
+    var alertSluit = document.getElementById('weegtijd-alert-sluit');
+    if (alertSluit) alertSluit.addEventListener('click', sluitWeegtijdAlert);
+})();
 </script>
 </body>
 </html>

@@ -365,9 +365,8 @@
         <textarea
             x-model="notities"
             @input.debounce.2000ms="autoSaveNotities()"
-            :style="'font-size: ' + fontSize + 'px; line-height: 1.5; height: calc(100vh - 180px);'"
-            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words mb-16"
-            class="break-words [overflow-wrap:break-word]"
+            data-font-target
+            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words mb-16 leading-[1.5] h-[calc(100vh_-_180px)] [overflow-wrap:break-word]"
             :class="unsavedBorderClass"
             placeholder="{{ __('Typ hier je notities...') }}"
         ></textarea>
@@ -540,7 +539,7 @@
                 <div x-show="pouleDataLoaded">
                     <div class="font-bold" x-text="pouleTitel"></div>
                 </div>
-                <div x-show="loadingPoule" class="font-bold" x-text="__laden"></div>
+                <div x-show="loadingPoule" class="font-bold">{{ __('Laden...') }}</div>
                 <button @click="closePouleModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
 

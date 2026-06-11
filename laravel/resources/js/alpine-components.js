@@ -457,9 +457,17 @@ export function registerAlpineComponents(Alpine) {
         init() {
             const val = parseInt(this.$el.dataset.initial || '18', 10);
             this.fontSize = Number.isFinite(val) ? val : 18;
+            this.apply();
         },
-        bigger() { this.fontSize = Math.min(this.fontSize + 2, 48); },
-        smaller() { this.fontSize = Math.max(this.fontSize - 2, 10); },
+        // Apply via CSSOM (el.style.*) instead of an Alpine :style string binding:
+        // a strict style-src CSP blocks inline style attributes, but programmatic
+        // CSSOM writes are allowed.
+        apply() {
+            const t = this.$el.querySelector('[data-font-target], textarea');
+            if (t) t.style.fontSize = this.fontSize + 'px';
+        },
+        bigger() { this.fontSize = Math.min(this.fontSize + 2, 48); this.apply(); },
+        smaller() { this.fontSize = Math.max(this.fontSize - 2, 10); this.apply(); },
     }));
 
     /**
@@ -494,6 +502,35 @@ export function registerAlpineComponents(Alpine) {
         closeMenu() { this.menuOpen = false; },
         toggleHelp() { this.showHelp = !this.showHelp; },
         closeHelp() { this.showHelp = false; },
+        openHelp() { this.menuOpen = false; this.showHelp = true; },
+        refreshMat() {
+            this.menuOpen = false;
+            const el = document.getElementById('mat-interface');
+            if (el && window.Alpine) Alpine.$data(el).refreshAll();
+        },
+        openSettings() {
+            this.menuOpen = false;
+            const m = document.getElementById('pwa-settings-modal');
+            if (m) m.classList.remove('hidden');
+        },
+    }));
+
+    /**
+     * Realtime connection indicator dot. Listens for ws-connected /
+     * ws-disconnected / reverb-disconnected window events and exposes the
+     * dot colour + tooltip via getters (labels from data-label-on/off).
+     */
+    Alpine.data('connectionDot', () => ({
+        connected: false,
+        labels: { on: '', off: '' },
+        init() {
+            this.labels.on = this.$el.dataset.labelOn || '';
+            this.labels.off = this.$el.dataset.labelOff || '';
+        },
+        setConnected() { this.connected = true; },
+        setDisconnected() { this.connected = false; },
+        get dotClass() { return this.connected ? 'bg-green-400' : 'bg-red-400'; },
+        get dotTitle() { return this.connected ? this.labels.on : this.labels.off; },
     }));
 
     /**

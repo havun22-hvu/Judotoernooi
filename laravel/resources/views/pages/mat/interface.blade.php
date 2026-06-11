@@ -31,13 +31,14 @@
             <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
         <div class="flex items-center gap-3">
-            <div x-data="{ connected: false }"
-                 @ws-connected.window="connected = true"
-                 @ws-disconnected.window="connected = false"
-                 @reverb-disconnected.window="connected = false">
-                <span :class="connected ? 'bg-green-400' : 'bg-red-400'"
+            <div x-data="connectionDot"
+                 data-label-on="{{ __('Verbonden') }}" data-label-off="{{ __('Geen verbinding') }}"
+                 @ws-connected.window="setConnected()"
+                 @ws-disconnected.window="setDisconnected()"
+                 @reverb-disconnected.window="setDisconnected()">
+                <span :class="dotClass"
                       class="w-2.5 h-2.5 rounded-full inline-block transition-colors duration-500"
-                      :title="connected ? 'Verbonden' : 'Geen verbinding'"></span>
+                      :title="dotTitle"></span>
             </div>
             <div class="text-2xl font-mono" id="clock"></div>
             <div x-data="menuWithHelp" class="relative">
@@ -49,7 +50,7 @@
                 {{-- Dropdown menu --}}
                 <div x-show="menuOpen" @click.outside="closeMenu()" x-transition
                      class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 text-sm">
-                    <button type="button" @click="menuOpen = false; document.getElementById('mat-interface') && Alpine.$data(document.getElementById('mat-interface')).refreshAll()"
+                    <button type="button" @click="refreshMat()"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         {{ __('Ververs gegevens') }}
@@ -65,12 +66,12 @@
                     @endif
                     @endif
                     <hr class="my-1">
-                    <button type="button" @click="menuOpen = false; showHelp = true"
+                    <button type="button" @click="openHelp()"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {{ __('Help') }}
                     </button>
-                    <button type="button" @click="menuOpen = false; document.getElementById('pwa-settings-modal').classList.remove('hidden')"
+                    <button type="button" @click="openSettings()"
                             class="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {{ __('Over') }}
@@ -121,7 +122,7 @@
     </main>
 
     <!-- Pusher for Reverb WebSocket -->
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous" @nonce></script>
 
     <!-- SortableJS for drag & drop in bracket -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>

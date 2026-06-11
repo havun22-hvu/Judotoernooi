@@ -8,11 +8,15 @@ export class DashboardPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.heading = page.locator('h1, h2').first();
+        // :visible skips headings inside collapsed/x-cloak'd menus, which only
+        // render once Alpine runs; the first *visible* heading is the content one.
+        this.heading = page.locator('h1:visible, h2:visible').first();
     }
 
     async goto(): Promise<void> {
-        await this.page.goto(dashboardUrl());
+        // domcontentloaded, not 'load'/networkidle: these pages open a Reverb
+        // WebSocket that keeps the network busy, so a full-load wait would hang.
+        await this.page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
     }
 
     async expectLoaded(): Promise<void> {

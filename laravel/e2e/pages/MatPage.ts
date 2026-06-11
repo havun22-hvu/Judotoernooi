@@ -12,15 +12,15 @@ export class MatPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.heading = page.locator('h1, h2').first();
+        this.heading = page.locator('h1:visible, h2:visible').first();
     }
 
     async gotoIndex(): Promise<void> {
-        await this.page.goto(toernooiUrl('/mat'));
+        await this.page.goto(toernooiUrl('/mat'), { waitUntil: 'domcontentloaded' });
     }
 
     async gotoInterface(): Promise<void> {
-        await this.page.goto(toernooiUrl('/mat/interface'));
+        await this.page.goto(toernooiUrl('/mat/interface'), { waitUntil: 'domcontentloaded' });
     }
 
     async expectLoaded(): Promise<void> {
