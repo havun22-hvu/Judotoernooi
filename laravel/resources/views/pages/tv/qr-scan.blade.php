@@ -18,7 +18,7 @@
             <p class="text-sm mt-1">{{ __('Ververs de TV-pagina voor een nieuwe code.') }}</p>
         </div>
     @elseif($status === 'ready')
-        <div x-data="tvQrScan()" x-cloak>
+        <div x-data="tvQrScan" x-cloak>
             @if($toernooien->isEmpty())
                 <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4">
                     <p>{{ __('Geen actieve toernooien gevonden.') }}</p>
@@ -56,8 +56,8 @@
         </div>
 
         <script @nonce>
-            function tvQrScan() {
-                return {
+            document.addEventListener('alpine:init', () => {
+            Alpine.data('tvQrScan', () => ({
                     toernooiId: '',
                     aantalMatten: 1,
                     status: null,
@@ -96,8 +96,8 @@
                             this.error = '{{ __('Netwerkfout') }}';
                         }
                     },
-                };
-            }
+                }));
+            });
         </script>
     @endif
 </div>

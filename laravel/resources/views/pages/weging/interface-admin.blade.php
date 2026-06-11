@@ -297,7 +297,7 @@ document.addEventListener('alpine:init', () => {
         gewogenLabel(judoka) { return `${judoka.gewicht_gewogen} kg`; },
         tijdOrDash(judoka) { return judoka.gewogen_om || '-'; },
         actieLabel(judoka) { return judoka.afwezig ? 'Herstel' : 'Wijzig'; },
-        get modalStyle() { return `left:${this.modalX}px; top:${this.modalY}px;`; },
+        get modalStyle() { return { left: this.modalX + 'px', top: this.modalY + 'px' }; },
         get editNaam() { return this.editJudoka ? this.editJudoka.naam : ''; },
         get hasGewichtOpgegeven() {
             return this.editJudoka && this.editJudoka.gewicht && parseFloat(this.editJudoka.gewicht) > 0;

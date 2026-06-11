@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -22,6 +23,11 @@ class SecurityHeaders
         // Generate CSP nonce for this request
         $nonce = base64_encode(random_bytes(16));
         app()->instance('csp-nonce', $nonce);
+
+        // Make Laravel's Vite directive emit the same nonce on the bundled
+        // script/stylesheet tags. Without this, under 'strict-dynamic' modern
+        // browsers ignore 'self' and block the unnonced app.js/app.css entirely.
+        Vite::useCspNonce($nonce);
 
         $response = $next($request);
 
@@ -45,6 +51,13 @@ class SecurityHeaders
 
         // Content Security Policy - strict, all assets bundled locally via Vite
         // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode), js.pusher.com (Reverb/Pusher)
+        // Reverb (self-hosted Pusher protocol) WebSocket host — must be allowed
+        // in connect-src or the realtime connection is blocked. The blades derive
+        // the wsHost from APP_URL's host (parse_url(config('app.url'))), so use the
+        // exact same source here to stay consistent in every environment.
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $reverbSources = $appHost ? " wss://{$appHost} ws://{$appHost} https://{$appHost}" : '';
+
         if (!app()->environment('local')) {
             // script-src without 'unsafe-eval': relies on @alpinejs/csp build +
             // Alpine.data() components — no runtime eval of x-* expressions.
@@ -54,9 +67,9 @@ class SecurityHeaders
                 "default-src 'none'",
                 "script-src 'self' 'nonce-{$nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://js.pusher.com",
                 "style-src 'self' 'nonce-{$nonce}'",
-                "img-src 'self' data: blob:",
+                "img-src 'self' data: blob: https://judoscoreboard.havun.nl",
                 "font-src 'self'",
-                "connect-src 'self' wss://*.pusher.com https://js.pusher.com https://nominatim.openstreetmap.org",
+                "connect-src 'self' wss://*.pusher.com https://js.pusher.com https://nominatim.openstreetmap.org" . $reverbSources,
                 "form-action 'self'",
                 "frame-ancestors 'self'",
                 "base-uri 'self'",

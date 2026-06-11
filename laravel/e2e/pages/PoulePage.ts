@@ -8,11 +8,11 @@ export class PoulePage {
 
     constructor(page: Page) {
         this.page = page;
-        this.heading = page.locator('h1, h2').first();
+        this.heading = page.locator('h1:visible, h2:visible').first();
     }
 
     async goto(): Promise<void> {
-        await this.page.goto(toernooiUrl('/poule'));
+        await this.page.goto(toernooiUrl('/poule'), { waitUntil: 'domcontentloaded' });
     }
 
     async expectLoaded(): Promise<void> {

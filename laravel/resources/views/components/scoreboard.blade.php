@@ -96,7 +96,7 @@
             'min-h-[400px]': !compact && !displayMode,
             'min-h-[250px]': compact
         }"
-        :style="displayMode ? 'height: calc(100vh - 56px)' : ''"
+        :style="{ height: displayMode ? 'calc(100vh - 56px)' : '' }"
     >
         {{-- BLAUW (LEFT - IJF standard) --}}
         <div
@@ -257,7 +257,7 @@
             <div
                 class="h-full transition-all duration-100"
                 :class="timeRemaining <= 30 ? 'bg-red-500' : 'bg-green-500'"
-                :style="'width: ' + (timeRemaining / matchDuration * 100) + '%'"
+                :style="{ width: (timeRemaining / matchDuration * 100) + '%' }"
             ></div>
         </div>
 

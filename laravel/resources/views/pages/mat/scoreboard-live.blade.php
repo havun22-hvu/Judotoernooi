@@ -645,7 +645,7 @@
         window.testAwaseteSound = function() { ensureCtx(); play(); };
     })();
     </script>
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous" @nonce></script>
     @php
         // Use config() not env() — env() returns null after config:cache
         $appUrl = config('app.url', 'https://localhost');

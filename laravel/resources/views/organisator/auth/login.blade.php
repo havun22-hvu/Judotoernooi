@@ -72,11 +72,11 @@
 
         {{-- Pill Tabs --}}
         <div class="flex mb-6 bg-gray-100 rounded-lg p-1">
-            <button type="button" id="tab-login" onclick="switchTab('login')"
+            <button type="button" id="tab-login"
                 class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all bg-white text-gray-800 shadow">
                 {{ __('Inloggen') }}
             </button>
-            <button type="button" id="tab-register" onclick="switchTab('register')"
+            <button type="button" id="tab-register"
                 class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all text-gray-500">
                 {{ __('Registreren') }}
             </button>
@@ -114,7 +114,7 @@
                                name="password"
                                required
                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 pr-10 focus:border-blue-500 focus:ring-blue-500">
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
                             <svg id="eye-open" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -156,7 +156,7 @@
             {{-- Alternative login methods --}}
             <div id="alt-login-methods">
                 {{-- QR button (desktop only) --}}
-                <button type="button" id="qr-login-btn" onclick="toggleQrModal()"
+                <button type="button" id="qr-login-btn"
                     class="hidden w-full py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-3">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
@@ -165,7 +165,7 @@
                 </button>
 
                 {{-- Biometric button (smartphone only) --}}
-                <button type="button" id="biometric-login-btn" onclick="startBiometric()"
+                <button type="button" id="biometric-login-btn"
                     class="hidden w-full py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-3">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
@@ -255,11 +255,11 @@
     </div>
 
     {{-- QR Login Modal --}}
-    <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick="if(event.target === this) toggleQrModal()">
+    <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="bg-white rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-semibold text-gray-800">{{ __('Scan met je telefoon') }}</h3>
-                <button onclick="toggleQrModal()" class="text-gray-400 hover:text-gray-600">
+                <button type="button" id="qr-modal-close" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -491,7 +491,14 @@ function startTimer() {
 }
 
 function showQrExpired() {
-    document.getElementById('qr-container').innerHTML = '<button onclick="generateQr()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">' + __t.refreshQr + '</button>';
+    const qrContainer = document.getElementById('qr-container');
+    qrContainer.innerHTML = '';
+    const refreshBtn = document.createElement('button');
+    refreshBtn.type = 'button';
+    refreshBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700';
+    refreshBtn.textContent = __t.refreshQr;
+    refreshBtn.addEventListener('click', generateQr);
+    qrContainer.appendChild(refreshBtn);
     document.getElementById('qr-status').textContent = __t.qrExpired;
     document.getElementById('qr-timer').classList.add('hidden');
     qrToken = null;
@@ -503,6 +510,21 @@ document.getElementById('registerForm')?.addEventListener('submit', function() {
     btn.disabled = true; btn.textContent = __t.registering;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
 });
+
+// CSP-safe event wiring — replaces inline onclick handlers, which the app's
+// strict CSP blocks (script-src has no 'unsafe-inline'). Plain getElementById
+// + addEventListener, no optional chaining, to stay safe on older mobile browsers.
+(function() {
+    const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+    on('tab-login', 'click', function () { switchTab('login'); });
+    on('tab-register', 'click', function () { switchTab('register'); });
+    on('toggle-password', 'click', togglePassword);
+    on('qr-login-btn', 'click', toggleQrModal);
+    on('biometric-login-btn', 'click', startBiometric);
+    on('qr-modal-close', 'click', toggleQrModal);
+    const qrModalEl = document.getElementById('qr-modal');
+    if (qrModalEl) qrModalEl.addEventListener('click', function (e) { if (e.target === qrModalEl) toggleQrModal(); });
+})();
 
 // Init: detect platform and show appropriate buttons
 (async function() {
