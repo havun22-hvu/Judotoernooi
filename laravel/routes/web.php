@@ -60,6 +60,14 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// E2E test-login seam — ONLY in local/testing with E2E_LOGIN set. Required here,
+// at the top, so it is registered before the catch-all {organisator}/{toernooi}
+// routes below (which would otherwise swallow /e2e/login). Absent (404) in every
+// other environment — no auth-bypass surface in production.
+if (app()->environment(['local', 'testing']) && env('E2E_LOGIN')) {
+    require __DIR__.'/e2e.php';
+}
+
 // Simple ping for connection status check (no auth required)
 Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]))->name('ping');
 

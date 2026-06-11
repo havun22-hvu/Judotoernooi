@@ -21,7 +21,7 @@
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "SportsEvent",
         "name": "{{ $toernooi->naam }}",
         "sport": "Judo",
@@ -44,7 +44,7 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
             {

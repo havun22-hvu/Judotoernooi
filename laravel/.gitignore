@@ -17,3 +17,8 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/test-results
+/playwright-report
+/playwright/.cache
+/e2e/.auth
+/database/e2e.sqlite
