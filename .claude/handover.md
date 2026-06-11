@@ -12,8 +12,32 @@ last_updated: 2026-06-04
 ## Huidige status
 
 **Status:** Stabiel in productie — multi-tenant SaaS op judotoernament.org
-**Branch:** main (schoon, alles gepushed)
+**Branch:** main (schoon) · **`upgrade/laravel-12` gepusht, wacht op deploy**
 **AutoFix:** actief op production + staging
+
+## ⚠️ Laravel 12 upgrade — KLAAR op branch, NOG NIET gedeployed
+
+Branch `upgrade/laravel-12` bevat de volledige upgrade 11.47 → 12.62. Lokaal
+volledig groen: **3469 PHPUnit tests + 18 Playwright e2e**. NIET naar main
+gemerged om te voorkomen dat een routine `git pull`-deploy hem zonder de
+juiste stappen oppakt.
+
+**Deploy-stappen (met BACKUP eerst — Henk's eis):**
+1. **MySQL-dump** van production EN staging maken (vóór alles)
+2. Staging eerst: `cd repo-staging && git fetch && git merge origin/upgrade/laravel-12`
+3. `composer install --no-dev -o` (haalt L12 vendor binnen — anders L11 vendor + L12 code = kapot)
+4. `php artisan view:clear && php artisan config:clear && php artisan cache:clear`
+5. `php artisan migrate --force` (geen nieuwe migraties verwacht, maar check)
+6. Smoke-test staging (publieke pagina's, scorebord, facturen-download)
+7. Pas daarna production identiek
+8. Na groen: merge branch → main, branch verwijderen
+
+Kernpunten van de upgrade (zie commit-messages voor detail):
+- `config/filesystems.php` toegevoegd: `local` disk root gepind op `storage/app`
+  (L12 default werd `storage/app/private` → facturen onbereikbaar)
+- JSON-LD `@context` → `@@context` in home + publiek/index (L12 Blade-compiler
+  zag `@context` als directive → fatale ParseError op publieke pagina's)
+- Carbon 2→3 mee-geüpgraded, composer audit clean (lost ook CVE-2026-48019 op)
 
 ## Openstaande items
 
@@ -36,6 +60,26 @@ last_updated: 2026-06-04
 - Alpine CSP verbiedt ook compound `@click` expressies (`x = 1; method()`) → altijd een aparte methode in de component
 
 ## Sessie-log
+
+### 2026-06-10/11 — Laravel 12 upgrade + Playwright
+
+**Security:** `composer audit` vond 2 nieuwe CVE's. phpspreadsheet 1.30.4→1.30.5
+(CVE-2026-45034, critical patch-bypass) gefixt + getest + naar main gepusht.
+De tweede (laravel/framework CVE-2026-48019 CRLF) had geen 11.x-patch → leidde
+tot de major upgrade.
+
+**Laravel 11.47 → 12.62 (branch `upgrade/laravel-12`):** zie deploy-blok boven.
+Twee echte issues gevonden via de volledige testrun:
+1. JSON-LD `@context` Blade-compiler regressie (publieke pagina's 500) → `@@context`
+2. Pre-existing testfout (niet L12): `winnaar_id`-validatie verwachtte 'required'
+   maar gelijkspel-feature (2 juni) maakte 'm nullable → test bijgewerkt.
+Eindresultaat: 3469 PHPUnit groen.
+
+**Playwright e2e geïntroduceerd:** `@playwright/test` in `laravel/`, config met
+self-hosting webServer (build + artisan serve), Page Object Model, smoke-specs
+voor home + publieke/legal pagina's (200 + zichtbare heading + geen JS-errors)
++ sitemap. `npm run e2e`. 18 specs groen. Vangt Alpine-CSP/render-regressies
+die PHPUnit niet ziet. Docs in `laravel/e2e/README.md`.
 
 ### 2026-06-04
 
