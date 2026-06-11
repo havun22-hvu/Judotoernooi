@@ -11,7 +11,6 @@ use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
-use App\Services\ToernooiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -325,7 +324,11 @@ class ApiControllersCoverageTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['wedstrijd_id', 'winnaar_id', 'uitslag_type']);
+        // winnaar_id is intentionally nullable since the gelijkspel (draw)
+        // feature (Jun 2026): a null winnaar_id signals a draw, so only
+        // wedstrijd_id and uitslag_type are genuinely required.
+        $response->assertJsonValidationErrors(['wedstrijd_id', 'uitslag_type']);
+        $response->assertJsonMissingValidationErrors(['winnaar_id']);
     }
 
     #[Test]
@@ -513,7 +516,7 @@ class ApiControllersCoverageTest extends TestCase
             'judoka_blauw_id' => Judoka::factory()->create(['toernooi_id' => $toernooi->id])->id,
         ]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
         $response = $controller->export($toernooi);
 
         $data = $response->getData(true);
@@ -545,9 +548,9 @@ class ApiControllersCoverageTest extends TestCase
         $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
         $judoka = Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -582,9 +585,9 @@ class ApiControllersCoverageTest extends TestCase
             'naam' => 'Original Name',
         ]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -616,9 +619,9 @@ class ApiControllersCoverageTest extends TestCase
         $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
         $judoka = Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -646,9 +649,9 @@ class ApiControllersCoverageTest extends TestCase
         $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
         $club = Club::factory()->create(['organisator_id' => $org->id]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -686,9 +689,9 @@ class ApiControllersCoverageTest extends TestCase
         $org = Organisator::factory()->create();
         $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -724,9 +727,9 @@ class ApiControllersCoverageTest extends TestCase
             'judoka_blauw_id' => $judokaBlauw->id,
         ]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
 
-        $request = new \Illuminate\Http\Request();
+        $request = new \Illuminate\Http\Request;
         $request->replace([
             'toernooi_id' => $toernooi->id,
             'items' => [
@@ -868,7 +871,7 @@ class ApiControllersCoverageTest extends TestCase
         $org = Organisator::factory()->create();
         $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
 
-        $controller = new \App\Http\Controllers\Api\SyncApiController();
+        $controller = new \App\Http\Controllers\Api\SyncApiController;
         $response = $controller->export($toernooi);
         $data = $response->getData(true);
 
