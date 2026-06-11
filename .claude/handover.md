@@ -9,11 +9,37 @@ last_updated: 2026-06-04
 
 > Vul dit aan aan het einde van elke sessie.
 
-## Huidige status
+## Huidige status (12-06-2026)
 
-**Status:** Stabiel in productie — multi-tenant SaaS op judotoernament.org
-**Branch:** main (schoon) · **`upgrade/laravel-12` gepusht, wacht op deploy**
+**Branch:** main · **L12 = GEDEPLOYED** (staging+main) · CSP-fix gedeployed naar **staging** (main `77071f6e`), **productie nog op `84a79367`** (oude code, Alpine geblokkeerd — bewust niet gedeployed).
 **AutoFix:** actief op production + staging
+
+## ⚠️ ACTIEF: CSP/Alpine-fix — staging klaar, productie wacht, mobiele puntjes open
+
+**De grote vondst:** de strikte CSP (`script-src nonce + strict-dynamic`, geen `unsafe-inline`) blokkeerde de **Vite-bundle volledig** omdat `@vite` géén nonce kreeg → **Alpine draaide nergens** op staging/prod (login dood, PWA's vast, layout instabiel). Henk merkt 't omdat hij lokaal ontwikkelt (CSP uit) en pas op de P10 testte.
+
+**Gefixt + geverifieerd (e2e groen, gedeployed staging):**
+- `Vite::useCspNonce()` in `SecurityHeaders` → app.js/css laden weer *(de kernfix)*
+- `connect-src` → Reverb ws-host via `parse_url(config('app.url'))` (zo bepalen de blades óók de wsHost) — realtime was overal geblokkeerd
+- `img-src` JS-icon + `@nonce` op 6 Pusher-tags
+- Alpine `@alpinejs/csp`-migratie: login (onclick→addEventListener), weging (`function countdown`→`Alpine.data`), mat (connectionDot + menuWithHelp methods), spreker (`__laden`, `:style`), tv/qr-scan, 5× `:style`-string→object (CSSOM)
+- shared lib: `connectionDot`, `menuWithHelp.{openHelp,refreshMat,openSettings}`, `fontSizer.apply()`
+- e2e: CSP-violation-detectie toegevoegd (`csp.ts`/`csp.spec`/`login.spec`/`pwa.spec`)
+- admin-tabbalk (`pages/toernooi/index`) → `overflow-x-auto` (was breder dan header op mobiel)
+- service-worker → **v1.5.0** (forceert clients verse assets)
+
+**KEY-INZICHT (bespaart morgen veel tijd):** de `@alpinejs/csp` build **ondersteunt ternary's + compound `@click` WÉL** (home `/` en mat slaagden met 0 violations). De doc `docs/alpine-csp-migration.md` was overdreven voorzichtig — NIET alle ~25 views met expressies hoeven migratie. Echte breakers waren smal: Vite-nonce (groot), connect-src, Pusher-nonces, paar globale-functie x-data, inline `:style`-strings.
+
+**OPEN voor morgen:**
+1. **Biometrie NIET testbaar op staging** — passkey is domein-gebonden; als op prod (`judotournament.org`) ingesteld, heeft de P10 geen passkey voor `staging.…`. Knop-fix is echt; verifieer op **productie** of registreer staging-passkey. (Henk's antwoord op "waar ingesteld?" nog niet gekregen.)
+2. **PWA-installknop zit onder "backup actief"-melding** — z-index/positie-overlap; screenshot nodig om te lokaliseren. installBanner = `publiek/index:1083` (`fixed bottom-0 z-50`), backup-toast in `layouts/app.blade.php:458`.
+3. **Mobiele responsiveness-sweep** van ingelogde schermen op een ECHT toestel — Playwright Pixel7-emulatie mist real-device-issues (forceert eigen viewport).
+4. **Productie-deploy** van de CSP-fix (zelfde commit, mét backup) zodra staging is goedgekeurd.
+5. Niet-e2e-geverifieerd (browser-check op staging): `:style`-object op scoreboard/publiek/toernooi-mobiel/weging-admin, tv/qr-scan, `offline/index` (laadt eigen CDN-Alpine — apart geval, ongemoeid).
+
+---
+
+## (Afgerond) Laravel 12 upgrade — GEDEPLOYED
 
 ## ⚠️ Laravel 12 upgrade — KLAAR op branch, NOG NIET gedeployed
 
