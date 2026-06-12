@@ -9,6 +9,7 @@ use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use App\Services\EliminatieService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionMethod;
@@ -484,5 +485,185 @@ class EliminatieServiceExtraTest extends TestCase
 
         $this->assertEquals(4, $echte, 'N=12: 4 echte wedstrijden in eerste ronde');
         $this->assertEquals(4, $byes, 'N=12: 4 byes in eerste ronde');
+    }
+
+    // =========================================================================
+    // WINNAAR AUTOMATISCH DOORSCHUIVEN (sinds 2026-06-12)
+    // =========================================================================
+
+    #[Test]
+    public function winnaar_schuift_automatisch_door_naar_volgende_a_ronde(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8, 'ijf');
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $kf = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->where('ronde', 'kwartfinale')
+            ->whereNotNull('judoka_wit_id')
+            ->whereNotNull('judoka_blauw_id')
+            ->whereNotNull('volgende_wedstrijd_id')
+            ->whereNotNull('winnaar_naar_slot')
+            ->first();
+
+        $this->assertNotNull($kf, 'Er moet een kwartfinale met volgende ronde zijn');
+
+        $winnaarId = $kf->judoka_wit_id;
+        $kf->update(['is_gespeeld' => true, 'winnaar_id' => $winnaarId]);
+        $this->service->verwerkUitslag($kf, $winnaarId, null, 'ijf');
+
+        $volgende = Wedstrijd::find($kf->volgende_wedstrijd_id);
+        $veld = $kf->winnaar_naar_slot === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
+        $this->assertEquals($winnaarId, $volgende->$veld,
+            'Winnaar moet automatisch in volgende A-wedstrijd staan op het juiste slot');
+    }
+
+    #[Test]
+    public function winnaar_schuift_automatisch_door_naar_volgende_b_ronde(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(16, 'dubbel');
+        $this->service->genereerBracket($poule, $judokaIds, 'dubbel');
+
+        // Pak een B-wedstrijd die naar een volgende B-ronde koppelt
+        $bWed = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'B')
+            ->whereNotNull('volgende_wedstrijd_id')
+            ->whereNotNull('winnaar_naar_slot')
+            ->first();
+
+        $this->assertNotNull($bWed, 'Er moet een B-wedstrijd met volgende ronde zijn');
+
+        // Vul handmatig 2 deelnemers (B-slots zijn bij generatie nog leeg)
+        $winnaarId = $judokaIds[0];
+        $bWed->update([
+            'judoka_wit_id' => $winnaarId,
+            'judoka_blauw_id' => $judokaIds[1],
+            'is_gespeeld' => true,
+            'winnaar_id' => $winnaarId,
+        ]);
+        $this->service->verwerkUitslag($bWed, $winnaarId, null, 'dubbel');
+
+        $volgende = Wedstrijd::find($bWed->volgende_wedstrijd_id);
+        $veld = $bWed->winnaar_naar_slot === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
+        $this->assertEquals($winnaarId, $volgende->$veld,
+            'B-winnaar moet automatisch in volgende B-wedstrijd staan op het juiste slot');
+    }
+
+    #[Test]
+    public function correctie_verwijdert_oude_winnaar_en_schuift_nieuwe_door(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8, 'ijf');
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $kf = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->where('ronde', 'kwartfinale')
+            ->whereNotNull('judoka_wit_id')
+            ->whereNotNull('judoka_blauw_id')
+            ->whereNotNull('volgende_wedstrijd_id')
+            ->whereNotNull('winnaar_naar_slot')
+            ->first();
+
+        $oudeWinnaar = $kf->judoka_wit_id;
+        $nieuweWinnaar = $kf->judoka_blauw_id;
+        $veld = $kf->winnaar_naar_slot === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
+
+        // Eerste uitslag: oude winnaar schuift door
+        $kf->update(['is_gespeeld' => true, 'winnaar_id' => $oudeWinnaar]);
+        $this->service->verwerkUitslag($kf, $oudeWinnaar, null, 'ijf');
+        $volgende = Wedstrijd::find($kf->volgende_wedstrijd_id);
+        $this->assertEquals($oudeWinnaar, $volgende->$veld);
+
+        // Correctie: nieuwe winnaar moet de oude vervangen
+        $kf->update(['winnaar_id' => $nieuweWinnaar]);
+        $this->service->verwerkUitslag($kf, $nieuweWinnaar, $oudeWinnaar, 'ijf');
+
+        $volgende->refresh();
+        $this->assertEquals($nieuweWinnaar, $volgende->$veld,
+            'Na correctie moet de nieuwe winnaar in het volgende slot staan');
+    }
+
+    #[Test]
+    public function eindpunt_zonder_volgende_wedstrijd_geeft_geen_fout(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8, 'ijf');
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $finale = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->where('ronde', 'finale')
+            ->first();
+
+        $this->assertNotNull($finale);
+        $this->assertNull($finale->volgende_wedstrijd_id, 'Finale is een eindpunt');
+
+        $finale->update([
+            'judoka_wit_id' => $judokaIds[0],
+            'judoka_blauw_id' => $judokaIds[1],
+            'is_gespeeld' => true,
+            'winnaar_id' => $judokaIds[0],
+        ]);
+
+        // Mag geen exception gooien
+        $correcties = $this->service->verwerkUitslag($finale, $judokaIds[0], null, 'ijf');
+        $this->assertIsArray($correcties);
+    }
+
+    #[Test]
+    public function ontbrekende_winnaar_naar_slot_logt_warning_en_plaatst_niet(): void
+    {
+        Log::spy();
+
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8, 'ijf');
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $kf = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->where('ronde', 'kwartfinale')
+            ->whereNotNull('judoka_wit_id')
+            ->whereNotNull('judoka_blauw_id')
+            ->whereNotNull('volgende_wedstrijd_id')
+            ->first();
+
+        // Forceer configuratiefout: volgende_wedstrijd_id wél, winnaar_naar_slot niet
+        $kf->update(['winnaar_naar_slot' => null, 'is_gespeeld' => true, 'winnaar_id' => $kf->judoka_wit_id]);
+        $winnaarId = $kf->judoka_wit_id;
+        $this->service->verwerkUitslag($kf, $winnaarId, null, 'ijf');
+
+        Log::shouldHaveReceived('warning')->once();
+
+        $volgende = Wedstrijd::find($kf->volgende_wedstrijd_id);
+        $this->assertNotEquals($winnaarId, $volgende->judoka_wit_id);
+        $this->assertNotEquals($winnaarId, $volgende->judoka_blauw_id);
+    }
+
+    #[Test]
+    public function doorschuiven_is_idempotent(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8, 'ijf');
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $kf = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->where('ronde', 'kwartfinale')
+            ->whereNotNull('judoka_wit_id')
+            ->whereNotNull('judoka_blauw_id')
+            ->whereNotNull('volgende_wedstrijd_id')
+            ->whereNotNull('winnaar_naar_slot')
+            ->first();
+
+        $winnaarId = $kf->judoka_wit_id;
+        $kf->update(['is_gespeeld' => true, 'winnaar_id' => $winnaarId]);
+
+        // 2× dezelfde uitslag
+        $this->service->verwerkUitslag($kf, $winnaarId, null, 'ijf');
+        $this->service->verwerkUitslag($kf, $winnaarId, null, 'ijf');
+
+        $volgende = Wedstrijd::find($kf->volgende_wedstrijd_id);
+        $veld = $kf->winnaar_naar_slot === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
+        $anderVeld = $kf->winnaar_naar_slot === 'wit' ? 'judoka_blauw_id' : 'judoka_wit_id';
+
+        $this->assertEquals($winnaarId, $volgende->$veld, 'Winnaar staat correct in het slot');
+        $this->assertNotEquals($winnaarId, $volgende->$anderVeld, 'Winnaar staat niet dubbel');
     }
 }

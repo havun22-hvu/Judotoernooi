@@ -8,6 +8,7 @@ use App\Services\Eliminatie\BracketCalculator;
 use App\Services\Eliminatie\MatchScheduler;
 use App\Services\Eliminatie\WinnerCalculator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * EliminatieService - Knockout Bracket Generator
@@ -630,19 +631,7 @@ class EliminatieService
             $this->verwijderUitLatereRondes($wedstrijd->poule_id, $wedstrijd->groep, $oudeWinnaarId, $wedstrijd->id);
             $correcties[] = "{$oudeWinnaarNaam} verwijderd uit latere rondes";
 
-            // 2. Plaats nieuwe winnaar in het volgende slot
-            if ($wedstrijd->volgende_wedstrijd_id) {
-                $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
-                if ($volgendeWedstrijd) {
-                    $slot = $wedstrijd->winnaar_naar_slot ?? 'wit';
-                    $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
-
-                    $volgendeWedstrijd->update([$veld => $winnaarId]);
-                    $correcties[] = "{$winnaarNaam} geplaatst in volgende ronde";
-                }
-            }
-
-            // 3. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
+            // 2. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
             // Want die was daar geplaatst als verliezer, maar is nu winnaar
             // ALLEEN bij A-groep! Bij B-groep correcties blijft de winnaar in B-groep
             if ($wedstrijd->groep === 'A') {
@@ -650,9 +639,34 @@ class EliminatieService
                 $correcties[] = "{$winnaarNaam} verwijderd uit B-groep (is nu winnaar)";
             }
 
-            // 4. Plaats oude winnaar (=nieuwe verliezer) in B-groep
-            // De reguliere code hieronder doet dit al
             $correcties[] = "Winnaar gecorrigeerd: {$winnaarNaam} (was: {$oudeWinnaarNaam})";
+        }
+
+        // Winnaar automatisch doorschuiven naar volgende ronde.
+        // Geldt voor ELKE uitslag: eerste registratie én correctie, A-groep én B-groep.
+        // Staat ná de correctie-cascade zodat de nieuwe winnaar netjes ná het opschonen
+        // wordt geplaatst. Idempotent: zelfde winnaar opnieuw plaatsen = zelfde waarde.
+        // Eindpunten (finale/brons) hebben geen volgende_wedstrijd_id en worden overgeslagen.
+        if ($wedstrijd->volgende_wedstrijd_id) {
+            $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
+            if ($volgendeWedstrijd) {
+                $slot = $wedstrijd->winnaar_naar_slot;
+                if (in_array($slot, ['wit', 'blauw'], true)) {
+                    $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
+                    $volgendeWedstrijd->update([$veld => $winnaarId]);
+
+                    // Alleen melding bij correctie (eerste uitslag is stille happy-path)
+                    if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
+                        $correcties[] = "{$winnaarNaam} geplaatst in volgende ronde";
+                    }
+                } else {
+                    Log::warning(
+                        "Wedstrijd {$wedstrijd->id} heeft volgende_wedstrijd_id "
+                        . "{$wedstrijd->volgende_wedstrijd_id} maar geen geldige winnaar_naar_slot "
+                        . "({$slot}) — duidt op een configuratiefout in het bracket-schema."
+                    );
+                }
+            }
         }
 
         // Verliezer naar B-groep (alleen bij A-groep wedstrijden)
