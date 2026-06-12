@@ -1920,11 +1920,31 @@
                 }
             });
 
-            // Update JSON on any input change in categories container
+            // Update JSON + per-veld validatie/toggles bij elke wijziging in de categorie-container.
+            // De inline on*-handlers in de dynamisch gerenderde categorie-HTML zijn dood onder de
+            // strikte CSP (inline event handlers geblokkeerd), dus delegeren we ze hier op class.
+            function handleCategorieVeld(t) {
+                const item = t.closest ? t.closest('.gewichtsklasse-item') : null;
+                if (!item) return;
+                if (t.classList.contains('gewichten-input')) {
+                    checkGewichtsklassenWarning(t);
+                } else if (t.classList.contains('max-kg-input')) {
+                    toggleGewichtsklassen(t);
+                } else if (t.classList.contains('max-lft-input')) {
+                    checkSysteemBeschikbaarheid(item);
+                } else if (t.classList.contains('systeem-select')) {
+                    togglePuntenCompSelect(t);
+                    checkSysteemBeschikbaarheid(item);
+                } else if (t.classList.contains('eind-optie-select')) {
+                    toggleGoldenScoreDuur(t);
+                }
+            }
             container.addEventListener('input', (e) => {
+                handleCategorieVeld(e.target);
                 updateJsonInput();
             });
             container.addEventListener('change', (e) => {
+                handleCategorieVeld(e.target);
                 updateJsonInput();
             });
 
