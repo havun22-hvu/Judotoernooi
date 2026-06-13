@@ -93,7 +93,7 @@
                     {{ __('Zaaloverzicht') }}
                 </a>
             </div>
-            <button onclick="sluitInschrijvingPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
+            <button data-action="close-inschrijving" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
                 {{ __('Ik begrijp het, toch doorgaan') }}
             </button>
         </div>
@@ -188,14 +188,14 @@
         @else
         <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST" class="inline"
               data-loading="{{ __('Poule-indeling genereren...') }}"
-              onsubmit="return {{ $poules->count() }} === 0 || confirm('{{ __('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?') }}')">
+              data-action="confirm-herindeling" data-poule-count="{{ $poules->count() }}" data-confirm="{{ __('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?') }}">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 {{ __('(her)Verdelen') }}
             </button>
         </form>
         @endif
-        <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+        <button data-action="verifieer" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             {{ __('Verifieer poules') }}
         </button>
     </div>
@@ -283,7 +283,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <button onclick="openNieuwePouleModal('{{ $categorieKey }}', '{{ $categorieLabel }}', {{ $heeftVasteGewichten ? 'true' : 'false' }})"
+        <button data-action="nieuwe-poule-modal" data-categorie-key="{{ $categorieKey }}" data-categorie-label="{{ $categorieLabel }}" data-vaste-gewichten="{{ $heeftVasteGewichten ? '1' : '0' }}"
                 class="ml-3 bg-white text-blue-800 hover:bg-blue-100 text-sm font-bold py-1.5 px-3 rounded">
             + {{ __('Nieuwe poule') }}
         </button>
@@ -375,17 +375,17 @@
                                 </button>
                                 <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
                                     @if($isEliminatie)
-                                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
+                                    <button data-action="omzetten" data-poule-id="{{ $poule->id }}" data-systeem="poules" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
                                         {{ __('Alleen poules') }}
                                     </button>
-                                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
+                                    <button data-action="omzetten" data-poule-id="{{ $poule->id }}" data-systeem="poules_kruisfinale" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
                                         {{ __('Poules + kruisfinale') }}
                                     </button>
                                     @else
-                                    <button onclick="zetOmNaar({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
+                                    <button data-action="omzetten-type" data-poule-id="{{ $poule->id }}" data-type="poules" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
                                         {{ __('Alleen poules') }}
                                     </button>
-                                    <button onclick="zetOmNaar({{ $poule->id }}, 'eliminatie')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
+                                    <button data-action="omzetten-type" data-poule-id="{{ $poule->id }}" data-type="eliminatie" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
                                         {{ __('Eliminatie') }}
                                     </button>
                                     @endif
@@ -393,7 +393,7 @@
                             </div>
                             @endif
                             @if($poule->judokas_count === 0)
-                            <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="{{ __('Verwijder poule') }}">&minus;</button>
+                            <button data-action="verwijder-poule" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="{{ __('Verwijder poule') }}">&minus;</button>
                             @endif
                         </div>
                     </div>
@@ -401,7 +401,7 @@
                         @if($poule->isKruisfinale())
                         <span class="flex items-center gap-1">
                             Top
-                            <select onchange="updateKruisfinalesPlaatsen({{ $poule->id }}, this.value)" class="border rounded px-1 py-0.5 text-xs bg-white">
+                            <select data-action="update-kruisfinale-plaatsen" data-poule-id="{{ $poule->id }}" class="border rounded px-1 py-0.5 text-xs bg-white">
                                 @for($i = 1; $i <= 3; $i++)
                                 <option value="{{ $i }}" {{ $poule->kruisfinale_plaatsen == $i ? 'selected' : '' }}>{{ $i }}</option>
                                 @endfor
@@ -447,7 +447,7 @@
                                 <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                             </div>
                             <button
-                                onclick="event.stopPropagation(); openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
+                                data-action="zoek-match-for" data-judoka-id="{{ $judoka->id }}"
                                 class="zoek-match-btn text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                 title="{{ __('Zoek geschikte poule') }}"
                             >🔍</button>
@@ -493,7 +493,7 @@
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                <button type="button" data-action="close-nieuwe-poule-modal" class="px-4 py-2 text-gray-600 hover:text-gray-800">
                     {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -506,7 +506,7 @@
 
 <!-- Context menu voor judoka -->
 <div id="judoka-context-menu" class="fixed hidden bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 min-w-[160px]">
-    <button onclick="openZoekMatch()" class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2">
+    <button data-action="open-zoek-match" class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2">
         <span>🔍</span> {{ __('Zoek match') }}
     </button>
 </div>
@@ -520,10 +520,10 @@
                 <span class="text-gray-500 font-normal" id="zoek-match-judoka-info"></span>
             </h2>
             <div class="flex items-center gap-2">
-                <button id="zoek-match-afmelden-btn" onclick="uitschrijvenVanuitModal()" class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded hidden">
+                <button id="zoek-match-afmelden-btn" data-action="uitschrijven-modal" class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded hidden">
                     ✕ {{ __('Afmelden') }}
                 </button>
-                <button onclick="closeZoekMatchModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                <button data-action="close-zoek-match-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
         </div>
         <div class="p-4 overflow-y-auto flex-1" id="zoek-match-results">
@@ -535,6 +535,35 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'close-inschrijving': () => sluitInschrijvingPopup(),
+        'verifieer': () => verifieerPoules(),
+        'nieuwe-poule-modal': (el) => openNieuwePouleModal(el.dataset.categorieKey, el.dataset.categorieLabel, el.dataset.vasteGewichten === '1'),
+        'omzetten': (el) => zetOmNaarPoules(+el.dataset.pouleId, el.dataset.systeem),
+        'omzetten-type': (el) => zetOmNaar(+el.dataset.pouleId, el.dataset.type),
+        'verwijder-poule': (el) => verwijderPoule(+el.dataset.pouleId, el.dataset.pouleNummer),
+        'change:update-kruisfinale-plaatsen': (el) => updateKruisfinalesPlaatsen(+el.dataset.pouleId, el.value),
+        'zoek-match-for': (el, e) => { e.stopPropagation(); openZoekMatchFor(+el.dataset.judokaId, el.closest('.judoka-item')); },
+        'close-nieuwe-poule-modal': () => closeNieuwePouleModal(),
+        'open-zoek-match': () => openZoekMatch(),
+        'uitschrijven-modal': () => uitschrijvenVanuitModal(),
+        'close-zoek-match-modal': () => closeZoekMatchModal(),
+        'verplaats-poule': (el) => verplaatsNaarPoule(+el.dataset.judokaId, +el.dataset.naarPouleId),
+        'reload': () => location.reload(),
+        'highlight-poule': (el) => {
+            const t = document.getElementById('poule-' + el.dataset.pouleId);
+            if (!t) return;
+            t.classList.add('ring-2', 'ring-yellow-400');
+            setTimeout(() => t.classList.remove('ring-2', 'ring-yellow-400'), 3000);
+        },
+        'submit:confirm-herindeling': (el, e) => {
+            if (+el.dataset.pouleCount > 0 && !confirm(el.dataset.confirm)) e.preventDefault();
+        },
+    });
+});
+
 // i18n constants
 const __leeg = @json(__('Leeg'));
 const __bezigMetVerificatie = @json(__('Bezig met verificatie...'));
@@ -970,15 +999,15 @@ async function verifieerPoules() {
                 html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
                     <h3 class="font-bold text-yellow-800 mb-2">⚠️ ${__verificatieProblemenGevonden.replace(':aantal', data.problemen.length)}</h3>
                     <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
-                        ${data.problemen.map(p => `<li><a href="#poule-${p.poule_id}" class="underline hover:no-underline" onclick="document.getElementById('poule-${p.poule_id}')?.classList.add('ring-2','ring-yellow-400');setTimeout(()=>document.getElementById('poule-${p.poule_id}')?.classList.remove('ring-2','ring-yellow-400'),3000)">${p.message}</a></li>`).join('')}
+                        ${data.problemen.map(p => `<li><a href="#poule-${p.poule_id}" class="underline hover:no-underline" data-action="highlight-poule" data-poule-id="${p.poule_id}">${p.message}</a></li>`).join('')}
                     </ul>
-                    ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button onclick="location.reload()" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
+                    ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button data-action="reload" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
                 </div>`;
             } else {
                 html = `<div class="bg-green-50 border border-green-300 rounded-lg p-4">
                     <h3 class="font-bold text-green-800 mb-2">✅ ${__verificatieGeslaagd}</h3>
                     <p class="text-green-700 text-sm">${__allePoulesCorrect.replace(':totaal', data.totaal_poules).replace(':wedstrijden', data.totaal_wedstrijden)}</p>
-                    ${refreshNeeded ? `<p class="text-green-600 text-sm mt-2">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button onclick="location.reload()" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
+                    ${refreshNeeded ? `<p class="text-green-600 text-sm mt-2">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button data-action="reload" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
                 </div>`;
             }
 
@@ -1457,7 +1486,7 @@ async function openZoekMatch() {
 
             html += `
                 <div class="p-3 rounded-lg border cursor-pointer transition-colors ${colorClass} ${catOverschrijding ? 'border-l-4 border-l-orange-400' : ''}"
-                     onclick="verplaatsNaarPoule(${selectedJudokaId}, ${match.poule_id})">
+                     data-action="verplaats-poule" data-judoka-id="${selectedJudokaId}" data-naar-poule-id="${match.poule_id}">
                     <div class="flex justify-between items-start flex-wrap gap-1">
                         <div class="flex items-center flex-wrap">
                             <span class="font-medium">${icon} #${match.poule_nummer} ${match.poule_titel || ''}</span>

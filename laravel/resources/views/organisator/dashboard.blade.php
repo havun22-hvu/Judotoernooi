@@ -58,7 +58,7 @@
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
                             <hr class="my-1">
-                            <button type="button" onclick="location.reload(true)" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
+                            <button type="button" data-action="reload-force" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
                             <button type="button" @click="openAbout()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -94,7 +94,7 @@
                                         <p class="text-sm text-gray-500">havun22@gmail.com</p>
                                     </div>
                                     <hr>
-                                    <button type="button" onclick="location.reload(true)"
+                                    <button type="button" data-action="reload-force"
                                             class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
                                         {{ __('Ververs app') }}
                                     </button>
@@ -174,6 +174,16 @@
         </div>
 
         <script @nonce>
+            // CSP-safe event delegation: koppel data-action attributen aan acties.
+            document.addEventListener('DOMContentLoaded', () => {
+                window.cspActions({
+                    'reload-force': () => location.reload(true),
+                    'dismiss-idle': () => { document.getElementById('idle-warning')?.remove(); window.resetIdleTimers?.(); },
+                    'submit:confirm-submit': (el, e) => {
+                        if (!confirm((el.dataset.confirm || '').replace(/\\n/g, '\n'))) e.preventDefault();
+                    },
+                });
+            });
             document.addEventListener('alpine:init', () => {
                 const __t = { confirmDeleteTemplate: @json(__('Weet je zeker dat je deze template wilt verwijderen?')) };
 
@@ -289,7 +299,7 @@
                     <div class="flex items-center gap-2">
                         {{-- Reset knop --}}
                         <form action="{{ route('toernooi.reset', $toernooi->routeParams()) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt resetten?\n\nDit verwijdert:\n- Alle judoka\'s\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.')">
+                              data-action="confirm-submit" data-confirm="Weet je zeker dat je '{{ $toernooi->naam }}' wilt resetten?\n\nDit verwijdert:\n- Alle judoka's\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.">
                             @csrf
                             <button type="submit" class="text-gray-400 hover:text-orange-600 transition-colors" title="{{ __('Reset toernooi (verwijder judoka\'s en poules)') }}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,7 +318,7 @@
                         </form>
                         {{-- Delete knop --}}
                         <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
+                              data-action="confirm-submit" data-confirm="Weet je zeker dat je '{{ $toernooi->naam }}' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka's\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" title="{{ __('Verwijder toernooi') }}">
@@ -384,7 +394,7 @@
                                 </form>
                                 {{-- Delete knop --}}
                                 <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data en kan niet ongedaan worden!')">
+                                      data-action="confirm-submit" data-confirm="Weet je zeker dat je '{{ $toernooi->naam }}' wilt verwijderen?\n\nDit verwijdert ALLE data en kan niet ongedaan worden!">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" title="{{ __('Verwijder toernooi') }}">
@@ -435,7 +445,7 @@
                         <div class="bg-white p-6 rounded-lg max-w-[400px] text-center shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                             <h3 class="text-lg font-bold mb-3 text-red-700">{{ __('Sessie verloopt bijna') }}</h3>
                             <p class="mb-4 text-gray-700">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
-                            <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
+                            <button data-action="dismiss-idle"
                                     class="bg-blue-600 text-white px-6 py-2.5 rounded-md border-none cursor-pointer font-medium">
                                 {{ __('Actief blijven') }}
                             </button>

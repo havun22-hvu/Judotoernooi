@@ -12,11 +12,11 @@
         </div>
         <div class="flex gap-2">
             @if(!$heeftEliminatie)
-            <button onclick="genereerBracket()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button data-action="genereer-bracket" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                 Genereer Bracket
             </button>
             @else
-            <button onclick="if(confirm('Dit verwijdert de huidige bracket en maakt een nieuwe. Doorgaan?')) genereerBracket()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+            <button data-action="hergenereer-bracket" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 Hergeneer Bracket
             </button>
             @endif
@@ -62,7 +62,7 @@
                                 <!-- Wit -->
                                 <div class="bracket-judoka flex items-center justify-between p-2 border-b {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_wit_id ? 'bg-green-100 font-bold' : '' }}"
                                      data-judoka-id="{{ $wedstrijd->judoka_wit_id }}"
-                                     onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_wit_id ?? 'null' }})">
+                                     data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_wit_id }}">
                                     <span class="text-sm truncate max-w-32">
                                         @if($wedstrijd->judokaWit)
                                             {{ $wedstrijd->judokaWit->naam }}
@@ -77,7 +77,7 @@
                                 <!-- Blauw -->
                                 <div class="bracket-judoka flex items-center justify-between p-2 {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_blauw_id ? 'bg-green-100 font-bold' : '' }}"
                                      data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}"
-                                     onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_blauw_id ?? 'null' }})">
+                                     data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}">
                                     <span class="text-sm truncate max-w-32">
                                         @if($wedstrijd->judokaBlauw)
                                             {{ $wedstrijd->judokaBlauw->naam }}
@@ -115,7 +115,7 @@
                                 <!-- Wit -->
                                 <div class="bracket-judoka flex items-center justify-between p-2 border-b {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_wit_id ? 'bg-green-100 font-bold' : '' }}"
                                      data-judoka-id="{{ $wedstrijd->judoka_wit_id }}"
-                                     onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_wit_id ?? 'null' }})">
+                                     data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_wit_id }}">
                                     <span class="text-sm truncate max-w-32">
                                         @if($wedstrijd->judokaWit)
                                             {{ $wedstrijd->judokaWit->naam }}
@@ -130,7 +130,7 @@
                                 <!-- Blauw -->
                                 <div class="bracket-judoka flex items-center justify-between p-2 {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_blauw_id ? 'bg-green-100 font-bold' : '' }}"
                                      data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}"
-                                     onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_blauw_id ?? 'null' }})">
+                                     data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}">
                                     <span class="text-sm truncate max-w-32">
                                         @if($wedstrijd->judokaBlauw)
                                             {{ $wedstrijd->judokaBlauw->naam }}
@@ -165,7 +165,7 @@
                     <!-- Wit -->
                     <div class="bracket-judoka flex items-center justify-between p-2 border-b {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_wit_id ? 'bg-green-100 font-bold' : '' }}"
                          data-judoka-id="{{ $wedstrijd->judoka_wit_id }}"
-                         onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_wit_id ?? 'null' }})">
+                         data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_wit_id }}">
                         <span class="text-sm">
                             @if($wedstrijd->judokaWit)
                                 {{ $wedstrijd->judokaWit->naam }}
@@ -180,7 +180,7 @@
                     <!-- Blauw -->
                     <div class="bracket-judoka flex items-center justify-between p-2 {{ $wedstrijd->winnaar_id == $wedstrijd->judoka_blauw_id ? 'bg-green-100 font-bold' : '' }}"
                          data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}"
-                         onclick="selectWinnaar({{ $wedstrijd->id }}, {{ $wedstrijd->judoka_blauw_id ?? 'null' }})">
+                         data-action="select-winnaar" data-wedstrijd-id="{{ $wedstrijd->id }}" data-judoka-id="{{ $wedstrijd->judoka_blauw_id }}">
                         <span class="text-sm">
                             @if($wedstrijd->judokaBlauw)
                                 {{ $wedstrijd->judokaBlauw->naam }}
@@ -230,6 +230,15 @@
 </style>
 
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'genereer-bracket': () => genereerBracket(),
+        'hergenereer-bracket': () => { if (confirm('Dit verwijdert de huidige bracket en maakt een nieuwe. Doorgaan?')) genereerBracket(); },
+        'select-winnaar': (el) => selectWinnaar(+el.dataset.wedstrijdId, el.dataset.judokaId ? +el.dataset.judokaId : null),
+    });
+});
+
 const csrfToken = '{{ csrf_token() }}';
 const genereerUrl = '{{ route('toernooi.poule.eliminatie.genereer', $toernooi->routeParamsWith(['poule' => $poule])) }}';
 const uitslagUrl = '{{ route('toernooi.poule.eliminatie.uitslag', $toernooi->routeParamsWith(['poule' => $poule])) }}';

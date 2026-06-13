@@ -70,7 +70,7 @@
                             {{ __('Bekijken') }}
                         </a>
                         <form action="{{ route('toernooi.judoka.destroy', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" method="POST" class="inline"
-                              onsubmit="return confirm('{{ __('Weet je zeker dat je :naam wilt verwijderen?', ['naam' => $judoka->naam]) }}')">
+                              data-action="confirm-delete" data-confirm="{{ __('Weet je zeker dat je :naam wilt verwijderen?', ['naam' => $judoka->naam]) }}">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 text-xs">
@@ -189,7 +189,7 @@
     </div>
     <div class="flex space-x-2">
         @if($toernooi->organisator->stamJudokas()->actief()->exists())
-        <button onclick="document.getElementById('stambestandModal').classList.remove('hidden'); loadStambestand()"
+        <button data-action="open-stambestand"
                 class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
             {{ __('Uit database') }}
         </button>
@@ -197,7 +197,7 @@
         <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             {{ __('Importeren') }}
         </a>
-        <button onclick="document.getElementById('addJudokaModal').classList.remove('hidden')"
+        <button data-action="open-add-judoka"
                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             + {{ __('Judoka toevoegen') }}
         </button>
@@ -697,7 +697,7 @@ document.addEventListener('alpine:init', () => {
     <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-lg bg-white">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">{{ __('Judoka toevoegen') }}</h3>
-            <button onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
+            <button data-action="close-add-judoka"
                     class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
 
@@ -755,7 +755,7 @@ document.addEventListener('alpine:init', () => {
 
             <div class="mt-6 flex justify-end space-x-3">
                 <button type="button"
-                        onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
+                        data-action="close-add-judoka"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                     {{ __('Annuleren') }}
                 </button>
@@ -773,13 +773,13 @@ document.addEventListener('alpine:init', () => {
         <div class="p-6 border-b">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold text-gray-800">{{ __('Importeer uit database') }}</h2>
-                <button onclick="document.getElementById('stambestandModal').classList.add('hidden')"
+                <button data-action="close-stambestand"
                         class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <div class="mt-3">
                 <input type="text" id="stamZoek" placeholder="{{ __('Zoek op naam...') }}"
                        class="w-full border rounded-lg px-4 py-2 text-sm focus:border-purple-500 focus:outline-none"
-                       oninput="filterStambestand()">
+                       data-action="filter-stambestand">
             </div>
         </div>
 
@@ -792,11 +792,11 @@ document.addEventListener('alpine:init', () => {
                 <span id="stamGeselecteerd">0</span> {{ __('geselecteerd') }}
             </span>
             <div class="flex gap-3">
-                <button onclick="document.getElementById('stambestandModal').classList.add('hidden')"
+                <button data-action="close-stambestand"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                     {{ __('Annuleren') }}
                 </button>
-                <button onclick="importUitDatabase()" id="stamImportBtn" disabled
+                <button data-action="import-database" id="stamImportBtn" disabled
                         class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed">
                     {{ __('Importeer geselecteerde') }}
                 </button>
@@ -806,6 +806,21 @@ document.addEventListener('alpine:init', () => {
 </div>
 
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'open-stambestand': () => { document.getElementById('stambestandModal').classList.remove('hidden'); loadStambestand(); },
+        'open-add-judoka': () => document.getElementById('addJudokaModal').classList.remove('hidden'),
+        'close-add-judoka': () => document.getElementById('addJudokaModal').classList.add('hidden'),
+        'close-stambestand': () => document.getElementById('stambestandModal').classList.add('hidden'),
+        'input:filter-stambestand': () => filterStambestand(),
+        'import-database': () => importUitDatabase(),
+        'toggle-stam-checkbox': (el) => toggleStamCheckbox(+el.dataset.stamId),
+        'change:stam-checkbox': () => updateStamCount(),
+        'submit:confirm-delete': (el, e) => { if (!confirm(el.dataset.confirm)) e.preventDefault(); },
+    });
+});
+
 let _stamData = [];
 const _stamUrl = @json(route('toernooi.judoka.stambestand', $toernooi->routeParams()));
 const _importUrl = @json(route('toernooi.judoka.import-database', $toernooi->routeParams()));
@@ -850,11 +865,11 @@ function renderStambestand(data) {
             const disabled = j.al_aangemeld;
             const bandLabel = j.band ? j.band.charAt(0).toUpperCase() + j.band.slice(1) : '-';
             return '<tr class="' + (disabled ? 'opacity-40' : 'hover:bg-purple-50 cursor-pointer') + '"' +
-                (disabled ? '' : ' onclick="toggleStamCheckbox(' + j.id + ')"') + '>' +
+                (disabled ? '' : ' data-action="toggle-stam-checkbox" data-stam-id="' + j.id + '"') + '>' +
                 '<td class="px-3 py-2">' +
                     (disabled
                         ? '<span class="text-xs text-gray-400">&#10003;</span>'
-                        : '<input type="checkbox" id="stam_' + j.id + '" value="' + j.id + '" class="stam-cb rounded" onchange="updateStamCount()" onclick="event.stopPropagation()">') +
+                        : '<input type="checkbox" id="stam_' + j.id + '" value="' + j.id + '" class="stam-cb rounded" data-action="stam-checkbox">') +
                 '</td>' +
                 '<td class="px-3 py-2 font-medium">' + j.naam + (disabled ? ' <span class="text-xs text-gray-400">({{ __("al aangemeld") }})</span>' : '') + '</td>' +
                 '<td class="px-3 py-2 text-center text-gray-600">' + (j.geboortejaar || '-') + '</td>' +

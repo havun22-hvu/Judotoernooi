@@ -36,7 +36,7 @@
                     {{ __('Zaaloverzicht') }}
                 </a>
             </div>
-            <button onclick="sluitInschrijvingPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
+            <button data-action="close-inschrijving" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
                 {{ __('Ik begrijp het, toch doorgaan') }}
             </button>
         </div>
@@ -249,7 +249,7 @@
                 <span class="text-gray-600 whitespace-nowrap">{{ __('Verdeling') }}</span>
                 <input type="range" id="balans-slider-header" min="0" max="100" value="{{ session('blok_balans', 50) }}"
                        class="w-24 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
-                       oninput="updateBalansSlider(this.value)">
+                       data-action="balans-slider">
                 <span class="text-gray-600 whitespace-nowrap">{{ __('Aansluiting') }}</span>
             </div>
             <button type="submit" id="bereken-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded min-w-[160px]">
@@ -289,7 +289,7 @@
     <div class="flex-1 space-y-3">
         <!-- Sleepvak (niet verdeeld) -->
         <div class="bg-white rounded-lg shadow" id="sleepvak-container">
-            <div class="bg-purple-700 text-white px-4 py-2 rounded-t-lg flex justify-between items-center cursor-pointer" onclick="document.getElementById('niet-verdeeld-content').classList.toggle('hidden')">
+            <div class="bg-purple-700 text-white px-4 py-2 rounded-t-lg flex justify-between items-center cursor-pointer" data-action="toggle-niet-verdeeld">
                 <div class="flex items-center gap-3">
                     <span class="toggle-icon">▼</span>
                     <span class="font-bold">{{ __('Sleepvak') }}</span>
@@ -347,7 +347,7 @@
                                value="{{ $blok->gewenst_wedstrijden ?? '' }}"
                                placeholder="{{ $gemiddeldPerBlok }}"
                                data-blok-id="{{ $blok->id }}"
-                               onchange="updateGewenst(this)">
+                               data-action="update-gewenst">
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -375,7 +375,7 @@
             <!-- Toepassen/Annuleer knoppen rechtsboven -->
             @if($toonVarianten)
             <div class="flex justify-end gap-3 mb-2">
-                <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
+                <button type="button" data-action="pas-variant-toe" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
                     ✓ {{ __('Toepassen') }}
                 </button>
                 <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ {{ __('Annuleer') }}</a>
@@ -392,7 +392,7 @@
                         // Score kleur: lager = beter
                         $scoreKleur = $totaal < 100 ? 'text-green-600' : ($totaal < 200 ? 'text-yellow-600' : 'text-red-600');
                     @endphp
-                    <button type="button" onclick="toonVariant({{ $idx }})"
+                    <button type="button" data-action="toon-variant" data-idx="{{ $idx }}"
                             class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
                             data-idx="{{ $idx }}"
                             data-origineel-score="{{ $totaal }}"
@@ -497,6 +497,18 @@ const afkortingen = @json($afkortingen);
 @endif
 
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'close-inschrijving': () => sluitInschrijvingPopup(),
+        'input:balans-slider': (el) => updateBalansSlider(el.value),
+        'toggle-niet-verdeeld': () => document.getElementById('niet-verdeeld-content').classList.toggle('hidden'),
+        'change:update-gewenst': (el) => updateGewenst(el),
+        'pas-variant-toe': () => pasVariantToe(),
+        'toon-variant': (el) => toonVariant(+el.dataset.idx),
+    });
+});
+
 function updateBalansSlider(value) {
     const headerSlider = document.getElementById('balans-slider-header');
     const variantSlider = document.getElementById('balans-slider');
