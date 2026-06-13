@@ -24,9 +24,10 @@ last_updated: 2026-06-13
 
 Lokaal + origin: alleen `main`. Staging hard-gereset naar origin/main (oude lokale main = puur deploy-merge-ruis, geverifieerd geen uniek werk; reflog bewaart). Geraakte-gebieden testsuite **607 groen**.
 
+**PRODUCTIE-DEPLOY VOLTOOID (13-06-2026, 21:20).** Prod draaide nog L11.47 → nu **L12.62** (gelijk aan staging/main `6492c2e6`). Stappen: MySQL-backup (`/root/backups/judo_toernooi_pre-l12_20260613-212038.sql.gz`, 101K, 52 tabellen) → maintenance down → `git pull` → `composer install --no-dev` → `migrate` (Nothing to migrate, géén nieuwe migrations) → `optimize` → `queue:restart` → up. Geverifieerd: homepage 200, login 200, **strikte CSP live** (`script-src 'self' 'nonce' 'strict-dynamic'`, geen unsafe-inline), correcte bundle `app-BrUnN-aO.js`, geen errors. Rollback indien nodig: `git checkout 84a79367 && composer install --no-dev` + restore backup.
+
 **TE DOEN (open):**
-1. **Productie-deploy** — CSP-migratie + auto-advance + noodplan-print + LCD/TV-fix samen naar prod, **mét MySQL-backup vooraf** (bewust, jouw moment).
-2. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+1. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
 
 ### LCD / TV-URLs — OPGELOST (13-06-2026)
 - **`havun.nl/tv/{code}` 404 gefixt.** Root-cause: nginx op havun.nl had alleen `location = /tv` (exact-match) → `/tv/JTCI` viel door naar de Node-proxy → 404. Toegevoegd: regex-redirects `^/tv/(.+)$` → `judotournament.org/tv/$1` + `^/tvs/(.+)$` → staging. Getest (301 ✅), nginx herladen. Config: `/etc/nginx/sites-enabled/havun.nl` (backup in `/root/havun.nl.bak*`).
