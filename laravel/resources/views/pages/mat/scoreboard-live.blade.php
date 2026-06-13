@@ -404,9 +404,19 @@
         .snd-panel select, .snd-panel input[type=range] { flex: 1; min-width: 0; }
         .snd-test { width: 100%; margin-top: 10px; padding: 7px; border: none; border-radius: 6px; background: #DC2626; color: #fff; font-weight: 700; cursor: pointer; }
         .snd-hint { font-size: 11px; color: #9CA3AF; margin-top: 8px; line-height: 1.3; }
+        .env-badge {
+            position: fixed; top: 0; left: 0; z-index: 200;
+            background: #DC2626; color: #fff; font-weight: 800;
+            font-size: clamp(12px, 1.6vh, 18px); letter-spacing: 0.1em;
+            padding: 4px 14px; border-bottom-right-radius: 8px;
+            pointer-events: none; font-family: system-ui, sans-serif;
+        }
     </style>
 </head>
 <body>
+    @unless(app()->isProduction())
+        <div class="env-badge">{{ strtoupper(app()->environment()) }}</div>
+    @endunless
     <div id="app">
         <div class="scoreboard" id="scoreboard">
             {{-- 0. Header — poule info --}}
