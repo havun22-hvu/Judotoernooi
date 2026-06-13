@@ -2,24 +2,32 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-04
+last_updated: 2026-06-13
 ---
 
 # JudoToernooi — Handover
 
 > Vul dit aan aan het einde van elke sessie.
 
-## Huidige status (13-06-2026, nachtsessie)
+## Huidige status (13-06-2026)
 
-**3 feature-branches op staging gemerged, NOG NIET op main. Productie ongewijzigd.**
+**ALLE feature-branches geconsolideerd naar `main` (00cc0c2a) + opgeruimd. Staging draait op main. Productie ongewijzigd.**
 
-| Branch | Inhoud | Staging | Main | Prod |
-|--------|--------|---------|------|------|
-| `feat/winnaar-auto-doorschuiven` | Eliminatie: winnaar schuift automatisch door | ✅ | ❌ | ❌ |
-| `fix/csp-categorie-editor-delegation` | edit.blade.php categorie-validatie CSP-fix | ✅ | ❌ | ❌ |
-| `fix/csp-inline-handlers-migratie` | **Volledige CSP-migratie 265 inline handlers** | ✅ | ❌ | ❌ |
+| Branch | Inhoud | Status |
+|--------|--------|--------|
+| `feat/winnaar-auto-doorschuiven` | Eliminatie: winnaar schuift automatisch door | ✅ in main, branch verwijderd |
+| `fix/csp-categorie-editor-delegation` | edit.blade.php categorie-validatie CSP-fix | ✅ in main, branch verwijderd |
+| `fix/csp-inline-handlers-migratie` | Volledige CSP-migratie 265 inline handlers | ✅ in main, branch verwijderd |
+| `fix/eliminatie-bracket-render` | Bracket CSSOM-positionering + badge + noodplan-print | ✅ in main, branch verwijderd |
+| `fix/csp-alpine-migration` | Alpine/realtime onder strikte CSP | ✅ in main, branch verwijderd |
+| `upgrade/laravel-12` | L12 upgrade | ✅ in main, branch verwijderd |
 
-**TE DOEN (jij, ochtend):** staging testen → bij akkoord de 3 branches naar **main** mergen → daarna productie-deploy (CSP-fix + auto-advance samen, mét MySQL-backup).
+Lokaal + origin: alleen `main`. Staging hard-gereset naar origin/main (oude lokale main = puur deploy-merge-ruis, geverifieerd geen uniek werk; reflog bewaart). Geraakte-gebieden testsuite **607 groen**.
+
+**TE DOEN (open):**
+1. **Productie-deploy** — CSP-migratie + auto-advance + noodplan-print samen naar prod, **mét MySQL-backup vooraf** (bewust, jouw moment).
+2. **LCD `scoreboard-live` + spreker `?.`/`??` fix** (~17 expressies) — nog te migreren onder `@alpinejs/csp` (ondersteunt geen optional-chaining/nullish).
+3. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
 
 ### Wat is er 's nachts gebeurd
 
