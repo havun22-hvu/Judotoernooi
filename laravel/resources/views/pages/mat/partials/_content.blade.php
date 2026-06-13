@@ -209,10 +209,11 @@
         }
     @endphp
 <div id="mat-interface" x-data="matInterface" x-init="init()"
-     x-on:mat-score-update.window="laadWedstrijden()"
+     x-on:mat-score-update.window="herlaadLive()"
+     x-on:mat-bracket-update.window="herlaadLive()"
      x-on:mat-beurt-update.window="laadWedstrijden()"
-     x-on:mat-poule-klaar.window="laadWedstrijden()"
-     x-on:ws-connected.window="laadWedstrijden()">
+     x-on:mat-poule-klaar.window="herlaadLive()"
+     x-on:ws-connected.window="herlaadLive()">
     <!-- Build: v2026.02.10-D (Blade bracket) -->
     <!-- Huidige selectie + Legenda -->
     <div class="mb-1" x-show="blokId && matId">
@@ -1404,6 +1405,20 @@ document.addEventListener('alpine:init', () => {
                 await new Promise(r => setTimeout(r, 300));
             } finally {
                 this.isRefreshing = false;
+            }
+        },
+
+        // Lichte live-refresh voor realtime events (Reverb): herlaadt de wedstrijd-data
+        // én de bracket-HTML van eliminatie-poules. Zonder SW-check/spinner (anders dan
+        // refreshAll), zodat een binnenkomende uitslag de doorgeschoven winnaar/B-plaatsing
+        // direct toont. laadBracketHtml behoudt de actieve ronde (start_ronde).
+        async herlaadLive() {
+            await this.laadWedstrijden();
+            for (const p of this.poules) {
+                if (p.type === 'eliminatie') {
+                    this.laadBracketHtml(p.poule_id, 'A');
+                    if (this.heeftHerkansing(p)) this.laadBracketHtml(p.poule_id, 'B');
+                }
             }
         },
 
