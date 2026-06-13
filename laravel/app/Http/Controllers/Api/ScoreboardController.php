@@ -253,6 +253,10 @@ class ScoreboardController extends Controller
                     'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
                 ]
             );
+
+            // Stuur de nieuwe actieve wedstrijd automatisch naar de scorebord-app
+            // + LCD. Zonder dit wachtte de app na een uitslag op de volgende wedstrijd.
+            app(\App\Services\ScoreboardNotifier::class)->notifyActiveMatchChanged($toernooiId, $mat);
         }
 
         return response()->json([

@@ -485,48 +485,9 @@ class MatUitslagController extends Controller
             'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
         ]);
 
-        // Notify scoreboard app + LCD display when active match changes
-        if ($mat->actieve_wedstrijd_id) {
-            $actieveWedstrijd = Wedstrijd::with(['judokaWit.club', 'judokaBlauw.club', 'poule'])
-                ->find($mat->actieve_wedstrijd_id);
-
-            if ($actieveWedstrijd) {
-                $matchData = [
-                    'id' => $actieveWedstrijd->id,
-                    'judoka_wit' => [
-                        'id' => $actieveWedstrijd->judokaWit?->id,
-                        'naam' => $actieveWedstrijd->judokaWit?->naam ?? 'WIT',
-                        'club' => $actieveWedstrijd->judokaWit?->club?->naam ?? '',
-                    ],
-                    'judoka_blauw' => [
-                        'id' => $actieveWedstrijd->judokaBlauw?->id,
-                        'naam' => $actieveWedstrijd->judokaBlauw?->naam ?? 'BLAUW',
-                        'club' => $actieveWedstrijd->judokaBlauw?->club?->naam ?? '',
-                    ],
-                    'poule_naam' => $actieveWedstrijd->poule?->titel ?? "Poule {$actieveWedstrijd->poule?->nummer}",
-                    'ronde' => $actieveWedstrijd->ronde,
-                    'groep' => $actieveWedstrijd->groep,
-                    'match_duration' => $actieveWedstrijd->poule?->toernooi?->getMatchDurationForCategorie($actieveWedstrijd->poule?->categorie_key) ?? 180,
-                    ...($actieveWedstrijd->poule?->toernooi?->getMatchRulesForCategorie($actieveWedstrijd->poule?->categorie_key) ?? []),
-                    'updated_at' => $actieveWedstrijd->updated_at?->toISOString(),
-                ];
-
-                // Notify scoreboard app
-                ScoreboardAssignment::dispatch($toernooiId, $mat->id, $matchData);
-
-                // Notify LCD display directly (no app relay needed)
-                ScoreboardEvent::dispatch($toernooiId, $mat->id, [
-                    'event' => 'match.assign',
-                    ...$matchData,
-                ]);
-            }
-        } else {
-            // Active match cleared — notify app and LCD to reset
-            ScoreboardAssignment::dispatch($toernooiId, $mat->id, []);
-            ScoreboardEvent::dispatch($toernooiId, $mat->id, [
-                'event' => 'match.unassign',
-            ]);
-        }
+        // Notify scoreboard app + LCD display when active match changes.
+        // Gedeelde logica met de auto-advance in ScoreboardController::result.
+        app(\App\Services\ScoreboardNotifier::class)->notifyActiveMatchChanged($toernooiId, $mat);
 
         return response()->json([
             'success' => true,
