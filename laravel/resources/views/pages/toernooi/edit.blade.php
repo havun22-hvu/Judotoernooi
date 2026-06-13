@@ -2867,6 +2867,16 @@
                     @endfor
                 </div>
             </div>
+
+            <!-- 7. Eliminatie brackets (leeg + startposities) -->
+            <div class="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded">
+                <div>
+                    <h4 class="font-medium text-purple-800">{{ __('7. Eliminatie brackets') }}</h4>
+                    <p class="text-sm text-purple-600">{{ __('Leeg op maat of startposities per poule') }}</p>
+                </div>
+                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}" target="_blank"
+                   class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">{{ __('Openen') }}</a>
+            </div>
         </div>
 
     </div>
@@ -2925,6 +2935,16 @@
                        class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">{{ $blok->nummer }}</a>
                     @endforeach
                 </div>
+            </div>
+
+            <!-- 4. Eliminatie brackets (live) -->
+            <div class="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded">
+                <div>
+                    <h4 class="font-medium text-purple-800">{{ __('4. Eliminatie brackets (live)') }}</h4>
+                    <p class="text-sm text-purple-600">{{ __('Snapshot per eliminatie-poule, met scores en doorgeschoven winnaars') }}</p>
+                </div>
+                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}" target="_blank"
+                   class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">{{ __('Openen') }}</a>
             </div>
         </div>
     </div>
