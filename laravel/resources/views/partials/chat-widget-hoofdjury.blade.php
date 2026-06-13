@@ -12,7 +12,7 @@
 
 {{-- Chat Icon Button (fixed position) --}}
 <button id="chat-toggle-btn"
-        onclick="toggleChat()"
+        data-action="toggle-chat"
         class="fixed bottom-20 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-105"
         title="Chat">
     <svg id="chat-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@
             <h2 class="font-bold text-lg">{{ __('Hoofdjury Chat') }}</h2>
             <p class="text-blue-200 text-sm">{{ __('Communicatie met vrijwilligers') }}</p>
         </div>
-        <button onclick="toggleChat()" class="p-2 hover:bg-blue-700 rounded-full">
+        <button data-action="toggle-chat" class="p-2 hover:bg-blue-700 rounded-full">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -47,27 +47,27 @@
     <div class="bg-gray-100 border-b p-3">
         <label class="text-xs font-medium text-gray-600 block mb-2">{{ __('Verstuur naar:') }}</label>
         <div class="flex flex-wrap gap-2">
-            <button type="button" onclick="setRecipient('iedereen', null)"
+            <button type="button" data-action="set-recipient" data-recipient-type="iedereen"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="iedereen">
                 {{ __('Iedereen') }}
             </button>
-            <button type="button" onclick="setRecipient('alle_matten', null)"
+            <button type="button" data-action="set-recipient" data-recipient-type="alle_matten"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="alle_matten">
                 {{ __('Alle Matten') }}
             </button>
-            <button type="button" onclick="setRecipient('weging', null)"
+            <button type="button" data-action="set-recipient" data-recipient-type="weging"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="weging">
                 {{ __('Weging') }}
             </button>
-            <button type="button" onclick="setRecipient('spreker', null)"
+            <button type="button" data-action="set-recipient" data-recipient-type="spreker"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="spreker">
                 {{ __('Spreker') }}
             </button>
-            <button type="button" onclick="setRecipient('dojo', null)"
+            <button type="button" data-action="set-recipient" data-recipient-type="dojo"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="dojo">
                 {{ __('Dojo') }}
@@ -80,7 +80,7 @@
             <label class="text-xs font-medium text-gray-500 block mb-2">{{ __('Individuele mat:') }}</label>
             <div class="flex flex-wrap gap-2">
                 @for($i = 1; $i <= $aantalMatten; $i++)
-                <button type="button" onclick="setRecipient('mat', {{ $i }})"
+                <button type="button" data-action="set-recipient" data-recipient-type="mat" data-recipient-id="{{ $i }}"
                         class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                         data-type="mat" data-id="{{ $i }}">
                     {{ __('Mat') }} {{ $i }}
@@ -106,7 +106,7 @@
         <div id="recipient-display" class="text-xs text-blue-600 font-medium mb-2">
             {{ __('Naar:') }} <span id="recipient-label">{{ __('Selecteer ontvanger') }}</span>
         </div>
-        <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
+        <form id="chat-form" data-action="send-message" class="flex gap-2">
             <input type="text"
                    id="chat-input"
                    placeholder="{{ __('Typ een bericht...') }}"
@@ -128,7 +128,7 @@
 {{-- Toast Notification --}}
 <div id="chat-toast"
      class="fixed top-4 right-4 bg-blue-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300 cursor-pointer max-w-sm"
-     onclick="showToastMessage()">
+     data-action="show-toast">
     <div class="flex items-start gap-3">
         <div class="flex-shrink-0 bg-blue-600 rounded-full p-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@
             <p id="chat-toast-sender" class="font-bold text-sm">{{ __('Mat') }} 1</p>
             <p id="chat-toast-message" class="text-blue-100 text-sm truncate">{{ __('Nieuw bericht') }}</p>
         </div>
-        <button onclick="event.stopPropagation(); hideToast();" class="text-blue-200 hover:text-white">
+        <button data-action="hide-toast" class="text-blue-200 hover:text-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -150,7 +150,7 @@
 {{-- Overlay --}}
 <div id="chat-overlay"
      class="fixed inset-0 bg-black/50 z-40 hidden"
-     onclick="toggleChat()"></div>
+     data-action="toggle-chat"></div>
 
 <style @nonce>
     .recipient-btn {
@@ -170,6 +170,17 @@
 </style>
 
 <script @nonce>
+    // CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+    document.addEventListener('DOMContentLoaded', () => {
+        window.cspActions({
+            'toggle-chat': () => toggleChat(),
+            'set-recipient': (el) => setRecipient(el.dataset.recipientType, el.dataset.recipientId ? +el.dataset.recipientId : null),
+            'submit:send-message': (el, e) => sendMessage(e),
+            'show-toast': () => showToastMessage(),
+            'hide-toast': (el, e) => { e.stopPropagation(); hideToast(); },
+        });
+    });
+
     // Chat configuration for hoofdjury
     const chatConfig = {
         type: 'hoofdjury',
@@ -289,7 +300,7 @@
             const time = new Date(msg.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
             // Click on incoming message to reply to that sender
-            const clickHandler = !isOwn ? `onclick="setRecipient('${msg.van_type}', ${msg.van_id || 'null'})"` : '';
+            const clickHandler = !isOwn ? `data-action="set-recipient" data-recipient-type="${msg.van_type}" data-recipient-id="${msg.van_id || ''}"` : '';
             const cursorClass = !isOwn ? 'cursor-pointer hover:ring-2 hover:ring-blue-300' : '';
 
             div.innerHTML = `

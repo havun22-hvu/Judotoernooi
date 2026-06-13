@@ -7,7 +7,7 @@
         <!-- Scanner area -->
         <div class="flex-1 flex items-center justify-center">
             <!-- Scan button (when not scanning) -->
-            <button id="scan-button" onclick="startScanner()"
+            <button id="scan-button" data-action="start-scanner"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                 <span class="text-3xl mb-1">📷</span>
                 <span class="font-bold text-sm">{{ __('Scan') }}</span>
@@ -16,7 +16,7 @@
             <!-- Scanner (when scanning) -->
             <div id="scanner-container" class="text-center w-full hidden">
                 <div id="qr-reader" class="w-full max-w-[300px] min-h-[200px] mx-auto"></div>
-                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">
+                <button data-action="stop-scanner" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">
                     {{ __('Stop') }}
                 </button>
             </div>
@@ -26,7 +26,7 @@
         <div class="mt-1">
             <input type="text" id="search-input"
                    placeholder="{{ __('Of zoek op naam...') }}"
-                   oninput="searchJudoka(this.value)"
+                   data-action="search-judoka"
                    class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-3 py-2 text-center text-sm focus:border-white focus:outline-none placeholder-blue-300 text-white">
             <!-- Search results dropdown -->
             <div id="search-results" class="hidden mt-1 bg-white rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -55,7 +55,7 @@
                     <div id="judoka-info-compact" class="flex-1 text-gray-800 min-w-0">
                         <!-- Filled by JS -->
                     </div>
-                    <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-3xl leading-none ml-2 flex-shrink-0">&times;</button>
+                    <button data-action="clear-selection" class="text-gray-400 hover:text-gray-600 text-3xl leading-none ml-2 flex-shrink-0">&times;</button>
                 </div>
 
                 <!-- Weight input -->
@@ -70,22 +70,22 @@
 
                 <!-- Numpad -->
                 <div class="grid grid-cols-4 gap-1 mb-2">
-                    <button type="button" onclick="np('7')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">7</button>
-                    <button type="button" onclick="np('8')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">8</button>
-                    <button type="button" onclick="np('9')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">9</button>
-                    <button type="button" onclick="np('C')" class="bg-red-200 text-red-700 rounded py-3 text-2xl font-bold">C</button>
-                    <button type="button" onclick="np('4')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">4</button>
-                    <button type="button" onclick="np('5')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">5</button>
-                    <button type="button" onclick="np('6')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">6</button>
-                    <button type="button" onclick="np('.')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">.</button>
-                    <button type="button" onclick="np('1')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">1</button>
-                    <button type="button" onclick="np('2')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">2</button>
-                    <button type="button" onclick="np('3')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">3</button>
-                    <button type="button" onclick="np('0')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">0</button>
+                    <button type="button" data-action="numpad" data-key="7" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">7</button>
+                    <button type="button" data-action="numpad" data-key="8" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">8</button>
+                    <button type="button" data-action="numpad" data-key="9" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">9</button>
+                    <button type="button" data-action="numpad" data-key="C" class="bg-red-200 text-red-700 rounded py-3 text-2xl font-bold">C</button>
+                    <button type="button" data-action="numpad" data-key="4" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">4</button>
+                    <button type="button" data-action="numpad" data-key="5" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">5</button>
+                    <button type="button" data-action="numpad" data-key="6" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">6</button>
+                    <button type="button" data-action="numpad" data-key="." class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">.</button>
+                    <button type="button" data-action="numpad" data-key="1" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">1</button>
+                    <button type="button" data-action="numpad" data-key="2" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">2</button>
+                    <button type="button" data-action="numpad" data-key="3" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">3</button>
+                    <button type="button" data-action="numpad" data-key="0" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">0</button>
                 </div>
 
                 <!-- Register button -->
-                <button onclick="registreerGewicht()" id="register-btn"
+                <button data-action="registreer-gewicht" id="register-btn"
                         class="w-full bg-green-600 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
                     ✓ {{ __('Registreer') }}
                 </button>
@@ -113,6 +113,19 @@
 </div>
 
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'start-scanner': () => startScanner(),
+        'stop-scanner': () => stopScanner(),
+        'input:search-judoka': (el) => searchJudoka(el.value),
+        'clear-selection': () => clearSelection(),
+        'numpad': (el) => np(el.dataset.key),
+        'registreer-gewicht': () => registreerGewicht(),
+        'select-judoka': (el) => selectJudoka(JSON.parse(el.dataset.judoka)),
+    });
+});
+
 const __t = {
     noClub: @json(__('Geen club')),
     noResults: @json(__('Geen resultaten')),
@@ -254,7 +267,7 @@ async function searchJudoka(query) {
 
             if (data.judokas && data.judokas.length > 0) {
                 results.innerHTML = data.judokas.map(j => `
-                    <div onclick="selectJudoka(${JSON.stringify(j).replace(/"/g, '&quot;')})"
+                    <div data-action="select-judoka" data-judoka="${JSON.stringify(j).replace(/"/g, '&quot;')}"
                          class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0">
                         <div class="font-medium text-gray-800">${j.naam}</div>
                         <div class="text-sm text-gray-600">${j.club || __t.noClub} | ${j.gewichtsklasse} kg</div>

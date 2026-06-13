@@ -40,11 +40,11 @@
 
     <!-- Tab Bar -->
     <div class="flex border-b border-blue-700 bg-blue-800">
-        <button onclick="showTab('scanner')" id="tab-scanner"
+        <button data-action="show-tab" data-tab="scanner" id="tab-scanner"
                 class="flex-1 py-3 text-center font-medium border-b-2 border-white">
             {{ __('Scanner') }}
         </button>
-        <button onclick="showTab('overzicht')" id="tab-overzicht"
+        <button data-action="show-tab" data-tab="overzicht" id="tab-overzicht"
                 class="flex-1 py-3 text-center font-medium border-b-2 border-transparent text-blue-300">
             {{ __('Overzicht') }}
         </button>
@@ -55,7 +55,7 @@
         <!-- TOP HALF: Scanner area (fixed height 45%) -->
         <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col h-[45%]">
             <div class="flex-1 flex items-center justify-center">
-                <button id="scan-button" onclick="startScanner()"
+                <button id="scan-button" data-action="start-scanner"
                         class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                     <span class="text-3xl mb-1">📷</span>
                     <span class="font-bold text-sm">{{ __('Scan') }}</span>
@@ -63,14 +63,14 @@
 
                 <div id="scanner-container" class="text-center w-full hidden">
                     <div id="reader" class="w-full max-w-[300px] min-h-[200px] mx-auto"></div>
-                    <button onclick="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
+                    <button data-action="stop-scanner" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
                         {{ __('Stop') }}
                     </button>
                 </div>
             </div>
 
             <div class="mt-2">
-                <button onclick="showManualEntry()"
+                <button data-action="show-manual"
                         class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center text-blue-300 hover:bg-blue-700">
                     {{ __('Of voer code handmatig in...') }}
                 </button>
@@ -103,7 +103,7 @@
         <div class="mb-3">
             <input type="text" id="club-search" placeholder="{{ __('Zoek budoschool...') }}"
                    class="w-full bg-blue-800 border border-blue-600 rounded-lg px-4 py-3 text-white placeholder-blue-400"
-                   oninput="filterClubs(this.value)">
+                   data-action="filter-clubs">
         </div>
 
         <!-- Club lijst -->
@@ -113,7 +113,7 @@
 
         <!-- Club detail (hidden by default) -->
         <div id="club-detail" class="hidden">
-            <button onclick="hideClubDetail()" class="flex items-center gap-2 text-blue-300 mb-3">
+            <button data-action="hide-club-detail" class="flex items-center gap-2 text-blue-300 mb-3">
                 <span>←</span>
                 <span id="club-detail-naam">{{ __('Club naam') }}</span>
             </button>
@@ -137,13 +137,13 @@
             <input type="text" id="manual-code"
                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
                    placeholder="XXXXXX" maxlength="32"
-                   oninput="this.value = this.value.toUpperCase()">
+                   data-action="uppercase">
             <div class="flex gap-3 mt-4">
-                <button onclick="hideManualEntry()"
+                <button data-action="hide-manual"
                         class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
                     {{ __('Annuleren') }}
                 </button>
-                <button onclick="submitManualCode()"
+                <button data-action="submit-manual"
                         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
                     {{ __('Controleren') }}
                 </button>
@@ -156,7 +156,7 @@
         <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto text-gray-800">
             <div class="p-4 border-b flex justify-between items-center">
                 <h2 class="font-bold" id="kaart-detail-title">{{ __('Kaart Detail') }}</h2>
-                <button onclick="hideKaartDetail()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <button data-action="hide-kaart-detail" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
             <div id="kaart-detail-content" class="p-4">
                 <!-- Content wordt dynamisch geladen -->
@@ -165,6 +165,24 @@
     </div>
 
     <script @nonce>
+        // CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+        document.addEventListener('DOMContentLoaded', () => {
+            window.cspActions({
+                'show-tab': (el) => showTab(el.dataset.tab),
+                'start-scanner': () => startScanner(),
+                'stop-scanner': () => stopScanner(),
+                'show-manual': () => showManualEntry(),
+                'hide-manual': () => hideManualEntry(),
+                'submit-manual': () => submitManualCode(),
+                'input:filter-clubs': (el) => filterClubs(el.value),
+                'hide-club-detail': () => hideClubDetail(),
+                'hide-kaart-detail': () => hideKaartDetail(),
+                'show-club-detail': (el) => showClubDetail(+el.dataset.clubId),
+                'show-kaart-detail': (el) => showKaartDetail(el.dataset.qr),
+                'input:uppercase': (el) => { el.value = el.value.toUpperCase(); },
+            });
+        });
+
         const organisatorSlug = '{{ $toernooi->organisator->slug }}';
         const toernooiSlug = '{{ $toernooi->slug }}';
         let html5QrCode = null;
@@ -212,7 +230,7 @@
             }
 
             container.innerHTML = clubs.map(club => `
-                <div onclick="showClubDetail(${club.id})" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
+                <div data-action="show-club-detail" data-club-id="${club.id}" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
                     <div class="flex justify-between items-center">
                         <span class="font-medium">${club.naam}</span>
                         <span class="text-blue-300 text-sm">${club.totaal_kaarten} kaarten</span>
@@ -250,7 +268,7 @@
                                        kaart.status === 'uit' ? `UIT (${kaart.status_tijd || '--'})` : '--';
 
                     return `
-                        <div onclick="showKaartDetail('${kaart.qr_code}')" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
+                        <div data-action="show-kaart-detail" data-qr="${kaart.qr_code}" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
                             <div class="flex justify-between items-center">
                                 <span>Kaart ${kaart.nummer}: ${kaart.naam}</span>
                                 <span class="${statusClass}">${statusIcon} ${statusText}</span>

@@ -37,7 +37,7 @@
 
 {{-- Chat Icon Button (fixed position) --}}
 <button id="chat-toggle-btn"
-        onclick="toggleChat()"
+        data-action="toggle-chat"
         class="fixed bottom-20 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-105"
         title="Chat">
     {{-- Chat icon --}}
@@ -64,7 +64,7 @@
             <h2 class="font-bold text-lg">Chat</h2>
             <p class="text-blue-200 text-sm">{{ $chatDisplayName }}</p>
         </div>
-        <button onclick="toggleChat()" class="p-2 hover:bg-blue-700 rounded-full">
+        <button data-action="toggle-chat" class="p-2 hover:bg-blue-700 rounded-full">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -84,7 +84,7 @@
 
     {{-- Input Area --}}
     <div class="border-t bg-white p-4">
-        <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
+        <form id="chat-form" data-action="send-message" class="flex gap-2">
             <input type="text"
                    id="chat-input"
                    placeholder="{{ __('Typ een bericht...') }}"
@@ -105,7 +105,7 @@
 {{-- Toast Notification --}}
 <div id="chat-toast"
      class="fixed top-4 right-4 bg-blue-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300 cursor-pointer max-w-sm"
-     onclick="showToastMessage()">
+     data-action="show-toast">
     <div class="flex items-start gap-3">
         <div class="flex-shrink-0 bg-blue-600 rounded-full p-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@
             <p id="chat-toast-sender" class="font-bold text-sm">{{ __('Hoofdjury') }}</p>
             <p id="chat-toast-message" class="text-blue-100 text-sm truncate">{{ __('Nieuw bericht') }}</p>
         </div>
-        <button onclick="event.stopPropagation(); hideToast();" class="text-blue-200 hover:text-white">
+        <button data-action="hide-toast" class="text-blue-200 hover:text-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -127,9 +127,19 @@
 {{-- Overlay when chat is open --}}
 <div id="chat-overlay"
      class="fixed inset-0 bg-black/50 z-40 hidden"
-     onclick="toggleChat()"></div>
+     data-action="toggle-chat"></div>
 
 <script @nonce>
+    // CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+    document.addEventListener('DOMContentLoaded', () => {
+        window.cspActions({
+            'toggle-chat': () => toggleChat(),
+            'submit:send-message': (el, e) => sendMessage(e),
+            'show-toast': () => showToastMessage(),
+            'hide-toast': (el, e) => { e.stopPropagation(); hideToast(); },
+        });
+    });
+
     // Chat configuration
     const chatConfig = {
         type: '{{ $chatType }}',
