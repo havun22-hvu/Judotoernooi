@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-13
+last_updated: 2026-06-14
 ---
 
 # JudoToernooi — Handover
@@ -26,8 +26,16 @@ Lokaal + origin: alleen `main`. Staging hard-gereset naar origin/main (oude loka
 
 **PRODUCTIE-DEPLOY VOLTOOID (13-06-2026, 21:20).** Prod draaide nog L11.47 → nu **L12.62** (gelijk aan staging/main `6492c2e6`). Stappen: MySQL-backup (`/root/backups/judo_toernooi_pre-l12_20260613-212038.sql.gz`, 101K, 52 tabellen) → maintenance down → `git pull` → `composer install --no-dev` → `migrate` (Nothing to migrate, géén nieuwe migrations) → `optimize` → `queue:restart` → up. Geverifieerd: homepage 200, login 200, **strikte CSP live** (`script-src 'self' 'nonce' 'strict-dynamic'`, geen unsafe-inline), correcte bundle `app-BrUnN-aO.js`, geen errors. Rollback indien nodig: `git checkout 84a79367 && composer install --no-dev` + restore backup.
 
+### Bracket #Nrs (slotnummers) — OPGELOST (13-06-2026, staging)
+- **Bug:** de #Nrs-knop (slotnummers tonen) deed niets. Oorzaak: `@click="debugSlots = !debugSlots; ..."` is een **cross-scope assignment** (debugSlots op hoofd-component, knop in `bracketTabs` child-scope) → werkt niet onder `@alpinejs/csp`. Zie [[csp-alpine-gotchas]].
+- **Fix:** `toggleDebugSlots(pouleId, groep)` method op de hoofd-component (`this` = plain JS) + `@click` roept die aan. Herlaad-knop werkte al (pure call).
+- **Admin-gate:** #Nrs nu achter `@if($isAdmin)` — `interface-admin` geeft `isAdmin=true`, `interface` (vrijwilliger) `false`. Alleen beheerder ziet de knop.
+- **STAAT OP STAGING (`8d0ea7fe`), NOG NIET OP PROD.**
+
 **TE DOEN (open):**
-1. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+1. **Prod-deploy van de #Nrs-fix + verse CSS-bundle** (`app-CmNiIFXc.css`). Prod staat op `6492c2e6` (mist commits `713834d8`..`8d0ea7fe`). Zelfde procedure als 13-06 maar zonder composer/migrate nodig (geen dep/DB-wijziging) — `git pull` + `optimize` volstaat. Backup is goedkoop, dus toch even maken.
+2. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+3. **Let op bij elke deploy:** build-assets (`laravel/public/build/`) zijn **gecommit** en worden via `git pull` uitgerold (servers bouwen niet). Na blade/JS-wijzigingen die Tailwind-output raken: `npm run build` + de assets meecommitten, anders serveren de servers stale CSS/JS.
 
 ### LCD / TV-URLs — OPGELOST (13-06-2026)
 - **`havun.nl/tv/{code}` 404 gefixt.** Root-cause: nginx op havun.nl had alleen `location = /tv` (exact-match) → `/tv/JTCI` viel door naar de Node-proxy → 404. Toegevoegd: regex-redirects `^/tv/(.+)$` → `judotournament.org/tv/$1` + `^/tvs/(.+)$` → staging. Getest (301 ✅), nginx herladen. Config: `/etc/nginx/sites-enabled/havun.nl` (backup in `/root/havun.nl.bak*`).
