@@ -9,7 +9,40 @@ last_updated: 2026-06-04
 
 > Vul dit aan aan het einde van elke sessie.
 
-## Huidige status (12-06-2026)
+## Huidige status (13-06-2026, nachtsessie)
+
+**3 feature-branches op staging gemerged, NOG NIET op main. Productie ongewijzigd.**
+
+| Branch | Inhoud | Staging | Main | Prod |
+|--------|--------|---------|------|------|
+| `feat/winnaar-auto-doorschuiven` | Eliminatie: winnaar schuift automatisch door | ✅ | ❌ | ❌ |
+| `fix/csp-categorie-editor-delegation` | edit.blade.php categorie-validatie CSP-fix | ✅ | ❌ | ❌ |
+| `fix/csp-inline-handlers-migratie` | **Volledige CSP-migratie 265 inline handlers** | ✅ | ❌ | ❌ |
+
+**TE DOEN (jij, ochtend):** staging testen → bij akkoord de 3 branches naar **main** mergen → daarna productie-deploy (CSP-fix + auto-advance samen, mét MySQL-backup).
+
+### Wat is er 's nachts gebeurd
+
+**1. Auto-doorschuiven winnaar (feat/winnaar-auto-doorschuiven)** — `/arch`+`/mpc` flow. `EliminatieService::verwerkUitslag` schuift de winnaar nu bij ELKE uitslag automatisch door naar de volgende ronde (was alleen bij correctie). Verliezer→B was al automatisch. 6 unit + 1 feature test, volledige suite **3476 groen**. DnD blijft override. Byes ongemoeid (bewuste scope-keuze, Henk akkoord).
+
+**2. VOLLEDIGE CSP-migratie (fix/csp-inline-handlers-migratie)** — de root-cause: commit `e6cb1746` haalde `unsafe-inline` uit `script-src`, maar migreerde alleen de `<script>`-tags, niet de **265 vanilla inline `on*=` handlers** over 49 views → dode knoppen (Henk's "doorsturen", categorie-validatie, weging, etc.).
+- **Patroon:** nieuwe helper `resources/js/csp-actions.js` (in Vite-bundle, krijgt nonce). Inline `onclick="fn(x)"` → `data-action="naam"` + `data-*`; document-level event delegation roept bestaande globale functies aan. Per-view `cspActions({...})` in DOMContentLoaded, plus **built-in acties** (print/reload/confirm/confirm-submit/confirm-navigate + migratie-bridge via window-lookup) zodat simpele views geen registratie nodig hebben.
+- **Gemigreerd (alle 49 views op 2 na):** wedstrijddag/poules+poule-card, poule/index, judoka/index, blok/index, poule/eliminatie, organisator/dashboard, weging, dojo/scanner, chat-widgets, setup-pin, pwa-mobile, **layouts/app**, mat/_content (bracket-nav), scoreboard-live, en ~30 long-tail views.
+- **NIET gemigreerd (bewust):** `toernooi/edit.blade.php` categorie-editor (20 handlers) → gedekt door branch `fix/csp-categorie-editor-delegation`; `noodplan/offline-pakket` → standalone offline-pakket met eigen CDN-Alpine, draait NIET onder app-CSP.
+- **Verificatie:** nieuwe `e2e/csp-authenticated.auth.spec.ts` (strikte CSP op e2e-server) — dashboard/wedstrijddag/poule/judoka/blok = **0 CSP-violations, 0 JS-errors**. Publieke csp.spec groen. Ook `auth.setup.ts` selector-flake gefixt (deblokkeert authenticated suite).
+
+### ⚠️ Merge-naar-main aandachtspunt
+`fix/csp-categorie-editor-delegation` en `fix/csp-inline-handlers-migratie` raken beide `edit.blade.php` (verschillende secties → cleane merge op staging gelukt). Bij main-merge: merge eerst auto-doorschuiven, dan beide CSP-branches. De categorie-editor-branch en de grote migratie zijn complementair (geen overlap in gedrag).
+
+### Te testen op staging (ochtend)
+1. **Eliminatie**: bracket spelen, uitslag via scoreboard/mat → winnaar verschijnt automatisch in volgende potje; verliezer in B.
+2. **Wedstrijddag → "doorsturen naar zaaloverzicht"** (jouw oorspronkelijke melding) → moet werken.
+3. **Categorie-editor** (toernooi/edit): Δkg=0 + gewichten → waarschuwing verdwijnt, eliminatie selecteerbaar.
+4. Steekproef knoppen op weging/dojo/poules/judoka/dashboard (alles via delegation nu).
+
+---
+
+## (Historisch) Status 12-06-2026
 
 **Branch:** main · **L12 = GEDEPLOYED** (staging+main) · CSP-fix gedeployed naar **staging** (main `77071f6e`), **productie nog op `84a79367`** (oude code, Alpine geblokkeerd — bewust niet gedeployed).
 **AutoFix:** actief op production + staging
