@@ -504,13 +504,6 @@
             </div>
         </div>
 
-        {{-- Fullscreen overlay — shown on load if not already fullscreen --}}
-        <div id="fullscreen-overlay" class="fullscreen-overlay"
-             data-action="go-fullscreen">
-            <div class="fullscreen-overlay-title">JudoToernooi</div>
-            <div class="fullscreen-overlay-subtitle">{{ __('Klik voor volledig scherm') }}</div>
-        </div>
-
         {{-- Winner overlay --}}
         <div class="winner-overlay" id="winner-overlay">
             <div class="winner-name" id="winner-name"></div>
