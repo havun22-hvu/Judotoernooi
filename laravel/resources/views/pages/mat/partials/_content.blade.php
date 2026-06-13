@@ -257,12 +257,12 @@
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
                         <span x-text="pouleTitel(poule)"></span>
-                        (<span x-text="poule.judoka_count"></span> judoka's, <span x-text="poule.wedstrijden?.length ?? 0"></span>w)
+                        (<span x-text="poule.judoka_count"></span> judoka's, <span x-text="aantalWedstrijden(poule)"></span>w)
                     </h2>
                 </div>
                 <div class="flex items-center gap-3">
                     <!-- Geen wedstrijden: toon waarschuwing -->
-                    <div x-show="!poule.wedstrijden?.length" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
+                    <div x-show="heeftGeenWedstrijden(poule)" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
                         ⚠ Geen wedstrijden
                     </div>
 
@@ -2563,6 +2563,10 @@ document.addEventListener('alpine:init', () => {
             return `P#${poule.poule_nummer} ${typeLabel} - ${poule.leeftijdsklasse} ${poule.gewichtsklasse} | Blok ${poule.blok_nummer} - Mat ${poule.mat_nummer}`;
         },
         isEliminatie(poule) { return poule.type === 'eliminatie'; },
+        // CSP-build (@alpinejs/csp) evalueert geen optional-chaining (?.) / nullish (??)
+        // in x-* expressies → die falen stil. Daarom via component-methods (plain JS).
+        aantalWedstrijden(poule) { return (poule.wedstrijden && poule.wedstrijden.length) ? poule.wedstrijden.length : 0; },
+        heeftGeenWedstrijden(poule) { return this.aantalWedstrijden(poule) === 0; },
         toonBarrage(poule) { return this.heeftBarrageNodig(poule) && !poule.spreker_klaar; },
         toonAfronden(poule) {
             return this.isPouleAfgerond(poule) && !poule.spreker_klaar && !this.heeftBarrageNodig(poule);
