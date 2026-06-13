@@ -248,7 +248,6 @@
                 </span>
             </div>
         </div>
-        <p class="text-xs text-gray-400 mt-0.5">{{ __('Klik op een wedstrijdnummer (poule) of dubbelklik op een wedstrijd in de bracket om de beurtkleur in te stellen') }}</p>
     </div>
 
     <template x-for="poule in poules" :key="poule.poule_id">
@@ -291,6 +290,12 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Hint per poule-type: alleen relevante interactie tonen -->
+            <p class="text-xs text-gray-400 px-3 pt-1">
+                <span x-show="isEliminatie(poule)" x-cloak>{{ __('Dubbelklik op een wedstrijd om de beurtkleur in te stellen') }}</span>
+                <span x-show="!isEliminatie(poule)" x-cloak>{{ __('Klik op een wedstrijdnummer om de beurtkleur in te stellen') }}</span>
+            </p>
 
             <!-- ELIMINATIE WEERGAVE - Drag & Drop Bracket met A/B Tabs -->
             <template x-if="isEliminatie(poule)">
