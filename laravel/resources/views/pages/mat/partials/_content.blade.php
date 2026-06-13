@@ -248,7 +248,7 @@
                 </span>
             </div>
         </div>
-        <p class="text-xs text-gray-400 mt-0.5">{{ __('Klik op wedstrijdnummer om beurtkleur in te stellen') }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">{{ __('Klik op een wedstrijdnummer (poule) of dubbelklik op een wedstrijd in de bracket om de beurtkleur in te stellen') }}</p>
     </div>
 
     <template x-for="poule in poules" :key="poule.poule_id">
