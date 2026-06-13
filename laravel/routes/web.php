@@ -622,6 +622,13 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::get('/contactlijst', [NoodplanController::class, 'printContactlijst'])->name('contactlijst');
 
         // Tijdens wedstrijd (live)
+        // Eliminatie brackets (print)
+        Route::get('/brackets/{blok?}', [NoodplanController::class, 'brackets'])->name('brackets');
+        Route::get('/bracket/leeg/{aantal}', [NoodplanController::class, 'printBracketLeeg'])
+            ->where('aantal', '[0-9]+')->name('bracket-leeg');
+        Route::get('/bracket/{poule}/startposities', [NoodplanController::class, 'printBracketStartposities'])->name('bracket-startposities');
+        Route::get('/bracket/{poule}/live', [NoodplanController::class, 'printBracketLive'])->name('bracket-live');
+
         Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
         Route::get('/poule/{poule}/schema', [NoodplanController::class, 'printPouleSchema'])->name('poule-schema');
         Route::get('/ingevuld-schemas/{blok?}', [NoodplanController::class, 'printIngevuldSchemas'])->name('ingevuld-schemas');

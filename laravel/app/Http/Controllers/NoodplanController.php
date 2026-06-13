@@ -15,6 +15,7 @@ use App\Models\Wedstrijd;
 use App\Exports\PouleExport;
 use App\Services\OfflineExportService;
 use App\Services\OfflinePackageBuilder;
+use App\Services\PrintableBracketService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -764,5 +765,79 @@ class NoodplanController extends Controller
                 ];
             })->values(),
         ];
+    }
+
+    /**
+     * Overzicht van alle eliminatie-poules met print-links per poule.
+     */
+    public function brackets(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
+    {
+        $query = Poule::where('toernooi_id', $toernooi->id)
+            ->where('type', 'eliminatie')
+            ->with(['judokas', 'blok', 'mat']);
+
+        if ($blokNummer !== null) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            abort_unless($blok, 404);
+            $query->where('blok_id', $blok->id);
+        }
+
+        $poules = $query->get()->sortBy(fn($p) => [$p->blok?->nummer ?? 99, $p->nummer])->values();
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get();
+
+        return view('pages.noodplan.brackets-index', compact('toernooi', 'poules', 'blokken', 'blokNummer'));
+    }
+
+    /**
+     * Print: leeg eliminatie-bracket op maat (N judoka's, geen poule).
+     */
+    public function printBracketLeeg(
+        Organisator $organisator,
+        Toernooi $toernooi,
+        int $aantal,
+        PrintableBracketService $printableBracket
+    ): View {
+        abort_if($aantal < 2 || $aantal > 64, 404);
+
+        $data = $printableBracket->buildLeegOpMaat($aantal);
+        $titel = $data['meta']['titel'];
+
+        return view('pages.noodplan.bracket-print', compact('toernooi', 'data', 'titel'));
+    }
+
+    /**
+     * Print: startposities voor een bestaande eliminatie-poule (deelnemers in slots, geen scores).
+     */
+    public function printBracketStartposities(
+        Organisator $organisator,
+        Toernooi $toernooi,
+        Poule $poule,
+        PrintableBracketService $printableBracket
+    ): View {
+        abort_unless($poule->toernooi_id === $toernooi->id, 404);
+        abort_unless($poule->type === 'eliminatie', 404);
+
+        $data = $printableBracket->buildStartposities($poule);
+        $titel = $data['meta']['titel'];
+
+        return view('pages.noodplan.bracket-print', compact('toernooi', 'data', 'titel'));
+    }
+
+    /**
+     * Print: live snapshot van een bestaande eliminatie-poule (gespeelde wedstrijden ingevuld).
+     */
+    public function printBracketLive(
+        Organisator $organisator,
+        Toernooi $toernooi,
+        Poule $poule,
+        PrintableBracketService $printableBracket
+    ): View {
+        abort_unless($poule->toernooi_id === $toernooi->id, 404);
+        abort_unless($poule->type === 'eliminatie', 404);
+
+        $data = $printableBracket->buildLive($poule);
+        $titel = $data['meta']['titel'];
+
+        return view('pages.noodplan.bracket-print', compact('toernooi', 'data', 'titel'));
     }
 }

@@ -278,6 +278,18 @@
                     @endforeach
                 </div>
             </div>
+
+            <!-- Eliminatie brackets -->
+            <div class="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded">
+                <div>
+                    <h3 class="font-medium text-purple-800">{{ __('Eliminatie brackets') }}</h3>
+                    <p class="text-sm text-purple-600">{{ __('Leeg op maat, startposities of live snapshot per eliminatie-poule') }}</p>
+                </div>
+                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}"
+                   class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">
+                    {{ __('Openen') }}
+                </a>
+            </div>
         </div>
     </div>
 
