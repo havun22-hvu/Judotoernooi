@@ -1589,6 +1589,16 @@ document.addEventListener('alpine:init', () => {
                     container.addEventListener('scroll', container._stickyHandler);
                 }
 
+                // Posities via CSSOM zetten (CSP-veilig): de bracket gebruikte
+                // dynamische Tailwind-classes top-[{{ }}px]/h-[{{ }}px] die de JIT
+                // niet compileert → niet in de CSS. Nu via data-attributen + style.
+                container.querySelectorAll('[data-bracket-top]').forEach(el => {
+                    el.style.top = el.dataset.bracketTop + 'px';
+                });
+                container.querySelectorAll('[data-bracket-height]').forEach(el => {
+                    el.style.height = el.dataset.bracketHeight + 'px';
+                });
+
                 // Initialiseer SortableJS op de nieuwe DOM elementen
                 this.$nextTick(() => {
                     window.initBracketSortable?.();

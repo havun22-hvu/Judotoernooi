@@ -63,7 +63,7 @@
     $rondeIdx = $rondeIdx ?? 99;
 @endphp
 
-<div class="absolute w-32 bracket-potje top-[{{ $topPos }}px]"
+<div class="absolute w-32 bracket-potje" data-bracket-top="{{ $topPos }}"
      id="potje-{{ $wed['id'] }}"
      data-wedstrijd-id="{{ $wed['id'] }}"
      data-poule-id="{{ $pouleId }}"
