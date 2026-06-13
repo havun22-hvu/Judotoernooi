@@ -60,7 +60,7 @@
                     <span x-text="label"></span>
                 </button>
             </div>
-            <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button data-action="verifieer" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                 {{ __('Verifieer poules') }}
             </button>
         </div>
@@ -94,7 +94,7 @@
         <p class="text-gray-600 text-xs mb-2">{{ __('Oplossing: sleep judoka naar andere poule, of bij weging gewicht') }} <strong>0</strong> {{ __('invoeren = afmelden') }}</p>
         <div id="problematische-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($teWeinigjudokas as $p)
-            <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
+            <a href="#poule-{{ $p['id'] }}" data-action="scroll-poule" data-poule-id="{{ $p['id'] }}" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                 #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
@@ -106,7 +106,7 @@
         <p class="text-purple-700 text-sm mb-2">{{ __("Te veel judoka's") }} (&ge; 6) - {{ __('splitsen') }}:</p>
         <div id="teveel-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($teVeelJudokas as $p)
-            <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-teveel-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 cursor-pointer transition-colors">
+            <a href="#poule-{{ $p['id'] }}" data-action="scroll-poule" data-poule-id="{{ $p['id'] }}" data-teveel-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 cursor-pointer transition-colors">
                 #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-teveel-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
@@ -135,7 +135,7 @@
             <div id="gewichtsrange-poule-{{ $pouleId }}" class="bg-white border border-orange-200 rounded-lg p-3" data-gewichtsrange-poule="{{ $pouleId }}">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <a href="#poule-{{ $pouleId }}" onclick="scrollToPoule(event, {{ $pouleId }})" class="font-bold text-orange-800 hover:underline cursor-pointer">
+                        <a href="#poule-{{ $pouleId }}" data-action="scroll-poule" data-poule-id="{{ $pouleId }}" class="font-bold text-orange-800 hover:underline cursor-pointer">
                             #{{ $pouleInfo->nummer }} {{ $pouleInfo->getDisplayTitel() }}
                         </a>
                         <span class="text-orange-600 text-sm ml-2">Range: {{ number_format($probleem['range'], 1) }}kg (max: {{ number_format($probleem['max_toegestaan'], 1) }}kg)</span>
@@ -149,7 +149,7 @@
                             <span class="text-blue-600 font-medium">{{ number_format($probleem['min_kg'], 1) }}kg</span>
                             - {{ $probleem['lichtste']->naam }}
                         </span>
-                        <button onclick="openZoekMatchWedstrijddag({{ $probleem['lichtste']->id }}, {{ $pouleId }})" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-0.5 bg-blue-100 rounded">
+                        <button data-action="zoek-match" data-judoka-id="{{ $probleem['lichtste']->id }}" data-poule-id="{{ $pouleId }}" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-0.5 bg-blue-100 rounded">
                             {{ __('Zoek match') }}
                         </button>
                     </div>
@@ -160,7 +160,7 @@
                             <span class="text-red-600 font-medium">{{ number_format($probleem['max_kg'], 1) }}kg</span>
                             - {{ $probleem['zwaarste']->naam }}
                         </span>
-                        <button onclick="openZoekMatchWedstrijddag({{ $probleem['zwaarste']->id }}, {{ $pouleId }})" class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-0.5 bg-red-100 rounded">
+                        <button data-action="zoek-match" data-judoka-id="{{ $probleem['zwaarste']->id }}" data-poule-id="{{ $pouleId }}" class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-0.5 bg-red-100 rounded">
                             {{ __('Zoek match') }}
                         </button>
                     </div>
@@ -227,9 +227,9 @@
                     }
                 }
             @endphp
-            <button onclick="openNieuweJudokaModal('', '', {{ $blokPouleOpties->values()->toJson() }})" class="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Laatkomer') }}</button>
+            <button data-action="nieuwe-judoka-modal" data-leeftijd="" data-gewicht="" data-opties="{{ $blokPouleOpties->values()->toJson() }}" class="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Laatkomer') }}</button>
             @endif
-            <button onclick="openNieuwePouleModal({{ $blok['nummer'] }})" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Poule') }}</button>
+            <button data-action="nieuwe-poule-modal" data-blok-nummer="{{ $blok['nummer'] }}" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Poule') }}</button>
         </div>
 
         {{-- Categories within blok --}}
@@ -290,15 +290,15 @@
                                 </div>
                                 @endif
                                 <button
-                                    onclick="naarZaaloverzichtPoule({{ $elimPoule->id }}, this)"
+                                    data-action="naar-zaaloverzicht" data-poule-id="{{ $elimPoule->id }}"
                                     class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurdElim ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-400' }}"
                                     title="{{ $isDoorgestuurdElim ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
                                 >{{ $isDoorgestuurdElim ? '✓' : '→' }}</button>
                                 <div class="relative" x-data="toggle">
                                     <button @click="toggle()" class="bg-gray-500 hover:bg-gray-400 text-white text-xs px-2 py-0.5 rounded"><svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
                                     <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
-                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
-                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ {{ __('kruisfinale') }}</button>
+                                        <button data-action="omzetten" data-poule-id="{{ $elimPoule->id }}" data-systeem="poules" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
+                                        <button data-action="omzetten" data-poule-id="{{ $elimPoule->id }}" data-systeem="poules_kruisfinale" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ {{ __('kruisfinale') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -320,7 +320,7 @@
                                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                     </div>
                                     <button
-                                        onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
+                                        data-action="zoek-match" data-judoka-id="{{ $judoka->id }}" data-poule-id="{{ $elimPoule->id }}"
                                         class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                         title="{{ __('Zoek geschikte poule') }}"
                                     >🔍</button>
@@ -365,17 +365,17 @@
                             @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">({{ __('Eliminatie') }})</span>@endif
                         </h2>
                         @if(!$isEliminatie)
-                        <button onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ {{ __('Poule') }}</button>
+                        <button data-action="nieuwe-poule" data-leeftijd="{{ $jsLeeftijd }}" data-gewicht="{{ $jsGewicht }}" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ {{ __('Poule') }}</button>
                         @endif
-                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="{{ __('Nieuwe judoka aanmelden (laatkomer)') }}">+ {{ __('Laatkomer') }}</button>
+                        <button data-action="nieuwe-judoka-modal" data-leeftijd="{{ $jsLeeftijd }}" data-gewicht="{{ $jsGewicht }}" data-opties="{{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }}" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="{{ __('Nieuwe judoka aanmelden (laatkomer)') }}">+ {{ __('Laatkomer') }}</button>
                     </div>
                     @if($isEliminatie)
                     @php $elimPoule = $category['poules']->first(); @endphp
                     <div class="relative" x-data="toggle">
                         <button @click="toggle()" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">{{ __('Omzetten naar poules') }} ▾</button>
                         <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
-                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">{{ __('Alleen poules') }}</button>
-                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">{{ __('Poules + kruisfinale') }}</button>
+                            <button data-action="omzetten" data-poule-id="{{ $elimPoule->id }}" data-systeem="poules" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">{{ __('Alleen poules') }}</button>
+                            <button data-action="omzetten" data-poule-id="{{ $elimPoule->id }}" data-systeem="poules_kruisfinale" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">{{ __('Poules + kruisfinale') }}</button>
                         </div>
                         @endif
                     </div>
@@ -430,7 +430,7 @@
                                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                     </div>
                                     <button
-                                        onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
+                                        data-action="zoek-match" data-judoka-id="{{ $judoka->id }}" data-poule-id="{{ $elimPoule->id }}"
                                         class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                         title="{{ __('Zoek geschikte poule') }}"
                                     >🔍</button>
@@ -479,7 +479,7 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <select
-                                            onchange="updateKruisfinale({{ $poule->id }}, this.value)"
+                                            data-action="update-kruisfinale" data-poule-id="{{ $poule->id }}"
                                             class="text-xs bg-purple-500 text-white border border-purple-400 rounded px-1 py-0.5"
                                             title="{{ __('Aantal plaatsen per poule') }}"
                                         >
@@ -488,7 +488,7 @@
                                             @endfor
                                         </select>
                                         <button
-                                            onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                            data-action="verwijder-poule" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}"
                                             class="w-5 h-5 flex items-center justify-center bg-purple-800 hover:bg-purple-900 text-white rounded-full text-xs font-bold"
                                             title="{{ __('Verwijder kruisfinale') }}"
                                         >×</button>
@@ -515,7 +515,7 @@
                                         <div class="text-xs text-orange-200">{{ $poule->aantal_judokas }} {{ __("judoka's") }} | {{ $poule->aantal_wedstrijden }} {{ __('wedstrijden') }}</div>
                                     </div>
                                     <button
-                                        onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                        data-action="verwijder-poule" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}"
                                         class="w-5 h-5 flex items-center justify-center bg-orange-800 hover:bg-orange-900 text-white rounded-full text-xs font-bold"
                                         title="{{ __('Verwijder eliminatie finale') }}"
                                     >×</button>
@@ -578,13 +578,13 @@
                                         @if($aantalActief > 0)
                                         @php $isDoorgestuurd = $poule->doorgestuurd_op !== null; @endphp
                                         <button
-                                            onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
+                                            data-action="naar-zaaloverzicht" data-poule-id="{{ $poule->id }}"
                                             class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600' }}"
                                             title="{{ $isDoorgestuurd ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
                                         >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
                                         @else
                                         <button
-                                            onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                            data-action="verwijder-poule" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}"
                                             class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
                                             title="{{ __('Verwijder lege poule') }}"
                                         >×</button>
@@ -636,7 +636,7 @@
                                                     <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                                                 </div>
                                                 <button
-                                                    onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
+                                                    data-action="zoek-match" data-judoka-id="{{ $judoka->id }}" data-poule-id="{{ $poule->id }}"
                                                     class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                                     title="{{ __('Zoek geschikte poule') }}"
                                                 >🔍</button>
@@ -695,7 +695,7 @@
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                <button type="button" data-action="close-nieuwe-poule-modal" class="px-4 py-2 text-gray-600 hover:text-gray-800">
                     {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -760,7 +760,7 @@
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-4">
-                <button type="button" onclick="closeNieuweJudokaModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                <button type="button" data-action="close-nieuwe-judoka-modal" class="px-4 py-2 text-gray-600 hover:text-gray-800">
                     {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -774,6 +774,30 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha384-eeLEhtwdMwD3X9y+8P3Cn7Idl/M+w8H4uZqkgD/2eJVkWIN1yKzEj6XegJ9dL3q0" crossorigin="anonymous" @nonce></script>
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan de bestaande functies.
+// (Inline on*-handlers werken niet onder de strikte CSP.) cspActions komt uit de
+// Vite-bundle, dus registreren in DOMContentLoaded zodat de helper geladen is.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'verifieer': () => verifieerPoules(),
+        'scroll-poule': (el, e) => scrollToPoule(e, +el.dataset.pouleId),
+        'zoek-match': (el, e) => { e.stopPropagation(); openZoekMatchWedstrijddag(+el.dataset.judokaId, +el.dataset.pouleId); },
+        'naar-zaaloverzicht': (el) => naarZaaloverzichtPoule(+el.dataset.pouleId, el),
+        'omzetten': (el) => zetOmNaarPoules(+el.dataset.pouleId, el.dataset.systeem),
+        'verwijder-poule': (el) => verwijderPoule(+el.dataset.pouleId, el.dataset.pouleNummer),
+        'meld-af': (el, e) => { e.stopPropagation(); meldJudokaAf(+el.dataset.judokaId, el.dataset.judokaNaam); },
+        'nieuwe-judoka-modal': (el) => openNieuweJudokaModal(el.dataset.leeftijd, el.dataset.gewicht, JSON.parse(el.dataset.opties || '[]')),
+        'nieuwe-poule-modal': (el) => openNieuwePouleModal(+el.dataset.blokNummer),
+        'nieuwe-poule': (el) => nieuwePoule(el.dataset.leeftijd, el.dataset.gewicht),
+        'change:update-kruisfinale': (el) => updateKruisfinale(+el.dataset.pouleId, el.value),
+        'close-nieuwe-poule-modal': () => closeNieuwePouleModal(),
+        'close-nieuwe-judoka-modal': () => closeNieuweJudokaModal(),
+        'selecteer-poule': (el) => selecteerPouleWedstrijddag(+el.dataset.judokaId, +el.dataset.fromPouleId, +el.dataset.naarPouleId),
+        'zoek-match-overlay': (el, e) => { if (e.target === el) closeZoekMatchModal(); },
+        'close-zoek-match-modal': () => closeZoekMatchModal(),
+    });
+});
+
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
@@ -1772,7 +1796,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
                 <span class="font-bold">${data.judoka.naam}</span>
                 <span class="text-gray-500">(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)</span>
             </div>
-            <button onclick="meldJudokaAf(${judokaId}, '${data.judoka.naam.replace(/'/g, "\\'")}')"
+            <button data-action="meld-af" data-judoka-id="${judokaId}" data-judoka-naam="${(data.judoka.naam || '').replace(/"/g, '&quot;')}"
                 class="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">
                 ✕ ${__afmelden}
             </button>
@@ -1802,7 +1826,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
                 const overschrijding = isVariabel && match.kg_overschrijding > 0 ? `<span class="text-orange-600 text-sm ml-2">+${match.kg_overschrijding}kg</span>` : '';
 
                 html += `<div class="border rounded p-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                    onclick="selecteerPouleWedstrijddag(${judokaId}, ${fromPouleId}, ${match.poule_id})">
+                    data-action="selecteer-poule" data-judoka-id="${judokaId}" data-from-poule-id="${fromPouleId}" data-naar-poule-id="${match.poule_id}">
                     <div class="flex justify-between items-start">
                         <div>
                             <span class="font-medium">${statusIcon} #${match.poule_nummer} ${match.leeftijdsklasse}${match.gewichtsklasse ? ' ' + match.gewichtsklasse + ' kg' : ''}</span>
@@ -1866,11 +1890,11 @@ function closeZoekMatchModal() {
 </script>
 
 <!-- Zoek Match Modal (draggable) -->
-<div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50" onclick="if(event.target === this) closeZoekMatchModal()">
+<div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50" data-action="zoek-match-overlay">
     <div id="zoek-match-dialog" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <div class="flex justify-between items-center px-4 py-3 border-b bg-blue-700 text-white rounded-t-lg cursor-move" id="zoek-match-header">
             <h3 class="font-bold text-lg select-none">{{ __('Zoek match (wedstrijddag)') }}</h3>
-            <button onclick="closeZoekMatchModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            <button data-action="close-zoek-match-modal" class="text-white hover:text-gray-200 text-xl">&times;</button>
         </div>
         <div class="p-4 overflow-y-auto max-h-[60vh]">
             <div id="zoek-match-loading" class="text-center py-4">

@@ -84,20 +84,20 @@
             <div class="relative" x-data="toggle">
                 <button @click="toggle()" class="bg-gray-500 hover:bg-gray-400 text-white text-xs px-2 py-0.5 rounded"><svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
                 <div x-show="open" @click.outside="close()" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
-                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
-                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">{{ __('+ kruisfinale') }}</button>
+                    <button data-action="omzetten" data-poule-id="{{ $poule->id }}" data-systeem="poules" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
+                    <button data-action="omzetten" data-poule-id="{{ $poule->id }}" data-systeem="poules_kruisfinale" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">{{ __('+ kruisfinale') }}</button>
                 </div>
             </div>
             @elseif($aantalTotaal > 0)
             @php $isDoorgestuurd = $poule->doorgestuurd_op !== null; @endphp
             <button
-                onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
+                data-action="naar-zaaloverzicht" data-poule-id="{{ $poule->id }}"
                 class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600' }}"
                 title="{{ $isDoorgestuurd ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
             >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
             @else
             <button
-                onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                data-action="verwijder-poule" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}"
                 class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
                 title="{{ __('Verwijder lege poule') }}"
             >×</button>
@@ -148,12 +148,12 @@
                         <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                     </div>
                     <button
-                        onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
+                        data-action="zoek-match" data-judoka-id="{{ $judoka->id }}" data-poule-id="{{ $poule->id }}"
                         class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                         title="{{ __('Zoek geschikte poule') }}"
                     >🔍</button>
                     <button
-                        onclick="event.stopPropagation(); meldJudokaAf({{ $judoka->id }}, '{{ addslashes($judoka->naam) }}')"
+                        data-action="meld-af" data-judoka-id="{{ $judoka->id }}" data-judoka-naam="{{ $judoka->naam }}"
                         class="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                         title="{{ __('Afmelden (kan niet deelnemen)') }}"
                     >✕</button>

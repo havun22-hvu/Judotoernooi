@@ -15,7 +15,9 @@ setup('authenticate test organisator via e2e seam', async ({ page }) => {
 
     // Seam: /e2e/login -> /dashboard -> /{org}/dashboard.
     await page.waitForURL(new RegExp(`/${ORG_SLUG}/dashboard`));
-    await expect(page.locator('h1, h2').first()).toBeVisible();
+    // Target the page heading inside <main>; the nav also has an (often hidden)
+    // <h2>JudoToernooi</h2> that 'h1, h2'.first() would wrongly grab.
+    await expect(page.locator('main h1, main h2').first()).toBeVisible();
 
     fs.mkdirSync(path.dirname(STORAGE_STATE), { recursive: true });
     await page.context().storageState({ path: STORAGE_STATE });
