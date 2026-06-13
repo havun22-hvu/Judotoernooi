@@ -20,7 +20,7 @@
     <h1 class="text-2xl font-bold text-gray-800">🥋 {{ __('Mat Interface') }}</h1>
 </div>
 
-@include('pages.mat.partials._content')
+@include('pages.mat.partials._content', ['isAdmin' => true])
 
 <!-- Pusher for Reverb WebSocket -->
 <script src="https://js.pusher.com/8.2.0/pusher.min.js" integrity="sha384-gA0TPBlnosOv77mNKhqDqUd7BMOqU7f5VlaEGFdyCus4A5l7JHELZ4K5dQMBSL1j" crossorigin="anonymous" @nonce></script>

@@ -118,7 +118,7 @@
     </header>
 
     <main class="p-3 max-w-5xl mx-auto">
-        @include('pages.mat.partials._content')
+        @include('pages.mat.partials._content', ['isAdmin' => false])
     </main>
 
     <!-- Pusher for Reverb WebSocket -->

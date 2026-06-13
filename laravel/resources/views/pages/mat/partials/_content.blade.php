@@ -346,11 +346,13 @@
                                         class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
                                     🔄 {{ __('Herlaad') }}
                                 </button>
-                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'A')"
+                                @if($isAdmin ?? false)
+                                <button @click="toggleDebugSlots(poule.poule_id, 'A')"
                                         class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
+                                @endif
                                 {{-- Kolom navigatie pijltjes --}}
                                 <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-A'">
                                     <button type="button" data-action="bracket-nav" data-dir="-1"
@@ -389,11 +391,13 @@
                                         class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
                                     🔄 {{ __('Herlaad') }}
                                 </button>
-                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'B')"
+                                @if($isAdmin ?? false)
+                                <button @click="toggleDebugSlots(poule.poule_id, 'B')"
                                         class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
+                                @endif
                                 {{-- Kolom navigatie pijltjes --}}
                                 <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-B'">
                                     <button type="button" data-action="bracket-nav" data-dir="-1" data-groep="B"
@@ -1570,6 +1574,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         // Laad bracket HTML via AJAX endpoint (server-rendered Blade partial)
+        // Toggle slotnummers (admin). Assignment kan NIET in @click onder @alpinejs/csp,
+        // dus hier als method waar `this` plain JS is en de assignment wél werkt.
+        toggleDebugSlots(pouleId, groep) {
+            this.debugSlots = !this.debugSlots;
+            this.laadBracketHtml(pouleId, groep);
+        },
+
         async laadBracketHtml(pouleId, groep) {
             const container = document.getElementById('bracket-container-' + pouleId + '-' + groep);
             if (!container) return;
