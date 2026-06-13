@@ -31,11 +31,14 @@ class DeviceToegangController extends Controller
             return $this->redirectToInterface($toegang);
         }
 
-        // If a different device is already bound, the organisator must
-        // explicitly reset the binding from the beheer UI before a new
-        // device can take over — the role code alone is not enough to
-        // override an existing binding.
-        if ($toegang->isGebonden()) {
+        // De ingelogde organisator/beheerder van dit toernooi mag een toegang
+        // altijd openen en de binding overnemen (bv. om mat/LCD op een ander
+        // apparaat te gebruiken of te testen). Voor vrijwilligers (niet ingelogd)
+        // geldt first-device-wins: een al-gebonden toegang blokkeert.
+        $org = auth('organisator')->user();
+        $isBeheerder = $org && $org->hasAccessToToernooi($toegang->toernooi);
+
+        if ($toegang->isGebonden() && !$isBeheerder) {
             return $this->vrijwilligerError('Deze toegang is al aan een ander apparaat gekoppeld. Vraag de organisator om de binding te resetten.');
         }
 
