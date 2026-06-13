@@ -1590,8 +1590,8 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 // Posities via CSSOM zetten (CSP-veilig): de bracket gebruikte
-                // dynamische Tailwind-classes top-[{{ }}px]/h-[{{ }}px] die de JIT
-                // niet compileert → niet in de CSS. Nu via data-attributen + style.
+                // dynamische Tailwind arbitrary-value classes voor top/height die de
+                // JIT niet compileert (niet in de CSS). Nu via data-attributen + style.
                 container.querySelectorAll('[data-bracket-top]').forEach(el => {
                     el.style.top = el.dataset.bracketTop + 'px';
                 });
