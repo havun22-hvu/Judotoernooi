@@ -50,18 +50,18 @@
 
             <!-- Numpad -->
             <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto" id="numpad">
-                <button type="button" onclick="addPin('1')" class="numpad-btn">1</button>
-                <button type="button" onclick="addPin('2')" class="numpad-btn">2</button>
-                <button type="button" onclick="addPin('3')" class="numpad-btn">3</button>
-                <button type="button" onclick="addPin('4')" class="numpad-btn">4</button>
-                <button type="button" onclick="addPin('5')" class="numpad-btn">5</button>
-                <button type="button" onclick="addPin('6')" class="numpad-btn">6</button>
-                <button type="button" onclick="addPin('7')" class="numpad-btn">7</button>
-                <button type="button" onclick="addPin('8')" class="numpad-btn">8</button>
-                <button type="button" onclick="addPin('9')" class="numpad-btn">9</button>
+                <button type="button" data-action="pin-key" data-key="1" class="numpad-btn">1</button>
+                <button type="button" data-action="pin-key" data-key="2" class="numpad-btn">2</button>
+                <button type="button" data-action="pin-key" data-key="3" class="numpad-btn">3</button>
+                <button type="button" data-action="pin-key" data-key="4" class="numpad-btn">4</button>
+                <button type="button" data-action="pin-key" data-key="5" class="numpad-btn">5</button>
+                <button type="button" data-action="pin-key" data-key="6" class="numpad-btn">6</button>
+                <button type="button" data-action="pin-key" data-key="7" class="numpad-btn">7</button>
+                <button type="button" data-action="pin-key" data-key="8" class="numpad-btn">8</button>
+                <button type="button" data-action="pin-key" data-key="9" class="numpad-btn">9</button>
                 <div></div>
-                <button type="button" onclick="addPin('0')" class="numpad-btn">0</button>
-                <button type="button" onclick="removePin()" class="numpad-btn">
+                <button type="button" data-action="pin-key" data-key="0" class="numpad-btn">0</button>
+                <button type="button" data-action="pin-remove" class="numpad-btn">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/>
                     </svg>
@@ -80,7 +80,7 @@
                 <p class="text-gray-700 mb-2">{{ __('PIN is ingesteld!') }}</p>
                 <p class="text-sm text-gray-500 mb-6">{{ __('Wil je ook inloggen met je vingerafdruk of gezichtsherkenning?') }}</p>
 
-                <button onclick="registerPasskey()" id="biometric-enable-btn"
+                <button data-action="register-passkey" id="biometric-enable-btn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mb-3">
                     {{ __('Ja, biometrie inschakelen') }}
                 </button>
@@ -99,6 +99,15 @@
     </div>
 
 <script @nonce>
+// CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'pin-key': (el) => addPin(el.dataset.key),
+        'pin-remove': () => removePin(),
+        'register-passkey': () => registerPasskey(),
+    });
+});
+
 const __t = {
     confirmPin: @json(__('Bevestig je PIN')),
     enterSamePin: @json(__('Voer dezelfde PIN nogmaals in')),

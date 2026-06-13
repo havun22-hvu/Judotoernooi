@@ -161,9 +161,9 @@
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <a href="{{ route('auth.account') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Account Instellingen') }}</a>
-                            <button type="button" id="qr-scan-menu-btn" onclick="openQrScanner()" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('QR Login Scanner') }}</button>
+                            <button type="button" id="qr-scan-menu-btn" data-action="open-qr-scanner" class="hidden w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('QR Login Scanner') }}</button>
                             <hr class="my-1">
-                            <button type="button" onclick="if(typeof forceRefresh==='function'){forceRefresh()}else{location.reload(true)}" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
+                            <button type="button" data-action="force-refresh-fallback" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Forceer Update') }}</button>
                             <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -199,7 +199,7 @@
                                         <p class="text-sm text-gray-500">havun22@gmail.com</p>
                                     </div>
                                     <hr>
-                                    <button type="button" onclick="location.reload(true)"
+                                    <button type="button" data-action="reload-force"
                                             class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
                                         {{ __('Ververs app') }}
                                     </button>
@@ -242,7 +242,7 @@
     <div id="app-toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden">
         <div id="app-toast-content" class="px-6 py-3 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2">
             <span id="app-toast-message"></span>
-            <button onclick="hideAppToast()" class="ml-2 text-current opacity-70 hover:opacity-100">&times;</button>
+            <button data-action="hide-app-toast" class="ml-2 text-current opacity-70 hover:opacity-100">&times;</button>
         </div>
     </div>
 
@@ -332,7 +332,7 @@
                         <div class="bg-white p-6 rounded-lg max-w-[400px] text-center shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                             <h3 class="text-lg font-bold mb-3 text-red-700">⚠️ {{ __('Sessie verloopt bijna') }}</h3>
                             <p class="mb-4 text-gray-700">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
-                            <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
+                            <button data-action="dismiss-idle"
                                     class="bg-blue-600 text-white px-6 py-2.5 rounded-md border-none cursor-pointer font-medium">
                                 {{ __('Actief blijven') }}
                             </button>
@@ -413,6 +413,18 @@
 
     {{-- Globale toast functies --}}
     <script @nonce>
+        // CSP-safe event delegation: koppel data-action attributen aan layout-acties.
+        document.addEventListener('DOMContentLoaded', () => {
+            window.cspActions({
+                'open-qr-scanner': () => openQrScanner(),
+                'close-qr-scanner': () => closeQrScanner(),
+                'hide-app-toast': () => hideAppToast(),
+                'reload-force': () => location.reload(true),
+                'dismiss-idle': () => { document.getElementById('idle-warning')?.remove(); window.resetIdleTimers?.(); },
+                'force-refresh-fallback': () => { typeof forceRefresh === 'function' ? forceRefresh() : location.reload(true); },
+            });
+        });
+
         let appToastTimeout = null;
         function showAppToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('app-toast');
@@ -568,7 +580,7 @@
         <div class="bg-white rounded-2xl w-full max-w-sm mx-4 overflow-hidden">
             <div class="flex justify-between items-center px-4 py-3 bg-blue-800 text-white">
                 <h3 class="font-semibold text-sm">{{ __('QR Login Scanner') }}</h3>
-                <button onclick="closeQrScanner()" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
+                <button data-action="close-qr-scanner" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
             </div>
             <div id="qr-scan-reader" class="w-full min-h-[280px]"></div>
             <div class="px-4 py-3 text-center">

@@ -53,7 +53,7 @@
 
 {{-- Settings Button (top right corner) — hidden if already in header --}}
 <button id="pwa-settings-floating-btn"
-        onclick="document.getElementById('pwa-settings-modal').classList.remove('hidden')"
+        data-action="open-pwa-settings"
         class="fixed top-3 right-3 z-40 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full hidden"
         title="{{ __('Instellingen') }}"
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,18 +63,18 @@
 </button>
 <script @nonce>
     // Show floating button only if no inline settings button exists in header
-    if (!document.querySelector('header button[onclick*="pwa-settings-modal"]')) {
+    if (!document.querySelector('header button[data-action="open-pwa-settings"]')) {
         document.getElementById('pwa-settings-floating-btn').classList.remove('hidden');
     }
 </script>
 
 {{-- About/Settings Modal (compact) --}}
 <div id="pwa-settings-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-     onclick="if(event.target===this)this.classList.add('hidden')">
+     data-action="pwa-settings-overlay">
     <div class="bg-white rounded-lg shadow-xl w-72 text-gray-800 overflow-hidden">
         <div class="px-4 py-3 border-b flex justify-between items-center">
             <h2 class="font-bold text-gray-900">{{ $config['name'] }}</h2>
-            <button onclick="document.getElementById('pwa-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">&times;</button>
+            <button data-action="close-pwa-settings" class="text-gray-400 hover:text-gray-600">&times;</button>
         </div>
         <div class="px-4 py-3 space-y-3 text-sm">
             <div class="flex justify-between items-center">
@@ -92,7 +92,7 @@
                 <span id="pwa-sw-version" class="text-gray-400 text-xs"></span>
             </div>
             <hr>
-            <button onclick="forceRefresh()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
+            <button data-action="force-refresh" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
                 {{ __('Forceer Update') }}
             </button>
             <div id="pwa-install-section" class="hidden">
@@ -115,8 +115,8 @@
             </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="hidePwaInstallBanner()" class="px-3 py-1 text-green-200 hover:text-white">{{ __('Later') }}</button>
-            <button onclick="installPwa()" class="bg-white text-green-600 px-4 py-1 rounded font-medium">{{ __('Installeer') }}</button>
+            <button data-action="hide-install-banner" class="px-3 py-1 text-green-200 hover:text-white">{{ __('Later') }}</button>
+            <button data-action="install-pwa" class="bg-white text-green-600 px-4 py-1 rounded font-medium">{{ __('Installeer') }}</button>
         </div>
     </div>
 </div>
@@ -138,6 +138,18 @@
 </style>
 
 <script @nonce>
+    // CSP-safe event delegation: koppel data-action attributen aan acties.
+    document.addEventListener('DOMContentLoaded', () => {
+        window.cspActions({
+            'open-pwa-settings': () => document.getElementById('pwa-settings-modal').classList.remove('hidden'),
+            'close-pwa-settings': () => document.getElementById('pwa-settings-modal').classList.add('hidden'),
+            'pwa-settings-overlay': (el, e) => { if (e.target === el) el.classList.add('hidden'); },
+            'force-refresh': () => forceRefresh(),
+            'hide-install-banner': () => hidePwaInstallBanner(),
+            'install-pwa': () => installPwa(),
+        });
+    });
+
     // PWA Install
     let deferredPrompt = null;
 
