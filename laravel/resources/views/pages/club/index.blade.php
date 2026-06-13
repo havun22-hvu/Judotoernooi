@@ -10,10 +10,10 @@
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Clubs Uitnodigen') }}</h1>
         <p class="text-gray-600 mt-1">{{ __('Selecteer welke clubs je wilt uitnodigen voor dit toernooi') }}</p>
         <div class="flex gap-2 mt-2">
-            <button type="button" onclick="toggleAlleClubs(true)" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded">
+            <button type="button" data-action="toggle-clubs" data-val="1" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded">
                 {{ __('Alles aan') }}
             </button>
-            <button type="button" onclick="toggleAlleClubs(false)" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded">
+            <button type="button" data-action="toggle-clubs" data-val="0" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded">
                 {{ __('Alles uit') }}
             </button>
         </div>
@@ -31,14 +31,14 @@
             {{ __('Clubs Beheren') }}
         </a>
         <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi->routeParams()) }}" method="POST" class="inline"
-              onsubmit="return confirm('{{ __('Coachkaarten genereren voor alle geselecteerde clubs?') }}')">
+              data-action="confirm-submit" data-confirm="{{ __('Coachkaarten genereren voor alle geselecteerde clubs?') }}">
             @csrf
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
                 {{ __('Genereer Coachkaarten') }}
             </button>
         </form>
         <form action="{{ route('toernooi.club.verstuur-alle', $toernooi->routeParams()) }}" method="POST" class="inline"
-              onsubmit="return confirm('{{ __('Alle geselecteerde clubs met email uitnodigen?') }}')">
+              data-action="confirm-submit" data-confirm="{{ __('Alle geselecteerde clubs met email uitnodigen?') }}">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

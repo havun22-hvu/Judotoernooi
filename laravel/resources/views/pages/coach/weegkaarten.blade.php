@@ -176,7 +176,7 @@
             <h3 class="font-medium text-gray-800 mb-3">{{ __('Alle weegkaarten delen') }}</h3>
             <div class="flex flex-wrap gap-2">
                 <button
-                    onclick="copyAllLinks()"
+                    data-action="copy-all-links"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
                 >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

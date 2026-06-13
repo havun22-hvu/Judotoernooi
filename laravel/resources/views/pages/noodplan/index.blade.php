@@ -430,11 +430,11 @@
         <div class="toolbar-controls">
             <strong>LIVE BACKUP${blokLabel} - ${timestamp}</strong>
             <span class="np-separator">|</span>
-            <button onclick="selectAll(true)" class="np-btn-link np-btn-link-blue">Alles aan</button>
-            <button onclick="selectAll(false)" class="np-btn-link np-btn-link-gray">Alles uit</button>
+            <button data-action="select-all" data-val="1" class="np-btn-link np-btn-link-blue">Alles aan</button>
+            <button data-action="select-all" data-val="0" class="np-btn-link np-btn-link-gray">Alles uit</button>
             <span id="print-counter" class="np-counter">${totalPoules} van ${totalPoules} geselecteerd</span>
         </div>
-        <button onclick="window.print()" class="np-btn-print">Print geselecteerde</button>
+        <button data-action="print" class="np-btn-print">Print geselecteerde</button>
     </div>
 </div>
 <scr` + `ipt>
@@ -523,7 +523,7 @@ function abbreviateClub(name) {
                                         <td colspan="${totalCols}">
                                             <div class="np-flex-between-center">
                                                 <div class="poule-checkbox no-print">
-                                                    <input type="checkbox" checked onchange="togglePoule(this)">
+                                                    <input type="checkbox" checked data-action="toggle-poule">
                                                     <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
                                                 </div>
                                                 <span>Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>

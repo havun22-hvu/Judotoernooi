@@ -193,7 +193,7 @@
     {{-- Action buttons --}}
     <div x-show="showContent" x-cloak class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
         <button
-            onclick="downloadWeegkaart()"
+            data-action="download-weegkaart"
             class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-full shadow-lg flex items-center gap-2 transition-colors text-sm"
         >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@
             {{ __('Opslaan') }}
         </button>
         <button
-            onclick="shareWeegkaart()"
+            data-action="share-weegkaart"
             class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-full shadow-lg flex items-center gap-2 transition-colors text-sm"
         >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

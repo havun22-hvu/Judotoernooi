@@ -59,3 +59,51 @@ export function cspActions(map) {
 
 // Expose globally so inline (nonce'd) view scripts can call it without imports.
 window.cspActions = cspActions;
+
+// Built-in universal actions — cover the most common inline handlers app-wide
+// so simple views only need a data-action attribute (no per-view registration).
+// A view may override any of these by registering the same name.
+const confirmMsg = (el) => (el.dataset.confirm || '').replace(/\\n/g, '\n');
+cspActions({
+    'print': () => window.print(),
+    'reload': () => location.reload(),
+    'reload-force': () => location.reload(true),
+    'history-back': () => history.back(),
+    // Click on a submit button / link guarded by a confirm dialog.
+    'confirm': (el, e) => { if (el.dataset.confirm && !confirm(confirmMsg(el))) e.preventDefault(); },
+    // Form submit guarded by a confirm dialog.
+    'submit:confirm-submit': (el, e) => { if (!confirm(confirmMsg(el))) e.preventDefault(); },
+    // Confirm dialog then navigate (was `onclick="if(confirm(..)){location.href=..}"`).
+    'confirm-navigate': (el) => { if (confirm(confirmMsg(el))) location.href = el.dataset.href; },
+    // Generic DOM one-liners that had no dedicated view function.
+    'set-provider': (el) => { const t = document.getElementById('selected-provider'); if (t) t.value = el.dataset.provider; },
+    'toggle-detail-log': (el) => document.getElementById('detail-' + el.dataset.logId)?.classList.toggle('hidden'),
+    'mark-onvolledig': () => { try { sessionStorage.setItem('toonOnvolledig', 'true'); } catch (e) { /* ignore */ } },
+});
+
+// Migration bridge: long-tail views whose handlers call a single global function
+// (a `function X(){}` declaration is a window property). Optional chaining makes
+// each a no-op on pages where that function isn't present, so one shared
+// registration safely covers them all. A view may still override any name.
+cspActions({
+    'toggle-pw': (el) => (window.togglePassword || window.togglePw)?.(el.dataset.target),
+    'toggle-clubs': (el) => window.toggleAlleClubs?.(el.dataset.val === '1'),
+    'go-fullscreen': () => window.goFullscreen?.(),
+    'toggle-snd-panel': () => window.toggleSndPanel?.(),
+    'test-awasete': () => window.testAwaseteSound?.(),
+    'select-all': (el) => window.selectAll?.(el.dataset.val === '1'),
+    'select-all-mats': (el) => window.selectAllMats?.(el.dataset.val === '1'),
+    'meld-probleem': () => window.meldProbleem?.(),
+    'approve-login': () => window.approveLogin?.(),
+    'copy-all-links': () => window.copyAllLinks?.(),
+    'download-weegkaart': () => window.downloadWeegkaart?.(),
+    'share-weegkaart': () => window.shareWeegkaart?.(),
+    'toggle-detail': (el) => window.toggleDetail?.(+el.dataset.id),
+    'reset-crop': () => window.resetCrop?.(),
+    'edit-crop': () => window.editCrop?.(),
+    'confirm-delete-toernooi': (el) => window.confirmDelete?.(el.dataset.orgSlug, el.dataset.toernooiSlug, el.dataset.toernooiNaam),
+    'change:toggle-poule': (el) => window.togglePoule?.(el),
+    'change:toggle-mat': (el) => window.toggleMat?.(+el.dataset.matId, el.checked),
+    'change:load-image': (el) => window.loadImage?.(el),
+    'change:update-betaal': () => window.updateBetaalKnop?.(),
+});

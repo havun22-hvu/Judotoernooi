@@ -38,6 +38,17 @@
     }
 </style>
 <script @nonce>
+    // CSP-safe event delegation: bracket-navigatie pijltjes (data-action).
+    document.addEventListener('DOMContentLoaded', () => {
+        window.cspActions({
+            'bracket-nav': (el) => bracketNavigate(
+                el.closest('[id^=bracket-nav]').id.split('-')[2],
+                +el.dataset.dir,
+                el.dataset.groep,
+            ),
+        });
+    });
+
     // === JAVASCRIPT TRANSLATION STRINGS ===
     const __t = {
         sessionExpired: @json(__('Sessie verlopen. De pagina wordt herladen.')),
@@ -334,12 +345,12 @@
                                 </button>
                                 {{-- Kolom navigatie pijltjes --}}
                                 <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-A'">
-                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], -1)"
+                                    <button type="button" data-action="bracket-nav" data-dir="-1"
                                             class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-left" disabled>
                                         &larr;
                                     </button>
                                     <span class="text-xs text-gray-400 bracket-nav-label">{{ __('Alle rondes') }}</span>
-                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], 1)"
+                                    <button type="button" data-action="bracket-nav" data-dir="1"
                                             class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-right">
                                         &rarr;
                                     </button>
@@ -377,12 +388,12 @@
                                 </button>
                                 {{-- Kolom navigatie pijltjes --}}
                                 <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-B'">
-                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], -1, 'B')"
+                                    <button type="button" data-action="bracket-nav" data-dir="-1" data-groep="B"
                                             class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-left" disabled>
                                         &larr;
                                     </button>
                                     <span class="text-xs text-gray-400 bracket-nav-label">{{ __('Alle rondes') }}</span>
-                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], 1, 'B')"
+                                    <button type="button" data-action="bracket-nav" data-dir="1" data-groep="B"
                                             class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-right">
                                         &rarr;
                                     </button>

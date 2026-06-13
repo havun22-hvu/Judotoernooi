@@ -435,7 +435,7 @@
                             @if($magWijzigen ?? true)<button @click="startEdit()" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
                             <form action="{{ route('coach.portal.judoka.destroy', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
+                                  data-action="confirm-submit" data-confirm="Verwijderen?">@csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-lg">×</button>
                             </form>
                             @endif

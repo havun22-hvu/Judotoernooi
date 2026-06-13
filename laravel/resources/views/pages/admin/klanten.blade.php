@@ -94,7 +94,7 @@
                             {{ __('Bewerken') }}
                         </a>
                         <form action="{{ route('admin.klanten.destroy', $klant) }}" method="POST"
-                              onsubmit="return confirm('Weet je zeker dat je {{ addslashes($klant->naam) }} wilt verwijderen?\n\n{{ $klant->toernooien_count }} toernooi(en), {{ $klant->clubs_count }} club(s)\n\nALLE data wordt permanent verwijderd!')">
+                              data-action="confirm-submit" data-confirm="Weet je zeker dat je {{ addslashes($klant->naam) }} wilt verwijderen?\n\n{{ $klant->toernooien_count }} toernooi(en), {{ $klant->clubs_count }} club(s)\n\nALLE data wordt permanent verwijderd!">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">

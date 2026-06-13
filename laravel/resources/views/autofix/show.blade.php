@@ -75,7 +75,7 @@
                     <form action="{{ route('autofix.approve', $proposal->approval_token) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold"
-                            onclick="return confirm('Weet je zeker dat je deze fix wilt toepassen op production?')">
+                            data-action="confirm" data-confirm="Weet je zeker dat je deze fix wilt toepassen op production?">
                             Goedkeuren & Toepassen
                         </button>
                     </form>

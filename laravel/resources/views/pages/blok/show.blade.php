@@ -15,7 +15,7 @@
         <form action="{{ route('toernooi.blok.sluit-weging', $toernooi->routeParamsWith(['blok' => $blok])) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-                    onclick="return confirm('Weging sluiten?')">
+                    data-action="confirm" data-confirm="Weging sluiten?">
                 Sluit Weging
             </button>
         </form>

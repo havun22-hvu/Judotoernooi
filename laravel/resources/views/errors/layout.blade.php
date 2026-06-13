@@ -21,7 +21,7 @@
                 Ga terug
             </a>
 
-            <button onclick="meldProbleem()" id="meld-btn"
+            <button data-action="meld-probleem" id="meld-btn"
                     class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition text-sm">
                 Meld dit probleem
             </button>

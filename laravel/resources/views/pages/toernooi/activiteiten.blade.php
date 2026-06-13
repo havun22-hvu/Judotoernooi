@@ -121,7 +121,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm">
                             @if($log->properties)
-                                <button onclick="document.getElementById('detail-{{ $log->id }}').classList.toggle('hidden')"
+                                <button data-action="toggle-detail-log" data-log-id="{{ $log->id }}"
                                         class="text-blue-600 hover:underline text-xs">
                                     {{ __('Toon') }}
                                 </button>

@@ -280,11 +280,11 @@
                     <input type="hidden" name="payment_provider" id="selected-provider" value="mollie">
 
                     <div class="flex flex-col sm:flex-row gap-3">
-                        <button type="submit" onclick="document.getElementById('selected-provider').value='mollie'"
+                        <button type="submit" data-action="set-provider" data-provider="mollie"
                                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                             {{ __('Betalen via Mollie') }}
                         </button>
-                        <button type="submit" onclick="document.getElementById('selected-provider').value='stripe'"
+                        <button type="submit" data-action="set-provider" data-provider="stripe"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                             {{ __('Betalen via Stripe') }}
                         </button>

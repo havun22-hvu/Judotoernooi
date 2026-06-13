@@ -24,7 +24,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                     @include('partials.coach-locale-switcher')
-                    <button onclick="window.print()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm">
+                    <button data-action="print" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm">
                         {{ __('Printen') }}
                     </button>
                     <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">

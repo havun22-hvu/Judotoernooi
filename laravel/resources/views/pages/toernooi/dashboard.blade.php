@@ -165,7 +165,7 @@
                 <div class="pt-2 mt-1 border-t border-gray-100">
                     <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST"
                         @if($statistieken['totaal_poules'] > 0)
-                            onsubmit="return confirm('{{ __('Let op: er zijn al :poules poules met :wedstrijden wedstrijden. Bij opnieuw genereren gaat de huidige indeling verloren. Weet je het zeker?', ['poules' => $statistieken['totaal_poules'], 'wedstrijden' => $statistieken['totaal_wedstrijden']]) }}')"
+                            data-action="confirm-submit" data-confirm="{{ __('Let op: er zijn al :poules poules met :wedstrijden wedstrijden. Bij opnieuw genereren gaat de huidige indeling verloren. Weet je het zeker?', ['poules' => $statistieken['totaal_poules'], 'wedstrijden' => $statistieken['totaal_wedstrijden']]) }}"
                         @endif
                     >
                         @csrf

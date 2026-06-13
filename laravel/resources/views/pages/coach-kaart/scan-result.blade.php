@@ -146,7 +146,7 @@
 
         {{-- Back to scanner button --}}
         <div class="p-4 border-t">
-            <button onclick="history.back()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
+            <button data-action="history-back" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
                 {{ __('Volgende scan') }}
             </button>
         </div>

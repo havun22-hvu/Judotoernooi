@@ -33,7 +33,7 @@
             </div>
 
             <div id="approve-section">
-                <button onclick="approveLogin()" id="approve-btn"
+                <button data-action="approve-login" id="approve-btn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mb-3">
                     {{ __('Goedkeuren') }}
                 </button>

@@ -133,9 +133,9 @@
                         <img id="crop-image" class="max-w-full">
                     </div>
                     <div class="flex justify-center gap-2 mt-2">
-                        <button type="button" onclick="cropper.zoom(0.1)" class="px-3 py-1 bg-gray-200 rounded text-sm">➕ Zoom in</button>
-                        <button type="button" onclick="cropper.zoom(-0.1)" class="px-3 py-1 bg-gray-200 rounded text-sm">➖ Zoom uit</button>
-                        <button type="button" onclick="resetCrop()" class="px-3 py-1 bg-gray-200 rounded text-sm">↺ Reset</button>
+                        <button type="button" data-action="crop-zoom" data-amount="0.1" class="px-3 py-1 bg-gray-200 rounded text-sm">➕ Zoom in</button>
+                        <button type="button" data-action="crop-zoom" data-amount="-0.1" class="px-3 py-1 bg-gray-200 rounded text-sm">➖ Zoom uit</button>
+                        <button type="button" data-action="reset-crop" class="px-3 py-1 bg-gray-200 rounded text-sm">↺ Reset</button>
                     </div>
                     <p class="text-xs text-gray-500 mt-2 text-center">{{ __('Sleep om te centreren, knijp/scroll om te zoomen') }}</p>
                 </div>
@@ -143,7 +143,7 @@
                 {{-- Final preview (after crop confirmed) --}}
                 <div id="preview-container" class="hidden mb-3">
                     <img id="preview" class="w-32 h-32 object-cover rounded-lg mx-auto border-4 border-purple-200">
-                    <button type="button" onclick="editCrop()" class="block mx-auto mt-2 text-purple-600 text-sm underline">{{ __('Aanpassen') }}</button>
+                    <button type="button" data-action="edit-crop" class="block mx-auto mt-2 text-purple-600 text-sm underline">{{ __('Aanpassen') }}</button>
                 </div>
 
                 {{-- Hidden input for cropped image --}}
@@ -157,7 +157,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                         {{ __('Maak Selfie') }}
-                        <input type="file" id="foto-input" accept="image/*" capture="user" class="hidden" onchange="loadImage(this)">
+                        <input type="file" id="foto-input" accept="image/*" capture="user" class="hidden" data-action="load-image">
                     </label>
                 </div>
 
@@ -189,6 +189,13 @@
     <script @nonce>
         let cropper = null;
         let fotoSelected = false;
+        // CSP-safe event delegation: crop-zoom heeft de lokale `cropper` nodig (zelfde scope).
+        // De overige crop-acties (reset/edit/load-image) zitten als built-in in csp-actions.
+        document.addEventListener('DOMContentLoaded', () => {
+            window.cspActions({
+                'crop-zoom': (el) => { if (cropper) cropper.zoom(parseFloat(el.dataset.amount)); },
+            });
+        });
 
         function loadImage(input) {
             if (input.files && input.files[0]) {

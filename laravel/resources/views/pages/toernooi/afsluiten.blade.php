@@ -111,7 +111,7 @@
         <form action="{{ route('toernooi.heropenen', $toernooi->routeParams()) }}" method="POST" class="mt-4">
             @csrf
             <button type="submit"
-                    onclick="return confirm('{{ __('Weet je zeker dat je het toernooi wilt heropenen?') }}')"
+                    data-action="confirm" data-confirm="{{ __('Weet je zeker dat je het toernooi wilt heropenen?') }}"
                     class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium">
                 {{ __('Toernooi Heropenen') }}
             </button>
@@ -271,7 +271,7 @@
                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2">
                     <span>📊</span> {{ __('Uitslagen CSV') }}
                 </a>
-                <button onclick="window.print()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2">
+                <button data-action="print" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2">
                     <span>🖨️</span> {{ __('Printen / PDF') }}
                 </button>
             </div>
@@ -295,7 +295,7 @@
             <form action="{{ route('toernooi.afsluiten.bevestig', $toernooi->routeParams()) }}" method="POST">
                 @csrf
                 <button type="submit"
-                        onclick="return confirm('{{ __('Weet je zeker dat je dit toernooi wilt afsluiten?') }}\n\n{{ __('Je kunt het later nog heropenen indien nodig.') }}')"
+                        data-action="confirm" data-confirm="{{ __('Weet je zeker dat je dit toernooi wilt afsluiten?') }}\n\n{{ __('Je kunt het later nog heropenen indien nodig.') }}"
                         class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2">
                     <span>🔒</span> {{ __('Toernooi Afsluiten') }}
                 </button>

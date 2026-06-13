@@ -92,7 +92,7 @@
                     <span class="text-sm text-blue-200">
                         {{ __('Geprint:') }} {{ now()->format('d-m-Y H:i') }}
                     </span>
-                    <button onclick="window.print()" class="bg-white text-blue-800 px-4 py-2 rounded font-bold hover:bg-blue-100">
+                    <button data-action="print" class="bg-white text-blue-800 px-4 py-2 rounded font-bold hover:bg-blue-100">
                         {{ __('Print') }}
                     </button>
                 </div>

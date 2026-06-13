@@ -361,7 +361,7 @@
                     </td>
                     <td class="px-6 py-3 whitespace-nowrap space-x-2">
                         <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">{{ __('Open') }}</a>
-                        <button onclick="confirmDelete('{{ $organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
+                        <button data-action="confirm-delete-toernooi" data-org-slug="{{ $organisator->slug }}" data-toernooi-slug="{{ $toernooi->slug }}" data-toernooi-naam="{{ $toernooi->naam }}" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
                     </td>
                 </tr>
                 @endforeach
@@ -422,7 +422,7 @@
                     <td class="px-6 py-3 whitespace-nowrap space-x-2">
                         @if($toernooi->organisator)
                         <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">{{ __('Open') }}</a>
-                        <button onclick="confirmDelete('{{ $toernooi->organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
+                        <button data-action="confirm-delete-toernooi" data-org-slug="{{ $toernooi->organisator->slug }}" data-toernooi-slug="{{ $toernooi->slug }}" data-toernooi-naam="{{ $toernooi->naam }}" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
                         @else
                         <span class="text-gray-400 text-sm">{{ __('Geen organisator') }}</span>
                         @endif

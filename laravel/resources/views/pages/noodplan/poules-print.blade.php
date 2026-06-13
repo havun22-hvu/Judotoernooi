@@ -27,14 +27,14 @@
             @endphp
             @if($heeftPoules)
             <label class="mat-checkbox">
-                <input type="checkbox" checked onchange="toggleMat({{ $mat->id }}, this.checked)">
+                <input type="checkbox" checked data-action="toggle-mat" data-mat-id="{{ $mat->id }}">
                 <span>{{ __('Mat') }} {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}</span>
             </label>
             @endif
         @endforeach
         <span class="text-gray-300 mx-1">|</span>
-        <button onclick="selectAllMats(true)" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Alles') }}</button>
-        <button onclick="selectAllMats(false)" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Geen') }}</button>
+        <button data-action="select-all-mats" data-val="1" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Alles') }}</button>
+        <button data-action="select-all-mats" data-val="0" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Geen') }}</button>
         <span class="ml-auto text-xs text-gray-500" id="mat-count"></span>
     </div>
 </div>

@@ -83,7 +83,7 @@
                 </td>
                 <td class="px-4 py-3 text-center">
                     <form action="{{ route('toernooi.coach-kaart.force-checkout', $toernooi->routeParamsWith(['coachKaart' => $kaart])) }}" method="POST"
-                          onsubmit="return confirm('{{ __('Weet je zeker dat je :naam geforceerd wilt uitchecken?', ['naam' => $kaart->naam]) }}');">
+                          data-action="confirm-submit" data-confirm="{{ __('Weet je zeker dat je :naam geforceerd wilt uitchecken?', ['naam' => $kaart->naam]) }}">
                         @csrf
                         <button type="submit"
                                 class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm">

@@ -506,7 +506,7 @@
 
         {{-- Fullscreen overlay — shown on load if not already fullscreen --}}
         <div id="fullscreen-overlay" class="fullscreen-overlay"
-             onclick="goFullscreen()">
+             data-action="go-fullscreen">
             <div class="fullscreen-overlay-title">JudoToernooi</div>
             <div class="fullscreen-overlay-subtitle">{{ __('Klik voor volledig scherm') }}</div>
         </div>
@@ -526,7 +526,7 @@
         </div>
 
         {{-- Per-device sound settings for the awasete warning --}}
-        <button class="snd-gear" id="snd-gear" title="{{ __('Geluid') }}" onclick="toggleSndPanel()">🔊</button>
+        <button class="snd-gear" id="snd-gear" title="{{ __('Geluid') }}" data-action="toggle-snd-panel">🔊</button>
         <div class="snd-panel" id="snd-panel">
             <h4>{{ __('Waarschuwingsgeluid') }}</h4>
             <div class="snd-row"><label for="snd-enabled">{{ __('Geluid aan') }}</label><input type="checkbox" id="snd-enabled"></div>
@@ -538,7 +538,7 @@
                     <option value="sirene">{{ __('Sirene') }}</option>
                 </select>
             </div>
-            <button class="snd-test" onclick="testAwaseteSound()">{{ __('Test geluid') }}</button>
+            <button class="snd-test" data-action="test-awasete">{{ __('Test geluid') }}</button>
             <div class="snd-hint">{{ __('Klik één keer op het scherm om het geluid te activeren.') }}</div>
         </div>
 

@@ -100,7 +100,7 @@
             }
         @endphp
         <a href="{{ $terugUrl }}" class="text-blue-600 hover:text-blue-800"
-           @if(request('filter') === 'onvolledig') onclick="sessionStorage.setItem('toonOnvolledig', 'true')" @endif>
+           @if(request('filter') === 'onvolledig') data-action="mark-onvolledig" @endif>
             &larr; {{ __('Terug naar lijst') }}
         </a>
         <div class="flex gap-2">

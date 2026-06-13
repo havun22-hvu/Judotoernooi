@@ -2465,7 +2465,7 @@
                         <div>
                             @if($toernooi->mollie_onboarded)
                             <form action="{{ route('toernooi.mollie.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('{{ __('Weet je zeker dat je de Mollie koppeling wilt verbreken?') }}')">
+                                  data-action="confirm-submit" data-confirm="{{ __('Weet je zeker dat je de Mollie koppeling wilt verbreken?') }}">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
                                     {{ __('Ontkoppelen') }}
@@ -2512,7 +2512,7 @@
                         <div>
                             @if($stripeConnected)
                             <form action="{{ route('toernooi.stripe.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('{{ __('Weet je zeker dat je de Stripe koppeling wilt verbreken?') }}')">
+                                  data-action="confirm-submit" data-confirm="{{ __('Weet je zeker dat je de Stripe koppeling wilt verbreken?') }}">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
                                     {{ __('Ontkoppelen') }}
@@ -2747,7 +2747,7 @@
                 <button type="submit"
                         class="px-4 py-2 {{ $blokWedstrijden > 0 ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-400 cursor-not-allowed' }} text-white font-bold rounded-lg"
                         {{ $blokWedstrijden == 0 ? 'disabled' : '' }}
-                        onclick="return confirm('{{ __('Reset Blok :nummer?', ['nummer' => $blok->nummer]) }}\n\n{{ __(':aantal wedstrijden worden verwijderd.', ['aantal' => $blokWedstrijden]) }}\n{{ __('Poules blijven op hun mat.') }}\n{{ __('Status wordt teruggezet naar eind voorbereiding.') }}')">
+                        data-action="confirm" data-confirm="{{ __('Reset Blok :nummer?', ['nummer' => $blok->nummer]) }}\n\n{{ __(':aantal wedstrijden worden verwijderd.', ['aantal' => $blokWedstrijden]) }}\n{{ __('Poules blijven op hun mat.') }}\n{{ __('Status wordt teruggezet naar eind voorbereiding.') }}">
                     {{ __('Blok') }} {{ $blok->nummer }} {{ $blokWedstrijden > 0 ? "({$blokWedstrijden}w)" : __('(geen wed.)') }}
                 </button>
             </form>
@@ -3335,7 +3335,7 @@
         </p>
 
         <form action="{{ route('toernooi.blok.reset-alles', $toernooi->routeParams()) }}" method="POST"
-              onsubmit="return confirm('{{ __('WEET JE HET ZEKER?') }}\n\n{{ __('Dit verwijdert ALLE wedstrijden van ALLE categorieën!') }}\n\n{{ __("Judoka\'s blijven behouden.") }}')">
+              data-action="confirm-submit" data-confirm="{{ __('WEET JE HET ZEKER?') }}\n\n{{ __('Dit verwijdert ALLE wedstrijden van ALLE categorieën!') }}\n\n{{ __("Judoka\'s blijven behouden.") }}">
             @csrf
             <button type="submit" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
                 🔥 RESET ALLES 🔥
@@ -3402,7 +3402,7 @@
         </p>
 
         <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST"
-              onsubmit="return confirm('{{ __('WEET JE HET ABSOLUUT ZEKER?') }}\n\n{{ __('Dit verwijdert het GEHELE toernooi:') }}\n{{ __("- Alle judoka\'s") }}\n{{ __('- Alle clubs') }}\n{{ __('- Alle poules') }}\n{{ __('- Alle wedstrijden') }}\n{{ __('- Alle resultaten') }}\n\n{{ __('Dit kan NIET ongedaan worden!') }}')">
+              data-action="confirm-submit" data-confirm="{{ __('WEET JE HET ABSOLUUT ZEKER?') }}\n\n{{ __('Dit verwijdert het GEHELE toernooi:') }}\n{{ __("- Alle judoka\'s") }}\n{{ __('- Alle clubs') }}\n{{ __('- Alle poules') }}\n{{ __('- Alle wedstrijden') }}\n{{ __('- Alle resultaten') }}\n\n{{ __('Dit kan NIET ongedaan worden!') }}">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-8 py-4 bg-red-700 hover:bg-red-800 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">

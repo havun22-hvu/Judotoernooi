@@ -78,7 +78,7 @@
         <!-- Herroepingsrecht checkbox (wettelijk verplicht bij directe dienst) -->
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
             <label class="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" id="herroeping-akkoord" class="mt-0.5 w-4 h-4 text-green-600 rounded" onchange="updateBetaalKnop()">
+                <input type="checkbox" id="herroeping-akkoord" class="mt-0.5 w-4 h-4 text-green-600 rounded" data-action="update-betaal">
                 <span class="text-sm text-gray-700">
                     {{ __('Ik begrijp dat de inschrijving direct na betaling definitief is en dat ik daarmee afstand doe van mijn herroepingsrecht (14 dagen bedenktijd).') }}
                 </span>

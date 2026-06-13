@@ -18,7 +18,7 @@
         <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    onclick="return confirm('{{ __('Voorbereiding afronden?') }}\n\n{{ __('Dit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.') }}')">
+                    data-action="confirm" data-confirm="{{ __('Voorbereiding afronden?') }}\n\n{{ __('Dit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.') }}">
                 {{ __('Einde Voorbereiding') }}
             </button>
         </form>
@@ -154,7 +154,7 @@
                         @csrf
                         <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                         <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                                onclick="return confirm('{{ __('Reset poule :nummer? Wedstrijden worden verwijderd.', ['nummer' => $pouleInfo['nummer']]) }}')">
+                                data-action="confirm" data-confirm="{{ __('Reset poule :nummer? Wedstrijden worden verwijderd.', ['nummer' => $pouleInfo['nummer']]) }}">
                             {{ __('Reset') }}
                         </button>
                     </form>
@@ -173,7 +173,7 @@
             {{-- Grijs: wacht op doorsturen, waarschuwing + link naar wedstrijddag --}}
             <button type="button"
                     class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
-                    onclick="if(confirm('{{ __('Poule :nummer is nog niet doorgestuurd naar de mat.', ['nummer' => $pouleInfo['nummer']]) }}\n\n{{ __('Ga naar Wedstrijddag om de poule eerst door te sturen.') }}')) { window.location.href='{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}'; }">
+                    data-action="confirm-navigate" data-confirm="{{ __('Poule :nummer is nog niet doorgestuurd naar de mat.', ['nummer' => $pouleInfo['nummer']]) }}\n\n{{ __('Ga naar Wedstrijddag om de poule eerst door te sturen.') }}" data-href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}">
                 {{ $chipNaam }}
             </button>
             @endif

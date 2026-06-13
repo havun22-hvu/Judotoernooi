@@ -138,7 +138,7 @@
 
         <div class="bg-white rounded-lg shadow">
             {{-- Header row - clickable --}}
-            <button onclick="toggleDetail({{ $proposal->id }})" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg">
+            <button data-action="toggle-detail" data-id="{{ $proposal->id }}" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800 whitespace-nowrap">
