@@ -25,9 +25,13 @@ last_updated: 2026-06-13
 Lokaal + origin: alleen `main`. Staging hard-gereset naar origin/main (oude lokale main = puur deploy-merge-ruis, geverifieerd geen uniek werk; reflog bewaart). Geraakte-gebieden testsuite **607 groen**.
 
 **TE DOEN (open):**
-1. **Productie-deploy** — CSP-migratie + auto-advance + noodplan-print samen naar prod, **mét MySQL-backup vooraf** (bewust, jouw moment).
-2. **LCD `scoreboard-live` + spreker `?.`/`??` fix** (~17 expressies) — nog te migreren onder `@alpinejs/csp` (ondersteunt geen optional-chaining/nullish).
-3. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+1. **Productie-deploy** — CSP-migratie + auto-advance + noodplan-print + LCD/TV-fix samen naar prod, **mét MySQL-backup vooraf** (bewust, jouw moment).
+2. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+
+### LCD / TV-URLs — OPGELOST (13-06-2026)
+- **`havun.nl/tv/{code}` 404 gefixt.** Root-cause: nginx op havun.nl had alleen `location = /tv` (exact-match) → `/tv/JTCI` viel door naar de Node-proxy → 404. Toegevoegd: regex-redirects `^/tv/(.+)$` → `judotournament.org/tv/$1` + `^/tvs/(.+)$` → staging. Getest (301 ✅), nginx herladen. Config: `/etc/nginx/sites-enabled/havun.nl` (backup in `/root/havun.nl.bak*`).
+- **LCD bereikbaar via 2 URLs** — device-toegangen toont nu beide: knop **"Kort"** (`havun.nl/tv/{code}`) + **"Volledig"** (`judotournament.org/{org}/{toernooi}/mat/scoreboard-live/{mat}`, werkt altijd). Volledig gedocumenteerd in `docs/2-FEATURES/SCOREBORD-APP.md`.
+- **LCD CSP:** `scoreboard-live` werkt onder strikte CSP. 2 inline `style=` op de "GEEN VERBINDING"-overlay → nonced classes (`.msg`/`.sub`). De `?.`/`??` daarin zijn **vanilla JS** (geen Alpine) → CSP-veilig; mijn eerdere "spreker ?./?? fix"-notitie was onjuist en is geschrapt.
 
 ### Wat is er 's nachts gebeurd
 

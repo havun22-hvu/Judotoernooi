@@ -447,11 +447,35 @@ Klein paneel op de LCD-pagina (tandwiel), opgeslagen in **localStorage** (LCD is
 - OTA updates voor kleine fixes
 - Version check endpoint: `GET /api/scoreboard/version`
 
+## TV/LCD URLs (productie)
+
+Het LCD-display is via twee URLs bereikbaar — device-toegangen toont beide (knoppen "Kort" + "Volledig"):
+
+| Type | URL | Werking |
+|------|-----|---------|
+| **Origineel (volledig)** | `judotournament.org/{org}/{toernooi}/mat/scoreboard-live/{matNummer}` | `MatController::scoreboardLive` → view. Werkt altijd, lange URL. |
+| **Kort** | `havun.nl/tv/{4-char code}` → `judotournament.org/tv/{code}` → `MatController::tvRedirect` → scoreboard-live | Makkelijk over te typen op een TV. |
+
+**havun.nl/tv redirect (nginx, server 188.245.159.115).** `havun.nl` is een ander project op
+dezelfde server. De redirect staat in `/etc/nginx/sites-enabled/havun.nl`:
+```nginx
+location = /tv  { return 301 https://judotournament.org/tv; }          # bare
+location = /tvs { return 301 https://staging.judotournament.org/tv; }  # bare staging
+location ~ ^/tv/(.+)$  { return 301 https://judotournament.org/tv/$1; }          # /tv/{code}
+location ~ ^/tvs/(.+)$ { return 301 https://staging.judotournament.org/tv/$1; }  # staging /tvs/{code}
+```
+> **Was kapot (juni 2026):** alleen de exact-match `location = /tv` bestond → `havun.nl/tv/JTCI`
+> viel door naar de Node-proxy → 404. Opgelost met de regex-locations die de code (`$1`) meenemen.
+> Bij wijziging van het pad-formaat: deze nginx-regels mee aanpassen.
+
+CSP: `scoreboard-live.blade.php` draait onder strikte CSP — alle `<script>`/`<style>` met `@nonce`,
+knoppen via `data-action`, Pusher-CDN met `integrity`+`@nonce`. De `?.`/`??` in die view staan in
+**vanilla JS** (geen Alpine-expressies) → CSP-veilig.
+
 ## Openstaand
 
 - **LCD proporties voor TV (3-10m leesbaarheid):** timer ~15-20vw, grotere cijfers Y/W/I, namen op afstand leesbaar, shido-kaarten groter, vw/vh units voor 1920x1080.
-- **LCD link in device-toegangen updaten** naar `/tv/{eerste 4 tekens}` formaat via `DeviceToegang::getDisplayCode()`.
 
 ---
 
-*Laatst bijgewerkt: 8 juni 2026 (awasete-ippon waarschuwing toegevoegd)*
+*Laatst bijgewerkt: 13 juni 2026 (TV/LCD URL-architectuur + havun.nl/tv redirect-fix gedocumenteerd)*

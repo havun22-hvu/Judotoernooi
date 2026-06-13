@@ -326,6 +326,8 @@
             box-shadow: 0 0 12px #EF4444;
             animation: pulse-red 1.5s ease-in-out infinite;
         }
+        .disconnect-overlay .msg { color: #EF4444; font-size: clamp(18px,3vh,32px); font-weight: 800; }
+        .disconnect-overlay .sub { color: #9CA3AF; font-size: clamp(12px,2vh,20px); }
         @keyframes pulse-red {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -538,8 +540,8 @@
         {{-- Disconnect overlay — shown when WebSocket drops --}}
         <div class="disconnect-overlay" id="disconnect-overlay">
             <div class="dot"></div>
-            <div style="color:#EF4444;font-size:clamp(18px,3vh,32px);font-weight:800;">GEEN VERBINDING</div>
-            <div style="color:#9CA3AF;font-size:clamp(12px,2vh,20px);" id="disconnect-countdown"></div>
+            <div class="msg">{{ __('GEEN VERBINDING') }}</div>
+            <div class="sub" id="disconnect-countdown"></div>
         </div>
     </div>
 

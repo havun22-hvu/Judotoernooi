@@ -104,9 +104,13 @@
                                         <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap">{{ __('LCD') }}</td>
                                         <td class="py-1">
                                             <div class="flex items-center gap-1.5">
-                                                <button type="button" @click="copyTvUrl(toegang)"
+                                                <button type="button" @click="copyTvUrl(toegang)" title="{{ __('Korte URL (havun.nl/tv) — vereist redirect') }}"
                                                         class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs">
-                                                    <span x-show="notCopied('tv', toegang)">URL</span><span x-show="isCopied('tv', toegang)" x-cloak>✓</span>
+                                                    <span x-show="notCopied('tv', toegang)">{{ __('Kort') }}</span><span x-show="isCopied('tv', toegang)" x-cloak>✓</span>
+                                                </button>
+                                                <button type="button" @click="copyFullLcdUrl(toegang)" title="{{ __('Volledige originele URL — werkt altijd') }}"
+                                                        class="bg-green-700 hover:bg-green-800 text-white px-2.5 py-1 rounded text-xs">
+                                                    <span x-show="notCopied('full', toegang)">{{ __('Volledig') }}</span><span x-show="isCopied('full', toegang)" x-cloak>✓</span>
                                                 </button>
                                                 <button type="button" @click="toggleQrLcd(toegang)"
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
@@ -446,6 +450,10 @@ document.addEventListener('alpine:init', () => {
             const suffix = toegang.code ? toegang.code.substring(0, 4) : '';
             navigator.clipboard.writeText(`${this.urls.tvBase}/${suffix}`);
             this.flashCopied(`tv_${toegang.id}`);
+        },
+        copyFullLcdUrl(toegang) {
+            navigator.clipboard.writeText(this.getLcdUrl(toegang));
+            this.flashCopied(`full_${toegang.id}`);
         },
         copyQrUrl(toegang) {
             navigator.clipboard.writeText(this.qrUrl);
