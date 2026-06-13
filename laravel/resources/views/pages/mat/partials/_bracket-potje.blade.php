@@ -67,7 +67,7 @@
      id="potje-{{ $wed['id'] }}"
      data-wedstrijd-id="{{ $wed['id'] }}"
      data-poule-id="{{ $pouleId }}"
-     ondblclick="window.dblClickBracket({{ $wed['id'] }}, {{ $pouleId }})">
+     data-action="bracket-dblclick">
 
     {{-- Wit slot (boven) --}}
     <div class="relative">

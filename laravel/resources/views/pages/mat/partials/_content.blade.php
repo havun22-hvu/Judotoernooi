@@ -46,6 +46,8 @@
                 +el.dataset.dir,
                 el.dataset.groep,
             ),
+            // Beurtaanduiding: dubbelklik op een potje (was inline ondblclick).
+            'dblclick:bracket-dblclick': (el) => window.dblClickBracket?.(+el.dataset.wedstrijdId, +el.dataset.pouleId),
         });
     });
 
