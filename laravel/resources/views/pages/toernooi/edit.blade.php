@@ -2868,13 +2868,13 @@
                 </div>
             </div>
 
-            <!-- 7. Eliminatie brackets (leeg + startposities) -->
+            <!-- 7. Eliminatie brackets (leeg op maat) -->
             <div class="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded">
                 <div>
-                    <h4 class="font-medium text-purple-800">{{ __('7. Eliminatie brackets') }}</h4>
-                    <p class="text-sm text-purple-600">{{ __('Leeg op maat of startposities per poule') }}</p>
+                    <h4 class="font-medium text-purple-800">{{ __('7. Eliminatie brackets (leeg)') }}</h4>
+                    <p class="text-sm text-purple-600">{{ __('Lege bracket-templates op maat — geen namen, voor handmatig invullen') }}</p>
                 </div>
-                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}" target="_blank"
+                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}?modus=voorbereiding" target="_blank"
                    class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">{{ __('Openen') }}</a>
             </div>
         </div>
@@ -2937,13 +2937,13 @@
                 </div>
             </div>
 
-            <!-- 4. Eliminatie brackets (live) -->
+            <!-- 4. Eliminatie brackets (startposities + live) -->
             <div class="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded">
                 <div>
-                    <h4 class="font-medium text-purple-800">{{ __('4. Eliminatie brackets (live)') }}</h4>
-                    <p class="text-sm text-purple-600">{{ __('Snapshot per eliminatie-poule, met scores en doorgeschoven winnaars') }}</p>
+                    <h4 class="font-medium text-purple-800">{{ __('4. Eliminatie brackets (startposities & live)') }}</h4>
+                    <p class="text-sm text-purple-600">{{ __('Met namen erin: startposities na weging, of live snapshot met scores en doorgeschoven winnaars') }}</p>
                 </div>
-                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}" target="_blank"
+                <a href="{{ route('toernooi.noodplan.brackets', $toernooi->routeParams()) }}?modus=wedstrijddag" target="_blank"
                    class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">{{ __('Openen') }}</a>
             </div>
         </div>

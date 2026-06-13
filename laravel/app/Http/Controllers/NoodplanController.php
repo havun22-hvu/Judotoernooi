@@ -772,20 +772,31 @@ class NoodplanController extends Controller
      */
     public function brackets(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        $query = Poule::where('toernooi_id', $toernooi->id)
-            ->where('type', 'eliminatie')
-            ->with(['judokas', 'blok', 'mat']);
-
-        if ($blokNummer !== null) {
-            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
-            abort_unless($blok, 404);
-            $query->where('blok_id', $blok->id);
+        // Modus: 'voorbereiding' = alleen leeg-op-maat template (geen namen mogelijk)
+        //        'wedstrijddag'   = startposities + live per poule
+        $modus = request()->query('modus', 'wedstrijddag');
+        if (!in_array($modus, ['voorbereiding', 'wedstrijddag'], true)) {
+            $modus = 'wedstrijddag';
         }
 
-        $poules = $query->get()->sortBy(fn($p) => [$p->blok?->nummer ?? 99, $p->nummer])->values();
+        $poules = collect();
+        if ($modus === 'wedstrijddag') {
+            $query = Poule::where('toernooi_id', $toernooi->id)
+                ->where('type', 'eliminatie')
+                ->with(['judokas', 'blok', 'mat']);
+
+            if ($blokNummer !== null) {
+                $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+                abort_unless($blok, 404);
+                $query->where('blok_id', $blok->id);
+            }
+
+            $poules = $query->get()->sortBy(fn($p) => [$p->blok?->nummer ?? 99, $p->nummer])->values();
+        }
+
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
 
-        return view('pages.noodplan.brackets-index', compact('toernooi', 'poules', 'blokken', 'blokNummer'));
+        return view('pages.noodplan.brackets-index', compact('toernooi', 'poules', 'blokken', 'blokNummer', 'modus'));
     }
 
     /**
