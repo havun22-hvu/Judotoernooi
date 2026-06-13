@@ -621,6 +621,48 @@ class PouleControllerCoverageTest extends TestCase
     }
 
     #[Test]
+    public function opslaan_eliminatie_uitslag_schuift_winnaar_automatisch_door(): void
+    {
+        $poule = $this->maakPouleMetJudokas(2, ['type' => 'eliminatie']);
+        $judokas = $poule->judokas;
+
+        // Lege volgende wedstrijd (eindpunt van de doorschuiving)
+        $volgende = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'groep' => 'A',
+            'ronde' => 'finale',
+            'judoka_wit_id' => null,
+            'judoka_blauw_id' => null,
+        ]);
+
+        // Bronwedstrijd gekoppeld aan de volgende; winnaar moet op WIT landen
+        $bron = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $judokas[0]->id,
+            'judoka_blauw_id' => $judokas[1]->id,
+            'groep' => 'A',
+            'ronde' => 'halve_finale',
+            'volgende_wedstrijd_id' => $volgende->id,
+            'winnaar_naar_slot' => 'wit',
+        ]);
+
+        $response = $this->act()->postJson(
+            $this->url("poule/{$poule->id}/eliminatie/uitslag"),
+            [
+                'wedstrijd_id' => $bron->id,
+                'winnaar_id' => $judokas[0]->id,
+                'uitslag_type' => 'ippon',
+            ]
+        );
+
+        $response->assertStatus(200)->assertJson(['success' => true]);
+
+        $volgende->refresh();
+        $this->assertEquals($judokas[0]->id, $volgende->judoka_wit_id,
+            'Winnaar moet via de API automatisch zijn doorgeschoven naar de volgende wedstrijd');
+    }
+
+    #[Test]
     public function opslaan_eliminatie_uitslag_rejects_invalid_winner(): void
     {
         $poule = $this->maakPouleMetJudokas(2, ['type' => 'eliminatie']);

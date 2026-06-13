@@ -643,9 +643,9 @@ class EliminatieService
 
         // Winnaar automatisch doorschuiven naar de volgende ronde.
         // Geldt voor ELKE uitslag: eerste registratie én correctie, A- én B-groep.
-        // Staat ná de correctie-cascade zodat de nieuwe winnaar netjes ná het
-        // opschonen wordt geplaatst. Idempotent. Eindpunten (finale/brons) hebben
-        // geen volgende_wedstrijd_id en worden overgeslagen.
+        // Staat ná de correctie-cascade zodat de nieuwe winnaar netjes ná het opschonen
+        // wordt geplaatst. Idempotent. Eindpunten (finale/brons) hebben geen
+        // volgende_wedstrijd_id en worden overgeslagen.
         if ($wedstrijd->volgende_wedstrijd_id) {
             $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
             if ($volgendeWedstrijd) {
@@ -654,6 +654,7 @@ class EliminatieService
                     $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
                     $volgendeWedstrijd->update([$veld => $winnaarId]);
 
+                    // Alleen melding bij correctie (eerste uitslag is stille happy-path)
                     if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
                         $correcties[] = "{$winnaarNaam} geplaatst in volgende ronde";
                     }

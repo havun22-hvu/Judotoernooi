@@ -116,6 +116,12 @@ Slot 8  │ Wed 4   │
 
 ## Winnaar Doorschuiven
 
+> **Trigger (sinds 2026-06-12):** de winnaar schuift **automatisch** door bij elke uitslag
+> via `EliminatieService::verwerkUitslag()` — `winnaar_naar_slot` bepaalt of hij op `wit`
+> of `blauw` van `volgende_wedstrijd_id` landt. Zie [README.md](./README.md#uitslag-verwerken-automatisch-doorschuiven).
+> Onderstaande formules beschrijven de slot-wiskunde die bij bracket-**generatie**
+> de `volgende_wedstrijd_id` + `winnaar_naar_slot` koppeling legt.
+
 ### Basisregel
 
 ```
