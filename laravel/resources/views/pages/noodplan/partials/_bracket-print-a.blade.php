@@ -3,13 +3,13 @@
     $rondes = $layout['rondes'] ?? [];
     $totaleHoogte = max((int) ($layout['totale_hoogte'] ?? 300), 100);
 
-    // Layout grid (SVG units).
-    $kolomBreedte = 200;
-    $kolomGap = 20;
-    $headerHoogte = 24;
-    $potjeBreedte = 180;
-    $potjeHoogte = 80;
-    $potjeNaamRegel = 32;
+    // Layout grid (SVG units). Compact for A4 portrait.
+    $kolomBreedte = 140;
+    $kolomGap = 14;
+    $headerHoogte = 18;
+    $potjeBreedte = 126;
+    $potjeHoogte = 60;
+    $potjeNaamRegel = 24;
 
     $aantalKolommen = max(1, count($rondes));
     $svgBreedte = $aantalKolommen * ($kolomBreedte + $kolomGap);
@@ -49,25 +49,25 @@
                 @endphp
                 <g class="potje" transform="translate({{ $kolomX }}, {{ $top }})">
                     {{-- Wit (boven) --}}
-                    <rect class="potje-vakje" x="0" y="0" width="{{ $potjeBreedte - 30 }}" height="{{ $potjeNaamRegel }}"/>
-                    <text class="potje-naam {{ $witClass }}" x="6" y="14">{{ $witNaam ?? '__________________' }}</text>
+                    <rect class="potje-vakje" x="0" y="0" width="{{ $potjeBreedte - 24 }}" height="{{ $potjeNaamRegel }}"/>
+                    <text class="potje-naam {{ $witClass }}" x="4" y="10">{{ $witNaam ?? '____________' }}</text>
                     @if ($witClub)
-                        <text class="potje-club" x="6" y="26">{{ $witClub }}</text>
+                        <text class="potje-club" x="4" y="19">{{ $witClub }}</text>
                     @endif
-                    <rect class="potje-score-vakje" x="{{ $potjeBreedte - 30 }}" y="0" width="30" height="{{ $potjeNaamRegel }}"/>
+                    <rect class="potje-score-vakje" x="{{ $potjeBreedte - 24 }}" y="0" width="24" height="{{ $potjeNaamRegel }}"/>
                     @if (!is_null($wed['uitslag_wit'] ?? null))
-                        <text class="potje-score" x="{{ $potjeBreedte - 15 }}" y="20">{{ $wed['uitslag_wit'] }}</text>
+                        <text class="potje-score" x="{{ $potjeBreedte - 12 }}" y="16">{{ $wed['uitslag_wit'] }}</text>
                     @endif
 
                     {{-- Blauw (onder) --}}
-                    <rect class="potje-vakje" x="0" y="{{ $potjeHoogte - $potjeNaamRegel }}" width="{{ $potjeBreedte - 30 }}" height="{{ $potjeNaamRegel }}"/>
-                    <text class="potje-naam {{ $blauwClass }}" x="6" y="{{ $potjeHoogte - $potjeNaamRegel + 14 }}">{{ $blauwNaam ?? '__________________' }}</text>
+                    <rect class="potje-vakje" x="0" y="{{ $potjeHoogte - $potjeNaamRegel }}" width="{{ $potjeBreedte - 24 }}" height="{{ $potjeNaamRegel }}"/>
+                    <text class="potje-naam {{ $blauwClass }}" x="4" y="{{ $potjeHoogte - $potjeNaamRegel + 10 }}">{{ $blauwNaam ?? '____________' }}</text>
                     @if ($blauwClub)
-                        <text class="potje-club" x="6" y="{{ $potjeHoogte - $potjeNaamRegel + 26 }}">{{ $blauwClub }}</text>
+                        <text class="potje-club" x="4" y="{{ $potjeHoogte - $potjeNaamRegel + 19 }}">{{ $blauwClub }}</text>
                     @endif
-                    <rect class="potje-score-vakje" x="{{ $potjeBreedte - 30 }}" y="{{ $potjeHoogte - $potjeNaamRegel }}" width="30" height="{{ $potjeNaamRegel }}"/>
+                    <rect class="potje-score-vakje" x="{{ $potjeBreedte - 24 }}" y="{{ $potjeHoogte - $potjeNaamRegel }}" width="24" height="{{ $potjeNaamRegel }}"/>
                     @if (!is_null($wed['uitslag_blauw'] ?? null))
-                        <text class="potje-score" x="{{ $potjeBreedte - 15 }}" y="{{ $potjeHoogte - $potjeNaamRegel + 20 }}">{{ $wed['uitslag_blauw'] }}</text>
+                        <text class="potje-score" x="{{ $potjeBreedte - 12 }}" y="{{ $potjeHoogte - $potjeNaamRegel + 16 }}">{{ $wed['uitslag_blauw'] }}</text>
                     @endif
 
                     {{-- Connector to next round (skip last round) --}}

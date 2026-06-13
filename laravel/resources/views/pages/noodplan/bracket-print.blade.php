@@ -4,7 +4,17 @@
 
 @push('styles')
 <style @nonce>
-    @page { size: A4 landscape; margin: 0.5cm; }
+    @page {
+        size: A4 portrait;
+        margin: 1cm 0.5cm 0.7cm 0.5cm;
+
+        @bottom-right {
+            content: "{{ $titel }} — pagina " counter(page) " / " counter(pages);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 8pt;
+            color: #555;
+        }
+    }
 
     .bracket-header {
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -38,14 +48,14 @@
     }
 
     .ronde-header {
-        font-size: 9pt;
+        font-size: 7pt;
         font-weight: bold;
         text-anchor: middle;
         fill: #4c1d95;
     }
 
     .potje-naam {
-        font-size: 9pt;
+        font-size: 7pt;
         font-weight: bold;
         fill: #111;
     }
@@ -53,13 +63,13 @@
     .potje-naam.loser { fill: #999; text-decoration: line-through; }
 
     .potje-club {
-        font-size: 7pt;
+        font-size: 5pt;
         fill: #555;
     }
 
     .potje-vakje { fill: #fff; stroke: #333; stroke-width: 1; }
     .potje-score-vakje { fill: #f3f4f6; stroke: #333; stroke-width: 1; }
-    .potje-score { font-size: 10pt; font-weight: bold; text-anchor: middle; fill: #b91c1c; }
+    .potje-score { font-size: 8pt; font-weight: bold; text-anchor: middle; fill: #b91c1c; }
     .potje-lijn { stroke: #333; stroke-width: 1; fill: none; }
 
     .medaille { font-size: 11pt; font-weight: bold; }
