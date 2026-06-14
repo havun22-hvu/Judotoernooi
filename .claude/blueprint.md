@@ -1,764 +1,246 @@
-> **Blueprint** — JUDOTOERNOOI | Gegenereerd: 2026-06-13 13:15 | Model: gemini-2.5-flash
+> **Blueprint** — JUDOTOERNOOI | Gegenereerd: 2026-06-14 20:27 | Model: gemini-2.5-flash
 
-Oké, ik heb de gevraagde functionaliteit geïmplementeerd en een gedetailleerde uitleg gegeven van elke stap.
+Bedankt voor de duidelijke beschrijving van de bug en de gewenste oplossing! Dit is een belangrijk punt om de consistentie en bruikbaarheid van het zaaloverzicht te waarborgen.
 
----
+De analyse is correct: de nieuwe `Poule` objecten erven wel `blok_id` maar missen de `mat_id`, waardoor ze onzichtbaar worden op de matten in het zaaloverzicht.
 
-### Overzicht van de Oplossing
-
-1.  **Opslag (`eind_optie`, `golden_score_duur`):** Er is gekozen om deze instellingen op te slaan in een `JSONB`-kolom genaamd `categorie_instellingen` op de `toernooien` tabel. Deze kolom zal een associatieve array bevatten waarbij elke sleutel een `categorie_key` is (bijv. "U15", "Senioren") en de waarde een object is met `eind_optie` en `golden_score_duur` voor die categorie. Dit past bij het concept dat deze instellingen eigenschappen zijn van de categorie/leeftijdsklasse op toernooiniveau, en niet per individuele poule of wedstrijd.
-    *   **Reden voor deze keuze:**
-        *   Centraliseert categorie-specifieke regels per toernooi.
-        *   Voorkomt redundantie als meerdere poules dezelfde `categorie_key` delen.
-        *   Flexibel, omdat nieuwe categorieën dynamisch kunnen worden toegevoegd in de JSON zonder schemawijzigingen.
-        *   Sluit aan bij het genoemde `getCategorieConfig()`-mechanisme door een gestructureerde configuratie per categorie te bieden.
-
-2.  **Serialisatie (`ScoreboardController::formatMatch`):** De `formatMatch` methode in de `ScoreboardController` is uitgebreid om de `eind_optie` en `golden_score_duur` van de bijbehorende poule en toernooi op te halen en mee te sturen in de JSON-response. Standaardwaarden conform het contract worden toegepast als de instellingen niet expliciet zijn gedefinieerd.
-
-3.  **Admin/Instellingen-UI (Conceptueel):** Een concept voor een beheerpagina is uitgewerkt, inclusief controller-logica en een Blade-template schets. Deze UI zal de organisator in staat stellen om voor elke unieke `categorie_key` (uit de reeds aangemaakte poules van het toernooi) de `eind_optie` en `golden_score_duur` in te stellen. IJF 2024 defaults worden als suggestie in de UI gebruikt, maar de backend handhaaft de contractuele defaults bij afwezigheid van expliciete instellingen.
-
-4.  **Tests:** Feature tests zijn toegevoegd om de correcte werking van de API-endpoint (`/api/scoreboard/current-match`) te valideren, inclusief de verwerking van standaardwaarden, geconfigureerde waarden, en backward compatibility.
+Hieronder de antwoorden op je vragen:
 
 ---
 
-### Implementatie Details
+### 1) `mat_id` meegeven bij ALLE `Poule::create()` in `zetOmNaarPoules` (voorronde regel 547 EN kruisfinale regel 599)? `b_mat_id` nodig?
 
-Hieronder volgen de codeblokken voor de wijzigingen:
+**Ja, de `mat_id` moet meegegeven worden bij alle `Poule::create()` calls die voortkomen uit de omzetting, voor zowel voorronde- als kruisfinale-poules.** De `mat_id` van de originele `$elimPoule` is leidend.
 
-#### 1. Migratie: `add_category_settings_to_toernooien_table`
+Hier zijn de voorgestelde aanpassingen in `WedstrijddagController::zetOmNaarPoules()`:
 
-Deze migratie voegt de `categorie_instellingen` JSONB-kolom toe aan de `toernooien` tabel.
+**Aanpassing 1: Voorronde-poules**
 
-```php
-// database/migrations/YYYY_MM_DD_HHMMSS_add_category_settings_to_toernooien_table.php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('toernooien', function (Blueprint $table) {
-            // Gebruik 'json' type voor JSONB in PostgreSQL of JSON in MySQL/MariaDB.
-            // Laravel handhabt dit automatisch.
-            // Nullable voor optionele instellingen en backwards compatibility.
-            $table->json('categorie_instellingen')->nullable()->after('uitslagen_publiek');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('toernooien', function (Blueprint $table) {
-            $table->dropColumn('categorie_instellingen');
-        });
-    }
-};
-
-```
-
-#### 2. Model Wijzigingen: `app/Models/Toernooi.php`
-
-Het `Toernooi` model wordt uitgebreid met de nieuwe `categorie_instellingen` kolom, inclusief `casts` voor automatische JSON-parsing en een helper-methode `getCategorySetting` om eenvoudig categorie-specifieke instellingen op te halen met fallback naar standaardwaarden. Ook is een methode toegevoegd om de unieke categorie-sleutels van het toernooi op te halen, handig voor de admin-UI.
+Rond regel 547 (binnen de loop die de voorronde-poules creëert, waarschijnlijk via `Poule::create`):
 
 ```php
-// app/Models/Toernooi.php
+// Huidig (vereenvoudigd voorbeeld, exacte implementatie kan variëren)
+Poule::create([
+    'wedstrijddag_id' => $elimPoule->wedstrijddag_id,
+    'categorie_id' => $elimPoule->categorie_id,
+    'type' => 'voorronde',
+    'blok_id' => $elimPoule->blok_id,
+    // ... andere velden ...
+]);
 
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection; // Import Collection
-
-class Toernooi extends Model
-{
-    use HasFactory;
-
-    protected $table = 'toernooien';
-
-    protected $fillable = [
-        'naam',
-        'locatie',
-        'datum',
-        'status',
-        'organisator_id',
-        'regelement_id',
-        'is_recreatief',
-        'uitslagen_publiek',
-        'categorie_instellingen', // <-- Nieuwe veld
-    ];
-
-    protected $casts = [
-        'datum' => 'datetime',
-        'categorie_instellingen' => 'array', // <-- Cast als array voor JSON-parsing
-    ];
-
-    // Relaties (bestaande, ter context)
-    public function organisator() { return $this->belongsTo(User::class, 'organisator_id'); }
-    public function regelement() { return $this->belongsTo(Regelement::class, 'regelement_id'); }
-    public function poules() { return $this->hasMany(Poule::class); }
-    public function matten() { return $this->hasMany(Mat::class); }
-
-    /**
-     * Haalt een specifieke instelling op voor een gegeven categorie.
-     *
-     * @param string $categoryKey De sleutel die de categorie identificeert (bijv. "U15", "Senioren").
-     * @param string $settingName De naam van de instelling (bijv. "eind_optie", "golden_score_duur").
-     * @param mixed $default De standaardwaarde die moet worden teruggegeven als de instelling niet wordt gevonden.
-     * @return mixed
-     */
-    public function getCategorySetting(string $categoryKey, string $settingName, mixed $default = null): mixed
-    {
-        if (!is_array($this->categorie_instellingen)) {
-            return $default;
-        }
-
-        return data_get($this->categorie_instellingen, "$categoryKey.$settingName", $default);
-    }
-
-    /**
-     * Haalt de unieke categorie-sleutels op die worden gebruikt in de poules van dit toernooi.
-     * Dit is nuttig voor het vullen van de admin-UI.
-     *
-     * @return Collection<int, string>
-     */
-    public function getDistinctCategoryKeys(): Collection
-    {
-        return $this->poules()->distinct('categorie_key')->pluck('categorie_key');
-    }
-}
-
+// Voorgestelde aanpassing:
+Poule::create([
+    'wedstrijddag_id' => $elimPoule->wedstrijddag_id,
+    'categorie_id' => $elimPoule->categorie_id,
+    'type' => 'voorronde',
+    'blok_id' => $elimPoule->blok_id,
+    'mat_id' => $elimPoule->mat_id, // <-- VOEG DEZE REGEL TOE
+    // ... andere velden ...
+]);
 ```
 
-*(Aanname: `Poule.php` en `Wedstrijd.php` modellen bestaan en hebben de juiste relaties met `Toernooi` en `Poule` respectievelijk. Er zijn geen directe wijzigingen nodig in deze modellen behalve dat `Poule` een `categorie_key` heeft en een relatie met `Toernooi`.)*
+**Aanpassing 2: Kruisfinale-poule**
 
-#### 3. Serialisatie: `app/Http/Controllers/ScoreboardController.php`
-
-De `formatMatch` methode is aangepast om de nieuwe velden `eind_optie` en `golden_score_duur` mee te sturen, inclusief de contractueel vastgelegde defaults.
+Rond regel 599 (waar de `kruisfinale` poule wordt aangemaakt):
 
 ```php
-// app/Http/Controllers/ScoreboardController.php
+// Huidig (vereenvoudigd voorbeeld)
+$kruisfinalePoule = Poule::create([
+    'wedstrijddag_id' => $elimPoule->wedstrijddag_id,
+    'categorie_id' => $elimPoule->categorie_id,
+    'type' => 'kruisfinale',
+    'blok_id' => $elimPoule->blok_id,
+    // ... andere velden ...
+]);
 
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Models\Wedstrijd;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Events\ScoreboardAssignment; // Aanname: Reverb event
-
-class ScoreboardController extends Controller
-{
-    // ... andere methoden in ScoreboardController
-
-    /**
-     * Formatteert een wedstrijd object voor het scorebord display.
-     *
-     * @param Wedstrijd $wedstrijd
-     * @return array
-     */
-    protected function formatMatch(Wedstrijd $wedstrijd): array
-    {
-        // Eager load relaties om N+1 queries te voorkomen
-        $wedstrijd->load([
-            'poule.toernooi',
-            'deelnemer1.judoka',
-            'deelnemer2.judoka',
-            'scheidsrechter'
-        ]);
-
-        $poule = $wedstrijd->poule;
-        $toernooi = $poule->toernooi;
-        $categoryKey = $poule->categorie_key;
-
-        // Haal categorie-instellingen op met standaardwaarden
-        // CONTRACT: null/afwezig => app gebruikt 'golden_score' als default voor eind_optie
-        $eindOptie = $toernooi->getCategorySetting($categoryKey, 'eind_optie', 'golden_score');
-
-        // CONTRACT: golden_score_duur is een integer|null. null=onbeperkt.
-        // Alleen relevant bij eind_optie='golden_score'.
-        $goldenScoreDuur = null;
-        if ($eindOptie === 'golden_score') {
-            // Haal de geconfigureerde duur op.
-            $configuredDuration = $toernooi->getCategorySetting($categoryKey, 'golden_score_duur', null);
-
-            // Als geconfigureerd (niet null) en groter dan 0, gebruik de waarde.
-            // Anders (null of 0), betekent dit onbeperkt, dus stuur null als per contract.
-            if ($configuredDuration !== null && (int)$configuredDuration > 0) {
-                $goldenScoreDuur = (int) $configuredDuration;
-            } else {
-                $goldenScoreDuur = null; // 0 of expliciet null in instellingen betekent onbeperkt
-            }
-        }
-
-        // Basis structuur voorbeeld - aanpassen aan de werkelijke bestaande format
-        $formattedMatch = [
-            'id' => $wedstrijd->id,
-            'poule_naam' => $poule->naam,
-            'categorie_key' => $categoryKey,
-            'deelnemer1' => [
-                'id' => $wedstrijd->deelnemer1->id,
-                'naam' => $wedstrijd->deelnemer1->judoka->naam,
-                // ... andere details voor deelnemer1
-            ],
-            'deelnemer2' => [
-                'id' => $wedstrijd->deelnemer2->id,
-                'naam' => $wedstrijd->deelnemer2->judoka->naam,
-                // ... andere details voor deelnemer2
-            ],
-            'scheidsrechter' => $wedstrijd->scheidsrechter ? $wedstrijd->scheidsrechter->name : null,
-            'status' => $wedstrijd->status,
-            'volgorde' => $wedstrijd->volgorde,
-            'mat_id' => $wedstrijd->mat_id,
-            // ... alle andere bestaande velden
-
-            // Voeg de nieuwe velden toe
-            'eind_optie' => $eindOptie,
-            'golden_score_duur' => $goldenScoreDuur,
-        ];
-
-        return $formattedMatch;
-    }
-
-    /**
-     * API endpoint om de huidige wedstrijd voor een gegeven scorebord/mat op te halen.
-     * (Dit is een voorbeeld, de logica om de "huidige" wedstrijd te bepalen kan variëren)
-     *
-     * @param Request $request
-     * @param int $toernooiId
-     * @param int $matId
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function currentMatch(Request $request, int $toernooiId, int $matId)
-    {
-        $currentMatch = Wedstrijd::whereHas('poule', function ($query) use ($toernooiId) {
-                $query->where('toernooi_id', $toernooiId);
-            })
-            ->where('mat_id', $matId)
-            ->whereIn('status', ['gepland', 'bezig']) // Of welke status 'huidig' betekent
-            ->orderBy('volgorde')
-            ->first();
-
-        if (!$currentMatch) {
-            return response()->json(['message' => 'Geen actieve wedstrijd gevonden voor dit scorebord.', 'match' => null], 404);
-        }
-
-        return response()->json([
-            'match' => $this->formatMatch($currentMatch),
-        ]);
-    }
-
-    /**
-     * Voorbeeld methode die een Reverb event zou kunnen dispatch, gebruikmakend van formatMatch.
-     * (Ter illustratie van waar formatMatch verder gebruikt kan worden.)
-     *
-     * @param Wedstrijd $wedstrijd
-     * @param int $toernooiId
-     * @param int $matId
-     */
-    public function assignMatchToScoreboard(Wedstrijd $wedstrijd, int $toernooiId, int $matId)
-    {
-        // ... logica om match's mat_id en status te updaten
-        $wedstrijd->update(['mat_id' => $matId, 'status' => 'gepland']);
-
-        $formattedMatch = $this->formatMatch($wedstrijd);
-
-        // Dispatch het Reverb event
-        broadcast(new ScoreboardAssignment($toernooiId, $matId, $formattedMatch))->toOthers();
-
-        // ... return respons
-    }
-
-    // ... andere methoden
-}
+// Voorgestelde aanpassing:
+$kruisfinalePoule = Poule::create([
+    'wedstrijddag_id' => $elimPoule->wedstrijddag_id,
+    'categorie_id' => $elimPoule->categorie_id,
+    'type' => 'kruisfinale',
+    'blok_id' => $elimPoule->blok_id,
+    'mat_id' => $elimPoule->mat_id, // <-- VOEG DEZE REGEL TOE
+    // ... andere velden ...
+]);
 ```
 
-#### 4. Admin UI (Conceptuele Code)
+**Over `b_mat_id`:**
+Nee, `b_mat_id` is waarschijnlijk niet nodig. De instructie is duidelijk dat de *mat* hetzelfde moet blijven. `mat_id` op de `Poule` is de directe link naar de `matten` tabel en bepaalt op welke mat een poule verschijnt. Als `b_mat_id` een ander concept zou zijn (bijv. een backup mat of een mat binnen een sub-blok), dan zou de bugbeschrijving anders zijn geweest. Blijf bij `mat_id` zoals dit nu op de `elimPoule` staat.
 
-Dit is een schets van hoe de admin-UI eruit zou kunnen zien om de categorie-instellingen te beheren.
+---
 
-**A. Controller: `app/Http/Controllers/Admin/ToernooiSettingsController.php`**
+### 2) Data-reparatie voor bestaande poules met `mat_id=NULL`
+
+Dit is het meest delicate deel, aangezien de originele `$elimPoule` is verwijderd. De 'gewenste oplossing' stelt dat de mat hetzelfde moet blijven. Dit betekent dat we moeten proberen de *oorspronkelijke* `mat_id` te achterhalen.
+
+**Reperatie Strategie:**
+
+De meest logische benadering is om de `mat_id` te infereren van andere poules in hetzelfde `blok_id`. Aangenomen wordt dat een `blok_id` (op een bepaalde wedstrijddag) consistent aan één `mat_id` gekoppeld is als er al een matverdeling heeft plaatsgevonden.
+
+1.  **Identificeer getroffen poules:** Zoek alle `Poule`s die `mat_id = NULL` hebben en van het type `voorronde` of `kruisfinale` zijn. Beperk dit tot de toernooien/wedstrijddagen waar de bug zich heeft voorgedaan.
+
+    ```sql
+    SELECT p.id, p.blok_id, p.type, p.wedstrijddag_id, c.naam as categorie_naam
+    FROM poules p
+    JOIN categories c ON p.categorie_id = c.id
+    WHERE p.mat_id IS NULL
+    AND p.type IN ('voorronde', 'kruisfinale');
+    ```
+
+2.  **Groepeer per `blok_id` en `wedstrijddag_id`:** Loop door deze poules en groepeer ze per unieke combinatie van `blok_id` en `wedstrijddag_id`.
+
+3.  **Vind de beoogde `mat_id`:** Voor elke groep:
+    *   Zoek naar een *andere* `Poule` in diezelfde `blok_id` en `wedstrijddag_id` die *wel* een `mat_id` heeft. Dit is de meest waarschijnlijke `mat_id` die de originele `$elimPoule` had.
+    *   **Fallback:** Als er geen enkele andere `Poule` met een `mat_id` in dat `blok_id` kan worden gevonden (dit zou betekenen dat *alle* poules in dat blok door de bug zijn getroffen, of dat het blok nooit een mat toegewezen had), dan is het moeilijk om de "oorspronkelijke" mat te bepalen. In dit geval kan:
+        *   Een `mat_id` willekeurig worden toegewezen (minst gewenst, want niet consistent).
+        *   Handmatige interventie nodig zijn via het zaaloverzicht om deze blokken alsnog toe te wijzen.
+        *   De `BlokMatVerdelingService::verdeel()` opnieuw worden aangeroepen voor die specifieke `wedstrijddag_id` om alle on-toegewezen blokken een mat te geven. **Let op:** dit kan de matverdeling voor *alle* poules op die wedstrijddag opnieuw shufflen, wat tegen het "mat blijft hetzelfde" principe ingaat voor de *niet-getroffen* poules. Dit zou alleen een optie zijn als er geen andere manier is.
+
+**Concreet Reparatie Script (voorbeeld in PHP/Laravel Artisan command):**
 
 ```php
-// app/Http/Controllers/Admin/ToernooiSettingsController.php
+namespace App\Console\Commands;
 
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\Toernooi;
-use Illuminate\Http\Request;
-
-class ToernooiSettingsController extends Controller
-{
-    /**
-     * Toont het formulier voor het bewerken van toernooi categorie-instellingen.
-     *
-     * @param int $toernooiId
-     * @return \Illuminate\View\View
-     */
-    public function showCategorySettingsForm(int $toernooiId)
-    {
-        $toernooi = Toernooi::findOrFail($toernooiId);
-
-        // Haal unieke categorie-sleutels op uit bestaande poules voor dit toernooi
-        $categoryKeys = $toernooi->getDistinctCategoryKeys();
-
-        // Als er nog geen poules/categorieën zijn, geef dan enkele standaard categorieën op
-        // In een echte applicatie komen deze mogelijk uit een config of een globale tabel.
-        if ($categoryKeys->isEmpty()) {
-            $categoryKeys = collect(['Senioren', 'U21', 'U18', 'U15', 'U13', 'Recreatief']);
-        }
-
-        // Bereid gegevens voor de view voor
-        $settings = [];
-        foreach ($categoryKeys as $key) {
-            $settings[$key] = [
-                'eind_optie' => $toernooi->getCategorySetting($key, 'eind_optie'),
-                'golden_score_duur' => $toernooi->getCategorySetting($key, 'golden_score_duur'),
-            ];
-        }
-
-        // Voorbeeld IJF defaults voor de UI (worden alleen voorgesteld als er nog geen instellingen zijn)
-        $ijfDefaults = [
-            'Senioren' => ['eind_optie' => 'golden_score', 'golden_score_duur' => null], // null = onbeperkt
-            'U21' => ['eind_optie' => 'golden_score', 'golden_score_duur' => 3],
-            'U18' => ['eind_optie' => 'golden_score', 'golden_score_duur' => 3],
-            'U15' => ['eind_optie' => 'golden_score', 'golden_score_duur' => 2],
-            'U13' => ['eind_optie' => 'hantei', 'golden_score_duur' => null],
-            'Recreatief' => ['eind_optie' => 'hikiwake', 'golden_score_duur' => null],
-        ];
-
-        return view('admin.toernooien.category_settings', [
-            'toernooi' => $toernooi,
-            'categoryKeys' => $categoryKeys,
-            'settings' => $settings,
-            'ijfDefaults' => $ijfDefaults, // Geef defaults door aan frontend voor initiële setup
-            'eindOptieOptions' => [ // Opties voor de dropdown
-                'golden_score' => 'Golden Score',
-                'hantei' => 'Hantei',
-                'hikiwake' => 'Gelijkspel (Hikiwake)',
-            ],
-        ]);
-    }
-
-    /**
-     * Slaat de toernooi categorie-instellingen op of werkt deze bij.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $toernooiId
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function updateCategorySettings(Request $request, int $toernooiId)
-    {
-        $toernooi = Toernooi::findOrFail($toernooiId);
-
-        $validatedData = $request->validate([
-            'category_settings' => 'array',
-            'category_settings.*.eind_optie' => 'nullable|in:golden_score,hantei,hikiwake',
-            'category_settings.*.golden_score_duur' => 'nullable|integer|min:0', // 0 of null voor onbeperkt
-        ]);
-
-        // Voeg de nieuwe instellingen samen met bestaande om niet-ingediende categorieën te behouden
-        $currentSettings = $toernooi->categorie_instellingen ?? [];
-        $newSettings = $validatedData['category_settings'] ?? [];
-
-        foreach ($newSettings as $categoryKey => $data) {
-            $currentSettings[$categoryKey] = [
-                'eind_optie' => $data['eind_optie'] ?? null,
-                // Als 'golden_score_duur' leeg is of 0, sla het op als null (onbeperkt)
-                'golden_score_duur' => isset($data['golden_score_duur']) && (int)$data['golden_score_duur'] > 0 ? (int)$data['golden_score_duur'] : null,
-            ];
-        }
-
-        $toernooi->update([
-            'categorie_instellingen' => $currentSettings,
-        ]);
-
-        return redirect()->back()->with('success', 'Categorie-instellingen succesvol opgeslagen.');
-    }
-}
-```
-
-**B. Routes: `routes/web.php` (of `routes/admin.php`)**
-
-```php
-// routes/web.php (of routes/admin.php)
-
-use App\Http\Controllers\Admin\ToernooiSettingsController;
-
-// Voorbeeld routes voor het admin paneel
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // ... bestaande admin routes
-
-    Route::get('toernooien/{toernooi}/settings/categories', [ToernooiSettingsController::class, 'showCategorySettingsForm'])
-        ->name('toernooien.settings.categories.show');
-    Route::put('toernooien/{toernooi}/settings/categories', [ToernooiSettingsController::class, 'updateCategorySettings'])
-        ->name('toernooien.settings.categories.update');
-});
-```
-
-**C. Blade View: `resources/views/admin/toernooien/category_settings.blade.php`**
-
-```blade
-{{-- resources/views/admin/toernooien/category_settings.blade.php --}}
-
-@extends('layouts.admin') {{-- Aanname: een admin layout --}}
-
-@section('content')
-    <div class="container">
-        <h1>Instellingen voor categorieën - {{ $toernooi->naam }}</h1>
-
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <form action="{{ route('admin.toernooien.settings.categories.update', $toernooi) }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            @foreach($categoryKeys as $categoryKey)
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h3 class="mb-0">Categorie: {{ $categoryKey }}</h3>
-                        <small class="text-muted">
-                            @php
-                                $currentEindOptie = $settings[$categoryKey]['eind_optie'] ?? null;
-                                $currentGoldenScoreDuur = $settings[$categoryKey]['golden_score_duur'] ?? null;
-
-                                // Pas IJF defaults toe als er nog geen instellingen zijn opgeslagen voor deze categorie
-                                if ($currentEindOptie === null && isset($ijfDefaults[$categoryKey])) {
-                                    $currentEindOptie = $ijfDefaults[$categoryKey]['eind_optie'];
-                                    $currentGoldenScoreDuur = $ijfDefaults[$categoryKey]['golden_score_duur'];
-                                } elseif ($currentEindOptie === null) {
-                                    // Default naar contractuele waarde als er geen IJF default of opgeslagen waarde is
-                                    $currentEindOptie = 'golden_score'; // Contractuele default
-                                }
-                                // De duur voor Golden Score is standaard onbeperkt (null) als niet specifiek ingesteld
-                                // De formulierinvoer handelt het weergeven van 'Onbeperkt' of '0' voor null af.
-                            @endphp
-                            Huidige instelling:
-                            @if ($currentEindOptie === 'golden_score')
-                                Golden Score (
-                                @if ($currentGoldenScoreDuur === null || $currentGoldenScoreDuur === 0)
-                                    Onbeperkt
-                                @else
-                                    {{ $currentGoldenScoreDuur }} min
-                                @endif
-                                )
-                            @elseif ($currentEindOptie === 'hantei')
-                                Hantei
-                            @elseif ($currentEindOptie === 'hikiwake')
-                                Gelijkspel (Hikiwake)
-                            @else
-                                Niet ingesteld (standaard: Golden Score Onbeperkt)
-                            @endif
-                        </small>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group row">
-                            <label for="eind_optie_{{ $categoryKey }}" class="col-sm-4 col-form-label">Einde optie:</label>
-                            <div class="col-sm-8">
-                                <select name="category_settings[{{ $categoryKey }}][eind_optie]" id="eind_optie_{{ $categoryKey }}" class="form-control" onchange="toggleGoldenScoreDuur('{{ $categoryKey }}')">
-                                    @foreach($eindOptieOptions as $value => $label)
-                                        <option value="{{ $value }}" {{ old("category_settings.$categoryKey.eind_optie", $currentEindOptie) == $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error("category_settings.$categoryKey.eind_optie")
-                                    <div class="text-danger mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-group row mt-3 golden-score-duur-group" id="golden_score_duur_group_{{ $categoryKey }}" style="{{ old("category_settings.$categoryKey.eind_optie", $currentEindOptie) == 'golden_score' ? '' : 'display: none;' }}">
-                            <label for="golden_score_duur_{{ $categoryKey }}" class="col-sm-4 col-form-label">Golden Score duur (minuten):</label>
-                            <div class="col-sm-8">
-                                <input type="number" name="category_settings[{{ $categoryKey }}][golden_score_duur]" id="golden_score_duur_{{ $categoryKey }}"
-                                       class="form-control" placeholder="0 voor onbeperkt" min="0"
-                                       value="{{ old("category_settings.$categoryKey.golden_score_duur", $currentGoldenScoreDuur) }}">
-                                <small class="form-text text-muted">Laat leeg of vul 0 in voor onbeperkte Golden Score duur.</small>
-                                @error("category_settings.$categoryKey.golden_score_duur")
-                                    <div class="text-danger mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-
-            <button type="submit" class="btn btn-primary">Instellingen Opslaan</button>
-        </form>
-    </div>
-
-    <script>
-        function toggleGoldenScoreDuur(categoryKey) {
-            const eindOptieSelect = document.getElementById(`eind_optie_${categoryKey}`);
-            const goldenScoreDuurGroup = document.getElementById(`golden_score_duur_group_${categoryKey}`);
-
-            if (eindOptieSelect && goldenScoreDuurGroup) {
-                if (eindOptieSelect.value === 'golden_score') {
-                    goldenScoreDuurGroup.style.display = 'flex'; // Of 'block', afhankelijk van je CSS
-                } else {
-                    goldenScoreDuurGroup.style.display = 'none';
-                }
-            }
-        }
-
-        // Initialiseer bij het laden van de pagina voor alle categorieën
-        document.addEventListener('DOMContentLoaded', function() {
-            @foreach($categoryKeys as $categoryKey)
-                toggleGoldenScoreDuur('{{ $categoryKey }}');
-            @endforeach
-        });
-    </script>
-@endsection
-```
-
-#### 5. Feature Tests: `tests/Feature/ScoreboardApiTest.php`
-
-Deze tests valideren de API-response van `/api/scoreboard/{toernooiId}/mat/{matId}/current-match` onder verschillende configuraties.
-
-```php
-// tests/Feature/ScoreboardApiTest.php
-
-<?php
-
-namespace Tests\Feature;
-
+use Illuminate\Console\Command;
 use App\Models\Poule;
-use App\Models\Toernooi;
-use App\Models\Wedstrijd;
-use App\Models\Deelnemer;
-use App\Models\Judoka;
-use App\Models\User; // Voor scheidsrechter
-use App\Models\Mat; // Voor mat
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Illuminate\Support\Facades\Log;
 
-class ScoreboardApiTest extends TestCase
+class FixNullMatIdsOnConvertedPoules extends Command
 {
-    use RefreshDatabase;
+    protected $signature = 'fix:poules-mat-ids {--wedstrijddag= : Specifieke wedstrijddag_id om te repareren}';
+    protected $description = 'Repairs mat_id for converted poules that have mat_id=NULL by inferring from other poules in the same block.';
 
-    protected function setUp(): void
+    public function handle()
     {
-        parent::setUp();
+        $this->info('Starting mat_id repair for converted poules...');
 
-        // Maak een gebruiker voor organisator en scheidsrechter
-        User::factory()->create(['id' => 1, 'name' => 'Test Organizer', 'email' => 'organizer@test.com']);
-        User::factory()->create(['id' => 2, 'name' => 'Test Referee', 'email' => 'referee@test.com']);
-    }
+        $query = Poule::whereNull('mat_id')
+                      ->whereIn('type', ['voorronde', 'kruisfinale']);
 
-    /**
-     * Helper functie om een toernooi en wedstrijd te creëren met optionele categorie-instellingen.
-     */
-    private function createTournamentAndMatch(string $categoryKey, ?array $categorySettings = null): Wedstrijd
-    {
-        $toernooi = Toernooi::factory()->create([
-            'organisator_id' => 1,
-            'categorie_instellingen' => $categorySettings,
-        ]);
-        $mat = Mat::factory()->create(['toernooi_id' => $toernooi->id]);
-        $poule = Poule::factory()->create([
-            'toernooi_id' => $toernooi->id,
-            'categorie_key' => $categoryKey,
-        ]);
-        $judoka1 = Judoka::factory()->create();
-        $judoka2 = Judoka::factory()->create();
-        $deelnemer1 = Deelnemer::factory()->create(['judoka_id' => $judoka1->id, 'poule_id' => $poule->id, 'toernooi_id' => $toernooi->id]);
-        $deelnemer2 = Deelnemer::factory()->create(['judoka_id' => $judoka2->id, 'poule_id' => $poule->id, 'toernooi_id' => $toernooi->id]);
+        if ($this->option('wedstrijddag')) {
+            $wedstrijddagId = $this->option('wedstrijddag');
+            $query->where('wedstrijddag_id', $wedstrijddagId);
+            $this->info("Filtering for wedstrijddag_id: {$wedstrijddagId}");
+        }
 
-        $wedstrijd = Wedstrijd::factory()->create([
-            'poule_id' => $poule->id,
-            'deelnemer1_id' => $deelnemer1->id,
-            'deelnemer2_id' => $deelnemer2->id,
-            'scheidsrechter_id' => 2,
-            'mat_id' => $mat->id,
-            'status' => 'gepland',
-            'volgorde' => 1,
-        ]);
+        $nullMatPoules = $query->get();
 
-        return $wedstrijd;
-    }
+        if ($nullMatPoules->isEmpty()) {
+            $this->info('No poules found with mat_id=NULL that are of type voorronde or kruisfinale.');
+            return 0;
+        }
 
-    /** @test */
-    public function it_returns_default_golden_score_and_null_duration_when_no_category_settings_exist()
-    {
-        $wedstrijd = $this->createTournamentAndMatch('Senioren'); // Geen categorie-instellingen meegegeven
+        $this->info("Found {$nullMatPoules->count()} poules with mat_id=NULL.");
 
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
+        $processedBloks = [];
 
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score',
-                         'golden_score_duur' => null, // null voor onbeperkt
-                     ]
-                 ]);
-    }
+        foreach ($nullMatPoules->groupBy(['wedstrijddag_id', 'blok_id']) as $wedstrijddagId => $blokGroups) {
+            foreach ($blokGroups as $blokId => $poulesInBlok) {
+                if (isset($processedBloks[$wedstrijddagId][$blokId])) {
+                    continue; // Already processed this block
+                }
 
-    /** @test */
-    public function it_returns_configured_golden_score_and_duration_for_a_category()
-    {
-        $categoryKey = 'U18';
-        $categorySettings = [
-            $categoryKey => [
-                'eind_optie' => 'golden_score',
-                'golden_score_duur' => 3, // 3 minuten
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
+                $this->line("Processing blok_id {$blokId} on wedstrijddag_id {$wedstrijddagId}...");
 
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
+                // Try to find a mat_id from another poule in the same block and wedstrijddag
+                $existingMatPouleInBlok = Poule::where('wedstrijddag_id', $wedstrijddagId)
+                                            ->where('blok_id', $blokId)
+                                            ->whereNotNull('mat_id')
+                                            ->first();
 
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score',
-                         'golden_score_duur' => 3,
-                     ]
-                 ]);
-    }
+                $matToAssign = null;
+                if ($existingMatPouleInBlok) {
+                    $matToAssign = $existingMatPouleInBlok->mat_id;
+                    $this->info("  Found mat_id {$matToAssign} from poule {$existingMatPouleInBlok->id} in the same block.");
+                } else {
+                    $this->warn("  Could not find any existing mat_id for blok_id {$blokId} on wedstrijddag_id {$wedstrijddagId}.");
+                    $this->warn("  Poule IDs affected in this block: " . $poulesInBlok->pluck('id')->implode(', '));
+                    Log::warning("Data repair: Blok {$blokId} on wedstrijddag {$wedstrijddagId} has no existing mat_id to infer from. Manual review needed.");
+                    // Skip this block for automatic repair, or implement fallback logic here
+                    continue;
+                }
 
-    /** @test */
-    public function it_returns_golden_score_with_null_duration_when_duration_is_set_to_0_or_null_in_settings()
-    {
-        $categoryKey = 'Senioren';
-        // Test met duur ingesteld op 0
-        $categorySettings = [
-            $categoryKey => [
-                'eind_optie' => 'golden_score',
-                'golden_score_duur' => 0, // 0 betekent ook onbeperkt
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
+                foreach ($poulesInBlok as $poule) {
+                    if ($poule->mat_id === null) { // Double check in case it was fixed by another poule in the loop
+                        $poule->mat_id = $matToAssign;
+                        $poule->save();
+                        $this->line("  Repaired poule {$poule->id} (type: {$poule->type}) to mat_id {$matToAssign}.");
+                        Log::info("Data repair: Repaired poule {$poule->id}, blok {$blokId}, assigned mat {$matToAssign}");
+                    }
+                }
+                $processedBloks[$wedstrijddagId][$blokId] = true;
+            }
+        }
 
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score',
-                         'golden_score_duur' => null, // Moet null zijn in output
-                     ]
-                 ]);
-
-        // Test met expliciet null in instellingen
-        $categorySettings = [
-            $categoryKey => [
-                'eind_optie' => 'golden_score',
-                'golden_score_duur' => null,
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
-
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score',
-                         'golden_score_duur' => null, // Moet null zijn in output
-                     ]
-                 ]);
-    }
-
-    /** @test */
-    public function it_returns_hantei_option_and_null_duration_when_configured()
-    {
-        $categoryKey = 'U13';
-        $categorySettings = [
-            $categoryKey => [
-                'eind_optie' => 'hantei',
-                // golden_score_duur is irrelevant en moet null zijn
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
-
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'hantei',
-                         'golden_score_duur' => null, // Moet altijd null zijn als niet golden_score
-                     ]
-                 ]);
-    }
-
-    /** @test */
-    public function it_returns_hikiwake_option_and_null_duration_when_configured()
-    {
-        $categoryKey = 'Recreatief';
-        $categorySettings = [
-            $categoryKey => [
-                'eind_optie' => 'hikiwake',
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
-
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'hikiwake',
-                         'golden_score_duur' => null, // Moet altijd null zijn als niet golden_score
-                     ]
-                 ]);
-    }
-
-    /** @test */
-    public function it_returns_default_golden_score_when_eind_optie_is_missing_for_category()
-    {
-        $categoryKey = 'Junioren';
-        $categorySettings = [
-            $categoryKey => [
-                // 'eind_optie' ontbreekt
-                'golden_score_duur' => 5, // Deze moet genegeerd worden omdat de default eind_optie 'golden_score' is, en de default duur daarvoor null is
-            ]
-        ];
-        $wedstrijd = $this->createTournamentAndMatch($categoryKey, $categorySettings);
-
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score', // Default toegepast
-                         'golden_score_duur' => null, // Default voor duur is null als niet expliciet ingesteld voor Golden Score
-                     ]
-                 ]);
-    }
-
-    /** @test */
-    public function it_handles_non_existent_category_key_gracefully_with_defaults()
-    {
-        $wedstrijd = $this->createTournamentAndMatch('NonExistentCategory'); // Categorie-sleutel bestaat niet in instellingen
-
-        $response = $this->getJson("/api/scoreboard/{$wedstrijd->poule->toernooi_id}/mat/{$wedstrijd->mat_id}/current-match");
-
-        $response->assertStatus(200)
-                 ->assertJson([
-                     'match' => [
-                         'eind_optie' => 'golden_score',
-                         'golden_score_duur' => null,
-                     ]
-                 ]);
+        $this->info('Mat_id repair completed.');
+        return 0;
     }
 }
 ```
+
+**Belangrijke overwegingen voor de reparatie:**
+
+*   **Test het script grondig op een staging-omgeving** voordat je het op productie draait.
+*   **Maak een database backup** voordat je de reparatie uitvoert.
+*   **Voeg logging toe** om te kunnen traceren welke poules zijn aangepast en welke blokken problemen opleverden.
+*   De genoemde `fixKruisfinaleMatten` is inderdaad niet geschikt voor `voorronde` poules. Het bovenstaande script pakt beide types aan.
+
+---
+
+### 3) Welke test(s)?
+
+Om deze bug en de fix te testen, zijn zowel unit- als feature/integratietests cruciaal.
+
+**Unit Test: `WedstrijddagController::zetOmNaarPoules()`**
+
+*   **Setup:**
+    *   Maak een mock `EliminatiePoule` object aan met een specifieke `id`, `blok_id`, `mat_id`, `wedstrijddag_id`, `categorie_id`.
+    *   Mock de `Poule::create()` methode om de argumenten die worden doorgegeven te inspecteren, in plaats van daadwerkelijk een database-entry te maken.
+*   **Actie:** Roep de `zetOmNaarPoules()` methode aan met de gemockte `$elimPoule`.
+*   **Asserties:**
+    *   Controleer of `Poule::create()` minstens één keer (voor de kruisfinale) en N keer (voor de voorrondes) wordt aangeroepen.
+    *   Voor elke aanroep van `Poule::create()`, assert dat de `mat_id` in de doorgegeven attributen exact overeenkomt met de `mat_id` van de originele gemockte `$elimPoule`.
+    *   Assert dat de `blok_id` ook correct wordt overgenomen.
+
+**Feature/Integratie Test: End-to-end scenario**
+
+*   **Setup:**
+    *   Creëer een toernooi, een wedstrijddag, een categorie van het type 'eliminatie'.
+    *   Maak een `EliminatiePoule` aan voor deze categorie.
+    *   Zorg dat deze `EliminatiePoule` een `mat_id` toegewezen krijgt via de `BlokMatVerdelingService` of een mock daarvan (simuleer het proces van matverdeling via het zaaloverzicht).
+    *   Log de `mat_id` van de `EliminatiePoule` voordat deze wordt omgezet.
+*   **Actie:**
+    *   Roep de functionaliteit aan die `zetOmNaarPoules()` triggert (bijv. via een HTTP-request naar de juiste endpoint, of door de methode direct aan te roepen in een test die ook de database gebruikt).
+    *   De originele `EliminatiePoule` wordt nu verwijderd, en nieuwe `voorronde` en `kruisfinale` poules worden aangemaakt.
+*   **Asserties:**
+    *   Controleer in de database of de `EliminatiePoule` inderdaad is verwijderd.
+    *   Haal de zojuist aangemaakte `voorronde` en `kruisfinale` poules op (bijv. door te filteren op `categorie_id` en `wedstrijddag_id` en de types `voorronde`/`kruisfinale`).
+    *   Assert dat al deze nieuwe poules de *exacte `mat_id`* hebben die de originele `EliminatiePoule` had.
+    *   **UI check (optioneel, maar goed voor bevestiging):** Als er een test-browser beschikbaar is (bijv. met Dusk), navigeer dan naar het zaaloverzicht en controleer of de nieuwe poules op de verwachte mat verschijnen.
+
+---
+
+### 4) Andere plekken met `blok_id` erven zonder `mat_id` (`PouleController` etc.)?
+
+Dit vereist een code-audit van alle plekken waar `Poule::create()` wordt aangeroepen, met speciale aandacht voor situaties waarin een nieuwe `Poule` wordt gemaakt op basis van een bestaande `Poule` of `Blok` die al een `mat_id` heeft.
+
+**Mogelijke plaatsen om te controleren:**
+
+*   **`PouleController.php`**: Als er routes zijn voor het handmatig aanmaken of dupliceren van poules.
+*   **Category creatie/update processen**: Als het aanmaken van een categorie direct leidt tot het aanmaken van standaard poules, en deze matten moeten erven van een hogere entiteit of alvast een mat-suggestie krijgen.
+*   **Migratiescripts**: Controleer oude migraties die poules aanmaken. Dit is minder waarschijnlijk een plek waar `mat_id` *geërfd* zou moeten worden, eerder een plek waar het aanvankelijk *niet* is ingesteld.
+*   **Andere conversie- of splitsingslogica**: Zijn er andere scenario's waarbij een bestaande `Poule` wordt getransformeerd of opgesplitst in nieuwe `Poule`s?
+
+**Algemeen principe:**
+Telkens wanneer een `Poule` wordt gecreëerd, moet overwogen worden:
+1.  Moet deze poule direct een `mat_id` hebben?
+2.  Wordt de `mat_id` geërfd van een oudere/hogere entiteit (zoals in dit geval)?
+3.  Wordt de `mat_id` later toegewezen door een service (zoals `BlokMatVerdelingService`)?
+
+Als de intentie is om de mat-toewijzing van een bron-entiteit te behouden, dan moet de `mat_id` actief worden meegenomen in de creatie van de nieuwe `Poule`. Zo niet, dan moet er een duidelijk proces zijn om de `mat_id` later correct toe te wijzen.
+
+Dit bugrapport identificeert een heel specifiek geval van erfenis tijdens een transformatie. Het is goed mogelijk dat dit de enige plek is waar dit probleem zich voordoet, maar een snelle search op `Poule::create` in combinatie met `blok_id` toewijzing kan geen kwaad.
+
+---
+
+Door deze stappen te volgen, zou de bug structureel opgelost moeten zijn, inclusief een strategie voor datareparatie en robuuste tests.

@@ -9,6 +9,35 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
+## Huidige status (14-06-2026)
+
+### Mat-toewijzing bij poule-conversie — OPGELOST (commit `18dfce34`, main)
+- **Bug:** afgeleide poules verloren hun mat. Bij omzetten eliminatie→poules
+  (`WedstrijddagController::zetOmNaarPoules`), poule→kruisfinale (`wijzigType`)
+  en handmatig poule toevoegen (`PouleController`) erfden de nieuwe poules
+  alleen `blok_id`, niet `mat_id`. MatAssigner draait alleen bij "Naar
+  Zaaloverzicht" → na-conversie poules kregen `mat_id=NULL` → op geen mat
+  zichtbaar. (Gevonden op staging test3: #9/#10 -70kg, #11 -80kg in blok 3.)
+- **Fix:** alle afgeleide-poule flows erven nu `mat_id` van de bronpoule. Tevens
+  pre-existing `UNIQUE(toernooi_id,nummer)`-crash in de `poules_kruisfinale`-tak
+  gefixt (`nummer` => `$maxNummer + $aantalPoules + 1`). Tests in
+  `WedstrijddagControllerCoverageTest` asserten de mat-erving. 105 controller-
+  tests groen. Doc: `docs/2-FEATURES/BLOKVERDELING.md` (sectie "Afgeleide poules
+  erven de mat").
+- **Data-reparatie staging:** #9/#10/#11 (test3, blok 83) → mat 90 gezet
+  (backup `voor-matfix-poules_2026-06-14_18-40-23`).
+- **TE DOEN:** code staat op **main**, nog NIET op staging/prod. PHP-only (geen
+  asset-rebuild nodig). Deploy via `git pull` in repo-pad. Prod-impact: elke
+  organisator die op de wedstrijddag eliminatie→poules omzet raakte poules van
+  de mat kwijt → prod-deploy aanbevolen.
+
+### AutoFix stale alerts opgeruimd (14-06)
+- Melding "AutoFix failed: _content.blade.php / Unclosed '(' does not match '}'"
+  bleek stale (13-06 ochtend, CSP-migratie liep nog; bron inmiddels gezond).
+  4 staging-alerts + 2 oude Ignition-alerts (staging+prod) op `resolved` gezet.
+  Open wens: AutoFix stale failed-alerts zelf laten auto-resolven (re-check vóór
+  high-severity alert vuurt) — nog te bouwen.
+
 ## Huidige status (13-06-2026)
 
 **ALLE feature-branches geconsolideerd naar `main` (00cc0c2a) + opgeruimd. Staging draait op main. Productie ongewijzigd.**
