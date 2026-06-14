@@ -132,6 +132,26 @@ Eliminatie poules hebben A-groep (hoofdboom) en B-groep (herkansing). De B-groep
 - Laatste blok = oudste/zwaarste categorieën
 - (Dit wordt al geregeld door de blokverdeling zelf)
 
+#### Afgeleide poules erven de mat (conversie op de wedstrijddag)
+
+Wanneer op de wedstrijddag een **bestaande** poule wordt omgezet of opgesplitst,
+erven de nieuwe poules zowel `blok_id` **als `mat_id`** van de bronpoule — de
+categorie blijft dus op dezelfde mat staan. De matverdeling (`MatAssigner`) draait
+namelijk eenmalig bij "Naar Zaaloverzicht"; poules die ná dat moment ontstaan
+krijgen geen automatische mat en zouden anders op géén mat verschijnen.
+
+Geldt voor alle afgeleide-poule flows:
+- **Eliminatie → poules** (`WedstrijddagController::zetOmNaarPoules`): de nieuwe
+  `voorronde`-poules én een eventuele `kruisfinale` erven `mat_id` van de
+  oorspronkelijke eliminatie-poule.
+- **Type wijzigen → kruisfinale** (`WedstrijddagController::wijzigType`): de
+  kruisfinale erft `mat_id` van de poule waarvoor hij wordt aangemaakt.
+- **Handmatig poule toevoegen** (`PouleController`): erft `mat_id` van een
+  bestaande poule in dezelfde leeftijdsklasse (zelfde categorie = zelfde mat).
+
+`b_mat_id` is hierbij niet nodig: voorronde/kruisfinale draaien op één mat (alleen
+eliminatie-poules gebruiken de A/B-splitsing hierboven).
+
 #### Poule Weergave Volgorde (Wedstrijddag)
 
 **Binnen een blok:** Poules worden gesorteerd van **licht naar zwaar** (makkelijker te vinden voor ouders/coaches).

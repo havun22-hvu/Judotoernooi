@@ -229,6 +229,16 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $response->assertJson(['success' => true]);
         // Original elimination poule should be deleted
         $this->assertDatabaseMissing('poules', ['id' => $elimPoule->id]);
+
+        // Regression: new voorronde poules must inherit the mat of the original
+        // eliminatie poule, otherwise they appear on no mat in the zaaloverzicht.
+        $nieuwePoules = Poule::where('toernooi_id', $this->toernooi->id)
+            ->where('type', 'voorronde')->get();
+        $this->assertGreaterThan(0, $nieuwePoules->count());
+        foreach ($nieuwePoules as $p) {
+            $this->assertEquals($mat->id, $p->mat_id, 'Voorronde-poule moet de mat erven van de eliminatie-poule');
+            $this->assertEquals($blok->id, $p->blok_id);
+        }
     }
 
     #[Test]
@@ -257,13 +267,18 @@ class WedstrijddagControllerCoverageTest extends TestCase
             'systeem' => 'poules_kruisfinale',
         ]);
         $response->assertJson(['success' => true]);
-        // Should have created kruisfinale
+        // Should have created kruisfinale — and it must inherit the mat (regression)
         $this->assertDatabaseHas('poules', [
             'toernooi_id' => $this->toernooi->id,
             'type' => 'kruisfinale',
             'leeftijdsklasse' => "mini's",
             'gewichtsklasse' => '-30',
+            'mat_id' => $mat->id,
         ]);
+        // Voorronde poules too
+        foreach (Poule::where('toernooi_id', $this->toernooi->id)->where('type', 'voorronde')->get() as $p) {
+            $this->assertEquals($mat->id, $p->mat_id, 'Voorronde-poule moet de mat erven van de eliminatie-poule');
+        }
     }
 
     #[Test]

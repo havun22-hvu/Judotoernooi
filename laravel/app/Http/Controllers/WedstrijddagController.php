@@ -547,6 +547,9 @@ class WedstrijddagController extends Controller
             $poule = Poule::create([
                 'toernooi_id' => $toernooi->id,
                 'blok_id' => $elimPoule->blok_id,
+                // Erf mat van de bronpoule: matverdeling draait alleen bij "Naar
+                // Zaaloverzicht", dus na-conversie poules zouden anders matloos zijn.
+                'mat_id' => $elimPoule->mat_id,
                 'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
                 'gewichtsklasse' => $elimPoule->gewichtsklasse,
                 'nummer' => $nieuweNummer,
@@ -599,9 +602,14 @@ class WedstrijddagController extends Controller
             Poule::create([
                 'toernooi_id' => $toernooi->id,
                 'blok_id' => $elimPoule->blok_id,
+                // Erf mat van de bronpoule: matverdeling draait alleen bij "Naar
+                // Zaaloverzicht", dus na-conversie poules zouden anders matloos zijn.
+                'mat_id' => $elimPoule->mat_id,
                 'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
                 'gewichtsklasse' => $elimPoule->gewichtsklasse,
-                'nummer' => $aantalPoules + 1,
+                // Vervolg op de voorronde-nummers ($maxNummer + 1..$aantalPoules),
+                // anders botst de kruisfinale op de UNIQUE (toernooi_id, nummer).
+                'nummer' => $maxNummer + $aantalPoules + 1,
                 'titel' => $elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse . ' Kruisfinale',
                 'type' => 'kruisfinale',
                 'aantal_judokas' => min($aantalPoules * 2, $aantalJudokas), // Top 2 from each poule
@@ -733,6 +741,8 @@ class WedstrijddagController extends Controller
                 'kruisfinale_plaatsen' => 2,
                 'categorie_key' => $poule->categorie_key,
                 'blok_id' => $poule->blok_id,
+                // Erf mat van de bronpoule (zelfde categorie = zelfde mat)
+                'mat_id' => $poule->mat_id,
             ]);
 
             return response()->json([

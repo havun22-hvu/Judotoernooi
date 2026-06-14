@@ -190,6 +190,9 @@ class PouleController extends Controller
         $poule = $toernooi->poules()->create([
             'nummer' => $nieuweNummer,
             'blok_id' => $blokId,
+            // Erf mat van een bestaande poule in dezelfde categorie, anders verschijnt
+            // de poule op geen enkele mat (matverdeling draait niet opnieuw).
+            'mat_id' => $existingPoule?->mat_id,
             'categorie_key' => $categorieKey,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $gewichtsklasse,
