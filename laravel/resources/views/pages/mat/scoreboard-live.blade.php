@@ -725,6 +725,23 @@
             ipponName: document.getElementById('ippon-name'),
         };
 
+        // Compact round label: elimination rounds → "1/16 finale" etc. (saves space).
+        // Mirrors the JudoScoreBoard app util. Separator may be space or underscore.
+        function formatRonde(ronde) {
+            if (!ronde) return '';
+            var r = String(ronde).trim();
+            var map = [
+                [/\bzestiende[\s_]*finale\b/i, '1/16 finale'],
+                [/\bachtste[\s_]*finale\b/i, '1/8 finale'],
+                [/\bkwart[\s_]*finale\b/i, '1/4 finale'],
+                [/\bhalve[\s_]*finale\b/i, '1/2 finale'],
+            ];
+            for (var i = 0; i < map.length; i++) {
+                if (map[i][0].test(r)) return map[i][1];
+            }
+            return r.replace(/_/g, ' ');
+        }
+
         function showAwaseteWarning() {
             els.awaseteWarning.classList.add('active');
             if (window.awaseteAudio) window.awaseteAudio.play();
@@ -746,7 +763,7 @@
 
         // Load initial match data
         if (initialMatch) {
-            els.headerPoule.textContent = [initialMatch.poule_naam, initialMatch.ronde ? `Ronde ${initialMatch.ronde}` : ''].filter(Boolean).join(' · ');
+            els.headerPoule.textContent = [initialMatch.poule_naam, formatRonde(initialMatch.ronde)].filter(Boolean).join(' · ');
             document.getElementById('wit-naam').textContent = initialMatch.judoka_wit?.naam || 'WIT';
             document.getElementById('wit-club').textContent = initialMatch.judoka_wit?.club || '';
             document.getElementById('blauw-naam').textContent = initialMatch.judoka_blauw?.naam || 'BLAUW';
@@ -925,7 +942,7 @@
 
         function loadMatch(data, removeWinnerOverlay) {
             if (removeWinnerOverlay) els.winnerOverlay.classList.remove('active');
-            els.headerPoule.textContent = [data.poule_naam, data.ronde ? `Ronde ${data.ronde}` : ''].filter(Boolean).join(' · ');
+            els.headerPoule.textContent = [data.poule_naam, formatRonde(data.ronde)].filter(Boolean).join(' · ');
 
             document.getElementById('wit-naam').textContent = data.judoka_wit?.naam || 'WIT';
             document.getElementById('wit-club').textContent = data.judoka_wit?.club || '';
