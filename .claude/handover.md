@@ -30,12 +30,11 @@ Lokaal + origin: alleen `main`. Staging hard-gereset naar origin/main (oude loka
 - **Bug:** de #Nrs-knop (slotnummers tonen) deed niets. Oorzaak: `@click="debugSlots = !debugSlots; ..."` is een **cross-scope assignment** (debugSlots op hoofd-component, knop in `bracketTabs` child-scope) → werkt niet onder `@alpinejs/csp`. Zie [[csp-alpine-gotchas]].
 - **Fix:** `toggleDebugSlots(pouleId, groep)` method op de hoofd-component (`this` = plain JS) + `@click` roept die aan. Herlaad-knop werkte al (pure call).
 - **Admin-gate:** #Nrs nu achter `@if($isAdmin)` — `interface-admin` geeft `isAdmin=true`, `interface` (vrijwilliger) `false`. Alleen beheerder ziet de knop.
-- **STAAT OP STAGING (`8d0ea7fe`), NOG NIET OP PROD.**
+- **LIVE OP PROD (14-06-2026).** Prod gepulld naar `a6285035` (backup `/root/backups/judo_toernooi_pre-nrsfix_20260614-085757.sql.gz`); `git pull` + cache-optimize (geen composer/migrate). Geverifieerd: homepage/login 200, verse bundle `app-CmNiIFXc.css`, geen errors. Staging + prod + main nu allemaal `a6285035`.
 
 **TE DOEN (open):**
-1. **Prod-deploy van de #Nrs-fix + verse CSS-bundle** (`app-CmNiIFXc.css`). Prod staat op `6492c2e6` (mist commits `713834d8`..`8d0ea7fe`). Zelfde procedure als 13-06 maar zonder composer/migrate nodig (geen dep/DB-wijziging) — `git pull` + `optimize` volstaat. Backup is goedkoop, dus toch even maken.
-2. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
-3. **Let op bij elke deploy:** build-assets (`laravel/public/build/`) zijn **gecommit** en worden via `git pull` uitgerold (servers bouwen niet). Na blade/JS-wijzigingen die Tailwind-output raken: `npm run build` + de assets meecommitten, anders serveren de servers stale CSS/JS.
+1. Staging `npm ci` ontbreekt `vite-plugin-manifest-sri` — niet blokkerend (staging serveert gecommitte build), maar verse builds op staging falen tot `npm ci`.
+2. **Let op bij elke deploy:** build-assets (`laravel/public/build/`) zijn **gecommit** en worden via `git pull` uitgerold (servers bouwen niet). Na blade/JS-wijzigingen die Tailwind-output raken: `npm run build` + de assets meecommitten, anders serveren de servers stale CSS/JS.
 
 ### LCD / TV-URLs — OPGELOST (13-06-2026)
 - **`havun.nl/tv/{code}` 404 gefixt.** Root-cause: nginx op havun.nl had alleen `location = /tv` (exact-match) → `/tv/JTCI` viel door naar de Node-proxy → 404. Toegevoegd: regex-redirects `^/tv/(.+)$` → `judotournament.org/tv/$1` + `^/tvs/(.+)$` → staging. Getest (301 ✅), nginx herladen. Config: `/etc/nginx/sites-enabled/havun.nl` (backup in `/root/havun.nl.bak*`).
