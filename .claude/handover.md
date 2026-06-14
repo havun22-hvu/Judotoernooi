@@ -26,10 +26,10 @@ last_updated: 2026-06-14
   erven de mat").
 - **Data-reparatie staging:** #9/#10/#11 (test3, blok 83) → mat 90 gezet
   (backup `voor-matfix-poules_2026-06-14_18-40-23`).
-- **TE DOEN:** code staat op **main**, nog NIET op staging/prod. PHP-only (geen
-  asset-rebuild nodig). Deploy via `git pull` in repo-pad. Prod-impact: elke
-  organisator die op de wedstrijddag eliminatie→poules omzet raakte poules van
-  de mat kwijt → prod-deploy aanbevolen.
+- **GEDEPLOYED (14-06):** staging + productie beide op `9100ee0f` (ff-pull +
+  `optimize:clear` + `queue:restart`). PHP-only, geen migrations/composer/assets.
+  Prod-backup: `judo_toernooi_voor-matfix-deploy_2026-06-14_18-51-30.sql.gz`.
+  Geverifieerd: fix-code aanwezig, home/login 200, geen deploy-errors.
 
 ### AutoFix stale alerts opgeruimd (14-06)
 - Melding "AutoFix failed: _content.blade.php / Unclosed '(' does not match '}'"
