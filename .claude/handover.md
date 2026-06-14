@@ -11,6 +11,25 @@ last_updated: 2026-06-14
 
 ## Huidige status (14-06-2026)
 
+### Kleurbeurt bij poule/groep-verplaatsing — OPGELOST (commit `c8b8fe13`, main)
+- **Wens Henk:** verplaats je een poule/groep naar een andere mat, dan blijft de
+  **groene** kleurbeurt op de oude mat staan (lopende partij maakt af; scorebord +
+  LCD blijven 'm tonen). Alleen geel/blauw vervallen (met doorschuiving). Niet
+  gestart? Jury zet groen handmatig uit (knop vraagt al bevestiging + notificeert).
+- **Bug:** `Mat::resetWedstrijdSelectieVoorPoule` reset ook **groen** (in DB) zonder
+  de schermen te notificeren → DB en LCD liepen uiteen. En het was niet groep-
+  bewust: groep B verplaatsen wiste groep A's kleur (zelfde `poule_id`).
+- **Fix:** methode laat groen staan, reset alleen geel/blauw, en is nu groep-bewust
+  (`resetWedstrijdSelectieVoorPoule($pouleId, $groep)`). `verplaatsPoule` geeft
+  `$groep` mee. Uitslag landt sowieso op expliciet `wedstrijd_id` (ScoreboardController),
+  dus data klopt ongeacht mat. 5 unit-tests (groen-blijft + groep-A/B), 69 raakvlak-
+  tests groen. Docs: `MAT-WEDSTRIJD-SELECTIE.md` §"Poule verplaatst".
+- **Onderzocht (belangrijk voor context):** `match.start` wordt alleen gebroadcast,
+  niet opgeslagen → systeem weet niet of partij gestart is → daarom mens-in-de-loop
+  (waarschuwing) i.p.v. auto-detectie. Verplaatsen broadcast (nog) niet; geel/blauw-
+  refresh op andere jury-schermen is een bekend, klein, bestaand gat (niet in scope).
+- **TE DOEN:** staat op **main**, nog niet op staging/prod. PHP-only.
+
 ### Mat-toewijzing bij poule-conversie — OPGELOST (commit `18dfce34`, main)
 - **Bug:** afgeleide poules verloren hun mat. Bij omzetten eliminatie→poules
   (`WedstrijddagController::zetOmNaarPoules`), poule→kruisfinale (`wijzigType`)
