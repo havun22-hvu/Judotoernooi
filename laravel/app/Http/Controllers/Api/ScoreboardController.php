@@ -274,7 +274,7 @@ class ScoreboardController extends Controller
     public function event(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'event' => 'required|string|in:match.start,timer.start,timer.stop,timer.reset,score.update,osaekomi.start,osaekomi.stop,osaekomi.warning,match.end',
+            'event' => 'required|string|in:match.start,timer.start,timer.stop,timer.reset,score.update,osaekomi.start,osaekomi.stop,osaekomi.warning,osaekomi.ippon,match.end',
         ]);
 
         // Allow any additional data alongside the event type

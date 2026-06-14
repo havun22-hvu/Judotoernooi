@@ -383,6 +383,26 @@
             0%, 100% { background: #DC2626; opacity: 1; }
             50% { background: #7F1D1D; opacity: 0.82; }
         }
+        /* IPPON indicator — osaekomi reached an ippon-deciding point (referee signs) */
+        .ippon-banner {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+            flex-direction: column;
+            align-items: center;
+            padding: 3vh 7vw;
+            background: #DC2626;
+            color: #fff;
+            border: 0.6vh solid #fff;
+            border-radius: 2vh;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+            animation: awasete-blink 0.6s steps(1) infinite;
+        }
+        .ippon-banner.active { display: flex; }
+        .ippon-banner .ippon-word { font-weight: 900; font-size: clamp(48px, 16vh, 220px); letter-spacing: 0.06em; line-height: 1; }
+        .ippon-banner .ippon-name { font-weight: 700; font-size: clamp(18px, 3.4vh, 48px); margin-top: 1vh; }
         /* Per-device sound settings (localStorage) */
         .snd-gear {
             position: fixed; bottom: 10px; right: 10px; z-index: 60;
@@ -528,6 +548,12 @@
             <span>⚠ 2e WAZA-ARI — IPPON?</span>
             <span class="awasete-time" id="awasete-time">00</span>
             <span>⚠</span>
+        </div>
+
+        {{-- IPPON indicator — osaekomi reached an ippon-deciding point (app never auto-scores) --}}
+        <div class="ippon-banner" id="ippon-banner">
+            <span class="ippon-word">IPPON</span>
+            <span class="ippon-name" id="ippon-name"></span>
         </div>
 
         {{-- Per-device sound settings for the awasete warning --}}
@@ -695,6 +721,8 @@
             headerPoule: document.getElementById('header-poule'),
             awaseteWarning: document.getElementById('awasete-warning'),
             awaseteTime: document.getElementById('awasete-time'),
+            ipponBanner: document.getElementById('ippon-banner'),
+            ipponName: document.getElementById('ippon-name'),
         };
 
         function showAwaseteWarning() {
@@ -703,6 +731,17 @@
         }
         function hideAwaseteWarning() {
             els.awaseteWarning.classList.remove('active');
+        }
+        function showIppon(side) {
+            var nameEl = side === 'blauw'
+                ? document.getElementById('blauw-naam')
+                : document.getElementById('wit-naam');
+            els.ipponName.textContent = nameEl ? nameEl.textContent : (side ? side.toUpperCase() : '');
+            els.ipponBanner.classList.add('active');
+            if (window.awaseteAudio) window.awaseteAudio.play();
+        }
+        function hideIppon() {
+            els.ipponBanner.classList.remove('active');
         }
 
         // Load initial match data
@@ -938,6 +977,7 @@
                     timeRemaining = matchDuration;
                     osaekomiActive = false;
                     clearOsaekomiState();
+                    hideIppon();
                     els.winnerOverlay.classList.remove('active');
                     updateTimerDisplay();
                     break;
@@ -952,6 +992,7 @@
 
                 case 'osaekomi.start':
                     clearOsaekomiState();
+                    hideIppon();
                     osaekomiActive = true;
                     osaekomiJudoka = data.judoka;
                     osaekomiStartedAt = performance.now();
@@ -987,12 +1028,25 @@
                     }
                     break;
 
+                case 'osaekomi.ippon':
+                    // Osaekomi reached an ippon-deciding point — show a clear IPPON for the
+                    // referee. Persistent: NOT cleared by osaekomi.stop (I-threshold stops the
+                    // hold). The app sends active:false on award / release / reset.
+                    if (data.active) {
+                        showIppon(data.judoka);
+                    } else {
+                        hideIppon();
+                    }
+                    break;
+
                 case 'match.end':
                     isRunning = false;
                     if (timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
                     osaekomiActive = false;
                     if (osaekomiAnimFrame) cancelAnimationFrame(osaekomiAnimFrame);
                     clearOsaekomiState();
+                    hideAwaseteWarning();
+                    hideIppon();
 
                     const winnerSide = data.winner;
                     const nameEl = winnerSide === 'blauw'

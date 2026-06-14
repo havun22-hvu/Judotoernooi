@@ -420,6 +420,23 @@ class ApiControllersCoverageTest extends TestCase
     }
 
     #[Test]
+    public function scoreboard_event_relays_osaekomi_ippon(): void
+    {
+        $setup = $this->createScoreboardSetup();
+
+        $response = $this->postJson('/api/scoreboard/event', [
+            'event' => 'osaekomi.ippon',
+            'judoka' => 'blauw',
+            'active' => true,
+        ], [
+            'Authorization' => "Bearer {$setup['apiToken']}",
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonFragment(['success' => true]);
+    }
+
+    #[Test]
     public function scoreboard_event_rejects_invalid_event_type(): void
     {
         $setup = $this->createScoreboardSetup();
