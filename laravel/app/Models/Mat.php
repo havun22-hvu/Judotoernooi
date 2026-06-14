@@ -58,50 +58,47 @@ class Mat extends Model
     }
 
     /**
-     * Reset wedstrijd selectie als de wedstrijd van een specifieke poule is
-     * Inclusief doorschuiving: als geel reset → blauw wordt geel
+     * Pas de kleurbeurten aan wanneer een poule/groep naar een ANDERE mat wordt
+     * verplaatst.
+     *
+     * GROEN (actieve wedstrijd) blijft altijd staan: een lopende — of door de
+     * jury geselecteerde — partij maakt af op deze mat, en scorebord + LCD
+     * blijven 'm tonen. Was de partij nog niet gestart, dan zet de jury groen
+     * handmatig uit (die knop vraagt bevestiging én notificeert app + LCD).
+     * Alleen GEEL/BLAUW van de vertrokken poule/groep vervallen, met doorschuiving
+     * (blauw → geel).
+     *
+     * Groep-bewust: bij een eliminatie A/B-split raakt het verplaatsen van groep B
+     * de kleurbeurt van groep A (zelfde poule_id) niet.
      */
-    public function resetWedstrijdSelectieVoorPoule(int $pouleId): void
+    public function resetWedstrijdSelectieVoorPoule(int $pouleId, ?string $groep = null): void
     {
+        $hoortBijVerplaatsing = function (?int $wedstrijdId) use ($pouleId, $groep): bool {
+            if (!$wedstrijdId) {
+                return false;
+            }
+            $wedstrijd = Wedstrijd::find($wedstrijdId);
+            if (!$wedstrijd || $wedstrijd->poule_id !== $pouleId) {
+                return false;
+            }
+            // Groep null = reguliere poule (geen A/B) → alleen op poule matchen.
+            return $groep === null || $wedstrijd->groep === $groep;
+        };
+
+        $resetGeel = $hoortBijVerplaatsing($this->volgende_wedstrijd_id);
+        $resetBlauw = $hoortBijVerplaatsing($this->gereedmaken_wedstrijd_id);
+
         $updates = [];
-        $resetGroen = false;
-        $resetGeel = false;
-        $resetBlauw = false;
-
-        // Check welke kleuren gereset moeten worden
-        if ($this->actieve_wedstrijd_id) {
-            $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
-            if ($actieve && $actieve->poule_id === $pouleId) {
-                $resetGroen = true;
-            }
-        }
-
-        if ($this->volgende_wedstrijd_id) {
-            $volgende = Wedstrijd::find($this->volgende_wedstrijd_id);
-            if ($volgende && $volgende->poule_id === $pouleId) {
-                $resetGeel = true;
-            }
-        }
-
-        if ($this->gereedmaken_wedstrijd_id) {
-            $gereedmaken = Wedstrijd::find($this->gereedmaken_wedstrijd_id);
-            if ($gereedmaken && $gereedmaken->poule_id === $pouleId) {
-                $resetBlauw = true;
-            }
-        }
-
-        // Doorschuiving toepassen
-        if ($resetGroen) {
-            // Groen reset: geel → groen, blauw → geel
-            $updates['actieve_wedstrijd_id'] = $this->volgende_wedstrijd_id;
-            $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
+        if ($resetGeel && $resetBlauw) {
+            // Beide horen bij de vertrokken groep → beide vervallen.
+            $updates['volgende_wedstrijd_id'] = null;
             $updates['gereedmaken_wedstrijd_id'] = null;
         } elseif ($resetGeel) {
-            // Geel reset: blauw → geel
+            // Geel weg → blauw (blijft bij een andere groep) schuift door naar geel.
             $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
             $updates['gereedmaken_wedstrijd_id'] = null;
         } elseif ($resetBlauw) {
-            // Blauw reset: geen doorschuiving
+            // Blauw weg → geen doorschuiving.
             $updates['gereedmaken_wedstrijd_id'] = null;
         }
 

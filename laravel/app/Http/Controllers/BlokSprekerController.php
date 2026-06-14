@@ -427,12 +427,13 @@ class BlokSprekerController extends Controller
             $updateField = 'mat_id';
         }
 
-        // Reset geel (volgende_wedstrijd) op oude mat als het een wedstrijd van deze poule was
-        // Groen blijft staan - mat-jury moet handmatig stoppen
+        // Groen blijft op de oude mat (lopende partij maakt af; niet gestart? jury
+        // zet 'm handmatig uit). Alleen geel/blauw van de vertrokken groep vervallen.
+        // Groep-bewust: groep B verplaatsen laat groep A's kleurbeurt ongemoeid.
         if ($oudeMatId && $oudeMatId != $nieuweMatId) {
             $oudeMat = Mat::find($oudeMatId);
             if ($oudeMat) {
-                $oudeMat->resetWedstrijdSelectieVoorPoule($poule->id);
+                $oudeMat->resetWedstrijdSelectieVoorPoule($poule->id, $groep);
             }
         }
 

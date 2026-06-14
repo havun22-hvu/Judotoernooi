@@ -123,12 +123,17 @@ class MatAndConcernsCoverageTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function reset_selectie_resets_groen_and_shifts_geel_to_groen(): void
+    public function reset_selectie_laat_groen_van_verplaatste_poule_staan(): void
     {
+        // Groen blijft áltijd staan bij verplaatsing — ook al is het deze poule.
         $s = $this->maakSetup();
-        $w1 = $this->maakWedstrijd($s['poule']); // groen - same poule
-        $w2 = $this->maakWedstrijd($s['poule']); // geel
-        $w3 = $this->maakWedstrijd($s['poule']); // blauw
+        $otherPoule = Poule::factory()->create([
+            'toernooi_id' => $s['toernooi']->id,
+            'mat_id' => $s['mat']->id,
+        ]);
+        $w1 = $this->maakWedstrijd($s['poule']); // groen - verplaatste poule
+        $w2 = $this->maakWedstrijd($otherPoule); // geel - andere poule (blijft)
+        $w3 = $this->maakWedstrijd($otherPoule); // blauw - andere poule (blijft)
 
         $s['mat']->update([
             'actieve_wedstrijd_id' => $w1->id,
@@ -140,24 +145,24 @@ class MatAndConcernsCoverageTest extends TestCase
         $s['mat']->resetWedstrijdSelectieVoorPoule($s['poule']->id);
         $s['mat']->refresh();
 
-        // Groen reset: geel -> groen, blauw -> geel, blauw -> null
-        $this->assertEquals($w2->id, $s['mat']->actieve_wedstrijd_id);
-        $this->assertEquals($w3->id, $s['mat']->volgende_wedstrijd_id);
-        $this->assertNull($s['mat']->gereedmaken_wedstrijd_id);
+        // Niets verandert: groen blijft, andere poule ongemoeid.
+        $this->assertEquals($w1->id, $s['mat']->actieve_wedstrijd_id);
+        $this->assertEquals($w2->id, $s['mat']->volgende_wedstrijd_id);
+        $this->assertEquals($w3->id, $s['mat']->gereedmaken_wedstrijd_id);
     }
 
     #[Test]
     public function reset_selectie_resets_geel_and_shifts_blauw_to_geel(): void
     {
         $s = $this->maakSetup();
-        // Create a second poule for groen (different poule)
+        // Create a second poule for groen + blauw (different poule, blijven staan)
         $otherPoule = Poule::factory()->create([
             'toernooi_id' => $s['toernooi']->id,
             'mat_id' => $s['mat']->id,
         ]);
-        $w1 = $this->maakWedstrijd($otherPoule); // groen - different poule
-        $w2 = $this->maakWedstrijd($s['poule']);  // geel - target poule
-        $w3 = $this->maakWedstrijd($s['poule']);  // blauw
+        $w1 = $this->maakWedstrijd($otherPoule); // groen - andere poule (blijft)
+        $w2 = $this->maakWedstrijd($s['poule']);  // geel - verplaatste poule (vervalt)
+        $w3 = $this->maakWedstrijd($otherPoule);  // blauw - andere poule
 
         $s['mat']->update([
             'actieve_wedstrijd_id' => $w1->id,
@@ -169,9 +174,35 @@ class MatAndConcernsCoverageTest extends TestCase
         $s['mat']->resetWedstrijdSelectieVoorPoule($s['poule']->id);
         $s['mat']->refresh();
 
-        // Groen stays, geel reset: blauw -> geel, blauw -> null
+        // Groen blijft, geel vervalt: blauw (andere poule) → geel, blauw → null
         $this->assertEquals($w1->id, $s['mat']->actieve_wedstrijd_id);
         $this->assertEquals($w3->id, $s['mat']->volgende_wedstrijd_id);
+        $this->assertNull($s['mat']->gereedmaken_wedstrijd_id);
+    }
+
+    #[Test]
+    public function reset_selectie_is_groep_bewust_bij_ab_split(): void
+    {
+        // Verplaats je groep B, dan blijven de kleurbeurten van groep A ongemoeid,
+        // ook al delen ze hetzelfde poule_id (eliminatie A/B-split).
+        $s = $this->maakSetup();
+        $wA1 = $this->maakWedstrijd($s['poule'], ['groep' => 'A']); // groen - groep A
+        $wA2 = $this->maakWedstrijd($s['poule'], ['groep' => 'A']); // geel - groep A
+        $wB1 = $this->maakWedstrijd($s['poule'], ['groep' => 'B']); // blauw - groep B
+
+        $s['mat']->update([
+            'actieve_wedstrijd_id' => $wA1->id,
+            'volgende_wedstrijd_id' => $wA2->id,
+            'gereedmaken_wedstrijd_id' => $wB1->id,
+        ]);
+        $s['mat']->refresh();
+
+        $s['mat']->resetWedstrijdSelectieVoorPoule($s['poule']->id, 'B');
+        $s['mat']->refresh();
+
+        // Alleen groep B (blauw) vervalt; groep A's groen + geel blijven.
+        $this->assertEquals($wA1->id, $s['mat']->actieve_wedstrijd_id);
+        $this->assertEquals($wA2->id, $s['mat']->volgende_wedstrijd_id);
         $this->assertNull($s['mat']->gereedmaken_wedstrijd_id);
     }
 
