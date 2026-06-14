@@ -28,7 +28,10 @@ last_updated: 2026-06-14
   niet opgeslagen → systeem weet niet of partij gestart is → daarom mens-in-de-loop
   (waarschuwing) i.p.v. auto-detectie. Verplaatsen broadcast (nog) niet; geel/blauw-
   refresh op andere jury-schermen is een bekend, klein, bestaand gat (niet in scope).
-- **TE DOEN:** staat op **main**, nog niet op staging/prod. PHP-only.
+- **GEDEPLOYED (14-06):** staging + productie beide op `e474a2b0` (ff-pull +
+  `optimize:clear` + `queue:restart`). PHP-only. Prod-backup
+  `judo_toernooi_voor-kleurbeurt-fix_2026-06-14_21-02-28.sql.gz`. Geverifieerd:
+  fix-code aanwezig, home/login 200, geen deploy-errors.
 
 ### Mat-toewijzing bij poule-conversie — OPGELOST (commit `18dfce34`, main)
 - **Bug:** afgeleide poules verloren hun mat. Bij omzetten eliminatie→poules
