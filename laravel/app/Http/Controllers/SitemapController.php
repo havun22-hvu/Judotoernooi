@@ -11,7 +11,12 @@ class SitemapController extends Controller
     {
         $appUrl = rtrim(config('app.url'), '/');
         $locales = config('app.available_locales', ['nl', 'en']);
+        $defaultLocale = config('app.locale', 'nl');
         $now = now()->toW3cString();
+
+        // hreflang URL per taal — consistent met de canonical-strategie in <x-seo />:
+        // default-taal is param-loos, overige talen krijgen ?locale=xx.
+        $localeUrl = fn (string $url, string $locale) => $locale === $defaultLocale ? $url : $url . '?locale=' . $locale;
 
         // Static pages with lastmod
         $staticPages = [
@@ -23,11 +28,14 @@ class SitemapController extends Controller
             ['url' => '/disclaimer', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => '2026-01-01T00:00:00+01:00'],
         ];
 
-        // Active public tournaments (not closed, with a date in the future or recent past)
+        // Active public tournaments (not closed, with a date in the future or recent past).
+        // Only tournaments with participants — empty/test tournaments are thin content
+        // and must not be indexed (mirrors the noindex on the public tournament page).
         $toernooien = Toernooi::with('organisator')
             ->where('datum', '>=', now()->subMonths(3))
             ->whereNull('afgesloten_at')
             ->whereHas('organisator')
+            ->whereHas('judokas')
             ->get();
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
@@ -39,7 +47,7 @@ class SitemapController extends Controller
             $xml .= '  <url>' . "\n";
             $xml .= '    <loc>' . $appUrl . $page['url'] . '</loc>' . "\n";
             foreach ($locales as $locale) {
-                $xml .= '    <xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . $appUrl . $page['url'] . '?locale=' . $locale . '" />' . "\n";
+                $xml .= '    <xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . $localeUrl($appUrl . $page['url'], $locale) . '" />' . "\n";
             }
             $xml .= '    <lastmod>' . $page['lastmod'] . '</lastmod>' . "\n";
             $xml .= '    <changefreq>' . $page['changefreq'] . '</changefreq>' . "\n";
@@ -57,7 +65,7 @@ class SitemapController extends Controller
             $xml .= '  <url>' . "\n";
             $xml .= '    <loc>' . $toernooiUrl . '</loc>' . "\n";
             foreach ($locales as $locale) {
-                $xml .= '    <xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . $toernooiUrl . '?locale=' . $locale . '" />' . "\n";
+                $xml .= '    <xhtml:link rel="alternate" hreflang="' . $locale . '" href="' . $localeUrl($toernooiUrl, $locale) . '" />' . "\n";
             }
             $xml .= '    <changefreq>daily</changefreq>' . "\n";
             $xml .= '    <priority>0.8</priority>' . "\n";

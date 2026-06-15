@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\ActivityLog;
 use App\Models\AuthDevice;
 use App\Models\GewichtsklassenPreset;
+use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Models\ToernooiTemplate;
@@ -79,6 +80,7 @@ class SimpleControllersCoverageTest extends TestCase
 
         // Ensure tournament is in the future and not closed
         $toernooi->update(['datum' => now()->addWeek(), 'afgesloten_at' => null]);
+        Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
 
         $response = $this->get('/sitemap.xml');
 
@@ -98,6 +100,59 @@ class SimpleControllersCoverageTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertDontSee($toernooi->slug);
+    }
+
+    #[Test]
+    public function sitemap_excludes_tournaments_without_participants(): void
+    {
+        // Empty/test tournament (no judokas) is thin content and must not be indexed.
+        [$org, $toernooi] = $this->createOrgWithToernooi();
+        $toernooi->update(['datum' => now()->addWeek(), 'afgesloten_at' => null]);
+
+        $response = $this->get('/sitemap.xml');
+
+        $response->assertStatus(200);
+        $response->assertDontSee($org->slug . '/' . $toernooi->slug);
+    }
+
+    #[Test]
+    public function sitemap_hreflang_uses_param_less_url_for_default_locale(): void
+    {
+        $response = $this->get('/sitemap.xml');
+
+        $response->assertStatus(200);
+        // Default locale (nl) must point to the param-less canonical, not ?locale=nl.
+        $response->assertSee('hreflang="nl" href="' . rtrim(config('app.url'), '/') . '/help"', false);
+        $response->assertSee('hreflang="en" href="' . rtrim(config('app.url'), '/') . '/help?locale=en"', false);
+    }
+
+    // ========================================================================
+    // Public tournament page — SEO indexability (noindex on thin/test content)
+    // ========================================================================
+
+    #[Test]
+    public function public_tournament_page_is_noindex_when_empty(): void
+    {
+        // Empty/test tournament (no judokas) must not be indexed by search engines.
+        [$org, $toernooi] = $this->createOrgWithToernooi();
+
+        $response = $this->get(route('publiek.index', $toernooi->routeParams()));
+
+        $response->assertStatus(200);
+        $response->assertSee('noindex, nofollow', false);
+    }
+
+    #[Test]
+    public function public_tournament_page_is_indexable_with_participants(): void
+    {
+        [$org, $toernooi] = $this->createOrgWithToernooi();
+        Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
+
+        $response = $this->get(route('publiek.index', $toernooi->routeParams()));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('noindex, nofollow', false);
+        $response->assertSee('rel="canonical"', false);
     }
 
     // ========================================================================

@@ -9,15 +9,19 @@
 
 @php
     $appUrl = rtrim(config('app.url'), '/');
-    $currentPath = request()->getPathInfo();
-    $canonicalUrl = $canonical ?? $appUrl . $currentPath;
-    $ogImageUrl = $ogImage ? (str_starts_with($ogImage, 'http') ? $ogImage : $appUrl . $ogImage) : $appUrl . '/icon-512x512.png';
+    $defaultLocale = config('app.locale', 'nl');
     $currentLocale = app()->getLocale();
-    $alternateLocale = $currentLocale === 'nl' ? 'en' : 'nl';
+    $currentPath = request()->getPathInfo();
 
-    // Build hreflang URLs with locale parameter
-    $currentUrl = url()->current();
-    $hreflangSeparator = str_contains($currentUrl, '?') ? '&' : '?';
+    // Host-genormaliseerde basis-URL zonder query (consolideert www/non-www naar config('app.url')).
+    $baseUrl = $appUrl . $currentPath;
+
+    // Eén indexeerbare URL per taal: default-taal = param-loos, overige talen = ?locale=xx.
+    // Hierdoor zijn canonical en hreflang self-referentieel en consistent (geen conflict meer).
+    $localeUrl = fn (string $locale) => $locale === $defaultLocale ? $baseUrl : $baseUrl . '?locale=' . $locale;
+
+    $canonicalUrl = $canonical ?? $localeUrl($currentLocale);
+    $ogImageUrl = $ogImage ? (str_starts_with($ogImage, 'http') ? $ogImage : $appUrl . $ogImage) : $appUrl . '/icon-512x512.png';
 @endphp
 
 @if($description)
@@ -30,10 +34,13 @@
 
 <link rel="canonical" href="{{ $canonicalUrl }}">
 
-{{-- hreflang tags --}}
-<link rel="alternate" hreflang="nl" href="{{ $currentUrl . $hreflangSeparator . 'locale=nl' }}">
-<link rel="alternate" hreflang="en" href="{{ $currentUrl . $hreflangSeparator . 'locale=en' }}">
-<link rel="alternate" hreflang="x-default" href="{{ $currentUrl }}">
+@unless($noindex)
+{{-- hreflang tags — wijzen naar self-canonical, indexeerbare URLs per taal --}}
+@foreach(config('app.available_locales', ['nl', 'en']) as $locale)
+<link rel="alternate" hreflang="{{ $locale }}" href="{{ $localeUrl($locale) }}">
+@endforeach
+<link rel="alternate" hreflang="x-default" href="{{ $baseUrl }}">
+@endunless
 
 {{-- Open Graph --}}
 <meta property="og:type" content="{{ $type }}">

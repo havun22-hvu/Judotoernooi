@@ -35,8 +35,10 @@ JudoToernooi ondersteunt NL + EN via `__()` helpers. Alle SEO tags zijn taalafha
 | Homepage (`home.blade.php`) | `<x-seo>` | title, description |
 | Help (`help.blade.php`) | `<x-seo>` via `@push('seo')` | title, description |
 | Legal pages (`legal-layout.blade.php`) | `<x-seo>` | title |
-| Publieke toernooi (`publiek/index.blade.php`) | `<x-seo>` | title, description, type=article |
+| Publieke toernooi (`publiek/index.blade.php`) | `<x-seo>` | title, description, type=article, **noindex bij 0 deelnemers** |
 | Error pages (`errors/layout.blade.php`) | `<x-seo>` | noindex=true |
+
+> **Indexeerbaarheid toernooi-pagina's:** een toernooi zonder deelnemers (judoka's) is *thin content* (lege/test-toernooien) en krijgt `noindex`. De live-pagina blijft bereikbaar via directe link/QR; alleen Google-indexering wordt onderdrukt. De sitemap (`SitemapController`) past dezelfde regel toe via `whereHas('judokas')`, zodat sitemap en `<meta robots>` één bron van waarheid delen.
 
 ## robots.txt
 
@@ -104,16 +106,26 @@ Bevat:
 
 Type: `summary_large_image` (grotere preview bij delen op social media)
 
-## hreflang Strategie
+## hreflang + canonical Strategie
 
-Locale switching gebruikt `?locale=nl` / `?locale=en` query parameter.
-hreflang tags worden automatisch gegenereerd door `<x-seo />`:
+Locale switching gebruikt de `?locale=xx` query parameter. **Eén indexeerbare URL per taal**, met self-referentiële canonicals zodat hreflang en canonical elkaar niet tegenspreken:
+
+- **Default-taal (`nl`)** → param-loze URL (`/help`) = canonical én x-default
+- **Overige talen (`en`)** → `?locale=en`-URL (`/help?locale=en`) = eigen canonical
+- `?locale=nl` consolideert naar de param-loze URL (canonical wijst daarheen)
 
 ```html
-<link rel="alternate" hreflang="nl" href="...?locale=nl">
-<link rel="alternate" hreflang="en" href="...?locale=en">
-<link rel="alternate" hreflang="x-default" href="...">
+<!-- op /help (nl, default) én /help?locale=nl -->
+<link rel="canonical" href="https://judotournament.org/help">
+<link rel="alternate" hreflang="nl" href="https://judotournament.org/help">
+<link rel="alternate" hreflang="en" href="https://judotournament.org/help?locale=en">
+<link rel="alternate" hreflang="x-default" href="https://judotournament.org/help">
+
+<!-- op /help?locale=en -->
+<link rel="canonical" href="https://judotournament.org/help?locale=en">
 ```
+
+> **Waarom:** Google vereist dat hreflang-doelen self-canonical én indexeerbaar zijn. Eerder wezen de hreflang-tags naar `?locale=nl`/`?locale=en` terwijl de canonical altijd param-loos was → conflict → "Gecrawld – momenteel niet geïndexeerd". De basis-URL wordt opgebouwd uit `config('app.url')`, wat tegelijk `www`→non-`www` consolideert. `SitemapController` gebruikt exact dezelfde `$localeUrl`-logica.
 
 ## lang Attribuut
 
