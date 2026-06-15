@@ -13,7 +13,7 @@
         :title="'LIVE - ' . $toernooi->naam"
         :description="__('Live uitslagen en poule-indelingen voor :naam op :datum', ['naam' => $toernooi->naam, 'datum' => $toernooi->datum->format('d-m-Y')])"
         type="article"
-        :noindex="$totaalJudokas === 0"
+        :noindex="! $toernooi->isPubliekIndexeerbaar()"
     />
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">

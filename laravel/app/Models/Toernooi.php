@@ -461,6 +461,23 @@ class Toernooi extends Model
     }
 
     /**
+     * Of deze toernooi-pagina door zoekmachines geïndexeerd mag worden.
+     *
+     * Test-toernooien (van een test-organisator) en lege toernooien zonder
+     * deelnemers zijn thin/test content en horen niet in Google. De live-pagina
+     * blijft bereikbaar via directe link/QR; alleen indexering wordt onderdrukt.
+     * Single source of truth voor zowel <x-seo noindex> als de sitemap.
+     */
+    public function isPubliekIndexeerbaar(): bool
+    {
+        if ($this->organisator?->isTest()) {
+            return false;
+        }
+
+        return $this->judokas()->exists();
+    }
+
+    /**
      * Check of wedstrijddag is gestart (minimaal één blok heeft weging gesloten)
      * Na dit punt zijn Poules/Blokken pagina's LOCKED
      */

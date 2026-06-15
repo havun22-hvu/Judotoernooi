@@ -29,12 +29,13 @@ class SitemapController extends Controller
         ];
 
         // Active public tournaments (not closed, with a date in the future or recent past).
-        // Only tournaments with participants — empty/test tournaments are thin content
-        // and must not be indexed (mirrors the noindex on the public tournament page).
+        // Mirrors Toernooi::isPubliekIndexeerbaar(): only tournaments with participants
+        // and not owned by a test organisator — empty/test tournaments are thin content
+        // and must not be indexed.
         $toernooien = Toernooi::with('organisator')
             ->where('datum', '>=', now()->subMonths(3))
             ->whereNull('afgesloten_at')
-            ->whereHas('organisator')
+            ->whereHas('organisator', fn ($q) => $q->where('is_test', false))
             ->whereHas('judokas')
             ->get();
 

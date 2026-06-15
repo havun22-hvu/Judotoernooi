@@ -35,10 +35,14 @@ JudoToernooi ondersteunt NL + EN via `__()` helpers. Alle SEO tags zijn taalafha
 | Homepage (`home.blade.php`) | `<x-seo>` | title, description |
 | Help (`help.blade.php`) | `<x-seo>` via `@push('seo')` | title, description |
 | Legal pages (`legal-layout.blade.php`) | `<x-seo>` | title |
-| Publieke toernooi (`publiek/index.blade.php`) | `<x-seo>` | title, description, type=article, **noindex bij 0 deelnemers** |
+| Publieke toernooi (`publiek/index.blade.php`) | `<x-seo>` | title, description, type=article, **noindex via `Toernooi::isPubliekIndexeerbaar()`** |
 | Error pages (`errors/layout.blade.php`) | `<x-seo>` | noindex=true |
 
-> **Indexeerbaarheid toernooi-pagina's:** een toernooi zonder deelnemers (judoka's) is *thin content* (lege/test-toernooien) en krijgt `noindex`. De live-pagina blijft bereikbaar via directe link/QR; alleen Google-indexering wordt onderdrukt. De sitemap (`SitemapController`) past dezelfde regel toe via `whereHas('judokas')`, zodat sitemap en `<meta robots>` één bron van waarheid delen.
+> **Indexeerbaarheid toernooi-pagina's** — `Toernooi::isPubliekIndexeerbaar()` is de single source of truth. Een toernooi krijgt `noindex` als:
+> - het van een **test-organisator** is (`organisator->isTest()` / `is_test = true`) — test-toernooien horen niet in Google, óók niet met deelnemers, of
+> - het **geen deelnemers** heeft (lege = thin content).
+>
+> De live-pagina blijft bereikbaar via directe link/QR; alleen Google-indexering wordt onderdrukt. `SitemapController` mirrort exact dezelfde regel (`whereHas('organisator', is_test=false)->whereHas('judokas')`), zodat sitemap en `<meta robots>` consistent zijn.
 
 ## robots.txt
 

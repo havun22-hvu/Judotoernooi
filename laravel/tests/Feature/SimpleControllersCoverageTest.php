@@ -155,6 +155,39 @@ class SimpleControllersCoverageTest extends TestCase
         $response->assertSee('rel="canonical"', false);
     }
 
+    #[Test]
+    public function public_tournament_page_is_noindex_for_test_organisator(): void
+    {
+        // Test tournaments (test organisator) are not interesting for Google,
+        // even with participants.
+        $org = Organisator::factory()->test()->create();
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $toernooi->organisatoren()->attach($org->id, ['rol' => 'eigenaar']);
+        Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
+
+        $response = $this->get(route('publiek.index', $toernooi->routeParams()));
+
+        $response->assertStatus(200);
+        $response->assertSee('noindex, nofollow', false);
+    }
+
+    #[Test]
+    public function sitemap_excludes_test_organisator_tournaments(): void
+    {
+        $org = Organisator::factory()->test()->create();
+        $toernooi = Toernooi::factory()->create([
+            'organisator_id' => $org->id,
+            'datum' => now()->addWeek(),
+            'afgesloten_at' => null,
+        ]);
+        Judoka::factory()->create(['toernooi_id' => $toernooi->id]);
+
+        $response = $this->get('/sitemap.xml');
+
+        $response->assertStatus(200);
+        $response->assertDontSee($org->slug . '/' . $toernooi->slug);
+    }
+
     // ========================================================================
     // ReverbController (local environment returns special response)
     // ========================================================================
