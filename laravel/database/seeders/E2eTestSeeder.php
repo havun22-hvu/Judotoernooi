@@ -49,8 +49,11 @@ class E2eTestSeeder extends Seeder
         ]);
 
         // wedstrijddag() backdates the tournament to today so the mat
-        // interface (which only shows on match day) renders.
-        $toernooi = Toernooi::factory()->wedstrijddag()->create([
+        // interface (which only shows on match day) renders. dynamischeKlassen()
+        // gives it real age/weight categories (mini's 4-6j, pupillen 7-9j) so the
+        // seeded judokas actually categorise — without it every judoka is
+        // "uncategorised" and poule generation produces nothing.
+        $toernooi = Toernooi::factory()->wedstrijddag()->dynamischeKlassen()->create([
             'organisator_id' => $organisator->id,
             'naam' => 'E2E Test Toernooi',
             'slug' => self::TOERNOOI_SLUG,
@@ -82,10 +85,24 @@ class E2eTestSeeder extends Seeder
             'naam' => 'E2E Judoclub',
         ]);
 
-        Judoka::factory()->count(5)->aanwezig()->create([
-            'toernooi_id' => $toernooi->id,
-            'club_id' => $club->id,
-        ]);
+        // Five deterministic pupillen (8j), same age + sex and clustered weights
+        // so they form a single valid poule when generation runs. Weighed and
+        // present, so they count toward standings.
+        $jaar = (int) date('Y');
+        foreach ([26.0, 27.0, 27.5, 28.0, 28.5] as $i => $gewicht) {
+            Judoka::factory()->create([
+                'toernooi_id' => $toernooi->id,
+                'club_id' => $club->id,
+                'naam' => sprintf('Pupil %d, E2E', $i + 1),
+                'geboortejaar' => $jaar - 8,
+                'geslacht' => 'M',
+                'band' => 'geel',
+                'gewicht' => $gewicht,
+                'gewicht_gewogen' => $gewicht,
+                'leeftijdsklasse' => 'pupillen',
+                'aanwezigheid' => 'aanwezig',
+            ]);
+        }
 
         // Volunteer PWA device-access rows (mat, weging, jurytafel, spreker,
         // dojo). Each is reached via /{org}/{toernooi}/toegang/{code}, which

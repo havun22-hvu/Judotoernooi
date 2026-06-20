@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { toernooiUrl } from './fixtures';
+import { toernooiUrl, dashboardUrl } from './fixtures';
 
 /**
  * Functional UI flows for the organisator — beyond "the page loads", these drive
@@ -75,5 +75,47 @@ test.describe('Judoka beheer (UI)', () => {
         await expect(page).toHaveURL(/\/judoka/);
 
         expect(errors, `Uncaught JS errors:\n${errors.join('\n')}`).toEqual([]);
+    });
+});
+
+test.describe('Poule-generatie (HTTP)', () => {
+    test('generating poules yields a valid response with a problemen key', async ({ page }) => {
+        test.slow();
+        // Use the lightweight dashboard for the CSRF token (it carries the
+        // csrf-token meta) — the data-heavy judoka/poule pages are slow to load.
+        // POST from inside the page via fetch so the same-origin session cookie is
+        // sent automatically (page.request did not share the session reliably).
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        const post = (path: string) =>
+            page.evaluate(async (url) => {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN':
+                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                        Accept: 'application/json',
+                    },
+                });
+                return { status: res.status, text: await res.text() };
+            }, path);
+
+        // Generate poules from the seeded (categorised) pupillen.
+        const gen = await post(toernooiUrl('/poule/genereer'));
+        expect(gen.status, `genereer ${gen.status}: ${gen.text.slice(0, 200)}`).toBeLessThan(400);
+
+        // Verify returns the poule-rules report. The `problemen` key MUST be on
+        // every verify response (poule-rules check) — 13 PHPUnit tests guard it
+        // server-side; this guards it through the real HTTP stack.
+        const ver = await post(toernooiUrl('/poule/verifieer'));
+        expect(ver.status, `verifieer ${ver.status}: ${ver.text.slice(0, 200)}`).toBeLessThan(400);
+        const body = JSON.parse(ver.text);
+
+        expect(body).toHaveProperty('problemen');
+        expect(Array.isArray(body.problemen)).toBe(true);
+        // The five clustered pupillen must produce at least one poule with matches.
+        expect(body.totaal_poules, JSON.stringify(body).slice(0, 200)).toBeGreaterThanOrEqual(1);
+        expect(body.totaal_wedstrijden).toBeGreaterThan(0);
     });
 });
