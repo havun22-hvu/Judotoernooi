@@ -9,6 +9,57 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
+## Huidige status (20-06-2026)
+
+### cspActions load-order race — OPGELOST (commit `72a5171d`, main, gepusht)
+- **Gevonden via Playwright-baseline:** `e2e/csp-authenticated.auth.spec.ts` faalde
+  niet-deterministisch met `window.cspActions is not a function` op admin-pagina's
+  (judoka/blok/dashboard wisselend). **Echte intermitterende productie-bug:** onder
+  `script-src 'strict-dynamic'` injecteert Vite de bundel dynamisch → `csp-actions.js`
+  draait niet gegarandeerd vóór de inline DOMContentLoaded-registraties → knoppen dood.
+- **Fix (queue-stub):** `partials/csp-actions-stub.blade.php` definieert `window.cspActions`
+  vroeg als buffer (vóór `@vite`); `csp-actions.js` flusht de wachtrij + zet `__ready`.
+  Toegevoegd aan layouts/app + alle standalone-@vite views die cspActions gebruiken
+  (dashboard, setup-pin, coach-kaart/activeer, dojo/scanner, mat/weging/spreker-interface).
+  Bundel herbouwd (`app-D3OJMhA8.js`) + meegecommit. Doc: `docs/alpine-csp-migration.md`.
+  Via `/arch` blauwdruk → `/mpc`. Zie [[csp-alpine-gotchas]].
+- **Guard:** `e2e/csp-race.auth.spec.ts` vertraagt de bundel 800ms → forceert de race.
+  Geverifieerd groen: csp-authenticated (5 admin-pagina's) + csp-race (dashboard/judoka/blok).
+- **NOG NIET GEDEPLOYED** naar staging/prod. PHP/Blade/JS + assets, geen migrations.
+
+### CSP Parser Error op judoka/index — OPGELOST (commit `2897440e`, main, gepusht)
+- `x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)"` op de
+  ongecategoriseerd-alert → `@alpinejs/csp` kan arrow functions in directives niet parsen
+  → "CSP Parser Error: Unexpected token )" bij elke judoka/index-load. Verplaatst naar
+  `init()` op de `showOpen`-component (plain JS). Geverifieerd: console-error weg.
+
+### ⚠️ ONDERZOEKEN: judoka/index content kapt af in render (mogelijk PROD-bug)
+- **Ontdekt tijdens functionele e2e-bouw.** De gerenderde DOM van judoka/index mist de
+  staart van `@section('content')`: alles ná `addJudokaModal` (regel 695) ontbreekt —
+  `stambestandModal` (770), het cspActions-registratie-`<script>` (807) én
+  `loadStambestand()`. Gevolg: **knoppen "Judoka toevoegen" / stambestand / importeren
+  zijn dood** (handler nooit geregistreerd).
+- **Bewezen via Playwright-probes:** cspActions-delegation werkt (verse actie+klik vuurt),
+  maar `open-add-judoka` is niet in de registry; `loadStambestand` undefined; de
+  registratie-string staat NIET in `page.content()`. Géén JS/CSP-fout, géén SW-oorzaak
+  (getest met `serviceWorkers: 'block'`). Tag-balans klopt (62/62 div, 4/4 form).
+- **Afkap zit tussen regel 695 en 770.** Vermoedelijk malformed/relocatie-veroorzakende
+  HTML in de addJudokaModal-form (regel ~704-768). **Fris bekijken.** Mogelijk ook op
+  staging/prod (dan zijn de judoka-knoppen daar ook dood) — verifiëren.
+- Dit blokkeerde de eerste functionele UI-test (judoka toevoegen via modal). Die test +
+  de robuuste helpers (`blockExternalCdn`, `waitForCspReady` op de `__ready`-marker) zijn
+  NIET gecommit (geen rode test); klaar om te hergebruiken zodra de truncatie gefixt is.
+
+### Playwright-baseline (20-06) + bekende flaky
+- Volledige suite: ~44 passed. Pre-existing flaky/traag: **PWA "mat" + "jurytafel"**
+  falen op deze machine (mat-interface + poule.index laden synchrone CDN-scripts die
+  ~60s hangen → DCL-timeout; retry faalt door first-device-wins). **A/B-getest met
+  `git stash`: faalt OOK zonder mijn wijzigingen → pre-existing, niet de cspActions-fix.**
+  Mogelijke oorzaak: CDN traag/onbereikbaar in deze omgeving. Te onderzoeken: CDN-scripts
+  op mat/interface async maken of mocken in e2e.
+- **Testplan functionele flows** ligt klaar in `.claude/testplan-playwright.md` (laag A
+  API-flows + laag B UI-wiring). Wacht op scope-akkoord Henk + seeder-uitbreiding (eliminatie-poule).
+
 ## Huidige status (14-06-2026)
 
 ### Kleurbeurt bij poule/groep-verplaatsing — OPGELOST (commit `c8b8fe13`, main)
