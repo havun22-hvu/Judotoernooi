@@ -9,6 +9,17 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
+## Huidige status (21-06-2026)
+
+### 3 CSP/judoka-fixes GEDEPLOYED naar staging + productie (21-06)
+- Staging + prod beide op `ef65a127` (was staging `90c2c30d`, prod `cf34d15b`).
+- ff-pull + post-merge hook (`optimize:clear`) + `queue:restart`. PHP/Blade/JS + gecommitte
+  assets, **geen migrations/composer**. Prod-backup via `php artisan backup:milestone
+  voor-csp-fixes` → `/var/backups/havun/milestones/judo_toernooi_voor-csp-fixes_2026-06-20_22-10-22.sql.gz`.
+- Geverifieerd: staging + prod home/login 200, verse bundel `app-S3IsyqRL.js` live, geen
+  deploy-errors. Bevat: cspActions-race-fix (`72a5171d`), CSP-parserfout (`2897440e`),
+  dode judoka-knop (`942cab1e`).
+
 ## Huidige status (20-06-2026)
 
 ### cspActions load-order race — OPGELOST (commit `72a5171d`, main, gepusht)
