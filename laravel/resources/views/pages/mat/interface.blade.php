@@ -11,6 +11,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>{{ __('Mat Interface') }} - {{ $toernooi->naam }}</title>
+    @include('partials.csp-actions-stub')
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <style @nonce>
         body { overscroll-behavior: none; }

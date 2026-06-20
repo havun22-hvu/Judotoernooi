@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('PIN instellen') }} - {{ __('JudoToernooi') }}</title>
+    @include('partials.csp-actions-stub')
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <style @nonce>
         .pin-dot { transition: background-color 0.15s ease; }

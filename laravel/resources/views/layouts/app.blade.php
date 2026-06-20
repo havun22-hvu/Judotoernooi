@@ -12,6 +12,7 @@
     <link rel="manifest" href="@yield('manifest', '/manifest.json')">
     <meta name="theme-color" content="#1e40af">
     @stack('seo')
+    @include('partials.csp-actions-stub')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style @nonce>
         /* Verberg spinner pijltjes bij number inputs */

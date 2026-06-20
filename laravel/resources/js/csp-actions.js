@@ -57,6 +57,14 @@ export function cspActions(map) {
     }
 }
 
+// Capture any registrations buffered by the early queue-stub (layouts/app.blade.php
+// <head>) before we replace it with the real implementation. Under strict CSP
+// ('strict-dynamic') this module's execution is not guaranteed before the inline
+// view scripts run on DOMContentLoaded, so those calls land in the stub's queue.
+const queuedRegistrations = (window.cspActions && Array.isArray(window.cspActions.q))
+    ? window.cspActions.q
+    : [];
+
 // Expose globally so inline (nonce'd) view scripts can call it without imports.
 window.cspActions = cspActions;
 
@@ -107,3 +115,14 @@ cspActions({
     'change:load-image': (el) => window.loadImage?.(el),
     'change:update-betaal': () => window.updateBetaalKnop?.(),
 });
+
+// Flush registrations that arrived before this module executed (the race under
+// 'strict-dynamic'). Replayed AFTER the built-ins above so a view's own
+// registration still overrides a built-in of the same name — identical to the
+// non-race order (module built-ins first, then view DOMContentLoaded handlers).
+queuedRegistrations.forEach((map) => cspActions(map));
+
+// Marker: the real implementation has loaded and flushed any buffered
+// registrations. Lets the e2e race guard distinguish the real dispatcher from
+// the early queue-stub (which never sets this).
+window.cspActions.__ready = true;

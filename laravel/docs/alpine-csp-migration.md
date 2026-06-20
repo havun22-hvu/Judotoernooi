@@ -5,6 +5,30 @@
 > directives via `Alpine.data()` registraties lopen i.p.v. inline
 > `x-data="{...}"` of inline expressions zoals `@click="open = !open"`.
 
+## ⚠️ cspActions load-order race (fix 20-06-2026)
+
+**Symptoom:** intermitterend `window.cspActions is not a function` op admin-
+pagina's (judoka, blok, soms dashboard) → knoppen dood. Niet-deterministisch.
+
+**Oorzaak:** CSP gebruikt `script-src 'strict-dynamic'` (SecurityHeaders.php).
+Daardoor injecteert Vite de app-bundel dynamisch en is uitvoering **niet
+gegarandeerd vóór `DOMContentLoaded`**. De 15 views die hun knoppen op DCL
+registreren via `window.cspActions({...})` crashen als de bundel (die
+`window.cspActions` zet in `csp-actions.js`) die race verliest.
+
+**Fix:** queue-stub. `resources/views/partials/csp-actions-stub.blade.php`
+definieert `window.cspActions` als buffer en staat **vóór `@vite`** in elke
+`<head>` die de bundel laadt. `csp-actions.js` vangt de buffer op, vervangt de
+stub door de echte dispatcher, flusht de wachtrij (ná de built-ins, zodat view-
+registraties built-ins blijven overschrijven) en zet `window.cspActions.__ready`.
+
+**LET OP bij nieuwe standalone pagina's:** elke view met een **eigen `<head>` +
+`@vite`** (dus NIET `@extends('layouts.app')`) moet
+`@include('partials.csp-actions-stub')` direct vóór `@vite` hebben. Gedekt:
+layouts/app + dashboard, setup-pin, coach-kaart/activeer, dojo/scanner,
+mat/interface, weging/interface, spreker/interface. Regressie-guard:
+`e2e/csp-race.auth.spec.ts` (vertraagt de bundel 800ms → forceert de race).
+
 ## Strategie
 
 1. ✅ Maak shared utility components in `resources/js/alpine-components.js`
