@@ -33,22 +33,24 @@ last_updated: 2026-06-14
   → "CSP Parser Error: Unexpected token )" bij elke judoka/index-load. Verplaatst naar
   `init()` op de `showOpen`-component (plain JS). Geverifieerd: console-error weg.
 
-### ⚠️ ONDERZOEKEN: judoka/index content kapt af in render (mogelijk PROD-bug)
-- **Ontdekt tijdens functionele e2e-bouw.** De gerenderde DOM van judoka/index mist de
-  staart van `@section('content')`: alles ná `addJudokaModal` (regel 695) ontbreekt —
-  `stambestandModal` (770), het cspActions-registratie-`<script>` (807) én
-  `loadStambestand()`. Gevolg: **knoppen "Judoka toevoegen" / stambestand / importeren
-  zijn dood** (handler nooit geregistreerd).
-- **Bewezen via Playwright-probes:** cspActions-delegation werkt (verse actie+klik vuurt),
-  maar `open-add-judoka` is niet in de registry; `loadStambestand` undefined; de
-  registratie-string staat NIET in `page.content()`. Géén JS/CSP-fout, géén SW-oorzaak
-  (getest met `serviceWorkers: 'block'`). Tag-balans klopt (62/62 div, 4/4 form).
-- **Afkap zit tussen regel 695 en 770.** Vermoedelijk malformed/relocatie-veroorzakende
-  HTML in de addJudokaModal-form (regel ~704-768). **Fris bekijken.** Mogelijk ook op
-  staging/prod (dan zijn de judoka-knoppen daar ook dood) — verifiëren.
-- Dit blokkeerde de eerste functionele UI-test (judoka toevoegen via modal). Die test +
-  de robuuste helpers (`blockExternalCdn`, `waitForCspReady` op de `__ready`-marker) zijn
-  NIET gecommit (geen rode test); klaar om te hergebruiken zodra de truncatie gefixt is.
+### Dode "Judoka toevoegen"-knop zonder stambestand — OPGELOST (commit `942cab1e`, main, gepusht)
+- **Ontdekt tijdens functionele e2e-bouw.** De cspActions-registratie van de ALTIJD-
+  aanwezige knoppen (`open-add-judoka`, `close-add-judoka`, tabel `confirm-delete`) zat
+  ingesloten in `@if($organisator->stamJudokas()->actief()->exists())` (regel 769-912),
+  samen met de stambestand-modal. Dus voor elke organisator **zonder stambestand** werd
+  dat hele `<script>` niet gerenderd → handlers nooit geregistreerd → **"Judoka
+  toevoegen"-knop + verwijder-bevestiging dood**. (e2e-seed heeft geen stamJudokas → zo
+  ontdekt.) Reëel op prod voor organisatoren zonder stambestand.
+- **Fix:** altijd-aan registraties in een eigen genonced `<script>` vóór de `@if`;
+  stambestand-specifieke acties blijven erbinnen. **Let op:** een `@if` binnen een JS
+  `//`-comment wordt door Blade alsnog als directive geparsed → comments zonder `@`.
+- **Functionele e2e toegevoegd:** `e2e/flows.auth.spec.ts` (authenticated) — klikt de knop
+  (seed-org zónder stambestand), assert modal opent + form submit landt schoon. **Groen.**
+  Herbruikbare helpers: `blockExternalCdn` (CDN-scripts aborten — anders hangen
+  pusher/sortable ~60s in de sandbox) + `waitForCspReady` (wacht op `window.cspActions.__ready`).
+
+> **e2e-tip:** background test-runs laten soms een `php artisan serve` op :8008 achter →
+> volgende run aborteert ("port already used"). Kill stale servers vóór een run.
 
 ### Playwright-baseline (20-06) + bekende flaky
 - Volledige suite: ~44 passed. Pre-existing flaky/traag: **PWA "mat" + "jurytafel"**
