@@ -487,6 +487,12 @@ export function registerAlpineComponents(Alpine) {
     Alpine.data('showOpen', () => ({
         show: true,
         open: false,
+        // Stop the attention-blink after a moment. Lives here (plain JS) instead
+        // of an inline `x-init="setTimeout(() => ...)"` — the @alpinejs/csp build
+        // cannot parse arrow functions in directives (CSP Parser Error).
+        init() {
+            setTimeout(() => this.$el.classList.remove('animate-error-blink'), 1500);
+        },
         dismiss() { this.show = false; },
         toggle() { this.open = !this.open; },
         close() { this.open = false; },
