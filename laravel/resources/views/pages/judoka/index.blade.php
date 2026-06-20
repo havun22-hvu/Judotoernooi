@@ -765,6 +765,21 @@ document.addEventListener('alpine:init', () => {
         </form>
     </div>
 </div>
+
+{{-- Altijd-aan registraties: de "Judoka toevoegen"-modal en de verwijder-knoppen
+     in de tabel renderen ALTIJD, los van of er een stambestand is. Hun handlers
+     moeten dus BUITEN de stambestand-@if hieronder staan — anders zijn die
+     knoppen dood voor organisatoren zonder stambestand. --}}
+<script @nonce>
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'open-add-judoka': () => document.getElementById('addJudokaModal').classList.remove('hidden'),
+        'close-add-judoka': () => document.getElementById('addJudokaModal').classList.add('hidden'),
+        'submit:confirm-delete': (el, e) => { if (!confirm(el.dataset.confirm)) e.preventDefault(); },
+    });
+});
+</script>
+
 {{-- Stambestand Import Modal --}}
 @if($toernooi->organisator->stamJudokas()->actief()->exists())
 <div id="stambestandModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -807,16 +822,16 @@ document.addEventListener('alpine:init', () => {
 <script @nonce>
 // CSP-safe event delegation: koppel data-action attributen aan bestaande functies.
 document.addEventListener('DOMContentLoaded', () => {
+    // Stambestand-specifiek. De altijd-aanwezige acties (open-add-judoka,
+    // close-add-judoka, confirm-delete) staan in het blok boven deze modal,
+    // buiten de stambestand-conditie.
     window.cspActions({
         'open-stambestand': () => { document.getElementById('stambestandModal').classList.remove('hidden'); loadStambestand(); },
-        'open-add-judoka': () => document.getElementById('addJudokaModal').classList.remove('hidden'),
-        'close-add-judoka': () => document.getElementById('addJudokaModal').classList.add('hidden'),
         'close-stambestand': () => document.getElementById('stambestandModal').classList.add('hidden'),
         'input:filter-stambestand': () => filterStambestand(),
         'import-database': () => importUitDatabase(),
         'toggle-stam-checkbox': (el) => toggleStamCheckbox(+el.dataset.stamId),
         'change:stam-checkbox': () => updateStamCount(),
-        'submit:confirm-delete': (el, e) => { if (!confirm(el.dataset.confirm)) e.preventDefault(); },
     });
 });
 
