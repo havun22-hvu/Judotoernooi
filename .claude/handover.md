@@ -11,6 +11,19 @@ last_updated: 2026-06-14
 
 ## Huidige status (21-06-2026)
 
+### e2e-seed verrijkt + poule-generatie flowtest — KLAAR (commit `2c311215`, main, gepusht)
+- E2eTestSeeder: toernooi krijgt `dynamischeKlassen()` (mini's/pupillen) + 5 deterministische
+  pupillen (zelfde leeftijd/geslacht, dicht bijeen qua gewicht) → ze categoriseren en vormen
+  één geldige poule (was: alles "ongecategoriseerd / max 0"). Geen regressie op display/csp-tests.
+- Nieuwe flowtest `flows.auth.spec.ts` → `POST /poule/genereer` + `/poule/verifieer` via
+  **in-page fetch** (same-origin sessie-cookie), assert `problemen`-key + poules/wedstrijden.
+- **CSRF in Playwright-les:** `page.request` deelt de sessie NIET betrouwbaar (419). In-page
+  `fetch` wél (cookie auto). CSRF-token uit de `csrf-token` meta; dashboard kreeg die meta
+  (stond er niet, anders dan layouts.app) zodat de test 'm van de snelle dashboard-pagina haalt
+  i.p.v. de trage judoka/poule-pagina. **NB:** dashboard-meta-wijziging nog niet gedeployed
+  (triviaal/additief, gaat mee met volgende deploy).
+- **e2e-machine-les:** background-runs laten `php artisan serve` op :8008 achter → kill vóór run.
+
 ### 3 CSP/judoka-fixes GEDEPLOYED naar staging + productie (21-06)
 - Staging + prod beide op `ef65a127` (was staging `90c2c30d`, prod `cf34d15b`).
 - ff-pull + post-merge hook (`optimize:clear`) + `queue:restart`. PHP/Blade/JS + gecommitte
