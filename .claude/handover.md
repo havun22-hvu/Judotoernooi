@@ -34,6 +34,9 @@ Alle haalbare flows in `e2e/flows.auth.spec.ts` (authenticated project), allemaa
 5. **Poule-generatie** — `/poule/genereer` + `/verifieer`, `problemen`-key (`2c311215`).
 6. **Poule verplaatsen — kleurbeurt** — move poule → mat 2, groen blijft op mat 1,
    geel/blauw vervallen. Leest mat-state via `/mat/wedstrijden`. Guardt `c8b8fe13` (`5079f67d`).
+7. **Doorsturen naar zaaloverzicht** — `/wedstrijddag/naar-zaaloverzicht` markeert poules
+   doorgestuurd. Dé actie achter de knop die dood was onder de kapotte CSP — jouw
+   oorspronkelijke melding die deze hele zoektocht startte (`5bccadbd`).
 
 ### Resterende laag-B items — NIET e2e-haalbaar (elders gedekt)
 Onderzocht en bewust niet als e2e gebouwd (harde grenzen, geen scope-luiheid):
@@ -43,9 +46,13 @@ Onderzocht en bewust niet als e2e gebouwd (harde grenzen, geen scope-luiheid):
   Gedekt door `AdminControllerTest`.
 - **Betalingen** — Mollie/Stripe redirecten naar externe providers. Gedekt door
   `PaymentControllersCoverageTest`/`StripeProviderCoverageTest`.
-- **DnD-interactie zelf** — getest via de onderliggende HTTP-endpoints (zie flow 6); de
-  drag-drop-UI is in Playwright te flaky voor waarde. Conclusie: e2e dekt nu de kern-
-  competitieflows; periphere/externe zaken blijven op PHPUnit-niveau (juiste laag).
+- **DnD-interactie zelf** — getest via de onderliggende HTTP-endpoints (zie flow 6+7); de
+  drag-drop-UI is in Playwright te flaky voor waarde.
+- **Mat JP/WP-dropdown (UI)** — de scoring-datflow is gedekt (flow 2 uitslag→stand); de
+  mat-interface zelf laadt zonder JS-errors (smoke). Directe dropdown-UI-interactie
+  overgeslagen: mat-interface is de zwaarste/flakiest pagina in e2e (CDN/Reverb).
+  Conclusie: e2e dekt nu de kern-competitieflows; periphere/externe/zware-UI zaken blijven
+  op PHPUnit-niveau (juiste laag).
 
 **Patroon/lessen (herbruikbaar):**
 - Seeder (`E2eTestSeeder`) bouwt nu een complete round-robin poule + een 4-judoka eliminatie-
