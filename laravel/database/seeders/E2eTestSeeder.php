@@ -115,6 +115,9 @@ class E2eTestSeeder extends Seeder
             'blok_id' => $blok->id,
             'mat_id' => $mat->id,
             'titel' => 'Pupillen -28 Poule',
+            'type' => 'voorronde',
+            'leeftijdsklasse' => 'pupillen',
+            'gewichtsklasse' => '-28',
             'aantal_judokas' => $aantal,
             'aantal_wedstrijden' => $aantal * ($aantal - 1) / 2,
         ]);
@@ -198,6 +201,7 @@ class E2eTestSeeder extends Seeder
             'mat1Id' => $mat->id,
             'mat2Id' => $mat2->id,
             'groenWedstrijdId' => $rrWedstrijden[3]->id,
+            'category' => 'pupillen|-28',
             'eliminatie' => [
                 'pouleId' => $elimPoule->id,
                 'finaleId' => $elimFinale?->id,

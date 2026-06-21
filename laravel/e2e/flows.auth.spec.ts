@@ -235,6 +235,25 @@ test.describe('Poule verplaatsen — kleurbeurt (HTTP)', () => {
     });
 });
 
+test.describe('Doorsturen naar zaaloverzicht (HTTP)', () => {
+    test('forwarding a category marks its poules as doorgestuurd', async ({ page }) => {
+        test.slow();
+        const ids = seededIds();
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        // The "doorsturen naar zaaloverzicht" action (the button that was dead
+        // under the broken CSP — the bug that kicked off this whole investigation).
+        const res = await postJson(page, toernooiUrl('/wedstrijddag/naar-zaaloverzicht'), {
+            category: ids.category,
+        });
+        expect(res.status, `doorsturen ${res.status}: ${res.text.slice(0, 200)}`).toBeLessThan(400);
+        const body = JSON.parse(res.text);
+        expect(body.success).toBe(true);
+        expect(body.updated).toBeGreaterThanOrEqual(1);
+    });
+});
+
 test.describe('Poule-generatie (HTTP)', () => {
     test('generating poules yields a valid response with a problemen key', async ({ page }) => {
         test.slow();
