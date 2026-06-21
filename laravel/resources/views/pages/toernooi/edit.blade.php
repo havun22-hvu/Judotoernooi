@@ -3657,7 +3657,14 @@ window.triggerAutoSave = function() {};
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
                     autoSave();
-                    setTimeout(() => window.location.reload(), 800);
+                    // Reload op de Toernooi-tab (waar deze keuze staat). Een kale
+                    // reload zou een eventuele ?tab=organisatie uit de URL behouden
+                    // en de gebruiker naar de Organisatie-tab springen.
+                    setTimeout(() => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', 'toernooi');
+                        window.location.href = url.toString();
+                    }, 800);
                 }, 300);
                 return;
             }
