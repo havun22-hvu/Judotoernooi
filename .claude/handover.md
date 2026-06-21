@@ -11,6 +11,12 @@ last_updated: 2026-06-14
 
 ## Huidige status (21-06-2026)
 
+### Staging op `e0015101` (alle sessie-werk) — 21-06
+Alles van deze sessie staat op **staging** (incl. dashboard-csrf-meta + 7 e2e-flows-infra).
+ff-pull + post-merge cache-clear + queue-restart. Geverifieerd: home/login 200, bundel
+`app-S3IsyqRL.js`, geen errors. **Productie nog op `ef65a127`** (de 3 bugfixes; csrf-meta
++ e2e-files nog niet — e2e raakt runtime niet, meta is additief).
+
 ### e2e-seed verrijkt + poule-generatie flowtest — KLAAR (commit `2c311215`, main, gepusht)
 - E2eTestSeeder: toernooi krijgt `dynamischeKlassen()` (mini's/pupillen) + 5 deterministische
   pupillen (zelfde leeftijd/geslacht, dicht bijeen qua gewicht) → ze categoriseren en vormen
