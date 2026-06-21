@@ -73,6 +73,12 @@ class E2eTestSeeder extends Seeder
             'nummer' => 1,
             'naam' => 'Mat 1',
         ]);
+        // Second mat — target for the poule-move (kleurbeurt) flow test.
+        $mat2 = Mat::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'nummer' => 2,
+            'naam' => 'Mat 2',
+        ]);
 
         $club = Club::factory()->create([
             'organisator_id' => $organisator->id,
@@ -116,19 +122,30 @@ class E2eTestSeeder extends Seeder
             $poule->judokas()->attach($judoka->id, ['positie' => $pos + 1]);
         }
         $volgorde = 1;
-        $eersteWedstrijd = null;
+        $rrWedstrijden = [];
         for ($a = 0; $a < $aantal; $a++) {
             for ($b = $a + 1; $b < $aantal; $b++) {
-                $wedstrijd = Wedstrijd::create([
+                $rrWedstrijden[] = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => $judokas[$a]->id,
                     'judoka_blauw_id' => $judokas[$b]->id,
                     'volgorde' => $volgorde++,
                     'is_gespeeld' => false,
                 ]);
-                $eersteWedstrijd ??= $wedstrijd;
             }
         }
+        $eersteWedstrijd = $rrWedstrijden[0];
+
+        // Kleurbeurt on mat 1: groen/geel/blauw point at three of this poule's
+        // matches. Use unplayed ones ([3..5]) so the uitslag test (which plays
+        // [0]) can't disturb this. The poule-move flow test asserts that moving
+        // the poule to mat 2 keeps groen (actieve_wedstrijd_id) on mat 1 and
+        // clears geel/blauw.
+        $mat->update([
+            'actieve_wedstrijd_id' => $rrWedstrijden[3]->id,     // groen
+            'volgende_wedstrijd_id' => $rrWedstrijden[4]->id,    // geel
+            'gereedmaken_wedstrijd_id' => $rrWedstrijden[5]->id, // blauw
+        ]);
 
         // --- Eliminatie bracket (4 judokas) for the winner-advancement flow ---
         // Built via the real EliminatieService so the bracket linkage
@@ -177,6 +194,10 @@ class E2eTestSeeder extends Seeder
             'wedstrijdId' => $eersteWedstrijd->id,
             'judokaWitId' => $eersteWedstrijd->judoka_wit_id,
             'judokaBlauwId' => $eersteWedstrijd->judoka_blauw_id,
+            'blokId' => $blok->id,
+            'mat1Id' => $mat->id,
+            'mat2Id' => $mat2->id,
+            'groenWedstrijdId' => $rrWedstrijden[3]->id,
             'eliminatie' => [
                 'pouleId' => $elimPoule->id,
                 'finaleId' => $elimFinale?->id,

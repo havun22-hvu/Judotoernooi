@@ -197,6 +197,44 @@ test.describe('Weging (HTTP)', () => {
     });
 });
 
+test.describe('Poule verplaatsen — kleurbeurt (HTTP)', () => {
+    test('moving a poule keeps green on the old mat and clears yellow/blue', async ({ page }) => {
+        test.slow();
+        const ids = seededIds();
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        const matState = async () => {
+            const res = await postJson(page, toernooiUrl('/mat/wedstrijden'), {
+                blok_id: ids.blokId,
+                mat_id: ids.mat1Id,
+            });
+            expect(res.status, `mat-state ${res.status}: ${res.text.slice(0, 200)}`).toBeLessThan(400);
+            return JSON.parse(res.text).mat;
+        };
+
+        // Precondition: green/yellow/blue are all set on mat 1.
+        const before = await matState();
+        expect(before.actieve_wedstrijd_id).toBe(ids.groenWedstrijdId);
+        expect(before.volgende_wedstrijd_id).not.toBeNull();
+        expect(before.gereedmaken_wedstrijd_id).not.toBeNull();
+
+        // Move the poule to mat 2.
+        const move = await postJson(page, toernooiUrl('/blok/verplaats-poule'), {
+            poule_id: ids.pouleId,
+            mat_id: ids.mat2Id,
+        });
+        expect(move.status, `verplaats ${move.status}: ${move.text.slice(0, 200)}`).toBeLessThan(400);
+
+        // The running match (green) stays on the old mat so it can finish there;
+        // only yellow/blue of the departed poule clear. This is the kleurbeurt fix.
+        const after = await matState();
+        expect(after.actieve_wedstrijd_id, 'green must stay on the old mat').toBe(ids.groenWedstrijdId);
+        expect(after.volgende_wedstrijd_id, 'yellow must clear').toBeNull();
+        expect(after.gereedmaken_wedstrijd_id, 'blue must clear').toBeNull();
+    });
+});
+
 test.describe('Poule-generatie (HTTP)', () => {
     test('generating poules yields a valid response with a problemen key', async ({ page }) => {
         test.slow();
