@@ -175,6 +175,56 @@ class ToernooiService
                 ->whereDoesntHave('poules')
                 ->delete();
         }
+
+        // De "mat" device-toegangen moeten de werkelijke matten volgen.
+        $this->syncMatToegangen($toernooi);
+    }
+
+    /**
+     * Keep the "mat" device-toegangen in sync with the actual mats: create one
+     * for every mat that lacks one, and remove the ones whose mat no longer
+     * exists. Zo passen de mat-toegangen mee als het aantal matten verandert.
+     */
+    public function syncMatToegangen(Toernooi $toernooi): void
+    {
+        $matNummers = $toernooi->matten()->pluck('nummer')->all();
+
+        $bestaande = $toernooi->deviceToegangen()
+            ->where('rol', 'mat')
+            ->pluck('mat_nummer')
+            ->all();
+
+        foreach ($matNummers as $nummer) {
+            if (!in_array($nummer, $bestaande)) {
+                DeviceToegang::create([
+                    'toernooi_id' => $toernooi->id,
+                    'rol' => 'mat',
+                    'mat_nummer' => $nummer,
+                ]);
+            }
+        }
+
+        // Toegangen van niet-bestaande matten weghalen ([-1] vangt de lege lijst:
+        // whereNotIn([]) zou anders niets verwijderen).
+        $toernooi->deviceToegangen()
+            ->where('rol', 'mat')
+            ->whereNotIn('mat_nummer', $matNummers ?: [-1])
+            ->delete();
+    }
+
+    /**
+     * Haal alle poules van hun mat af (mat_id + b_mat_id => null). De poules
+     * blijven bestaan; alleen hun mat-toewijzing (de zaaloverzicht-indeling)
+     * vervalt. Wedstrijden worden NIET verwijderd — die regenereren bij de
+     * volgende blok-activatie. Gebruikt bij het verlagen van het aantal matten.
+     */
+    public function legeAlleMatten(Toernooi $toernooi): void
+    {
+        $toernooi->poules()
+            ->where(function ($q) {
+                $q->whereNotNull('mat_id')->orWhereNotNull('b_mat_id');
+            })
+            ->update(['mat_id' => null, 'b_mat_id' => null]);
     }
 
     /**

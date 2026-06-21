@@ -246,6 +246,26 @@ class ToernooiController extends Controller
             app(JudokaController::class)->voerValidatieUit($organisator, $toernooi);
         }
 
+        // Verlagen van het aantal matten terwijl er poules op matten staan: maak
+        // alle matten leeg (poules terug naar 'geen mat') — alleen als de gebruiker
+        // het in de frontend heeft bevestigd. Anders de verlaging niet doorvoeren.
+        $nieuwAantalMatten = (int) $toernooi->aantal_matten;
+        $huidigeMatten = $toernooi->matten()->count();
+        $poulesOpMatten = $toernooi->poules()
+            ->where(function ($q) {
+                $q->whereNotNull('mat_id')->orWhereNotNull('b_mat_id');
+            })
+            ->exists();
+
+        if ($nieuwAantalMatten < $huidigeMatten && $poulesOpMatten) {
+            if ($request->boolean('matten_legen_bevestigd')) {
+                $this->toernooiService->legeAlleMatten($toernooi);
+            } else {
+                // Vangnet: zonder bevestiging de verlaging terugdraaien.
+                $toernooi->update(['aantal_matten' => $huidigeMatten]);
+            }
+        }
+
         // Sync blokken and matten to match settings
         $blokkenResult = $this->toernooiService->syncBlokken($toernooi);
         $this->toernooiService->syncMatten($toernooi);

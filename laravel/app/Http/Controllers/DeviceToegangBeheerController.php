@@ -11,33 +11,13 @@ use Illuminate\Http\Request;
 class DeviceToegangBeheerController extends Controller
 {
     /**
-     * Ensure mat toegangen exist for all mats (based on aantal_matten).
-     */
-    private function syncMatToegangen(Toernooi $toernooi): void
-    {
-        $aantalMatten = $toernooi->aantal_matten ?? 7;
-        $bestaandeMatNummers = $toernooi->deviceToegangen()
-            ->where('rol', 'mat')
-            ->pluck('mat_nummer')
-            ->toArray();
-
-        for ($i = 1; $i <= $aantalMatten; $i++) {
-            if (!in_array($i, $bestaandeMatNummers)) {
-                DeviceToegang::create([
-                    'toernooi_id' => $toernooi->id,
-                    'rol' => 'mat',
-                    'mat_nummer' => $i,
-                ]);
-            }
-        }
-    }
-
-    /**
      * Get all device toegangen for a toernooi.
      */
     public function index(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
-        $this->syncMatToegangen($toernooi);
+        // Mat-toegangen gelijktrekken met de werkelijke matten (toevoegen + wezen
+        // verwijderen). Gedeelde logica met de toernooi-instellingen.
+        app(\App\Services\ToernooiService::class)->syncMatToegangen($toernooi);
 
         $toegangen = $toernooi->deviceToegangen()
             ->orderBy('naam')

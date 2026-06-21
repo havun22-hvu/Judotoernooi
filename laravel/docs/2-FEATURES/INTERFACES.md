@@ -114,6 +114,27 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 - Device resetten (nieuw device kan binden)
 - Automatische reset bij "Einde toernooi"
 
+### Mat-toegangen volgen het aantal matten
+
+De **mat**-device-toegangen lopen automatisch mee met het aantal matten (Toernooi-tab →
+"Aantal Matten"). Er is altijd precies één mat-toegang per bestaande mat.
+
+- **Aantal matten verhogen** → nieuwe mat(ten) + bijbehorende mat-toegang(en) erbij. Geen waarschuwing.
+- **Aantal matten verlagen, géén poules op de matten** → overtollige mat(ten) + hun mat-toegang weg.
+  Geen waarschuwing.
+- **Aantal matten verlagen, wél poules op matten** → eerst een waarschuwing:
+  > "Alle poules worden matloos — je moet ze opnieuw indelen via 'Blokken → Verdeel over matten'. Doorgaan?"
+  - **OK** → álle matten worden leeg: alle poules krijgen `mat_id = null` (terug naar 'geen mat')
+    en hun wedstrijdschema vervalt (regenereert bij opnieuw verdelen). Daarna wordt het nieuwe
+    aantal matten toegepast en lopen de mat-toegangen mee.
+  - **Annuleren** → er gebeurt niets; het aantal matten blijft staan.
+- **Poules worden nooit verwijderd** — alleen losgekoppeld van hun mat (vergelijkbaar met hoe het
+  verwijderen van een blok de poules naar het sleepvak verplaatst i.p.v. ze te wissen).
+- De device-toegangen-lijst op de Organisatie-tab **ververst direct** na de wijziging.
+
+Implementatie: `ToernooiService::syncMatten()` (matten) roept `syncMatToegangen()` aan; bij een
+bevestigde verlaging met poules worden eerst alle matten leeggemaakt.
+
 ### Toernooi Instellingen (3 tabs)
 
 **Route:** `/toernooi/{id}/edit`
