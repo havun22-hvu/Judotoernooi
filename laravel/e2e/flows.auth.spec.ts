@@ -178,6 +178,25 @@ test.describe('Eliminatie winnaar-doorschuiven (HTTP)', () => {
     });
 });
 
+test.describe('Weging (HTTP)', () => {
+    test('a valid weigh-in succeeds; under 15kg is refused', async ({ page }) => {
+        test.slow();
+        const ids = seededIds();
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        // A valid weigh-in is accepted. (Re-weighing a seeded judoka with a normal
+        // weight is harmless — it stays present and in its poule.)
+        const ok = await postJson(page, toernooiUrl(`/weging/${ids.judokaBlauwId}/registreer`), { gewicht: 28 });
+        expect(ok.status, `weging ${ok.status}: ${ok.text.slice(0, 200)}`).toBeLessThan(400);
+        expect(JSON.parse(ok.text).success).toBe(true);
+
+        // Under 15kg (but not 0, which means "absent") is refused without saving.
+        const tooLight = await postJson(page, toernooiUrl(`/weging/${ids.judokaBlauwId}/registreer`), { gewicht: 10 });
+        expect(JSON.parse(tooLight.text).success).toBe(false);
+    });
+});
+
 test.describe('Poule-generatie (HTTP)', () => {
     test('generating poules yields a valid response with a problemen key', async ({ page }) => {
         test.slow();
