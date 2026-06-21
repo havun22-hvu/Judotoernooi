@@ -24,6 +24,16 @@ last_updated: 2026-06-14
   (triviaal/additief, gaat mee met volgende deploy).
 - **e2e-machine-les:** background-runs laten `php artisan serve` op :8008 achter → kill vóór run.
 
+### uitslag → poulestand flowtest — KLAAR (commit `2a60f755`, main, gepusht)
+- Seeder bouwt nu een **complete poule**: 5 pupillen via `poule_judoka`-pivot + volledige
+  round-robin (ongespeelde) wedstrijden. Dynamische IDs (poule, 1e wedstrijd, beide judokas)
+  → `database/e2e-ids.json` (gitignored), gelezen door de spec.
+- Test: `POST /mat/uitslag` (beslissende winst voor wit) → `POST /spreker/standings`, assert
+  winnaar bovenaan met `wp=2` + precies één judoka op 2 winstpunten. **Draait vóór de
+  genereer-test** (die de poule wist). Volgorde in spec: judoka → uitslag → genereer.
+- 4 flows groen + display/csp geen regressie (2 flaky = bekende cold-load).
+- **Volgende geplande flow:** eliminatie winnaar-doorschuiven (in uitvoering, autonoom).
+
 ### 3 CSP/judoka-fixes GEDEPLOYED naar staging + productie (21-06)
 - Staging + prod beide op `ef65a127` (was staging `90c2c30d`, prod `cf34d15b`).
 - ff-pull + post-merge hook (`optimize:clear`) + `queue:restart`. PHP/Blade/JS + gecommitte
