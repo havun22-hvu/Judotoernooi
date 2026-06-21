@@ -124,6 +124,8 @@
     <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="{{ __('Instellingen opslaan...') }}">
         @csrf
         @method('PUT')
+        {{-- Huidige tab meesturen zodat de redirect na opslaan op dezelfde tab blijft. --}}
+        <input type="hidden" name="active_tab" :value="activeTab">
 
         <!-- ALGEMEEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -3657,12 +3659,13 @@ window.triggerAutoSave = function() {};
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
                     autoSave();
-                    // Reload op de Toernooi-tab (waar deze keuze staat). Een kale
-                    // reload zou een eventuele ?tab=organisatie uit de URL behouden
-                    // en de gebruiker naar de Organisatie-tab springen.
+                    // Reload op de huidige tab. Een kale reload zou een eventuele
+                    // ?tab=organisatie uit de URL behouden en de gebruiker naar een
+                    // andere tab springen.
                     setTimeout(() => {
+                        const tab = document.querySelector('[name=active_tab]')?.value || 'toernooi';
                         const url = new URL(window.location.href);
-                        url.searchParams.set('tab', 'toernooi');
+                        url.searchParams.set('tab', tab);
                         window.location.href = url.toString();
                     }, 800);
                 }, 300);

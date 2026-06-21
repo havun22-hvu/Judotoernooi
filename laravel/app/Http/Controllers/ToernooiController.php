@@ -278,7 +278,13 @@ class ToernooiController extends Controller
             ]);
         }
 
-        $redirect = redirect()->route('toernooi.edit', $toernooi->routeParams());
+        // Keep the user on the tab they saved from (sent as a hidden field).
+        $params = $toernooi->routeParams();
+        $activeTab = $request->input('active_tab');
+        if (in_array($activeTab, ['toernooi', 'organisatie', 'noodplan', 'admin'], true)) {
+            $params = $toernooi->routeParamsWith(['tab' => $activeTab]);
+        }
+        $redirect = redirect()->route('toernooi.edit', $params);
 
         // Combine warnings
         $warnings = array_filter([$overlapWarning, $blokkenWarning]);
