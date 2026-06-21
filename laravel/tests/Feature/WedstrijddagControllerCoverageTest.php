@@ -242,6 +242,46 @@ class WedstrijddagControllerCoverageTest extends TestCase
     }
 
     #[Test]
+    public function zet_om_naar_poules_erft_categorie_en_houdt_nummer(): void
+    {
+        $this->actAsOrg();
+        $blok = Blok::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+
+        $elimPoule = Poule::factory()->create([
+            'toernooi_id' => $this->toernooi->id,
+            'blok_id' => $blok->id,
+            'mat_id' => $mat->id,
+            'type' => 'eliminatie',
+            'leeftijdsklasse' => "mini's",
+            'gewichtsklasse' => '-30',
+            'categorie_key' => 'minis_-30',
+            'nummer' => 7,
+        ]);
+        for ($i = 0; $i < 6; $i++) {
+            $j = $this->makeJudoka(['aanwezigheid' => 'aanwezig']);
+            $elimPoule->judokas()->attach($j->id, ['positie' => $i + 1]);
+        }
+
+        $response = $this->postJson($this->url('wedstrijddag/zet-om-naar-poules'), [
+            'poule_id' => $elimPoule->id,
+            'systeem' => 'poules',
+        ]);
+        $response->assertJson(['success' => true]);
+
+        $nieuwePoules = Poule::where('toernooi_id', $this->toernooi->id)
+            ->where('type', 'voorronde')->get();
+
+        $this->assertGreaterThan(0, $nieuwePoules->count());
+        // Alle nieuwe poules erven de categorie van de eliminatie-poule.
+        foreach ($nieuwePoules as $p) {
+            $this->assertEquals('minis_-30', $p->categorie_key, 'categorie_key moet geërfd zijn');
+        }
+        // Eén nieuwe poule houdt het vrijgekomen nummer van de eliminatie-poule.
+        $this->assertTrue($nieuwePoules->contains('nummer', 7), 'eerste poule houdt nummer 7');
+    }
+
+    #[Test]
     public function zet_om_naar_poules_met_kruisfinale(): void
     {
         $this->actAsOrg();

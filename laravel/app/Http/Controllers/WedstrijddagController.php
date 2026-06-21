@@ -552,6 +552,9 @@ class WedstrijddagController extends Controller
                 'mat_id' => $elimPoule->mat_id,
                 'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
                 'gewichtsklasse' => $elimPoule->gewichtsklasse,
+                // Erf de categorie zodat de poules onder dezelfde categorie (bv.
+                // H-15) blijven; de blok-/matverdeling groepeert op categorie_key.
+                'categorie_key' => $elimPoule->categorie_key,
                 'nummer' => $nieuweNummer,
                 'titel' => $elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse . ' Poule ' . ($i + 1),
                 'type' => 'voorronde',
@@ -617,9 +620,14 @@ class WedstrijddagController extends Controller
             ]);
         }
 
-        // Delete original elimination poule
+        // Delete original elimination poule; daarna komt z'n nummer vrij en geven
+        // we dat aan de eerste nieuwe poule (herkenbaar onder dezelfde categorie).
+        $origineelNummer = $elimPoule->nummer;
         $elimPoule->judokas()->detach();
         $elimPoule->delete();
+        if (!empty($nieuwePoules)) {
+            $nieuwePoules[0]->update(['nummer' => $origineelNummer]);
+        }
 
         return response()->json([
             'success' => true,
