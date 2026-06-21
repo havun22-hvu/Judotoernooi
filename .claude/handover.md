@@ -24,6 +24,29 @@ last_updated: 2026-06-14
   (triviaal/additief, gaat mee met volgende deploy).
 - **e2e-machine-les:** background-runs laten `php artisan serve` op :8008 achter → kill vóór run.
 
+### Functionele e2e-flows COMPLEET (laatste: `7d006902`, main, gepusht)
+Alle geplande laag-A flows in `e2e/flows.auth.spec.ts` (authenticated project), allemaal groen:
+1. **Judoka-CRUD (UI)** — knop opent modal + form submit (`942cab1e` regressie-guard).
+2. **Uitslag → poulestand** — `/mat/uitslag` win → `/spreker/standings` wp=2 (`2a60f755`).
+3. **Eliminatie doorschuiven** — 2 halve-finales winnen → finale accepteert doorgeschoven
+   winnaar (de finale-POST slaagt alléén als doorschuiven werkte) (`fe823935`).
+4. **Weging** — geldige weging slaagt, <15kg geweigerd (`7d006902`).
+5. **Poule-generatie** — `/poule/genereer` + `/verifieer`, `problemen`-key (`2c311215`).
+
+**Patroon/lessen (herbruikbaar):**
+- Seeder (`E2eTestSeeder`) bouwt nu een complete round-robin poule + een 4-judoka eliminatie-
+  bracket (via echte `EliminatieService::genereerBracket`), schrijft dynamische IDs naar
+  `database/e2e-ids.json` (gitignored). Specs lezen die via `seededIds()`.
+- HTTP-POSTs via **in-page `fetch`** (`postJson()`) — same-origin cookie + CSRF uit dashboard-meta.
+  `page.request` deelde de sessie NIET (419).
+- Volgorde in spec: judoka → uitslag → eliminatie → weging → **genereer LAATST** (die wist poules).
+- `blockExternalCdn` + `waitForCspReady` + `test.slow()` tegen sandbox-CDN-hang/machine-load.
+- Geen regressie op display/csp/pwa; bekende cold-load flakiness (slaagt op retry).
+
+**Nog open (laag B / out-of-scope):** DnD poule-verplaatsing + kleurbeurt, realtime cross-device
+broadcast, facturen/PDF, betalingen. Dashboard-`csrf-token`-meta (commit `2c311215`) nog niet
+gedeployed (triviaal, gaat mee met volgende deploy).
+
 ### uitslag → poulestand flowtest — KLAAR (commit `2a60f755`, main, gepusht)
 - Seeder bouwt nu een **complete poule**: 5 pupillen via `poule_judoka`-pivot + volledige
   round-robin (ongespeelde) wedstrijden. Dynamische IDs (poule, 1e wedstrijd, beide judokas)
