@@ -9,7 +9,30 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
-## Huidige status (21-06-2026)
+## Huidige status (22-06-2026)
+
+### Sessie 21–22 juni — overzicht
+Lange sessie. Op **main + staging** (staging = `59ef4256`), **productie nog op `ef65a127`**
+(alleen de 3 vroege CSP/judoka-fixes draaien op prod; de rest hieronder wacht op deploy-cue).
+
+**Features (op staging, te beoordelen):**
+- **Mat-toegangen ↔ aantal matten** (`b2e16844`/`734acc30`): mat-device-toegangen volgen het
+  aantal matten (toevoegen/verwijderen). Verlagen mét poules → waarschuwing → poules matloos
+  (mat_id null, niet verwijderd), lijst ververst direct. Spec: INTERFACES.md. Plan:
+  `.claude/plan-matten-toegangen.md`. Tests: `MattenToegangenSyncTest`.
+- **Eliminatie → poules omzetten** (`59ef4256`): nieuwe poules erven `categorie_key` (blijven
+  onder dezelfde categorie, bv. H-15) + de eerste poule houdt het oude nummer.
+
+**Tab- + CSP-fixes op edit.blade.php (op staging):**
+- Tab blijft behouden bij open/intern-wissel én bij Opslaan (`active_tab` hidden + redirect).
+- Categorie-editor + hele `toernooi/edit.blade.php` CSP-schoon: **0 inline `on*=` en 0 inline
+  `style=`** (preset-opslaan werkte niet onder CSP). Zie `.claude/smallwork.md`.
+
+**Werkwijze-les vastgelegd:** AskUserQuestion-keuzetool AFGESCHAFT — alleen platte-tekst-vragen,
+1 voor 1; cancel ≠ go-ahead. Zie geheugen `[[feedback_vraag-cancel-niet-doorgaan]]`.
+
+**TE DOEN volgende sessie:** na Henk's akkoord op staging → het hele staging-pakket (mat-toegangen,
+eliminatie→poules, tab/CSP-fixes, csrf-meta) naar productie deployen (prod loopt achter op `ef65a127`).
 
 ### Staging op `e0015101` (alle sessie-werk) — 21-06
 Alles van deze sessie staat op **staging** (incl. dashboard-csrf-meta + 7 e2e-flows-infra).
