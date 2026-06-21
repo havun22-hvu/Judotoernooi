@@ -1431,7 +1431,6 @@
                         <div class="flex items-center gap-1">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
-                                    onchange="togglePuntenCompSelect(this); checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item'))"
                                     ${window.isWimpelAbo ? 'disabled' : ''}>
                                 <option value="punten_competitie" ${window.isWimpelAbo || systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 ${!window.isWimpelAbo ? `<option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
@@ -1455,8 +1454,7 @@
                             <input type="number" name="gewichtsklassen_max_kg[${key}]"
                                    value="${maxKg}"
                                    class="max-kg-input w-14 border rounded px-2 py-1.5 text-center text-sm"
-                                   min="0" max="10" step="0.5"
-                                   onchange="toggleGewichtsklassen(this)">
+                                   min="0" max="10" step="0.5">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
@@ -1464,15 +1462,14 @@
                                    value="${maxLft}"
                                    class="max-lft-input w-14 border rounded px-2 py-1.5 text-center text-sm"
                                    min="0" max="5" step="1"
-                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule"
-                                   onchange="checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item')); updateJsonInput()">
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
                         </div>
                         <div class="flex items-center gap-2 bg-blue-50 rounded px-2 py-1" title="{{ __('Wedstrijdregels per categorie') }}">
                             <label class="text-gray-600 text-sm whitespace-nowrap" title="{{ __('Shiai-tijd (wedstrijdduur)') }}">⏱</label>
                             <select name="gewichtsklassen_shiai_time[${key}]"
                                     class="shiai-time-select border rounded px-1 py-1 text-sm bg-white"
                                     title="{{ __('Wedstrijdtijd') }}"
-                                    onchange="updateJsonInput()">
+                                    >
                                 <option value="120" ${shiaiTime == 120 ? 'selected' : ''}>2:00</option>
                                 <option value="180" ${shiaiTime == 180 ? 'selected' : ''}>3:00</option>
                                 <option value="240" ${shiaiTime == 240 ? 'selected' : ''}>4:00</option>
@@ -1481,19 +1478,18 @@
                             <label class="text-gray-500 text-xs flex items-center gap-1" title="{{ __('Shime waza — wurging toegestaan') }}">
                                 <input type="checkbox" name="gewichtsklassen_shime_waza[${key}]"
                                        class="shime-waza-checkbox" ${shimeWaza ? 'checked' : ''}
-                                       onchange="updateJsonInput()">
+                                       >
                                 {{ __('Shime') }}
                             </label>
                             <label class="text-gray-500 text-xs flex items-center gap-1" title="{{ __('Kansetsu waza — armklem toegestaan') }}">
                                 <input type="checkbox" name="gewichtsklassen_kansetsu_waza[${key}]"
                                        class="kansetsu-waza-checkbox" ${kansetsuWaza ? 'checked' : ''}
-                                       onchange="updateJsonInput()">
+                                       >
                                 {{ __('Kansetsu') }}
                             </label>
                             <label class="text-gray-500 text-xs whitespace-nowrap" title="{{ __('Eindfase bij gelijkstand') }}">{{ __('Eind:') }}</label>
                             <select class="eind-optie-select border rounded px-1 py-1 text-sm bg-white"
-                                    title="{{ __('Eindoptie bij gelijkstand') }}"
-                                    onchange="toggleGoldenScoreDuur(this); updateJsonInput()">
+                                    title="{{ __('Eindoptie bij gelijkstand') }}">
                                 <option value="golden_score" ${eindOptie === 'golden_score' ? 'selected' : ''}>{{ __('GS') }}</option>
                                 <option value="hantei" ${eindOptie === 'hantei' ? 'selected' : ''}>{{ __('Hantei') }}</option>
                                 <option value="hikiwake" ${eindOptie === 'hikiwake' ? 'selected' : ''}>{{ __('Hikiwake') }}</option>
@@ -1502,8 +1498,7 @@
                                    value="${goldenScoreDuur}"
                                    min="1" max="10" placeholder="∞"
                                    title="{{ __('Golden Score duur in minuten (leeg = onbeperkt)') }}"
-                                   style="${eindOptie !== 'golden_score' ? 'display:none' : ''}"
-                                   onchange="updateJsonInput()">
+                                   >
                         </div>
                         <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
                             <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
@@ -1534,8 +1529,7 @@
                             <input type="text" name="gewichtsklassen[${key}]"
                                    value="${(item.gewichten || []).join(', ')}"
                                    class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
-                                   placeholder="-20, -23, -26, +26"
-                                   onchange="checkGewichtsklassenWarning(this)">
+                                   placeholder="-20, -23, -26, +26">
                             <div class="gewichten-warning hidden text-red-600 text-xs mt-1">
                                 ⚠️ Δkg=0 maar geen gewichtsklassen ingevuld
                             </div>
@@ -1545,6 +1539,26 @@
                         </div>
                     </div>
                 `;
+
+                // CSP-safe: handlers via één gedelegeerde change-listener i.p.v.
+                // inline onchange= (geblokkeerd onder strikte CSP). De globale
+                // functies bestaan al; dit voert exact dezelfde acties uit.
+                div.addEventListener('change', (e) => {
+                    const t = e.target;
+                    if (t.matches('.systeem-select')) { togglePuntenCompSelect(t); checkSysteemBeschikbaarheid(t.closest('.gewichtsklasse-item')); }
+                    else if (t.matches('.max-kg-input')) { toggleGewichtsklassen(t); }
+                    else if (t.matches('.max-lft-input')) { checkSysteemBeschikbaarheid(t.closest('.gewichtsklasse-item')); updateJsonInput(); }
+                    else if (t.matches('.eind-optie-select')) { toggleGoldenScoreDuur(t); updateJsonInput(); }
+                    else if (t.matches('.gewichten-input')) { checkGewichtsklassenWarning(t); }
+                    else if (t.matches('.shiai-time-select, .shime-waza-checkbox, .kansetsu-waza-checkbox, .golden-score-duur-input')) { updateJsonInput(); }
+                });
+
+                // Begin-zichtbaarheid GS-duur via CSSOM (geen inline style=).
+                if (eindOptie !== 'golden_score') {
+                    const gsDuur = div.querySelector('.golden-score-duur-input');
+                    if (gsDuur) gsDuur.style.display = 'none';
+                }
+
                 return div;
             }
 

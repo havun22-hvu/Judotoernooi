@@ -14,3 +14,9 @@
   redirect nu met die tab (gevalideerd tegen toernooi/organisatie/noodplan/admin). De
   toernooi_type-reload leest die hidden input → blijft op de huidige tab. Auto-save zelf is
   AJAX (geen navigatie) → tab bleef al staan. 67 ToernooiController-tests groen.
+- **Eigen preset-categorieën opslaan faalde (CSP)** — `createCategorieElement` bouwde de
+  categorie-rij met `innerHTML` mét inline `onchange="..."` (9×) en inline
+  `style="display:none"` → onder strikte CSP geblokkeerd → categorieën renderden niet →
+  opslaan lukte niet. Fix: inline attributen weg; één gedelegeerde `change`-listener op het
+  rij-element (CSP-safe), begin-zichtbaarheid GS-duur via CSSOM (`style.display`). De toggle-
+  functies waren al CSSOM/classList. Blade compileert; durabele oplossing.
