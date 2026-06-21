@@ -1804,13 +1804,13 @@
                     showPresetModal(__t.presetOpslaan, `
                         <p class="mb-4 text-gray-600">${__t.jeHebtGeladen.replace(':naam', huidigePresetNaam)}</p>
                         <div class="flex flex-col gap-2">
-                            <button type="button" onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                            <button type="button" data-action="preset-overwrite" data-naam="${huidigePresetNaam}" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                                 📝 ${__t.overschrijven.replace(':naam', huidigePresetNaam)}
                             </button>
-                            <button type="button" onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                            <button type="button" data-action="preset-new" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                                 ➕ ${__t.nieuwePresetMaken}
                             </button>
-                            <button type="button" onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                            <button type="button" data-action="preset-cancel" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
                                 ${__t.annuleren}
                             </button>
                         </div>
@@ -1829,10 +1829,10 @@
                         <input type="text" id="new-preset-naam" class="w-full border rounded px-3 py-2" placeholder="Bijv. Mijn toernooi preset" autofocus>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                        <button type="button" data-action="preset-save-new" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                             💾 ${__t.opslaan}
                         </button>
-                        <button type="button" onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                        <button type="button" data-action="preset-cancel" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
                             ${__t.annuleren}
                         </button>
                     </div>
@@ -1854,6 +1854,15 @@
             // Make savePreset and hidePresetModal available globally
             window.savePreset = savePreset;
             window.hidePresetModal = hidePresetModal;
+
+            // CSP-safe: de preset-modal-knoppen worden via innerHTML geïnjecteerd,
+            // dus inline onclick= is geblokkeerd. Koppel ze via event-delegation.
+            window.cspActions({
+                'preset-overwrite': (el) => window.savePreset(el.dataset.naam, true),
+                'preset-new': () => window.showNewPresetInput(),
+                'preset-cancel': () => window.hidePresetModal(),
+                'preset-save-new': () => window.saveNewPreset(),
+            });
 
             // Update delete button visibility when dropdown changes
             presetsDropdown.addEventListener('change', () => {
