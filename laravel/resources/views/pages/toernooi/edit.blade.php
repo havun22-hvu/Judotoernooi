@@ -126,6 +126,8 @@
         @method('PUT')
         {{-- Huidige tab meesturen zodat de redirect na opslaan op dezelfde tab blijft. --}}
         <input type="hidden" name="active_tab" :value="activeTab">
+        {{-- Bevestiging om bij het verlagen van het aantal matten alle matten leeg te maken. --}}
+        <input type="hidden" name="matten_legen_bevestigd" id="matten_legen_bevestigd" value="0">
 
         <!-- ALGEMEEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -245,6 +247,7 @@
                     <label for="aantal_matten" class="block text-gray-700 font-medium mb-1">{{ __('Aantal Matten') }}</label>
                     <input type="number" name="aantal_matten" id="aantal_matten"
                            value="{{ old('aantal_matten', $toernooi->aantal_matten) }}"
+                           data-huidig="{{ $toernooi->aantal_matten }}"
                            class="w-full border rounded px-3 py-2" min="1" max="20">
                     <p class="text-gray-500 text-sm mt-1">{{ __('Hoeveel wedstrijdmatten zijn beschikbaar?') }}</p>
                 </div>
@@ -3543,7 +3546,11 @@ window.triggerAutoSave = function() {};
         onbekendeFout: @json(__('Onbekende fout')),
         overlappendeCat: @json(__('Overlappende categorieën gedetecteerd!')),
         overlapUitleg: @json(__("Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan.")),
+        mattenWaarschuwing: @json(__('Alle poules worden matloos — je moet ze opnieuw indelen via Blokken → Verdeel over matten. Doorgaan?')),
     };
+
+    // Staan er poules op matten? (voor de waarschuwing bij minder matten)
+    const heeftPoulesOpMatten = @json($toernooi->poules()->whereNotNull('mat_id')->exists() || $toernooi->poules()->whereNotNull('b_mat_id')->exists());
 
     const form = document.getElementById('toernooi-form');
     if (!form) return;
@@ -3676,6 +3683,28 @@ window.triggerAutoSave = function() {};
     // Listen for changes on all form elements (using event delegation for dynamic elements)
     form.addEventListener('change', (e) => {
         if (e.target.matches('input, select, textarea')) {
+            // Aantal matten: bij verlagen met poules op matten eerst waarschuwen.
+            if (e.target.name === 'aantal_matten') {
+                const nieuw = parseInt(e.target.value, 10);
+                const huidig = parseInt(e.target.dataset.huidig, 10);
+                if (!isNaN(nieuw) && !isNaN(huidig) && nieuw < huidig && heeftPoulesOpMatten) {
+                    if (!confirm(__ta.mattenWaarschuwing)) {
+                        e.target.value = huidig; // terugzetten, niet opslaan
+                        return;
+                    }
+                    document.getElementById('matten_legen_bevestigd').value = '1';
+                }
+                e.target.dataset.huidig = isNaN(nieuw) ? String(huidig) : String(nieuw);
+                markDirty();
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    autoSave();
+                    document.getElementById('matten_legen_bevestigd').value = '0';
+                    // Device-toegangen-lijst direct verversen na de save.
+                    setTimeout(() => window.dispatchEvent(new CustomEvent('matten-gewijzigd')), 900);
+                }, 300);
+                return;
+            }
             // Reload page after saving toernooi_type (sections appear/disappear)
             if (e.target.name === 'toernooi_type') {
                 markDirty();
@@ -3701,6 +3730,8 @@ window.triggerAutoSave = function() {};
     });
     form.addEventListener('input', (e) => {
         if (e.target.matches('input[type="text"], input[type="number"], textarea')) {
+            // Aantal matten alleen op 'change' afhandelen (i.v.m. de waarschuwing).
+            if (e.target.name === 'aantal_matten') return;
             markDirty();
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, 1500);

@@ -467,6 +467,9 @@ document.addEventListener('alpine:init', () => {
         // --- Init & API ---
         async init() {
             await Promise.all([this.loadToegangen(), this.loadVrijwilligers()]);
+            // Bij wijziging van het aantal matten (Toernooi-tab) de lijst direct
+            // verversen — de mat-toegangen zijn dan server-side al meegeschoven.
+            window.addEventListener('matten-gewijzigd', () => this.loadToegangen());
         },
 
         async loadToegangen() {
