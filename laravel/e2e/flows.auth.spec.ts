@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 import { toernooiUrl, dashboardUrl } from './fixtures';
 
 /**
@@ -75,6 +77,56 @@ test.describe('Judoka beheer (UI)', () => {
         await expect(page).toHaveURL(/\/judoka/);
 
         expect(errors, `Uncaught JS errors:\n${errors.join('\n')}`).toEqual([]);
+    });
+});
+
+test.describe('Uitslag → poulestand (HTTP)', () => {
+    test('registering a win updates the standings (wp=2)', async ({ page }) => {
+        test.slow();
+        // IDs of the seeded poule + first match, written by E2eTestSeeder (the
+        // auto-increment ids aren't known up front). This runs before the
+        // poule-generation test, which deletes the seeded poule.
+        const ids = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'database/e2e-ids.json'), 'utf-8'));
+
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        const post = (url: string, body: unknown) =>
+            page.evaluate(
+                async ({ url, body }) => {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN':
+                                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                        },
+                        body: JSON.stringify(body),
+                    });
+                    return { status: res.status, text: await res.text() };
+                },
+                { url, body },
+            );
+
+        // Register a decisive win for the white judoka of the first match.
+        const uitslag = await post(toernooiUrl('/mat/uitslag'), {
+            wedstrijd_id: ids.wedstrijdId,
+            winnaar_id: ids.judokaWitId,
+            score_wit: 10,
+            score_blauw: 0,
+            uitslag_type: 'beslissing',
+        });
+        expect(uitslag.status, `uitslag ${uitslag.status}: ${uitslag.text.slice(0, 200)}`).toBeLessThan(400);
+
+        // The standings must now show exactly one judoka on 2 win-points, on top.
+        const stand = await post(toernooiUrl('/spreker/standings'), { poule_id: ids.pouleId });
+        expect(stand.status, `standings ${stand.status}: ${stand.text.slice(0, 200)}`).toBeLessThan(400);
+        const body = JSON.parse(stand.text);
+
+        expect(Array.isArray(body.standings)).toBe(true);
+        expect(body.standings[0]?.wp, JSON.stringify(body.standings).slice(0, 200)).toBe(2);
+        expect(body.standings.filter((s: { wp: number }) => s.wp === 2)).toHaveLength(1);
     });
 });
 

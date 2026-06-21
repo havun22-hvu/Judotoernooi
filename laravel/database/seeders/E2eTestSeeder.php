@@ -10,6 +10,7 @@ use App\Models\Mat;
 use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Models\Wedstrijd;
 use Illuminate\Database\Seeder;
 
 /**
@@ -73,24 +74,18 @@ class E2eTestSeeder extends Seeder
             'naam' => 'Mat 1',
         ]);
 
-        Poule::factory()->metJudokas(5)->create([
-            'toernooi_id' => $toernooi->id,
-            'blok_id' => $blok->id,
-            'mat_id' => $mat->id,
-            'titel' => "Pupillen -28 Poule",
-        ]);
-
         $club = Club::factory()->create([
             'organisator_id' => $organisator->id,
             'naam' => 'E2E Judoclub',
         ]);
 
         // Five deterministic pupillen (8j), same age + sex and clustered weights
-        // so they form a single valid poule when generation runs. Weighed and
-        // present, so they count toward standings.
+        // so they form a single valid poule. Weighed and present, so they count
+        // toward standings.
         $jaar = (int) date('Y');
+        $judokas = [];
         foreach ([26.0, 27.0, 27.5, 28.0, 28.5] as $i => $gewicht) {
-            Judoka::factory()->create([
+            $judokas[] = Judoka::factory()->create([
                 'toernooi_id' => $toernooi->id,
                 'club_id' => $club->id,
                 'naam' => sprintf('Pupil %d, E2E', $i + 1),
@@ -103,6 +98,46 @@ class E2eTestSeeder extends Seeder
                 'aanwezigheid' => 'aanwezig',
             ]);
         }
+
+        // A real poule with the five judokas linked and a full round-robin of
+        // (unplayed) matches, so the uitslag→standings flow has matches to score.
+        // NOTE: the poule-generation flow test deletes+regenerates poules, so the
+        // uitslag test must run before it (it does — earlier in the spec file).
+        $aantal = count($judokas);
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'blok_id' => $blok->id,
+            'mat_id' => $mat->id,
+            'titel' => 'Pupillen -28 Poule',
+            'aantal_judokas' => $aantal,
+            'aantal_wedstrijden' => $aantal * ($aantal - 1) / 2,
+        ]);
+        foreach ($judokas as $pos => $judoka) {
+            $poule->judokas()->attach($judoka->id, ['positie' => $pos + 1]);
+        }
+        $volgorde = 1;
+        $eersteWedstrijd = null;
+        for ($a = 0; $a < $aantal; $a++) {
+            for ($b = $a + 1; $b < $aantal; $b++) {
+                $wedstrijd = Wedstrijd::create([
+                    'poule_id' => $poule->id,
+                    'judoka_wit_id' => $judokas[$a]->id,
+                    'judoka_blauw_id' => $judokas[$b]->id,
+                    'volgorde' => $volgorde++,
+                    'is_gespeeld' => false,
+                ]);
+                $eersteWedstrijd ??= $wedstrijd;
+            }
+        }
+
+        // Expose the dynamic IDs the uitslag→standings spec needs (auto-increment
+        // ids aren't known up front). Read by e2e/flows.auth.spec.ts.
+        file_put_contents(database_path('e2e-ids.json'), json_encode([
+            'pouleId' => $poule->id,
+            'wedstrijdId' => $eersteWedstrijd->id,
+            'judokaWitId' => $eersteWedstrijd->judoka_wit_id,
+            'judokaBlauwId' => $eersteWedstrijd->judoka_blauw_id,
+        ]));
 
         // Volunteer PWA device-access rows (mat, weging, jurytafel, spreker,
         // dojo). Each is reached via /{org}/{toernooi}/toegang/{code}, which

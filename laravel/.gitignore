@@ -22,3 +22,4 @@ yarn-error.log
 /playwright/.cache
 /e2e/.auth
 /database/e2e.sqlite
+/database/e2e-ids.json
