@@ -20,3 +20,10 @@
   opslaan lukte niet. Fix: inline attributen weg; één gedelegeerde `change`-listener op het
   rij-element (CSP-safe), begin-zichtbaarheid GS-duur via CSSOM (`style.display`). De toggle-
   functies waren al CSSOM/classList. Blade compileert; durabele oplossing.
+- **Volledige CSP-sweep van toernooi/edit.blade.php** — naast de categorie-rijen bleken nog
+  meer inline handlers geblokkeerd: preset-modal-knoppen (savePreset/saveNewPreset/etc., via
+  innerHTML → opslaan preset faalde), Opslaan-knop, open/intern-radio's, kopieer-URL-knop,
+  Mollie-portaal-select, wachtwoord-toggle. Alles gemigreerd: preset-modal + radio's + copy +
+  mollie + password → `data-action` + `window.cspActions`-registratie; Opslaan-knop → native
+  `type=submit form=toernooi-form`. **Resultaat: 0 inline `on*=` en 0 inline `style=` in het
+  hele bestand.** De aangeroepen functies waren al globaal. Blade compileert.

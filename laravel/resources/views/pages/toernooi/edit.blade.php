@@ -111,7 +111,7 @@
         </button>
         @endif
         <div class="ml-auto pb-2" x-show="isTab('toernooi')" x-cloak>
-            <button type="button" onclick="document.getElementById('toernooi-form')?.requestSubmit()"
+            <button type="submit" form="toernooi-form"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
                 {{ __('Opslaan') }}
             </button>
@@ -167,7 +167,7 @@
                 <label class="block text-gray-700 font-medium mb-2">{{ __('Type toernooi') }}</label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors {{ old('toernooi_type', $toernooi->toernooi_type) === 'intern' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}"
-                           onclick="this.querySelector('input').checked = true; document.querySelectorAll('[name=toernooi_type]').forEach(r => r.closest('label').className = r.closest('label').className.replace(/border-blue-500 bg-blue-50/, 'border-gray-200')); this.className = this.className.replace('border-gray-200', 'border-blue-500 bg-blue-50')">
+                           data-action="select-toernooi-type">
                         <input type="radio" name="toernooi_type" value="intern" {{ old('toernooi_type', $toernooi->toernooi_type) === 'intern' ? 'checked' : '' }} class="hidden">
                         <div>
                             <span class="font-medium text-gray-800">{{ __('Intern toernooi') }}</span>
@@ -175,7 +175,7 @@
                         </div>
                     </label>
                     <label class="flex items-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors {{ old('toernooi_type', $toernooi->toernooi_type) === 'open' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}"
-                           onclick="this.querySelector('input').checked = true; document.querySelectorAll('[name=toernooi_type]').forEach(r => r.closest('label').className = r.closest('label').className.replace(/border-blue-500 bg-blue-50/, 'border-gray-200')); this.className = this.className.replace('border-gray-200', 'border-blue-500 bg-blue-50')">
+                           data-action="select-toernooi-type">
                         <input type="radio" name="toernooi_type" value="open" {{ old('toernooi_type', $toernooi->toernooi_type) === 'open' ? 'checked' : '' }} class="hidden">
                         <div>
                             <span class="font-medium text-gray-800">{{ __('Open toernooi') }}</span>
@@ -2252,7 +2252,7 @@
                 </svg>
                 {{ __('Bekijk publieke pagina') }}
             </a>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $publiekUrl }}').then(() => { this.textContent = 'Gekopieerd!'; setTimeout(() => { this.innerHTML = '<svg class=\'w-5 h-5 inline mr-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\'></path></svg>URL kopiëren'; }, 2000); })" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-2">
+            <button type="button" data-action="copy-publiek-url" data-url="{{ $publiekUrl }}" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
@@ -2362,7 +2362,7 @@
                     <label for="portaal_modus" class="block font-bold text-gray-800 mb-2">{{ __('Portaal modus') }}</label>
                     <select name="portaal_modus" id="portaal_modus"
                             class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onchange="toggleMollieOptie()">
+                            data-action="change:toggle-mollie">
                         <option value="uit" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'uit' ? 'selected' : '' }}>
                             {{ __('Uit - Alleen bekijken (organisator beheert alles)') }}
                         </option>
@@ -2733,7 +2733,7 @@
                     <div class="relative">
                         <input type="password" name="wachtwoord" x-model="wachtwoord" required
                                class="w-full border rounded px-3 py-2 pr-10" placeholder="{{ __('Voer wachtwoord in') }}">
-                        <button type="button" onclick="togglePassword(this)" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                        <button type="button" data-action="toggle-pw-field" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
                             <svg class="eye-closed h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
                             </svg>
@@ -3743,5 +3743,30 @@ window.triggerAutoSave = function() {};
         }
     });
 })();
+</script>
+
+{{-- CSP-safe registratie van de resterende data-action knoppen op deze pagina
+     (waren inline on*= → geblokkeerd onder strikte CSP). De functies zijn globaal. --}}
+<script @nonce>
+document.addEventListener('DOMContentLoaded', () => {
+    window.cspActions({
+        'change:toggle-mollie': () => window.toggleMollieOptie?.(),
+        'toggle-pw-field': (el) => window.togglePassword?.(el),
+        'select-toernooi-type': (el) => {
+            document.querySelectorAll('[name=toernooi_type]').forEach((r) => {
+                const lbl = r.closest('label');
+                if (lbl) lbl.className = lbl.className.replace('border-blue-500 bg-blue-50', 'border-gray-200');
+            });
+            el.className = el.className.replace('border-gray-200', 'border-blue-500 bg-blue-50');
+        },
+        'copy-publiek-url': (el) => {
+            const orig = el.innerHTML;
+            navigator.clipboard.writeText(el.dataset.url).then(() => {
+                el.textContent = 'Gekopieerd!';
+                setTimeout(() => { el.innerHTML = orig; }, 2000);
+            });
+        },
+    });
+});
 </script>
 @endsection
