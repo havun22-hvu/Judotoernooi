@@ -130,13 +130,61 @@ class E2eTestSeeder extends Seeder
             }
         }
 
-        // Expose the dynamic IDs the uitslag→standings spec needs (auto-increment
-        // ids aren't known up front). Read by e2e/flows.auth.spec.ts.
+        // --- Eliminatie bracket (4 judokas) for the winner-advancement flow ---
+        // Built via the real EliminatieService so the bracket linkage
+        // (volgende_wedstrijd_id + winnaar_naar_slot) is exactly what production
+        // produces. 4 judokas → 2 A-group halve-finales + a finale, no byes.
+        $elimJudokas = [];
+        foreach (range(1, 4) as $n) {
+            $elimJudokas[] = Judoka::factory()->create([
+                'toernooi_id' => $toernooi->id,
+                'club_id' => $club->id,
+                'naam' => sprintf('Elim %d, E2E', $n),
+                'geboortejaar' => $jaar - 8,
+                'geslacht' => 'M',
+                'band' => 'geel',
+                'gewicht' => 30.0,
+                'gewicht_gewogen' => 30.0,
+                'leeftijdsklasse' => 'pupillen',
+                'aanwezigheid' => 'aanwezig',
+            ]);
+        }
+        $elimPoule = Poule::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'blok_id' => $blok->id,
+            'mat_id' => $mat->id,
+            'titel' => 'Pupillen Eliminatie',
+            'type' => 'eliminatie',
+        ]);
+        foreach ($elimJudokas as $pos => $judoka) {
+            $elimPoule->judokas()->attach($judoka->id, ['positie' => $pos + 1]);
+        }
+        app(\App\Services\EliminatieService::class)->genereerBracket(
+            $elimPoule,
+            array_map(fn ($j) => $j->id, $elimJudokas),
+            'dubbel',
+        );
+        $halveFinales = Wedstrijd::where('poule_id', $elimPoule->id)
+            ->where('groep', 'A')->where('ronde', 'halve_finale')
+            ->orderBy('bracket_positie')->get();
+        $elimFinale = Wedstrijd::where('poule_id', $elimPoule->id)
+            ->where('groep', 'A')->where('ronde', 'finale')->first();
+
+        // Expose the dynamic IDs the flow specs need (auto-increment ids aren't
+        // known up front). Read by e2e/flows.auth.spec.ts.
         file_put_contents(database_path('e2e-ids.json'), json_encode([
             'pouleId' => $poule->id,
             'wedstrijdId' => $eersteWedstrijd->id,
             'judokaWitId' => $eersteWedstrijd->judoka_wit_id,
             'judokaBlauwId' => $eersteWedstrijd->judoka_blauw_id,
+            'eliminatie' => [
+                'pouleId' => $elimPoule->id,
+                'finaleId' => $elimFinale?->id,
+                'halveFinales' => $halveFinales->map(fn ($w) => [
+                    'id' => $w->id,
+                    'witId' => $w->judoka_wit_id,
+                ])->values()->all(),
+            ],
         ]));
 
         // Volunteer PWA device-access rows (mat, weging, jurytafel, spreker,

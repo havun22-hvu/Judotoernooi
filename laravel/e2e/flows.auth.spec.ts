@@ -47,6 +47,36 @@ async function waitForCspReady(page: Page): Promise<void> {
     });
 }
 
+/**
+ * POST JSON from inside the page via fetch, so the same-origin session cookie is
+ * sent automatically (page.request did not share the session reliably). The CSRF
+ * token is read from the page's csrf-token meta. Call after navigating to a page
+ * that carries that meta (e.g. the dashboard). Omit `body` for a bodyless POST.
+ */
+function postJson(page: Page, url: string, body?: unknown): Promise<{ status: number; text: string }> {
+    return page.evaluate(
+        async ({ url, body }) => {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN':
+                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: body === undefined ? undefined : JSON.stringify(body),
+            });
+            return { status: res.status, text: await res.text() };
+        },
+        { url, body },
+    );
+}
+
+/** Read the dynamic ids E2eTestSeeder wrote (poule/match/judoka ids). */
+function seededIds(): any {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), 'database/e2e-ids.json'), 'utf-8'));
+}
+
 test.describe('Judoka beheer (UI)', () => {
     test('add-judoka button opens the modal and the form submits', async ({ page }) => {
         test.slow();
@@ -86,31 +116,13 @@ test.describe('Uitslag → poulestand (HTTP)', () => {
         // IDs of the seeded poule + first match, written by E2eTestSeeder (the
         // auto-increment ids aren't known up front). This runs before the
         // poule-generation test, which deletes the seeded poule.
-        const ids = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'database/e2e-ids.json'), 'utf-8'));
+        const ids = seededIds();
 
         await blockExternalCdn(page);
         await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
 
-        const post = (url: string, body: unknown) =>
-            page.evaluate(
-                async ({ url, body }) => {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN':
-                                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                        },
-                        body: JSON.stringify(body),
-                    });
-                    return { status: res.status, text: await res.text() };
-                },
-                { url, body },
-            );
-
         // Register a decisive win for the white judoka of the first match.
-        const uitslag = await post(toernooiUrl('/mat/uitslag'), {
+        const uitslag = await postJson(page, toernooiUrl('/mat/uitslag'), {
             wedstrijd_id: ids.wedstrijdId,
             winnaar_id: ids.judokaWitId,
             score_wit: 10,
@@ -120,7 +132,7 @@ test.describe('Uitslag → poulestand (HTTP)', () => {
         expect(uitslag.status, `uitslag ${uitslag.status}: ${uitslag.text.slice(0, 200)}`).toBeLessThan(400);
 
         // The standings must now show exactly one judoka on 2 win-points, on top.
-        const stand = await post(toernooiUrl('/spreker/standings'), { poule_id: ids.pouleId });
+        const stand = await postJson(page, toernooiUrl('/spreker/standings'), { poule_id: ids.pouleId });
         expect(stand.status, `standings ${stand.status}: ${stand.text.slice(0, 200)}`).toBeLessThan(400);
         const body = JSON.parse(stand.text);
 
@@ -130,37 +142,58 @@ test.describe('Uitslag → poulestand (HTTP)', () => {
     });
 });
 
+test.describe('Eliminatie winnaar-doorschuiven (HTTP)', () => {
+    test('winners of the half-finals advance into the final', async ({ page }) => {
+        test.slow();
+        const { eliminatie } = seededIds();
+
+        await blockExternalCdn(page);
+        await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
+
+        // Win both A-group half-finals (winner = the white judoka of each). The
+        // mat/uitslag endpoint runs EliminatieService::verwerkUitslag, which must
+        // push each winner into the final's slot.
+        for (const hf of eliminatie.halveFinales) {
+            const res = await postJson(page, toernooiUrl('/mat/uitslag'), {
+                wedstrijd_id: hf.id,
+                winnaar_id: hf.witId,
+                uitslag_type: 'ippon',
+            });
+            expect(res.status, `halve-finale ${res.status}: ${res.text.slice(0, 200)}`).toBeLessThan(400);
+        }
+
+        // Score the final with the first half-final's winner. The endpoint rejects
+        // a winner who isn't one of the match's two judokas — so this only
+        // succeeds if that judoka was actually advanced into the final. That is
+        // the advancement assertion.
+        const finale = await postJson(page, toernooiUrl('/mat/uitslag'), {
+            wedstrijd_id: eliminatie.finaleId,
+            winnaar_id: eliminatie.halveFinales[0].witId,
+            uitslag_type: 'ippon',
+        });
+        expect(
+            finale.status,
+            `final winner not advanced (status ${finale.status}): ${finale.text.slice(0, 200)}`,
+        ).toBeLessThan(400);
+    });
+});
+
 test.describe('Poule-generatie (HTTP)', () => {
     test('generating poules yields a valid response with a problemen key', async ({ page }) => {
         test.slow();
         // Use the lightweight dashboard for the CSRF token (it carries the
         // csrf-token meta) — the data-heavy judoka/poule pages are slow to load.
-        // POST from inside the page via fetch so the same-origin session cookie is
-        // sent automatically (page.request did not share the session reliably).
         await blockExternalCdn(page);
         await page.goto(dashboardUrl(), { waitUntil: 'domcontentloaded' });
 
-        const post = (path: string) =>
-            page.evaluate(async (url) => {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                        Accept: 'application/json',
-                    },
-                });
-                return { status: res.status, text: await res.text() };
-            }, path);
-
         // Generate poules from the seeded (categorised) pupillen.
-        const gen = await post(toernooiUrl('/poule/genereer'));
+        const gen = await postJson(page, toernooiUrl('/poule/genereer'));
         expect(gen.status, `genereer ${gen.status}: ${gen.text.slice(0, 200)}`).toBeLessThan(400);
 
         // Verify returns the poule-rules report. The `problemen` key MUST be on
         // every verify response (poule-rules check) — 13 PHPUnit tests guard it
         // server-side; this guards it through the real HTTP stack.
-        const ver = await post(toernooiUrl('/poule/verifieer'));
+        const ver = await postJson(page, toernooiUrl('/poule/verifieer'));
         expect(ver.status, `verifieer ${ver.status}: ${ver.text.slice(0, 200)}`).toBeLessThan(400);
         const body = JSON.parse(ver.text);
 
