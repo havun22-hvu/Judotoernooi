@@ -24,14 +24,28 @@ last_updated: 2026-06-14
   (triviaal/additief, gaat mee met volgende deploy).
 - **e2e-machine-les:** background-runs laten `php artisan serve` op :8008 achter → kill vóór run.
 
-### Functionele e2e-flows COMPLEET (laatste: `7d006902`, main, gepusht)
-Alle geplande laag-A flows in `e2e/flows.auth.spec.ts` (authenticated project), allemaal groen:
+### Functionele e2e-flows COMPLEET (laatste: `5079f67d`, main, gepusht)
+Alle haalbare flows in `e2e/flows.auth.spec.ts` (authenticated project), allemaal groen:
 1. **Judoka-CRUD (UI)** — knop opent modal + form submit (`942cab1e` regressie-guard).
 2. **Uitslag → poulestand** — `/mat/uitslag` win → `/spreker/standings` wp=2 (`2a60f755`).
 3. **Eliminatie doorschuiven** — 2 halve-finales winnen → finale accepteert doorgeschoven
    winnaar (de finale-POST slaagt alléén als doorschuiven werkte) (`fe823935`).
 4. **Weging** — geldige weging slaagt, <15kg geweigerd (`7d006902`).
 5. **Poule-generatie** — `/poule/genereer` + `/verifieer`, `problemen`-key (`2c311215`).
+6. **Poule verplaatsen — kleurbeurt** — move poule → mat 2, groen blijft op mat 1,
+   geel/blauw vervallen. Leest mat-state via `/mat/wedstrijden`. Guardt `c8b8fe13` (`5079f67d`).
+
+### Resterende laag-B items — NIET e2e-haalbaar (elders gedekt)
+Onderzocht en bewust niet als e2e gebouwd (harde grenzen, geen scope-luiheid):
+- **Realtime cross-device broadcast** — e2e draait `BROADCAST_CONNECTION=null` (geen Reverb);
+  broadcasts zijn no-op. Gedekt door PHPUnit broadcast-event-tests.
+- **Facturen/PDF** — `admin/facturen` is sitebeheerder-auth (niet de organisator-sessie van e2e).
+  Gedekt door `AdminControllerTest`.
+- **Betalingen** — Mollie/Stripe redirecten naar externe providers. Gedekt door
+  `PaymentControllersCoverageTest`/`StripeProviderCoverageTest`.
+- **DnD-interactie zelf** — getest via de onderliggende HTTP-endpoints (zie flow 6); de
+  drag-drop-UI is in Playwright te flaky voor waarde. Conclusie: e2e dekt nu de kern-
+  competitieflows; periphere/externe zaken blijven op PHPUnit-niveau (juiste laag).
 
 **Patroon/lessen (herbruikbaar):**
 - Seeder (`E2eTestSeeder`) bouwt nu een complete round-robin poule + een 4-judoka eliminatie-
