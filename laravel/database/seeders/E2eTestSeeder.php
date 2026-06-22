@@ -193,6 +193,7 @@ class E2eTestSeeder extends Seeder
         // Expose the dynamic IDs the flow specs need (auto-increment ids aren't
         // known up front). Read by e2e/flows.auth.spec.ts.
         file_put_contents(database_path('e2e-ids.json'), json_encode([
+            'toernooiId' => $toernooi->id,
             'pouleId' => $poule->id,
             'wedstrijdId' => $eersteWedstrijd->id,
             'judokaWitId' => $eersteWedstrijd->judoka_wit_id,
