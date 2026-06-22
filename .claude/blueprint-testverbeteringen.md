@@ -3,10 +3,27 @@ title: Blueprint — 4 testverbeteringen
 type: claude
 scope: judotoernooi
 last_updated: 2026-06-22
-status: IN UITVOERING
+status: AFGEROND (22-06-2026)
 ---
 
 # Blueprint — 4 testverbeteringen
+
+## Eindresultaat (22-06-2026) — alle 4 gebouwd + gecommit op main
+- **#2 Infection** (`843f442d`): baseline MSI **47%** bij 91% coverage op 4 kern-services.
+  Windows initiële-run-bug omzeild via twee-staps `composer infection`
+  (coverage → `--skip-initial-tests`). Doc: `docs/3-DEVELOPMENT/MUTATION-TESTING.md`.
+- **#3 Visual** (`78ac91d4`): `visual.auth.spec.ts` — scorebord-LCD + spreker groen/stabiel
+  (3 passed, 23s). **Bracket bewust uitgesloten**: poule/eliminatie rendert intermitterend
+  nooit klaar onder de single-threaded PHP-dev-server + `.bracket-container` alleen in
+  gegenereerde-staat (niet betrouwbaar in seed). Bracket-gedrag blijft gedekt door de
+  eliminatie-flowtest. Baselines per platform (`*-win32.png`).
+- **#1 Realtime** (`2fcb2381`): `realtime.spec.ts` + `playwright.realtime.config.ts` —
+  Reverb áán, 2 contexts, score-POST → `mat.update` live ontvangen (2 passed, 42s).
+  Vondsten: blade leidt ws-poort uit APP_URL-scheme (prod-nginx-aanname) → spec abonneert
+  op expliciete poort; Chrome PNA blokkeert about:blank→127.0.0.1 ws → launch-flag.
+- **#4 Device** (`2fcb2381`): `DEVICE-TEST-CHECKLIST.md` + inerte BrowserStack-stub.
+
+
 
 > Doel: het vangnet versterken op de plekken waar het echt pijn doet —
 > realtime (Reverb laat het wel eens afweten), schijnzekerheid in de PHPUnit-suite,
