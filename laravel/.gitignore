@@ -9,6 +9,11 @@
 .phpunit.result.cache
 .phpunit.cache
 /tests/coverage
+/tests/.infection
+/tests/infection-coverage
+/tests/infection.log
+/tests/infection.html
+/tests/infection-summary.log
 Homestead.json
 Homestead.yaml
 auth.json

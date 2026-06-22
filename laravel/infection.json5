@@ -1,0 +1,27 @@
+{
+    // Mutation testing config. Scoped to the bug-prone core services (zie
+    // .claude/blueprint-testverbeteringen.md). Niet de hele app — anders draait
+    // Infection uren. Uitbreiden ná de eerste baseline.
+    //
+    // Draaien: composer infection   (of: php vendor/bin/infection --threads=4)
+    // Coverage-driver pcov is vereist en aanwezig.
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "app/Services"
+        ]
+    },
+    "logs": {
+        "text": "tests/infection.log",
+        "html": "tests/infection.html",
+        "summary": "tests/infection-summary.log"
+    },
+    "tmpDir": "tests/.infection",
+    "testFramework": "phpunit",
+    "phpUnit": {
+        "configDir": "tests/infection"
+    },
+    "mutators": {
+        "@default": true
+    }
+}
