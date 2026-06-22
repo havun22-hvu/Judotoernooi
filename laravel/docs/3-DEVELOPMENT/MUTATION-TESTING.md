@@ -57,6 +57,33 @@ vangen bijna de helft van de logica-wijzigingen niet. Voorbeeld (overleefd):
 +            $sortCategorie--;
 ```
 
+## Gerichte verbeteringen (23-06-2026)
+
+Mutant-killer-tests toegevoegd op de drie pure-logica-services (per service een
+`*MutationTest.php`), gericht op het écht gedrag dat de mutanten omdraaiden:
+
+| Service | Covered Code MSI | Wat is vastgepind |
+|---------|------------------|-------------------|
+| CategorieClassifier | → **69%** | sortCategorie-index, isDynamisch/getMaxKgVerschil-grenzen, geslacht-autodetectie, gewichtsklasse-grenzen, overlap-detectie |
+| WegingService | 65% → **68%** | te-licht/te-zwaar-alternatief (melding + klasse), QR-URL-extractie |
+| EliminatieService | 60% → **64%** | bracket-grootte-contract van `genereerBracket()` (a=n-1, b-formule) — grootste survivor-cluster, volledig gedood |
+
+**Belangrijker dan het getal — niet elke overlevende mutant is een testgat.** Veel
+resterende survivors zijn **equivalent** en dus niet zinvol te doden:
+- **Dode code:** `$sortCategorie` (CategorieClassifier:56) wordt berekend maar nooit
+  gebruikt (de return gebruikt `$categorieSortIndex`).
+- **Via-API-afgeschermde grenzen:** de `<`/`>`-mutanten in `bepaalAlternatief`
+  (WegingService) zijn onbereikbaar omdat `isGewichtBinnenKlasse` het grensgeval er
+  al uitfiltert vóór de vergelijking.
+- **Delegatie-wrappers:** `berekenStatistieken`/`berekenDoel` in EliminatieService
+  zijn één regel `return $this->calculator->…` — de echte math zit in `BracketCalculator`.
+- **Logging en meldingsteksten** (correctie-strings, `\Log::info`).
+
+Conclusie: jaag MSI niet naar een vast percentage — dat levert schijntests op. De
+waarde van Infection is het **continue meetsignaal** + gericht inzetten op echte
+gedragsgaten. PouleIndelingService blijft bewust ongemoeid: zijn MSI is kunstmatig
+laag door de externe Python-solver-timeouts (zie scope hierboven), niet door testgaten.
+
 Overlevende mutanten clusteren in (meeste eerst): PouleIndelingService,
 EliminatieService, CategorieClassifier, WegingService. De PouleIndeling-timeouts
 komen grotendeels door de externe Python-solver (`DynamischeIndelingService`,
