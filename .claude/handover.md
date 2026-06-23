@@ -9,6 +9,21 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
+## GUZZLE SECURITY-DEPLOY + STALE-TEST-FIX (23-06-2026)
+
+**Gedeployed naar staging + prod, alle drie op `ff081bca`.**
+- `guzzlehttp/guzzle` 7.11.1→7.12.1 + `guzzlehttp/psr7` 2.11.0→2.12.1 (3 medium CVE's:
+  request-smuggling, HTTPS-proxy-downgrade, CRLF-injection). Lock-only, minor, non-breaking.
+- Backup: `judo_toernooi_voor-guzzle-2026-06-23_..._11-51-14.sql.gz`.
+- Deploy mét `composer install --no-dev --optimize-autoloader` (runtime-dep). Staging had nog
+  dev-deps (41 removals, incl. infection) → opgeruimd; prod was al --no-dev (0 removals).
+  Geverifieerd: guzzle 7.12.1 op beide, home/login 200, audit schoon.
+- **Bijvangst:** volledige suite draaien legde 3 stale tests bloot (geen guzzle-issue): de
+  sessie-1-refactor verplaatste `syncMatToegangen` naar `ToernooiService` + maakte 'm
+  matten-records-driven. 2 ScoreboardPublicTest- + 1 AuthControllersCoverageTest-test
+  codeerden nog het oude gedrag. Gefixt (echte Mat-records + service-aanroep). Suite weer
+  **3557 groen**. Geen prod-gedragswijziging — puur test-drift.
+
 ## PRODUCTIE-DEPLOY VOLTOOID (23-06-2026)
 
 **Alles gedeployed + gesynchroniseerd. Lokaal + staging + productie alle drie op `edb285a6`.**
