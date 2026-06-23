@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ToernooiBloktijdenRequest;
+use App\Http\Requests\ToernooiWachtwoordenRequest;
 use App\Models\Organisator;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\Hash;
 
 class ToernooiInstellingenController extends Controller
 {
-    public function updateWachtwoorden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    public function updateWachtwoorden(Organisator $organisator, ToernooiWachtwoordenRequest $request, Toernooi $toernooi): RedirectResponse
     {
         $rollen = ['admin', 'jury', 'weging', 'mat', 'spreker'];
         $updated = [];
@@ -35,7 +37,7 @@ class ToernooiInstellingenController extends Controller
             ->with('success', 'Wachtwoorden bijgewerkt voor: ' . implode(', ', $updated));
     }
 
-    public function updateBloktijden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    public function updateBloktijden(Organisator $organisator, ToernooiBloktijdenRequest $request, Toernooi $toernooi): RedirectResponse
     {
         $bloktijden = $request->input('blokken', []);
 
