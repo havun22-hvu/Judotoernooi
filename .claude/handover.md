@@ -11,11 +11,19 @@ last_updated: 2026-06-23
 
 ## OPENSTAANDE ITEMS (na sessie 23-06)
 
-- [ ] **K&V: form-validation coverage 53% (<60% drempel) = enige openstaande K&V-eis.**
-  `qv:scan --project=judotoernooi` is verder schoon (0 crit, alle security-checks groen).
-  7 FormRequests + 106 inline `::validate` tegen 215 write-routes. Aanpak besproken:
-  via `/arch` → blauwdruk → `/mpc`, gericht FormRequests toevoegen op echt-ongevalideerde
-  write-routes. **Wacht op scope-akkoord Henk** (app-breed, ~100 routes).
+- [x] **K&V form-validation (24-06): 2 echte gaten gedicht, 60%-drempel is heuristiek-artefact.**
+  `ToernooiWachtwoordenRequest` + `ToernooiBloktijdenRequest` toegevoegd (commit `ac31ac31`) —
+  de enige écht-ongevalideerde input-endpoints (`updateWachtwoorden`/`updateBloktijden`). 5 tests.
+  **60% is niet eerlijk haalbaar**: de qv-heuristiek (`QualitySafetyScanner::formsCoverage`) telt
+  `(FormRequest-classes + inline ::validate-occurrences) / write-routes` → een gedeelde FormRequest
+  (ToernooiRequest/StamJudokaRequest/ClubRequest op store+update) telt als **1 i.p.v. 2**, passkey-
+  request-classes extenden geen FormRequest (niet geteld), en service-laag-validatie telt niet.
+  De **echte** route-dekking ligt materieel hoger dan 53%. Converteren inline→FormRequest verzet
+  de teller niet (−1/+1). Verder ophogen = óf schijn-validatie (afgewezen) óf de heuristiek
+  fijnmaziger maken (= **HavunCore-wijziging, buiten scope** van dit project). Aanbeveling:
+  qv-forms-check route-based maken (dekking = #write-routes-mét-validatie / #write-routes) i.p.v.
+  occurrence-based, óf de drempel voor judotoernooi accepteren. Blauwdruk-routelijst was grotendeels
+  gehallucineerd (zie `.claude/blueprint.md` — negeren).
 - [ ] **`.env.bak.2026-05-02` residu op prod** (51d, K&V info-item) — klaar om naar
   `/var/backups/havun-env/judotoernooi/`. `.env`-adjacent → niet aangeraakt, wacht op go.
 - [ ] **Repo-hygiëne:** `storage/framework/testing/disks/public/coach-fotos/*.jpg` zijn
