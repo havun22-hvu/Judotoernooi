@@ -67,6 +67,12 @@ Mutant-killer-tests toegevoegd op de drie pure-logica-services (per service een
 | CategorieClassifier | → **69%** | sortCategorie-index, isDynamisch/getMaxKgVerschil-grenzen, geslacht-autodetectie, gewichtsklasse-grenzen, overlap-detectie |
 | WegingService | 65% → **68%** | te-licht/te-zwaar-alternatief (melding + klasse), QR-URL-extractie |
 | EliminatieService | 60% → **64%** | bracket-grootte-contract van `genereerBracket()` (a=n-1, b-formule) — grootste survivor-cluster, volledig gedood |
+| BracketCalculator | (geen test) → **86%** | álle pure functies: slot-mapping, ronde-naam-grenzen, `berekenDoel` (macht van 2), minimale B-wedstrijden, bracket-params, volledige `berekenStatistieken` (dubbel vs ijf) |
+
+> **BracketCalculator-detail:** de 11 resterende survivors zijn alle **equivalent** —
+> ze zitten in de twee guard-clauses van `berekenDoel` (`if ($n <= 0)` en `if ($n == 1)`).
+> Die guards zijn redundant: de algemene formule `pow(2, floor(log($n,2)))` levert voor
+> n=0 en n=1 zelf al 0 resp. 1. Geen testgat — eerder een kleine opschoonkans in de bron.
 
 **Belangrijker dan het getal — niet elke overlevende mutant is een testgat.** Veel
 resterende survivors zijn **equivalent** en dus niet zinvol te doden:
