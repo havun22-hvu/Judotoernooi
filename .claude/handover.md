@@ -43,9 +43,11 @@ last_updated: 2026-06-14
   Windows-bug). Baseline **MSI 47% bij 91% coverage** op CategorieClassifier/Eliminatie/
   Weging/PouleIndeling → veel loze asserts. Doc: `docs/3-DEVELOPMENT/MUTATION-TESTING.md`.
   Vervolg-optie: overlevende mutanten dichten (richtlijn MSI ≥70%).
-- **Visual regression** `78ac91d4` — `npm run e2e` draait `visual.auth.spec.ts`
-  (scorebord-LCD + spreker). `npm run e2e:update-snapshots` om baselines te verversen.
-  Bracket bewust niet (zware pagina hangt onder PHP-dev-server; zie blueprint).
+- **Visual regression** `78ac91d4` + bracket `17abca5a` — `npm run e2e` draait
+  `visual.auth.spec.ts` (scorebord-LCD + spreker + **bracket**). `npm run
+  e2e:update-snapshots` om baselines te verversen. Bracket via de lichte print-view
+  (`noodplan/bracket/{poule}/live`, `layouts.print`) i.p.v. de zware organisator-
+  pagina die onder de PHP-dev-server hangt. Alle 3 schermen groen.
 - **Realtime cross-device** `2fcb2381` — `npm run e2e:realtime` (Reverb áán, eigen config).
   Bewijst score-POST → Reverb → browser live. NIET in CI-gate (flaky-by-design).
 - **Device-sweep** `2fcb2381` — handmatige checklist `DEVICE-TEST-CHECKLIST.md` +
