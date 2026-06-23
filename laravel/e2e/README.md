@@ -28,7 +28,10 @@ npm run e2e:realtime         # realtime cross-device run (Reverb on, separate co
 ### Visual regression (`visual.auth.spec.ts`)
 
 Pixel snapshots of the screens that break visually and that PHPUnit can't see:
-the **scoreboard-live LCD** and the **spreker interface**. Desktop-only (Pixel7
+the **scoreboard-live LCD**, the **spreker interface** and the **eliminatie
+bracket** (via the lighter print view `noodplan/bracket/{poule}/live`, which
+renders the same server-side bracket layout without the heavy organisator page
+that intermittently hangs the dev server). Desktop-only (Pixel7
 emulation is unreliable for mobile). Baselines live in
 `e2e/visual.auth.spec.ts-snapshots/` and are committed **per platform**
 (`*-win32.png` here); CI on another OS generates its own. An intentional visual
@@ -37,11 +40,11 @@ blocked to freeze the frame; dynamic regions (timer, disconnect overlay) are
 masked. Scope is pixels only — the "no JS errors" guard lives in the functional
 specs.
 
-The **eliminatie-bracket is intentionally not snapshotted**: that page is the
-heaviest organisator view and intermittently never finishes rendering under the
-single-threaded PHP dev server (pre-existing flakiness), and its bracket only
-renders in a generated-bracket state not reliably reproducible in the seeded e2e
-DB. Its data/behaviour is covered by the eliminatie flow test instead.
+The bracket is snapshotted via the **print view**, not the organisator
+`poule/eliminatie` page: that page is the heaviest organisator view and
+intermittently never finishes rendering under the single-threaded PHP dev server.
+The print view (`layouts.print`) renders the same server-side bracket layout
+without the heavy chrome, so it snapshots fast and deterministically.
 
 ### Realtime cross-device (`realtime.spec.ts` + `playwright.realtime.config.ts`)
 

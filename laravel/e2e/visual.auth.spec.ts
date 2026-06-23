@@ -4,7 +4,7 @@ import { blockAllExternal, waitForCspReady } from './helpers';
 
 /**
  * Visual regression for the screens that break visually and that PHPUnit can't
- * see: the scoreboard-live LCD and the spreker interface.
+ * see: the scoreboard-live LCD, the spreker interface, and the eliminatie bracket.
  *
  * Desktop-only (runs in the `authenticated` project = Desktop Chrome). Pixel7
  * emulation is unreliable for real mobile layout, so mobile stays out of visual
@@ -19,13 +19,11 @@ import { blockAllExternal, waitForCspReady } from './helpers';
  * (realtime.spec.ts). Animations are disabled and dynamic regions (timer,
  * disconnect overlay) are masked for determinism.
  *
- * NOT snapshotted (deliberate): the eliminatie-bracket (poule/eliminatie). That
- * page is the heaviest organisator view and intermittently never finishes
- * rendering under the single-threaded PHP dev server (pre-existing, see handover),
- * and its `.bracket-container` only renders in the generated-bracket state, which
- * is not reliably reproducible in the seeded e2e DB. The bracket's data/behaviour
- * is covered by the eliminatie flow test (flows.auth.spec.ts). Revisit once a
- * lighter, deterministic bracket render (e.g. the print view) is wired for e2e.
+ * Bracket note: the organisator poule/eliminatie page is too heavy to snapshot
+ * (it intermittently never fires DOMContentLoaded under the single-threaded PHP
+ * dev server). Instead we snapshot the bracket via the lighter PRINT view
+ * (noodplan/bracket/{poule}/live → layouts.print), which renders the same
+ * server-side bracket layout without the heavy organisator chrome.
  */
 
 // LCD scoreboard is a public route (no /toernooi/ segment), shown on the TV.
@@ -38,6 +36,21 @@ const SNAPSHOT_OPTS = {
 };
 
 test.describe('Visual regression', () => {
+    test('eliminatie bracket (print view) renders stably', async ({ page }) => {
+        test.slow();
+        await blockAllExternal(page);
+        await page.setViewportSize({ width: 1280, height: 720 });
+        // Seeded eliminatie poule = id 2 (database/e2e-ids.json). The print view
+        // (layouts.print) loads only the local Vite bundle, no external CDN, so it
+        // does not hang like the organisator eliminatie page.
+        await page.goto(toernooiUrl('/noodplan/bracket/2/live'), { waitUntil: 'commit' });
+
+        const bracket = page.locator('.bracket-page').first();
+        await expect(bracket).toBeVisible({ timeout: 30_000 });
+        await page.waitForTimeout(500);
+        await expect(bracket).toHaveScreenshot('bracket.png', SNAPSHOT_OPTS);
+    });
+
     test('scoreboard-live (LCD) renders stably', async ({ page }) => {
         test.slow();
         await blockAllExternal(page);
