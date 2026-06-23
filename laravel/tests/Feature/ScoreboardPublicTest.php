@@ -133,14 +133,14 @@ class ScoreboardPublicTest extends TestCase
             'aantal_matten' => 3,
         ]);
 
-        // Manually create mat 1 only
+        // Three real mats exist; only mat 1 already has a toegang.
+        foreach ([1, 2, 3] as $n) {
+            \App\Models\Mat::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => $n]);
+        }
         DeviceToegang::create(['toernooi_id' => $toernooi->id, 'rol' => 'mat', 'mat_nummer' => 1]);
 
-        // Call sync directly
-        $controller = new \App\Http\Controllers\DeviceToegangBeheerController();
-        $reflection = new \ReflectionMethod($controller, 'syncMatToegangen');
-        $reflection->setAccessible(true);
-        $reflection->invoke($controller, $toernooi);
+        // syncMatToegangen lives on ToernooiService (moved out of the controller).
+        app(\App\Services\ToernooiService::class)->syncMatToegangen($toernooi);
 
         $matToegangen = $toernooi->deviceToegangen()->where('rol', 'mat')->orderBy('mat_nummer')->pluck('mat_nummer')->toArray();
         $this->assertEquals([1, 2, 3], $matToegangen);
@@ -155,12 +155,14 @@ class ScoreboardPublicTest extends TestCase
             'aantal_matten' => 3,
         ]);
 
-        $controller = new \App\Http\Controllers\DeviceToegangBeheerController();
-        $reflection = new \ReflectionMethod($controller, 'syncMatToegangen');
-        $reflection->setAccessible(true);
+        foreach ([1, 2, 3] as $n) {
+            \App\Models\Mat::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => $n]);
+        }
 
-        $reflection->invoke($controller, $toernooi);
-        $reflection->invoke($controller, $toernooi);
+        // Syncing twice must be idempotent (no duplicate toegangen).
+        $service = app(\App\Services\ToernooiService::class);
+        $service->syncMatToegangen($toernooi);
+        $service->syncMatToegangen($toernooi);
 
         $matToegangen = $toernooi->deviceToegangen()->where('rol', 'mat')->count();
         $this->assertEquals(3, $matToegangen);

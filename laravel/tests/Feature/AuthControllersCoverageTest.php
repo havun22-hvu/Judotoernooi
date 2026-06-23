@@ -1385,6 +1385,10 @@ class AuthControllersCoverageTest extends TestCase
             'organisator_id' => $this->sitebeheerder->id,
             'aantal_matten' => 3,
         ]);
+        // Toegangen sync to the actual Mat records, not the aantal_matten field.
+        foreach ([1, 2, 3] as $n) {
+            \App\Models\Mat::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => $n]);
+        }
         $this->actingAs($this->sitebeheerder, 'organisator');
 
         $response = $this->getJson("/{$this->sitebeheerder->slug}/toernooi/{$toernooi->slug}/api/device-toegang");
