@@ -9,6 +9,17 @@ last_updated: 2026-06-14
 
 > Vul dit aan aan het einde van elke sessie.
 
+## PRODUCTIE-DEPLOY VOLTOOID (23-06-2026)
+
+**Alles gedeployed + gesynchroniseerd. Lokaal + staging + productie alle drie op `edb285a6`.**
+- Prod was `ef65a127` → nu `edb285a6` (sessie-1-pakket: mat-toegangen-sync, eliminatie→poules,
+  tab/CSP-fixes, dashboard csrf-meta + alle sessie-2 test/docs-werk dat runtime niet raakt).
+- Backup vóór deploy: `/var/backups/havun/milestones/judo_toernooi_voor-deploy-2026-06-23_..._08-23-40.sql.gz`.
+- Stappen: ff `git pull` in repo-pad + `optimize:clear` + post-merge-hook + `queue:restart`.
+  Geen migrations/composer (sessie-1-pakket was PHP/Blade; sessie-2 voegde alleen een dev-dep toe → `--no-dev` negeert).
+- Geverifieerd: staging + prod home/login 200, geen nieuwe errors (enige log-errors zijn oud, 12-04).
+- Branches/PR's: niets op te ruimen — alleen `main` lokaal+origin, geen open PR's.
+
 ## Huidige status (22-06-2026, sessie 2 — testverbeteringen)
 
 **4 testverbeteringen gebouwd + gepusht naar main** (`835c9c13`). Plan/uitkomst:
