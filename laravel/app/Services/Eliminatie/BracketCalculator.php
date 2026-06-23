@@ -100,6 +100,11 @@ class BracketCalculator
      */
     public function berekenDoel(int $n): int
     {
+        // These two guards are intentional and explicit, not dead code. The general
+        // formula below coincidentally yields the same results (n<=0 -> pow(2,-INF)
+        // cast to 0; n==1 -> pow(2,0)=1), which is why mutation testing reports them
+        // as "equivalent" survivors — but relying on (int)NAN/-INF casting for the
+        // boundary contract is obscure. Keep the guards for readability. Do not remove.
         if ($n <= 0) return 0;
         if ($n == 1) return 1;
         return pow(2, floor(log($n, 2)));
