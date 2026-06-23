@@ -2,12 +2,28 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-14
+last_updated: 2026-06-23
 ---
 
 # JudoToernooi — Handover
 
 > Vul dit aan aan het einde van elke sessie.
+
+## OPENSTAANDE ITEMS (na sessie 23-06)
+
+- [ ] **K&V: form-validation coverage 53% (<60% drempel) = enige openstaande K&V-eis.**
+  `qv:scan --project=judotoernooi` is verder schoon (0 crit, alle security-checks groen).
+  7 FormRequests + 106 inline `::validate` tegen 215 write-routes. Aanpak besproken:
+  via `/arch` → blauwdruk → `/mpc`, gericht FormRequests toevoegen op echt-ongevalideerde
+  write-routes. **Wacht op scope-akkoord Henk** (app-breed, ~100 routes).
+- [ ] **`.env.bak.2026-05-02` residu op prod** (51d, K&V info-item) — klaar om naar
+  `/var/backups/havun-env/judotoernooi/`. `.env`-adjacent → niet aangeraakt, wacht op go.
+- [ ] **Repo-hygiëne:** `storage/framework/testing/disks/public/coach-fotos/*.jpg` zijn
+  getrackt maar regenereren per testrun → werktree-ruis. Gitignoren is de echte fix.
+- [ ] **Device-sweep (#4 van de 4 testpunten):** fysieke sweep op Henks P10 met
+  `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md` — kan Claude niet zelf. Henk test "vanavond".
+- [ ] Servers staan op de runtime-relevante staat; de laatste test-only commits (visual-bracket)
+  zijn niet gedeployd (geen prod-impact). Synchroniseer servers alleen bij wens om pariteit.
 
 ## GUZZLE SECURITY-DEPLOY + STALE-TEST-FIX (23-06-2026)
 
