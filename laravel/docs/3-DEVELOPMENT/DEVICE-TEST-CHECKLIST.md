@@ -3,7 +3,7 @@
 > Playwright's Pixel7-emulatie forceert een eigen viewport en mist echte
 > mobiele-device-issues (overflow, zoom, PWA-install, passkey, oriëntatie). Deze
 > checklist is de **handmatige** sweep op een fysiek toestel — geen automatisering
-> kan dit volledig vervangen. Zie [[csp-alpine-gotchas]] (passkey domeingebonden).
+> kan dit volledig vervangen. Let op: passkey/biometrie is domeingebonden.
 
 ## Hoe te gebruiken
 
