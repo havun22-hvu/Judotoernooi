@@ -9,6 +9,29 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 24-06 (vervolg) — write-route validatie + HavunCore-overdracht
+
+**Twee dingen afgerond, beide op main (`8b1c9baf`, gepusht).**
+
+- **Write-route audit weerlegt gisteren-aanname.** Niet 2 maar **10** echt-ongevalideerde
+  write-routes gevonden (volledige handmatige audit van web.php+api.php; ~150 write-routes,
+  ~95 met validatie, ~45 input-loos). De 6 data-integriteit-gaten **gedicht** (`884ba064`,
+  milde type/bounds-validatie vóór elke try/catch, breekt bestaand gedrag niet):
+  Judoka/StamJudoka `importConfirm` (mapping), Blok `genereerVerdeling`/`genereerVariabeleVerdeling`/
+  `kiesVariant`, Publiek `favorieten`. 3 rejection-tests + bestaande suites groen (156+25+3 passed).
+- **4 bewust lage-prio gelaten** (gedocumenteerd in het overdrachtsdoc): `qrGenerate`
+  (cosmetische device-strings), `simulateComplete` (status al de-facto gewhitelist via mapping;
+  **echte issue = `betaling/simulate`-route heeft geen environment-guard → autorisatie, geen
+  validatie — open**), `receiveSync` (achter middleware), `errorReport` (moet tolerant blijven).
+- **HavunCore-overdracht** `8b1c9baf` → `.claude/HAVUNCORE-forms-coverage-plan.md`: plan om
+  `QualitySafetyScanner::formsCoverage` route-based te maken (de 53%-vs-60% is een meet-artefact;
+  materiële dekking ≈90%). Inclusief SaaS blast-radius + veilige uitrol. **Door te geven aan een
+  HavunCore-sessie** (`/arch --project=havuncore`). Niet hier doen → scope-regel.
+
+> **Open detail:** `betaling/simulate` (web.php:414-415) heeft geen `app()->isProduction()`/
+> middleware-guard. In productie kan een client een betaling als `paid` markeren. Verifiëren of
+> de route in prod bereikbaar is; zo ja → guarden. (Buiten de validatie-scope gelaten.)
+
 ## OPENSTAANDE ITEMS (na sessie 23-06)
 
 - [x] **K&V form-validation (24-06): 2 echte gaten gedicht, 60%-drempel is heuristiek-artefact.**
