@@ -26,9 +26,10 @@ last_updated: 2026-06-23
   simulate-tests groen.
 - **`qrGenerate` device-strings begrensd** (`2dc966cc`): `browser`/`os` → `nullable|string|max:255`,
   2 tests. Audit nu **7/10 gedicht + simulate-guard**.
-- **2 bewust gelaten** (met reden): `receiveSync` (`$request->all()` dynamische sync-payload achter
-  `local-sync.auth`+standby-guard — structuur-validatie heeft weinig waarde), `errorReport`
-  (error-reporting endpoint, móét tolerant blijven + heeft al defensieve truncatie).
+- **Laatste 2 ook gevalideerd** (`dbd88f06`) → audit **10/10 + simulate-guard**: `receiveSync`
+  dwingt nu `{timestamp, toernooien[]}` af, cap 100 toernooien, cachet alleen gevalideerde keys
+  (geen rauwe `$request->all()` meer); `errorReport` dwingt element-types/lengtes af mét behoud van
+  de tolerante count/size-truncatie (telemetry mag niet hele batches weigeren). 4 tests.
 - **Repo-hygiëne GEDICHT** (`ca25ecdd`): `storage/framework/testing/` gegitignored + 3 getrackte
   coach-fotos jpg's uit de index (regenereren per testrun → was werktree-ruis).
 - **HavunCore-overdracht** `8b1c9baf` → `.claude/HAVUNCORE-forms-coverage-plan.md`: plan om
