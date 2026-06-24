@@ -166,6 +166,11 @@ class PasskeyController extends Controller
 
     public function qrGenerate(Request $request): JsonResponse
     {
+        $request->validate([
+            'browser' => ['nullable', 'string', 'max:255'],
+            'os' => ['nullable', 'string', 'max:255'],
+        ]);
+
         // Clean up expired tokens
         QrLoginToken::where('expires_at', '<', now())->where('status', 'pending')->update(['status' => 'expired']);
 

@@ -1441,4 +1441,30 @@ class AuthControllersCoverageTest extends TestCase
         $toegang->refresh();
         $this->assertTrue($toegang->isGebonden());
     }
+
+    // ========================================================================
+    // PasskeyController — qrGenerate (public QR-login)
+    // ========================================================================
+
+    #[Test]
+    public function qr_generate_succeeds_with_device_info(): void
+    {
+        $response = $this->postJson('/auth/qr/generate', [
+            'browser' => 'Chrome',
+            'os' => 'Android',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+    }
+
+    #[Test]
+    public function qr_generate_rejects_oversized_device_info(): void
+    {
+        $response = $this->postJson('/auth/qr/generate', [
+            'browser' => str_repeat('a', 256),
+        ]);
+
+        $response->assertStatus(422);
+    }
 }
