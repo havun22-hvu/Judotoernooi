@@ -44,8 +44,13 @@ Per categorie in `gewichtsklassen` JSON:
 
 ## Fase 2: Hantei (winnaar aanwijzen) en Gelijkspel
 
-> **Status:** TODO
+> **Status:** GEÏMPLEMENTEERD (geverifieerd 25-06-2026)
 > **Aanleiding:** Scheids beslist de winnaar op basis van toernooi-/categorie-regels — het systeem registreert alleen de uitkomst.
+>
+> **Live in code:** `_content.blade.php` JP-dropdown `<option value="hantei">W</option>` (regel ~509)
+> + `updateJP()` handelt `value === 'hantei'` af → `hanteiWinnaarId` (WP=2, JP=0), opponent WP=0
+> (regel ~1854). `ScoreboardController::uitslagTypeToJP()` geeft 0 voor hantei (via `default`, regel ~414).
+> Gelijkspel werkte al (JP=0 → beide WP=1, `winnaar_id=null`). Onderstaand implementatieplan is afgerond.
 
 ### Scoring-afspraken
 
