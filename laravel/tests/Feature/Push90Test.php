@@ -979,6 +979,32 @@ class Push90Test extends TestCase
     }
 
     #[Test]
+    public function local_sync_receive_caps_oversized_toernooien(): void
+    {
+        config(['local-server.role' => 'standby']);
+        $response = $this->postJson('/local-server/receive-sync', [
+            'toernooien' => array_fill(0, 101, ['id' => 1]),
+        ]);
+        $response->assertStatus(422);
+    }
+
+    #[Test]
+    public function local_sync_receive_caches_only_validated_keys(): void
+    {
+        config(['local-server.role' => 'standby']);
+        $response = $this->postJson('/local-server/receive-sync', [
+            'timestamp'  => now()->toIso8601String(),
+            'toernooien' => [['id' => 1, 'naam' => 'Test']],
+            'rogue'      => 'drop-me',
+        ]);
+        $response->assertOk()->assertJson(['status' => 'ok']);
+
+        $cached = \Illuminate\Support\Facades\Cache::get('standby_sync_data');
+        $this->assertArrayHasKey('toernooien', $cached);
+        $this->assertArrayNotHasKey('rogue', $cached, 'raw unknown keys must not be cached');
+    }
+
+    #[Test]
     public function local_sync_standby_status_returns_info(): void
     {
         $response = $this->get('/local-server/standby-status');

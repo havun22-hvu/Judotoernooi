@@ -353,6 +353,21 @@ class ScoreboardController extends Controller
      */
     public function errorReport(Request $request): JsonResponse
     {
+        // Enforce types/lengths up front; the loop below still truncates count
+        // and string sizes so a legitimate oversized batch degrades instead of
+        // being rejected wholesale (this is telemetry, not a user form).
+        $request->validate([
+            'errors'               => ['nullable', 'array'],
+            'errors.*'             => ['array'],
+            'errors.*.message'     => ['nullable', 'string'],
+            'errors.*.stack'       => ['nullable', 'string'],
+            'errors.*.screen'      => ['nullable', 'string', 'max:255'],
+            'errors.*.app_version' => ['nullable', 'string', 'max:50'],
+            'errors.*.fatal'       => ['nullable', 'boolean'],
+            'device'               => ['nullable', 'string', 'max:255'],
+            'platform_version'     => ['nullable', 'string', 'max:50'],
+        ]);
+
         $errors = $request->input('errors', []);
         if (empty($errors) || !is_array($errors)) {
             return response()->json(['ok' => true]);

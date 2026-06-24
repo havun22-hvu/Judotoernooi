@@ -328,9 +328,16 @@ class LocalSyncController extends Controller
             ], 400);
         }
 
-        // Store received data in cache for quick access
-        $data = $request->all();
-        Cache::put('standby_sync_data', $data, 120);
+        // Enforce the shape produced by syncData() ({timestamp, toernooien[]})
+        // and cap the payload so an authenticated peer cannot flood the cache.
+        $validated = $request->validate([
+            'timestamp'    => ['nullable', 'string', 'max:40'],
+            'toernooien'   => ['nullable', 'array', 'max:100'],
+            'toernooien.*' => ['array'],
+        ]);
+
+        // Store only the validated keys (never raw request input).
+        Cache::put('standby_sync_data', $validated, 120);
         Cache::put('standby_last_sync', now()->toIso8601String(), 120);
 
         return response()->json([

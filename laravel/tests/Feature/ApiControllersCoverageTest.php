@@ -899,4 +899,37 @@ class ApiControllersCoverageTest extends TestCase
         $this->assertEmpty($data['poules']);
         $this->assertEmpty($data['wedstrijden']);
     }
+
+    // ========================================================================
+    // ScoreboardController — errorReport (public telemetry)
+    // ========================================================================
+
+    #[Test]
+    public function scoreboard_error_report_stores_valid_errors(): void
+    {
+        $response = $this->postJson('/api/scoreboard/error-report', [
+            'errors' => [
+                ['message' => 'Boom', 'screen' => 'mat', 'fatal' => true],
+            ],
+            'device' => 'Tablet-1',
+            'platform_version' => 'Android 14',
+        ]);
+
+        $response->assertOk()->assertJson(['ok' => true]);
+        $this->assertDatabaseHas('scoreboard_error_logs', [
+            'message' => 'Boom',
+            'screen' => 'mat',
+            'device' => 'Tablet-1',
+        ]);
+    }
+
+    #[Test]
+    public function scoreboard_error_report_rejects_malformed_errors(): void
+    {
+        $response = $this->postJson('/api/scoreboard/error-report', [
+            'errors' => ['not-an-array'],
+        ]);
+
+        $response->assertStatus(422);
+    }
 }
