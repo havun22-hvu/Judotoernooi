@@ -428,6 +428,33 @@ class PaymentControllersCoverageTest extends TestCase
         ]);
     }
 
+    #[Test]
+    public function simulate_page_is_blocked_on_production(): void
+    {
+        config(['app.env' => 'production']);
+
+        $this->get(route('betaling.simulate', ['payment_id' => 'tr_x']))
+            ->assertNotFound();
+    }
+
+    #[Test]
+    public function simulate_complete_is_blocked_on_production(): void
+    {
+        $betaling = $this->createBetaling(['mollie_payment_id' => 'tr_prodblock']);
+        config(['app.env' => 'production']);
+
+        $this->post(route('betaling.simulate.complete'), [
+            'payment_id' => 'tr_prodblock',
+            'status' => 'paid',
+        ])->assertNotFound();
+
+        // Status must NOT have been forced to paid.
+        $this->assertDatabaseMissing('betalingen', [
+            'id' => $betaling->id,
+            'status' => Betaling::STATUS_PAID,
+        ]);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | StripeController - Webhook Tests

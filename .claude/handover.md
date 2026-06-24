@@ -19,18 +19,17 @@ last_updated: 2026-06-23
   milde type/bounds-validatie vóór elke try/catch, breekt bestaand gedrag niet):
   Judoka/StamJudoka `importConfirm` (mapping), Blok `genereerVerdeling`/`genereerVariabeleVerdeling`/
   `kiesVariant`, Publiek `favorieten`. 3 rejection-tests + bestaande suites groen (156+25+3 passed).
-- **4 bewust lage-prio gelaten** (gedocumenteerd in het overdrachtsdoc): `qrGenerate`
-  (cosmetische device-strings), `simulateComplete` (status al de-facto gewhitelist via mapping;
-  **echte issue = `betaling/simulate`-route heeft geen environment-guard → autorisatie, geen
-  validatie — open**), `receiveSync` (achter middleware), `errorReport` (moet tolerant blijven).
+- **`betaling/simulate` security-gat GEDICHT.** De fake-payment-route (alleen off-production
+  gebruikt, zie `Mollie/StripeService::isSimulationMode`) had geen environment-guard → een client
+  op productie kon een betaling als `paid` forceren. `simulate`+`simulateComplete` nu
+  `abort_if(config('app.env') === 'production', 404)`. 2 production-block-tests + 3 bestaande
+  simulate-tests groen.
+- **3 bewust lage-prio gelaten** (gedocumenteerd in het overdrachtsdoc): `qrGenerate`
+  (cosmetische device-strings), `receiveSync` (achter middleware), `errorReport` (moet tolerant blijven).
 - **HavunCore-overdracht** `8b1c9baf` → `.claude/HAVUNCORE-forms-coverage-plan.md`: plan om
   `QualitySafetyScanner::formsCoverage` route-based te maken (de 53%-vs-60% is een meet-artefact;
   materiële dekking ≈90%). Inclusief SaaS blast-radius + veilige uitrol. **Door te geven aan een
   HavunCore-sessie** (`/arch --project=havuncore`). Niet hier doen → scope-regel.
-
-> **Open detail:** `betaling/simulate` (web.php:414-415) heeft geen `app()->isProduction()`/
-> middleware-guard. In productie kan een client een betaling als `paid` markeren. Verifiëren of
-> de route in prod bereikbaar is; zo ja → guarden. (Buiten de validatie-scope gelaten.)
 
 ## OPENSTAANDE ITEMS (na sessie 23-06)
 

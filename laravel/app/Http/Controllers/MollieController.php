@@ -309,6 +309,11 @@ class MollieController extends Controller
      */
     public function simulate(Request $request): View
     {
+        // Simulation is only ever wired up off-production (see Mollie/StripeService
+        // ::isSimulationMode). Block it on production so a client cannot forge a
+        // payment status via this seam.
+        abort_if(config('app.env') === 'production', 404);
+
         $paymentId = $request->get('payment_id');
         $betaling = Betaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first()
             ?? ToernooiBetaling::where('mollie_payment_id', $paymentId)->orWhere('stripe_payment_id', $paymentId)->first();
@@ -324,6 +329,8 @@ class MollieController extends Controller
      */
     public function simulateComplete(Request $request): RedirectResponse
     {
+        abort_if(config('app.env') === 'production', 404);
+
         $paymentId = $request->input('payment_id');
         $status = $request->input('status', 'paid');
 
