@@ -55,6 +55,36 @@ class ScoreboardPublicTest extends TestCase
     }
 
     // ========================================================================
+    // Scoreboard Mobile (public, portrait + landscape)
+    // ========================================================================
+
+    #[Test]
+    public function scoreboard_mobile_is_publicly_accessible(): void
+    {
+        [$org, $toernooi, $mat] = $this->createToernooiWithMat();
+
+        // No auth — parents/coaches open it via a public link/QR.
+        $response = $this->get("/{$org->slug}/{$toernooi->slug}/mat/scoreboard-mobiel/1");
+
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.mat.scoreboard-mobile');
+        // A core engine-driven element must render (shared element-ID contract).
+        $response->assertSee('id="timer-display"', false);
+        $response->assertSee('id="header-poule"', false);
+    }
+
+    #[Test]
+    public function scoreboard_mobile_returns_200_for_invalid_mat(): void
+    {
+        [$org, $toernooi] = $this->createToernooiWithMat();
+
+        $response = $this->get("/{$org->slug}/{$toernooi->slug}/mat/scoreboard-mobiel/99");
+
+        // Mat fallback — still renders, no crash.
+        $response->assertStatus(200);
+    }
+
+    // ========================================================================
     // Scoreboard State API
     // ========================================================================
 

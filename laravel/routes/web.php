@@ -730,6 +730,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 // Scoreboard live display — public, no auth needed (shown on TV/LCD next to mat)
 Route::get('{organisator}/{toernooi}/mat/scoreboard-live/{mat}', [MatController::class, 'scoreboardLive'])->name('mat.scoreboard-live');
 
+// Public mobile scoreboard — public, no auth (parents/coaches follow live score on phone via link/QR)
+Route::get('{organisator}/{toernooi}/mat/scoreboard-mobiel/{mat}', [MatController::class, 'scoreboardMobile'])->name('mat.scoreboard-mobile');
+
 // Scoreboard state API — used by inline scoreboard tab in public app
 Route::get('{organisator}/{toernooi}/live/scorebord/{mat}/state', [MatController::class, 'scoreboardState'])->name('publiek.scorebord.state');
 

@@ -142,18 +142,36 @@ class MatController extends Controller
      */
     public function scoreboardLive(Organisator $organisator, Toernooi $toernooi, $mat): View
     {
+        return view('pages.mat.scoreboard-live', $this->scoreboardViewData($toernooi, $mat));
+    }
+
+    /**
+     * Public mobile scoreboard — portrait + landscape, no auth, no app install.
+     * Parents/coaches follow the live score on their phone via a public link/QR.
+     * Same live data + element-IDs as the LCD view so the shared engine works 1:1.
+     */
+    public function scoreboardMobile(Organisator $organisator, Toernooi $toernooi, $mat): View
+    {
+        return view('pages.mat.scoreboard-mobile', $this->scoreboardViewData($toernooi, $mat));
+    }
+
+    /**
+     * Shared data builder for both the LCD and mobile scoreboard views.
+     */
+    private function scoreboardViewData(Toernooi $toernooi, $mat): array
+    {
         $matModel = $toernooi->matten()->where('nummer', $mat)->first();
         $matId = $matModel ? $matModel->id : $mat;
         $currentMatch = $matModel ? $this->getFormattedCurrentMatch($matModel, $toernooi) : null;
         $blauwRechts = (bool) ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false);
 
-        return view('pages.mat.scoreboard-live', [
+        return [
             'toernooi' => $toernooi,
             'matId' => $matId,
             'matNummer' => $matModel?->nummer ?? $mat,
             'currentMatch' => $currentMatch,
             'blauwRechts' => $blauwRechts,
-        ]);
+        ];
     }
 
     /**
