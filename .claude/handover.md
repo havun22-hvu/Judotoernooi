@@ -24,8 +24,13 @@ last_updated: 2026-06-23
   op productie kon een betaling als `paid` forceren. `simulate`+`simulateComplete` nu
   `abort_if(config('app.env') === 'production', 404)`. 2 production-block-tests + 3 bestaande
   simulate-tests groen.
-- **3 bewust lage-prio gelaten** (gedocumenteerd in het overdrachtsdoc): `qrGenerate`
-  (cosmetische device-strings), `receiveSync` (achter middleware), `errorReport` (moet tolerant blijven).
+- **`qrGenerate` device-strings begrensd** (`2dc966cc`): `browser`/`os` → `nullable|string|max:255`,
+  2 tests. Audit nu **7/10 gedicht + simulate-guard**.
+- **2 bewust gelaten** (met reden): `receiveSync` (`$request->all()` dynamische sync-payload achter
+  `local-sync.auth`+standby-guard — structuur-validatie heeft weinig waarde), `errorReport`
+  (error-reporting endpoint, móét tolerant blijven + heeft al defensieve truncatie).
+- **Repo-hygiëne GEDICHT** (`ca25ecdd`): `storage/framework/testing/` gegitignored + 3 getrackte
+  coach-fotos jpg's uit de index (regenereren per testrun → was werktree-ruis).
 - **HavunCore-overdracht** `8b1c9baf` → `.claude/HAVUNCORE-forms-coverage-plan.md`: plan om
   `QualitySafetyScanner::formsCoverage` route-based te maken (de 53%-vs-60% is een meet-artefact;
   materiële dekking ≈90%). Inclusief SaaS blast-radius + veilige uitrol. **Door te geven aan een
@@ -48,8 +53,8 @@ last_updated: 2026-06-23
   gehallucineerd (zie `.claude/blueprint.md` — negeren).
 - [ ] **`.env.bak.2026-05-02` residu op prod** (51d, K&V info-item) — klaar om naar
   `/var/backups/havun-env/judotoernooi/`. `.env`-adjacent → niet aangeraakt, wacht op go.
-- [ ] **Repo-hygiëne:** `storage/framework/testing/disks/public/coach-fotos/*.jpg` zijn
-  getrackt maar regenereren per testrun → werktree-ruis. Gitignoren is de echte fix.
+- [x] **Repo-hygiëne** (24-06, `ca25ecdd`): `storage/framework/testing/` gegitignored + 3 getrackte
+  coach-fotos jpg's uit de index gehaald. Werktree-ruis weg.
 - [ ] **Device-sweep (#4 van de 4 testpunten):** fysieke sweep op Henks P10 met
   `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md` — kan Claude niet zelf. Henk test "vanavond".
 - [ ] Servers staan op de runtime-relevante staat; de laatste test-only commits (visual-bracket)
