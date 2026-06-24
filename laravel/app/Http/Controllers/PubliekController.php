@@ -395,6 +395,11 @@ class PubliekController extends Controller
      */
     public function favorieten(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
+        $request->validate([
+            'judoka_ids' => ['nullable', 'array'],
+            'judoka_ids.*' => ['integer'],
+        ]);
+
         $judokaIds = $request->input('judoka_ids', []);
 
         if (empty($judokaIds)) {

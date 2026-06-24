@@ -158,6 +158,45 @@ class BlokControllerCoverageTest extends TestCase
         $response->assertRedirect();
     }
 
+    #[Test]
+    public function genereer_verdeling_rejects_out_of_range_balans(): void
+    {
+        $this->actAsOrg();
+        $this->createBlokWithPoules();
+
+        $response = $this->post($this->url('blok/genereer-verdeling'), [
+            'balans' => 150,
+        ]);
+
+        $response->assertSessionHasErrors('balans');
+    }
+
+    #[Test]
+    public function genereer_variabele_verdeling_rejects_non_integer_max(): void
+    {
+        $this->actAsOrg();
+        $this->createBlokWithPoules();
+
+        $response = $this->post($this->url('blok/genereer-variabele-verdeling'), [
+            'max_per_blok' => 'tien',
+        ]);
+
+        $response->assertSessionHasErrors('max_per_blok');
+    }
+
+    #[Test]
+    public function kies_variant_rejects_non_array_toewijzingen(): void
+    {
+        $this->actAsOrg();
+        $this->createBlokWithPoules();
+
+        $response = $this->post($this->url('blok/kies-variant'), [
+            'toewijzingen' => 'not-an-array',
+        ]);
+
+        $response->assertSessionHasErrors('toewijzingen');
+    }
+
     // ========================================================================
     // Genereer Variabele Verdeling
     // ========================================================================

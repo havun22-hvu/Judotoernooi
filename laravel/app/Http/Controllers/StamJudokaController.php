@@ -116,6 +116,8 @@ class StamJudokaController extends Controller
     {
         $this->authorizeAccess($organisator);
 
+        $request->validate(['mapping' => ['nullable', 'array']]);
+
         $mapping = $request->input('mapping', []);
         $data = session('stam_import_data');
         $header = session('stam_import_header');

@@ -50,6 +50,8 @@ class BlokController extends Controller
      */
     public function genereerVerdeling(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
+        $request->validate(['balans' => ['nullable', 'integer', 'between:0,100']]);
+
         try {
             // Clear old variants first
             session()->forget(['blok_varianten', 'blok_stats']);
@@ -108,6 +110,11 @@ class BlokController extends Controller
      */
     public function kiesVariant(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
+        $request->validate([
+            'toewijzingen' => ['nullable', 'array'],
+            'variant' => ['nullable', 'integer', 'min:0'],
+        ]);
+
         // Accept either direct toewijzingen (from DOM) or variant index (legacy)
         $toewijzingen = $request->input('toewijzingen');
 
@@ -159,6 +166,8 @@ class BlokController extends Controller
      */
     public function genereerVariabeleVerdeling(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
+        $request->validate(['max_per_blok' => ['nullable', 'integer', 'min:1']]);
+
         try {
             // Reset non-pinned poules
             $toernooi->poules()->where('blok_vast', false)->update(['blok_id' => null]);

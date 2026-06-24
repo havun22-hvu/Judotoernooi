@@ -303,6 +303,8 @@ class JudokaController extends Controller
      */
     public function importConfirm(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
+        $request->validate(['mapping' => ['nullable', 'array']]);
+
         $mapping = $request->input('mapping', []);
 
         // Get data from session
