@@ -7,9 +7,21 @@ last_check: 2026-04-22
 
 # Feature: Publiek Scorebord (Mobiel)
 
-> **Status:** OPEN
+> **Status:** GEÏMPLEMENTEERD (25-06-2026, commit `360ee266`)
 > **Prioriteit:** Medium — nice to have, lage kosten
 > **Geschatte effort:** Klein — bestaande infra hergebruiken
+>
+> **Live:** publieke route `GET {org}/{toernooi}/mat/scoreboard-mobiel/{mat}` (`mat.scoreboard-mobile`,
+> geen auth) → `MatController::scoreboardMobile()` (deelt `scoreboardViewData()` met de LCD).
+> View `pages/mat/scoreboard-mobile.blade.php`: portrait-first (wit boven / timer+osaekomi midden /
+> blauw onder), landscape via `@media(orientation:landscape)`. De live-engine (Pusher + `handleEvent`
+> + timer/osaekomi/sound/disconnect) is geëxtraheerd naar `partials/_scoreboard-engine.blade.php` en
+> wordt **gedeeld** met de LCD-view (`scoreboard-live`) — die bleef pixel-identiek (visual regression).
+> Zelfde Reverb-channel `scoreboard-display.{toernooiId}.{matId}` (al publiek). CSP-veilig (`@nonce`).
+> De LCD blijft bewust landscape-only.
+>
+> **Nog te doen (klein):** een deel-knop/QR naar deze URL bij de device-toegang-links (naast
+> "Kort/Volledig") zodat organisatoren 'm makkelijk delen met publiek.
 
 ## Idee
 

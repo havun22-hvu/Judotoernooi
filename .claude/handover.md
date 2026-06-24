@@ -9,6 +9,31 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 25-06 (nacht, autonoom) — publiek mobiel scorebord + doc-rot
+
+**Feature gebouwd + gepusht (`360ee266`, main). NIET gedeployd (deploy = Henks cue).**
+- **Publiek mobiel scorebord** (portrait+landscape) voor ouders/coaches, geen inlog/app:
+  publieke route `{org}/{toernooi}/mat/scoreboard-mobiel/{mat}` (`mat.scoreboard-mobile`) +
+  `MatController::scoreboardMobile()` (deelt `scoreboardViewData()` met de LCD). Nieuwe view
+  `scoreboard-mobile.blade.php`. De live-engine (Pusher+`handleEvent`+timer/osaekomi/sound/disconnect)
+  is geëxtraheerd naar `partials/_scoreboard-engine.blade.php` en **gedeeld** met de LCD-view.
+- **LCD bleef pixel-identiek** — geverifieerd: enkel `@include` toegevoegd (0 HTML/CSS verwijderd),
+  77 scoreboard/mat PHPUnit groen, visual-regression LCD-baseline 4 passed. Optie A (gedeelde
+  partial) geslaagd; geen terugval naar duplicatie nodig.
+- **Build-asset-ruis teruggedraaid**: de bouw-agent draaide onnodig `npm run build` (de views zijn
+  standalone, geen Tailwind/Vite) → CSS-bundle-rebuild **niet** gecommit (geen app-breed CSS-risico).
+- **Gemini-blauwdruk was fout** (gokte Echo/privé-channel/`data.redScore`/nieuwe backend). Vervangen
+  door een correct plan op de echte code (`.claude/blueprint.md`). Les: Gemini speculeert óók over
+  bestaande code — altijd toetsen.
+- **NOG TE DOEN (klein, CSP-gevoelig → browser-check nodig):** deel-knop/QR naar de mobiele URL bij
+  de device-toegang-links (`device-toegangen.blade.php`, Alpine-CSP). Bewust niet 's nachts gedaan —
+  CSP-knoppen moet je visueel verifiëren (deze sessie zat vol CSP-dode-knop-bugs op edit-partials).
+  De feature werkt al via de directe URL.
+
+**Doc-rot opgeruimd (`7f7a954e`):** 5 voltooide wegwerp-plannen verwijderd (matten-toegangen,
+winnaar-doorschuiven, printbare-brackets, testverbeteringen, testplan-playwright) + Fase 2
+(Hantei/GS) in CATEGORIE-doc op GEÏMPLEMENTEERD gezet (stond onterecht TODO).
+
 ## SESSIE 24-06 (vervolg) — write-route validatie + HavunCore-overdracht
 
 **Twee dingen afgerond, beide op main (`8b1c9baf`, gepusht).**
