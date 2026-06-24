@@ -151,28 +151,28 @@ Volledige handmatige audit van `routes/web.php` + `routes/api.php` (handler-meth
 
 | Categorie | Aantal |
 |---|---|
-| Write-routes onderzocht (POST/PUT/PATCH/DELETE + resource store/update) | ~150 |
+| **qv-scanner-meting** (occurrence-based, rauwe `Route::write`-telling) | **215 routes / 59%** |
+| Handmatige route-audit: write-routes onderzocht (handler-methodes gelezen) | ~150 |
 | Mét validatie (FormRequest / `validate()` / signature-verify / gedeelde validerende `do*()`) | ~95 |
 | Geen input (route-model-binding / toggle / auth-only acties, géén request-body) → **uit noemer** | ~45 |
-| Écht-ongevalideerd (rauwe input zonder `validate()`) | 10 |
+| Écht-ongevalideerd (rauwe input zonder `validate()`) bij audit | 10 |
 
-**Materiële coverage = 95 / (150 − 45) ≈ 90%** — ruim boven de 60%-drempel. De scanner rapporteert
-~53% omdat hij (a) gedeelde FormRequests/`do*()`-validatie ondertelt en (b) input-loze routes wél
-in de noemer stopt. Dit is dé concrete testcase: de nieuwe heuristiek moet voor JudoToernooi
-≈90% rapporteren, niet 53%.
+**Het verschil ZELF is de testcase.** De scanner meet **215 write-routes / 59%**; de handmatige
+audit telt ~150 echte handler-routes en **materieel ≈90%** (95 / (150 − 45)). De kloof komt door
+precies de 3 ondertellingen uit §1: de scanner telt rauwe `Route::write`-occurrences (closures,
+dubbele route-files) in de noemer én ondertelt gedeelde FormRequests/`do*()`-validatie + input-loze
+routes. De nieuwe heuristiek moet voor JudoToernooi ≈90% rapporteren, niet 59% — en wel omdat de
+meting correcter wordt, **niet** omdat de teller losser wordt gezet.
 
-**De 10 echt-ongevalideerde routes** (bewijs in de audit; 6 zijn 24-06 alsnog gevalideerd in
-JudoToernooi, 4 blijven bewust lage-prio):
-1. `JudokaController@importConfirm` — `mapping` rauw → **gevalideerd 24-06**
-2. `StamJudokaController@importConfirm` — `mapping` rauw → **gevalideerd 24-06**
-3. `BlokController@genereerVerdeling` — `balans` zonder bounds → **gevalideerd 24-06**
-4. `BlokController@genereerVariabeleVerdeling` — `max_per_blok` zonder bounds → **gevalideerd 24-06**
-5. `BlokController@kiesVariant` — `toewijzingen` rauwe array → **gevalideerd 24-06**
-6. `PubliekController@favorieten` — `judoka_ids` rauw in `whereIn` → **gevalideerd 24-06**
-7. `PasskeyController@qrGenerate` — `browser`/`os` device-strings (cosmetisch) → lage-prio
-8. `MollieController@simulateComplete` — `status` de-facto al gewhitelist via mapping; échte issue
-   is dat de `betaling/simulate`-route **geen environment-guard** heeft → autorisatie, geen validatie
-9. `LocalSyncController@receiveSync` — `$request->all()` dynamische sync-payload achter
-   `local-sync.auth` + standby-guard → lage-prio
-10. `ScoreboardController@errorReport` — error-reporting endpoint met defensieve truncatie; moet
-    tolerant blijven → lage-prio
+**De 10 echt-ongevalideerde routes — ALLE 10 inmiddels afgehandeld in JudoToernooi (24-06):**
+1. `JudokaController@importConfirm` — `mapping` → **gevalideerd** (`884ba064`)
+2. `StamJudokaController@importConfirm` — `mapping` → **gevalideerd** (`884ba064`)
+3. `BlokController@genereerVerdeling` — `balans` bounds → **gevalideerd** (`884ba064`)
+4. `BlokController@genereerVariabeleVerdeling` — `max_per_blok` → **gevalideerd** (`884ba064`)
+5. `BlokController@kiesVariant` — `toewijzingen` → **gevalideerd** (`884ba064`)
+6. `PubliekController@favorieten` — `judoka_ids` → **gevalideerd** (`884ba064`)
+7. `PasskeyController@qrGenerate` — `browser`/`os` → **begrensd** (`2dc966cc`)
+8. `MollieController@simulateComplete` — échte issue was de ongeguarde `betaling/simulate`-route →
+   **environment-guard toegevoegd** (`c13446a1`, `abort_if(config('app.env')==='production')`)
+9. `LocalSyncController@receiveSync` — `$request->all()` → **structuur afgedwongen + cap** (`dbd88f06`)
+10. `ScoreboardController@errorReport` — **types/lengtes afgedwongen** mét behoud truncatie (`dbd88f06`)

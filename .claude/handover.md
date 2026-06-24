@@ -39,6 +39,20 @@ last_updated: 2026-06-23
 
 ## OPENSTAANDE ITEMS (na sessie 23-06)
 
+- [ ] **HavunCore: forms-coverage scanner route-based maken** — plan ligt klaar in
+  **`.claude/HAVUNCORE-forms-coverage-plan.md`** (gecommit, niet scratchpad → wordt onthouden).
+  qv-scanner meet JudoToernooi op **215 routes / 59%** (occurrence-based artefact); materieel ≈90%.
+  Dit is een **HavunCore-wijziging**: open een HavunCore-sessie en wijs dat MD aan
+  (`/arch --project=havuncore`). HavunCore-sessie heeft het doc al beoordeeld als self-contained.
+  *(Reden dat dit hier als open-punt staat: scratchpad/cross-project-bestanden worden niet
+  automatisch door `/start` geladen — dit punt + het vaste pad zorgt dat een volgende sessie het ziet.)*
+- [ ] **`.env.bak.2026-05-02` residu op prod** (51d, K&V info-item) — klaar om naar
+  `/var/backups/havun-env/judotoernooi/`. `.env`-adjacent → niet aangeraakt, wacht op go.
+- [ ] **Device-sweep (#4 van de 4 testpunten):** fysieke sweep op Henks P10 met
+  `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md` — kan Claude niet zelf.
+
+### Afgerond
+
 - [x] **K&V form-validation (24-06): 2 echte gaten gedicht, 60%-drempel is heuristiek-artefact.**
   `ToernooiWachtwoordenRequest` + `ToernooiBloktijdenRequest` toegevoegd (commit `ac31ac31`) —
   de enige écht-ongevalideerde input-endpoints (`updateWachtwoorden`/`updateBloktijden`). 5 tests.
@@ -52,12 +66,8 @@ last_updated: 2026-06-23
   qv-forms-check route-based maken (dekking = #write-routes-mét-validatie / #write-routes) i.p.v.
   occurrence-based, óf de drempel voor judotoernooi accepteren. Blauwdruk-routelijst was grotendeels
   gehallucineerd (zie `.claude/blueprint.md` — negeren).
-- [ ] **`.env.bak.2026-05-02` residu op prod** (51d, K&V info-item) — klaar om naar
-  `/var/backups/havun-env/judotoernooi/`. `.env`-adjacent → niet aangeraakt, wacht op go.
 - [x] **Repo-hygiëne** (24-06, `ca25ecdd`): `storage/framework/testing/` gegitignored + 3 getrackte
   coach-fotos jpg's uit de index gehaald. Werktree-ruis weg.
-- [ ] **Device-sweep (#4 van de 4 testpunten):** fysieke sweep op Henks P10 met
-  `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md` — kan Claude niet zelf. Henk test "vanavond".
 - [ ] Servers staan op de runtime-relevante staat; de laatste test-only commits (visual-bracket)
   zijn niet gedeployd (geen prod-impact). Synchroniseer servers alleen bij wens om pariteit.
 
