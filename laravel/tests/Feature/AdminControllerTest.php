@@ -175,6 +175,24 @@ class AdminControllerTest extends TestCase
     }
 
     #[Test]
+    public function impersonate_writes_an_audit_log(): void
+    {
+        \Illuminate\Support\Facades\Log::spy();
+
+        $admin = $this->createAdmin();
+        $klant = $this->createKlant();
+        $this->actingAs($admin, 'organisator');
+
+        $this->post(route('admin.impersonate', $klant));
+
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('info')
+            ->withArgs(function ($message, $context = []) use ($klant) {
+                return $message === 'admin.impersonate.start'
+                    && ($context['klant_id'] ?? null) === $klant->id;
+            });
+    }
+
+    #[Test]
     public function cannot_impersonate_self(): void
     {
         $admin = $this->createAdmin();

@@ -248,6 +248,16 @@ class AdminController extends Controller
         }
 
         session()->put('impersonating_from', $admin->id);
+
+        // Audit trail: impersonation is a powerful sitebeheerder action.
+        \Log::info('admin.impersonate.start', [
+            'admin_id' => $admin->id,
+            'admin_naam' => $admin->naam,
+            'klant_id' => $klant->id,
+            'klant_naam' => $klant->naam,
+            'ip' => request()->ip(),
+        ]);
+
         Auth::guard('organisator')->login($klant);
 
         return redirect()->route('organisator.dashboard', ['organisator' => $klant->slug]);
@@ -270,6 +280,11 @@ class AdminController extends Controller
             session()->forget('impersonating_from');
             return redirect()->route('login');
         }
+
+        \Log::info('admin.impersonate.stop', [
+            'admin_id' => $admin->id,
+            'ip' => request()->ip(),
+        ]);
 
         session()->forget('impersonating_from');
         Auth::guard('organisator')->login($admin);
