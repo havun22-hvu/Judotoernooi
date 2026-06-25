@@ -9,6 +9,20 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## DEPLOY 25-06 — security-sweep + sessie-werk LIVE
+
+**Staging + productie beide op `cc90055d`** (was `e1eab29b`/guzzle-deploy 23-06). Fast-forward
+`git pull` + post-merge `optimize:clear` + `queue:restart`. **Geen migrations/composer/assets**
+(geverifieerd). Prod-backup vóór deploy: `judo_toernooi_voor-security-sweep_2026-06-25_11-52-23.sql.gz`.
+Bevat álle sessie-werk sinds 23-06: write-route-validatie (10 + simulate-guard), publiek mobiel
+scorebord, doc-rot, en de 6 security-fixes. Smoke (staging→prod): home/login/toernooi-pagina 200,
+geen verse errors. Staging als canary gebruikt (groen) vóór prod.
+
+> **Open rooktest (Henk, P10):** de session-rotatie (#3) raakt álle login-paden. Magic-link/PIN
+> zijn PHPUnit+staging-geverifieerd, maar de **passkey/QR-flow** (browser-cookie-flow) verdient
+> één handmatige login-test op prod — dat is de enige laag die PHPUnit niet dekt. Bij problemen:
+> rollback-commit is `652626bc` (alleen #3) of de DB-backup hierboven.
+
 ## SESSIE 25-06 — security-sweep (hele app, 4 parallelle audits)
 
 **6 fixes gebouwd + getest, op main. Volledige suite 3583 groen, 0 failures. NIET gedeployd (deploy = cue).**
