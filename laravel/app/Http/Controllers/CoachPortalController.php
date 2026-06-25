@@ -9,6 +9,7 @@ use App\Models\Judoka;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use App\Http\Controllers\PubliekResultatenController;
 use App\Services\MollieService;
@@ -153,10 +154,24 @@ class CoachPortalController extends Controller
             'pincode' => 'required|string|size:5',
         ]);
 
+        // Brute-force guard: the portal PIN is 5 digits (100k combos) and stays
+        // readable by design (the organiser shows it to the club), so cap attempts
+        // per code on top of the route's IP throttle.
+        $throttleKey = "coach-portal-pin:{$toernooiModel->id}:{$code}";
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return redirect()->route('coach.portal.code', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', "Te veel pogingen. Probeer over {$seconds} seconden opnieuw.");
+        }
+
         if (!$club->checkPincodeForToernooi($toernooiModel, $validated['pincode'])) {
+            RateLimiter::hit($throttleKey, 300);
+
             return redirect()->route('coach.portal.code', $this->routeParams($organisator, $toernooi, $code))
                 ->with('error', 'Onjuiste PIN code');
         }
+
+        RateLimiter::clear($throttleKey);
 
         $request->session()->put("club_logged_in_{$toernooiModel->id}_{$code}", true);
 

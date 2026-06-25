@@ -100,6 +100,21 @@ class CoachPortalControllerCoverageTest extends TestCase
         $response->assertSessionHasErrors('pincode');
     }
 
+    #[Test]
+    public function login_locks_out_after_five_wrong_pincode_attempts(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post($this->portalUrl('login'), ['pincode' => '00000']);
+        }
+
+        // The correct PIN is now refused while the per-code lockout is active
+        // (a successful login would carry no 'error' in the session).
+        $this->post($this->portalUrl('login'), ['pincode' => $this->pincode])
+            ->assertSessionHas('error');
+    }
+
     // ========================================================================
     // judokasCode — with session (full page)
     // ========================================================================
