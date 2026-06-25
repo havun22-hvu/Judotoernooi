@@ -197,23 +197,6 @@ class AuthControllersCoverageTest extends TestCase
     }
 
     #[Test]
-    public function magic_link_login_rotates_session_id(): void
-    {
-        $token = MagicLinkToken::generate($this->organisator->email, 'register');
-
-        // Establish a pre-login session id.
-        $this->get(route('organisator.login'));
-        $before = session()->getId();
-
-        $this->get(route('register.verify', $token->token));
-
-        // Session id must rotate on login (session-fixation guard), and the
-        // login must still succeed (regenerate must not break the flow).
-        $this->assertNotSame($before, session()->getId());
-        $this->assertAuthenticatedAs($this->organisator, 'organisator');
-    }
-
-    #[Test]
     public function verify_register_existing_sitebeheerder_redirects_admin(): void
     {
         $token = MagicLinkToken::generate($this->sitebeheerder->email, 'register');

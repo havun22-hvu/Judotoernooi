@@ -75,9 +75,8 @@ class PinAuthController extends Controller
         $organisator = $device->organisator;
         $device->touch();
 
-        // Rotate the session id on login to prevent session fixation.
+        // Login with organisator guard - no session regenerate!
         Auth::guard('organisator')->login($organisator, true);
-        session()->regenerate();
         session()->save();
 
         $organisator->updateLaatsteLogin();
