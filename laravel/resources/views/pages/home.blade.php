@@ -2,7 +2,7 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('JudoToernooi') }} - {{ __('Professioneel Toernooi Management') }}</title>
     <x-seo
@@ -99,7 +99,7 @@
     }
     </script>
 </head>
-<body class="bg-white min-h-screen antialiased">
+<body class="bg-white min-h-screen antialiased overflow-x-hidden">
     <!-- DO NOT REMOVE: Header with logo, language switcher, and login link -->
     <header class="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">

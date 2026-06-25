@@ -2,7 +2,8 @@
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
 // v1.4.0 - 2026-03-30: Biometric login fix, QR scanner PWA
 // v1.5.0 - 2026-06-11: CSP fix (Vite nonce, Alpine csp migration) — force fresh assets
-const VERSION = '1.5.0';
+// v1.5.1 - 2026-06-25: force fresh assets (homepage mobile hardening + security sweep)
+const VERSION = '1.5.1';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
