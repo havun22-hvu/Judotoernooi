@@ -51,6 +51,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocalSyncController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\CheckToernooiRol;
+use App\Http\Middleware\EnsureToernooiScope;
 use App\Http\Middleware\CheckFreemiumPrint;
 use Illuminate\Support\Facades\Route;
 
@@ -427,7 +428,7 @@ Route::middleware('throttle:webhook')->group(function () {
 | Auth: Organisator login vereist
 |--------------------------------------------------------------------------
 */
-Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator')->name('toernooi.')->group(function () {
+Route::prefix('{organisator}/toernooi/{toernooi}')->middleware(['auth:organisator', EnsureToernooiScope::class])->name('toernooi.')->group(function () {
     // Toernooi basis routes
     Route::get('/', [ToernooiController::class, 'show'])->name('show');
     Route::get('edit', [ToernooiController::class, 'edit'])->name('edit');
