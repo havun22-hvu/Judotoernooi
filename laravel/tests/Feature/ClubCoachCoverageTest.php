@@ -736,6 +736,24 @@ class ClubCoachCoverageTest extends TestCase
     }
 
     #[Test]
+    public function coach_kaart_activeer_rejects_svg_upload(): void
+    {
+        $club = Club::factory()->create(['organisator_id' => $this->org->id]);
+        $kaart = CoachKaart::create([
+            'club_id' => $club->id,
+            'toernooi_id' => $this->toernooi->id,
+        ]);
+
+        $response = $this->post(route('coach-kaart.activeer.opslaan', $kaart->qr_code), [
+            'naam' => 'Coach Test',
+            'foto' => \Illuminate\Http\UploadedFile::fake()->create('evil.svg', 10, 'image/svg+xml'),
+            'pincode' => $kaart->pincode,
+        ]);
+
+        $response->assertSessionHasErrors('foto');
+    }
+
+    #[Test]
     public function coach_kaart_scan_shows_result(): void
     {
         $club = Club::factory()->create(['organisator_id' => $this->org->id]);

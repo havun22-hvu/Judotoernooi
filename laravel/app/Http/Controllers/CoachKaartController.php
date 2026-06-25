@@ -105,7 +105,7 @@ class CoachKaartController extends Controller
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
-            'foto' => 'required|image|max:5120', // Max 5MB
+            'foto' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120', // Max 5MB — no SVG (stored-XSS via public storage)
             'pincode' => 'required|string|size:4',
         ]);
 
