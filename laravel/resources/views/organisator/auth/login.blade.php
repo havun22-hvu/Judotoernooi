@@ -7,8 +7,8 @@
     <title>{{ __('Inloggen') }} - {{ __('JudoToernooi') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+<body class="bg-white sm:bg-gray-100 min-h-screen flex items-center justify-center p-0 sm:p-4">
+    <div class="bg-white p-6 sm:p-8 w-full sm:max-w-md min-h-screen sm:min-h-0 flex flex-col justify-center sm:block sm:rounded-lg sm:shadow-xl">
         {{-- Language switcher --}}
         <div class="flex justify-end mb-2" x-data="toggle">
             <div class="relative">
