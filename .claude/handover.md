@@ -9,6 +9,36 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 25-06 — security-sweep (hele app, 4 parallelle audits)
+
+**6 fixes gebouwd + getest, op main. Volledige suite 3583 groen, 0 failures. NIET gedeployd (deploy = cue).**
+Audits: autorisatie/IDOR, rate-limiting, auth-hardening/uploads, headers/CSP/data-exposure (agent-severity's
+kritisch heringeschat — 2 alarmistische claims ontkracht: `APP_DEBUG=true` = lokale dev-env, niet prod;
+QR-token brute-force onmogelijk = 64-char tokens).
+
+- **`#1` tenant-scoping (IDOR)** `EnsureToernooiScope` middleware op de `/{org}/toernooi/{toernooi}`-groep:
+  elk geresolveerd route-model met `toernooi_id` moet matchen met `{toernooi}` → 403. Dichtte broken
+  object-level auth: child-bindings (judoka/poule/blok/mat/toegang/coachKaart/betaling) waren op id-only
+  geresolved → een org kon via z'n eigen toernooi-URL een child van een ánder toernooi muteren. (De
+  autorisatie-agent claimde "elke org kan alles" — overdreven; `CheckToernooiRol`+`hasAccessToToernooi`
+  beschermde toernooi-niveau al; dit was het smallere child-gat.) 403 ipv 404 voor consistentie met de
+  bestaande checks. `TenantScopeTest` + 7 bestaande 403-tests bleven groen.
+- **`#2` coach-kaart PIN** — 4-cijfer activatie-PIN had geen throttle → per-kaart lockout (5/5min) + route-throttle.
+- **`#3` session-rotatie (fixation)** — alleen wachtwoord-login regenereerde; PIN/passkey/QR/3×magic-link niet.
+  `session()->regenerate()` idiomatisch toegevoegd op alle 6. **Docs-first les:** de `// causes cookie issues`-
+  comment kwam uit het unified-login-bouwcommit (`b90fef44`), géén gedocumenteerde bug; alle 6 zijn directe
+  login-responses (niet de QR-polling-request) → idiomatische volgorde veilig. Test bewijst rotatie + login werkt.
+- **`#4` coach-portal PIN** — 5-cijfer PIN (leesbaar by-design) → per-code lockout.
+- **`#5` upload** — coach-foto `image`-rule accepteerde SVG (stored-XSS) → `mimes:jpeg,jpg,png,webp`.
+- **audit-log** — sitebeheerder-impersonate logt nu start/stop (admin/klant/IP).
+
+**Bewust NIET gedaan — risico > waarde, verdient browser-sessie (geen open gat):**
+- **CSP afbakenen** (`wss://*.pusher.com`-wildcard, externe `img-src`) — raakt de realtime-WebSocket
+  (`SecurityHeaders.php:72`); fout = scoreboard/live kapot, browser-fenomeen dat PHPUnit niet vangt.
+- **HSTS-staging** (onwenselijk: forceert subdomeinen permanent HTTPS) · **rate-limit-middleware-dubbeling**
+  (al via controller 3/10min) · **publieke leeftijd→categorie** (breekt favorieten-UI; PII-winst verwaarloosbaar,
+  publiek toernooi toont sowieso namen+categorieën).
+
 ## SESSIE 25-06 (nacht, autonoom) — publiek mobiel scorebord + doc-rot
 
 **Feature gebouwd + gepusht (`360ee266`, main). NIET gedeployd (deploy = Henks cue).**
