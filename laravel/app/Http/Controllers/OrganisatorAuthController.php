@@ -163,8 +163,9 @@ class OrganisatorAuthController extends Controller
         $organisator = Organisator::where('email', $magicToken->email)->first();
 
         if ($organisator) {
-            // Existing user - just log in
+            // Existing user - just log in (rotate session id: fixation guard)
             Auth::guard('organisator')->login($organisator, true);
+            session()->regenerate();
             session()->save();
 
             if ($organisator->isSitebeheerder()) {
@@ -184,6 +185,7 @@ class OrganisatorAuthController extends Controller
         ]);
 
         Auth::guard('organisator')->login($organisator, true);
+        session()->regenerate();
         $organisator->updateLaatsteLogin();
         session()->save();
 
@@ -322,6 +324,7 @@ class OrganisatorAuthController extends Controller
         $magicToken->markUsed();
 
         Auth::guard('organisator')->login($organisator, true);
+        session()->regenerate();
         session()->save();
 
         if ($organisator->isSitebeheerder()) {

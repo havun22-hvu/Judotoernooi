@@ -145,9 +145,10 @@ class PasskeyController extends Controller
             return redirect()->route('organisator.login')->with('error', 'Gebruiker niet gevonden');
         }
 
-        // Login with organisator guard - no session regenerate!
+        // Rotate the session id on login to prevent session fixation.
         Auth::guard('organisator')->login($organisator, true);
         $device->touch();
+        session()->regenerate();
         session()->save();
 
         $organisator->updateLaatsteLogin();
@@ -264,8 +265,11 @@ class PasskeyController extends Controller
         $qrToken->markUsed();
         $organisator = $qrToken->organisator;
 
-        // Login without regenerating session (causes cookie issues)
+        // Rotate the session id on login to prevent session fixation. (This is
+        // the desktop's final navigation, not the QR status-polling request, so
+        // rotating here is safe.)
         Auth::guard('organisator')->login($organisator, true);
+        session()->regenerate();
         session()->save();
 
         $organisator->updateLaatsteLogin();
