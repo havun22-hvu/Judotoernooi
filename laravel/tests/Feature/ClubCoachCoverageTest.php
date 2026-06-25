@@ -707,6 +707,35 @@ class ClubCoachCoverageTest extends TestCase
     }
 
     #[Test]
+    public function coach_kaart_activeer_locks_out_after_repeated_wrong_pincode(): void
+    {
+        $club = Club::factory()->create(['organisator_id' => $this->org->id]);
+        $kaart = CoachKaart::create([
+            'club_id' => $club->id,
+            'toernooi_id' => $this->toernooi->id,
+        ]);
+
+        // 5 wrong attempts are allowed; the 6th is locked out per card.
+        for ($i = 0; $i < 5; $i++) {
+            $this->post(route('coach-kaart.activeer.opslaan', $kaart->qr_code), [
+                'naam' => 'Coach Test',
+                'foto' => \Illuminate\Http\UploadedFile::fake()->image('foto.jpg'),
+                'pincode' => '0000',
+            ])->assertSessionHasErrors('pincode');
+        }
+
+        // Even the CORRECT pin is now refused while locked out.
+        $this->post(route('coach-kaart.activeer.opslaan', $kaart->qr_code), [
+            'naam' => 'Coach Test',
+            'foto' => \Illuminate\Http\UploadedFile::fake()->image('foto.jpg'),
+            'pincode' => $kaart->pincode,
+        ])->assertSessionHasErrors('pincode');
+
+        $kaart->refresh();
+        $this->assertFalse($kaart->is_geactiveerd, 'Card must not activate while locked out');
+    }
+
+    #[Test]
     public function coach_kaart_scan_shows_result(): void
     {
         $club = Club::factory()->create(['organisator_id' => $this->org->id]);

@@ -9,6 +9,7 @@ use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -93,6 +94,15 @@ class CoachKaartController extends Controller
                 ->withErrors(['overdracht' => 'Overdracht niet mogelijk. Huidige coach moet eerst uitchecken bij de dojo scanner.']);
         }
 
+        // Brute-force guard: the activation PIN is 4 digits (10k combos), so cap
+        // attempts per card. Without this the PIN is trivially brute-forceable.
+        $throttleKey = 'coach-kaart-activeer:' . $qrCode;
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return redirect()->back()->withInput()
+                ->withErrors(['pincode' => "Te veel pogingen. Probeer over {$seconds} seconden opnieuw."]);
+        }
+
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'foto' => 'required|image|max:5120', // Max 5MB
@@ -101,10 +111,13 @@ class CoachKaartController extends Controller
 
         // Verify pincode
         if ($validated['pincode'] !== $coachKaart->pincode) {
+            RateLimiter::hit($throttleKey, 300); // 5 attempts per 5 minutes per card
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['pincode' => 'Onjuiste pincode']);
         }
+
+        RateLimiter::clear($throttleKey);
 
         // Store the photo
         $path = $request->file('foto')->store('coach-fotos', 'public');

@@ -781,7 +781,7 @@ Route::get('weegkaart/{token}', [WeegkaartController::class, 'show'])->name('wee
 // Coach Kaart (public, accessed via QR code - toegang tot dojo)
 Route::get('coach-kaart/{qrCode}', [CoachKaartController::class, 'show'])->name('coach-kaart.show');
 Route::get('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeer'])->name('coach-kaart.activeer');
-Route::post('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeerOpslaan'])->name('coach-kaart.activeer.opslaan');
+Route::post('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeerOpslaan'])->middleware('throttle:form-submit')->name('coach-kaart.activeer.opslaan');
 Route::get('coach-kaart/{qrCode}/scan', [CoachKaartController::class, 'scan'])->name('coach-kaart.scan');
 Route::post('coach-kaart/{qrCode}/checkin', [CoachKaartController::class, 'checkin'])->name('coach-kaart.checkin');
 Route::post('coach-kaart/{qrCode}/checkout', [CoachKaartController::class, 'checkout'])->name('coach-kaart.checkout');
