@@ -9,6 +9,27 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 26-06 — auth-UX: oogje, beeldvullende login, magic-link-login
+
+**Prod + staging op `ba9e76dc`.** Drie auth-UX-dingen, gedeployd + geverifieerd:
+- **Wachtwoord-oogje op login gefixt** (`266bb97c`): de knop was dood (geen handler) → CSP-veilige
+  `data-action="toggle-pw"` (zelfde patroon als setup-password). e2e-klik-test. Registratie heeft géén
+  wachtwoordveld (magic-link); de setup-password-pagina had al werkende oogjes.
+- **Login beeldvullend op mobiel** (`47b585c0`): full-screen wit + edge-to-edge velden op `<sm`,
+  desktop houdt de kaart. CSS-bundle herbouwd.
+- **Magic-link-login** (`ba9e76dc`): knop "Inloggen via e-maillink" op het login-scherm. De infra
+  bestond al (alleen voor registratie); nieuw is een `login`-type token + `POST login.magic`
+  (enumeration-veilig, throttled) → mail → `GET login.magic-verify` logt in. **Migratie**
+  `magic_link_tokens.type` enum→string (additief). 4 tests. GEEN session-regenerate (zie #3-revert).
+
+> ⚠️ **PROD MIGRATIE-INCONSISTENTIE (pre-existing, openstaand):** `2026_04_17_create_jobs_table`
+> staat op prod als **Pending** terwijl de `jobs`-tabel **al bestaat** → `php artisan migrate --force`
+> faalt erop (1050 Table 'jobs' already exists). Daarom de magic-link-migratie **path-specifiek**
+> gedraaid. **Elke toekomstige deploy-met-migratie struikelt hierover tot het is rechtgezet.** Fix
+> (met Henk afstemmen): de jobs-migratie als uitgevoerd markeren in `migrations` of idempotent maken
+> (`Schema::hasTable`). Raakt queue-infra → niet blind doen. Backup vóór deze deploy:
+> `judo_toernooi_voor-magic-login-migratie_2026-06-26_06-26-01.sql.gz`.
+
 ## SESSIE 25→26-06 (vervolg) — #3 TERUGGEDRAAID + mobiele UI
 
 **Prod + staging op `47b585c0`.** Na de security-deploy bleek tijdens device-test op Henks P10:
