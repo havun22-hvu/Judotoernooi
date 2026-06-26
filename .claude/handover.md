@@ -9,6 +9,33 @@ last_updated: 2026-06-23
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 25→26-06 (vervolg) — #3 TERUGGEDRAAID + mobiele UI
+
+**Prod + staging op `47b585c0`.** Na de security-deploy bleek tijdens device-test op Henks P10:
+
+- ⛔ **#3 (session-rotatie) TERUGGEDRAAID** (`3ef4c6f2` revert van `652626bc`). De
+  `session()->regenerate()` op de login-paden **brak de biometrie/passkey-login op de mobiele PWA**
+  — exact de cookie-flow die de dev-comment (`// causes cookie issues`) al noemde en die ik vooraf
+  flagde. PHPUnit ving 't niet (browser-cookie-fenomeen). **NIET terugzetten zonder device-rooktest.**
+  De session-fixation-winst was verwaarloosbaar (al gedekt door `__Secure-`/secure/httponly/samesite).
+  Eventueel later veilig herintroduceren — enkel op de full-page-navigatie-paden, mét device-test.
+- **Mobiele UI** (`47b585c0` + homepage-commit): homepage `overflow-x-hidden`+`viewport-fit=cover`;
+  **login beeldvullend op mobiel** (full-screen wit + edge-to-edge velden via `sm:`-varianten,
+  desktop houdt de gecentreerde kaart).
+- **"Te brede pagina" was GEEN code-bug** — het was **"Desktop-site"-modus** in Henks Chrome.
+  Geverifieerd met Playwright-meting: homepage én login zijn `overflow=0` op 320/360/412px.
+- **CSS-bundle was STALE** — de gecommitte bundle liep achter op de bron (miste o.a.
+  `overflow-x-hidden`). Herbouwd + gecommit. **LES: na élke blade-wijziging die Tailwind-classes
+  toevoegt → `npm run build` + de nieuwe bundle (+manifest) meecommitten, anders mist de class op prod.**
+
+**OPENSTAAND:**
+- [ ] **Biometrie-bevestiging:** werkt passkey/biometrie-login nu na de #3-revert? (Henk testte op P10.)
+- [ ] **Passkey registreren** zit in account/`setup-pin`, niet op het login-scherm — verschijnt op
+  login pas als het device een passkey heeft. Mogelijk UX-verbetering (duidelijker maken).
+- [ ] **Smartphone-PWA scope** (Henk): de PWA hoeft op mobiel alleen QR-scannen + intro/info te
+  doen, niet de volle app. Aparte feature — nog te plannen.
+- [ ] **CSP/HSTS-hardening** (uit security-sweep, bewust uitgesteld — browser-verificatie nodig).
+
 ## DEPLOY 25-06 — security-sweep + sessie-werk LIVE
 
 **Staging + productie beide op `cc90055d`** (was `e1eab29b`/guzzle-deploy 23-06). Fast-forward
