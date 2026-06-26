@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ClubSyncController;
 use App\Http\Controllers\Api\ScoreboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,4 +44,19 @@ Route::middleware('scoreboard.token')->prefix('scoreboard')->name('api.scoreboar
     Route::post('/event', [ScoreboardController::class, 'event'])->name('event');
     Route::post('/heartbeat', [ScoreboardController::class, 'heartbeat'])->name('heartbeat');
     Route::post('/tv-link', [ScoreboardController::class, 'tvLink'])->name('tv-link');
+});
+
+/*
+|--------------------------------------------------------------------------
+| HavunClub integration API
+|--------------------------------------------------------------------------
+| HavunClub (the hub) pushes stamdata + entries and pulls results.
+| Auth via a per-Organisator Bearer token (club.token middleware) — the token
+| identifies the tenant, so no tenant parameter is sent. Additive: solo
+| JudoToernooi is unaffected. Contract: havuncore docs/kb/contracts/havunclub-koppelingen.md
+*/
+Route::middleware(['club.token', 'throttle:api'])->name('api.club.')->group(function () {
+    Route::post('/judokas', [ClubSyncController::class, 'upsertJudoka'])->name('judokas.upsert');
+    Route::post('/inschrijvingen', [ClubSyncController::class, 'inschrijven'])->name('inschrijvingen.store');
+    Route::get('/toernooien/{toernooi}/resultaten', [ClubSyncController::class, 'resultaten'])->name('resultaten');
 });

@@ -15,6 +15,7 @@ class StamJudoka extends Model
 
     protected $fillable = [
         'organisator_id',
+        'havunclub_ref',
         'naam',
         'geboortejaar',
         'geslacht',
