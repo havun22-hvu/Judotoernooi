@@ -17,18 +17,22 @@ class MagicLinkMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = $this->token->type === 'register'
-            ? __('Bevestig je registratie - JudoToernooi')
-            : __('Wachtwoord resetten - JudoToernooi');
+        $subject = match ($this->token->type) {
+            'register' => __('Bevestig je registratie - JudoToernooi'),
+            'login' => __('Inloggen via e-maillink - JudoToernooi'),
+            default => __('Wachtwoord resetten - JudoToernooi'),
+        };
 
         return new Envelope(subject: $subject);
     }
 
     public function content(): Content
     {
-        $route = $this->token->type === 'register'
-            ? route('register.verify', $this->token->token)
-            : route('password.magic-reset', $this->token->token);
+        $route = match ($this->token->type) {
+            'register' => route('register.verify', $this->token->token),
+            'login' => route('login.magic-verify', $this->token->token),
+            default => route('password.magic-reset', $this->token->token),
+        };
 
         return new Content(
             markdown: 'emails.magic-link',

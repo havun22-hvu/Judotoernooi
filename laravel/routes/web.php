@@ -255,6 +255,9 @@ Route::middleware('guest:organisator')->group(function () {
     Route::post('registreren', [OrganisatorAuthController::class, 'sendRegisterLink'])->name('register.submit');
     Route::get('registreren/verstuurd', [OrganisatorAuthController::class, 'magicLinkSent'])->name('register.sent');
     Route::get('registreren/bevestig/{token}', [OrganisatorAuthController::class, 'verifyRegister'])->name('register.verify');
+    // Magic-link login (passwordless): request a one-time login link by e-mail
+    Route::post('inloglink', [OrganisatorAuthController::class, 'sendLoginLink'])->middleware('throttle:login')->name('login.magic');
+    Route::get('inloglink/{token}', [OrganisatorAuthController::class, 'verifyLogin'])->name('login.magic-verify');
     Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('wachtwoord-vergeten', [OrganisatorAuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('wachtwoord-vergeten/verstuurd', [OrganisatorAuthController::class, 'resetSent'])->name('password.sent');

@@ -144,6 +144,16 @@
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                     {{ __('Inloggen') }}
                 </button>
+
+                {{-- Magic-link (passwordless) login: submits only the e-mail field
+                     (formnovalidate skips the password-required check). --}}
+                <button type="submit" formaction="{{ route('login.magic') }}" formnovalidate id="magic-login-btn"
+                        class="w-full mt-3 py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    {{ __('Inloggen via e-maillink') }}
+                </button>
             </form>
 
             {{-- Divider --}}

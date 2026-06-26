@@ -193,6 +193,72 @@ class OrganisatorAuthController extends Controller
     }
 
     /**
+     * Send a one-time magic login link by e-mail (passwordless login).
+     */
+    public function sendLoginLink(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // Rate limit: max 3 per 10 minutes per IP.
+        $key = 'magic-login:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            return back()->withErrors([
+                'email' => __('Te veel verzoeken. Probeer het over :seconds seconden opnieuw.', [
+                    'seconds' => RateLimiter::availableIn($key),
+                ]),
+            ])->withInput();
+        }
+        RateLimiter::hit($key, 600);
+
+        // Enumeration-safe: only mail an existing account, but always show the
+        // same confirmation so you cannot probe which e-mails are registered.
+        $organisator = Organisator::where('email', $request->email)->first();
+        if ($organisator) {
+            $token = MagicLinkToken::generate($request->email, 'login');
+            Mail::to($request->email)->send(new MagicLinkMail($token));
+        }
+
+        return redirect()->route('register.sent')->with([
+            'email' => $request->email,
+            'type' => 'login',
+        ]);
+    }
+
+    /**
+     * Verify a magic login link and sign the organisator in.
+     */
+    public function verifyLogin(string $token): RedirectResponse
+    {
+        $magicToken = MagicLinkToken::findValid($token, 'login');
+
+        if (!$magicToken) {
+            return redirect()->route('login')
+                ->withErrors(['email' => __('Link is verlopen of al gebruikt. Vraag een nieuwe aan.')]);
+        }
+
+        $organisator = Organisator::where('email', $magicToken->email)->first();
+
+        if (!$organisator) {
+            return redirect()->route('login')
+                ->withErrors(['email' => __('Account niet gevonden.')]);
+        }
+
+        $magicToken->markUsed();
+        // No session()->regenerate() here: it broke the device cookie-flow
+        // (see reverted #3). Full-page nav, so fixation risk is already covered
+        // by the __Secure-/secure/httponly/samesite cookie flags.
+        Auth::guard('organisator')->login($organisator, true);
+        session()->save();
+        $organisator->updateLaatsteLogin();
+
+        if ($organisator->isSitebeheerder()) {
+            return redirect()->intended(route('admin.index'));
+        }
+
+        return redirect()->intended(route('organisator.dashboard', ['organisator' => $organisator->slug]));
+    }
+
+    /**
      * Show password setup form (after magic link registration)
      */
     public function showSetupPassword(): View|RedirectResponse

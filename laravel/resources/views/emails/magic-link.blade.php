@@ -7,6 +7,14 @@
 <x-mail::button :url="$url">
 {{ __('Account activeren') }}
 </x-mail::button>
+@elseif($type === 'login')
+# {{ __('Inloggen bij JudoToernooi') }}
+
+{{ __('Klik op de knop hieronder om in te loggen.') }}
+
+<x-mail::button :url="$url">
+{{ __('Inloggen') }}
+</x-mail::button>
 @else
 # {{ __('Wachtwoord resetten') }}
 

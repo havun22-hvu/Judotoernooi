@@ -16,6 +16,8 @@
         <p class="text-gray-600 mb-2">
             @if($type === 'register')
                 {{ __('We hebben een activatielink gestuurd naar') }}
+            @elseif($type === 'login')
+                {{ __('We hebben een inloglink gestuurd naar') }}
             @else
                 {{ __('We hebben een reset link gestuurd naar') }}
             @endif

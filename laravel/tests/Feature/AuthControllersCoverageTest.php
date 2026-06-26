@@ -1467,4 +1467,54 @@ class AuthControllersCoverageTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    // ========================================================================
+    // Magic-link login (passwordless)
+    // ========================================================================
+
+    #[Test]
+    public function magic_login_link_sent_for_existing_account(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $this->post(route('login.magic'), ['email' => $this->organisator->email])
+            ->assertRedirect(route('register.sent'));
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MagicLinkMail::class);
+        $this->assertDatabaseHas('magic_link_tokens', [
+            'email' => $this->organisator->email,
+            'type' => 'login',
+        ]);
+    }
+
+    #[Test]
+    public function magic_login_link_is_enumeration_safe_for_unknown_email(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        // Same confirmation, but no mail sent for an unknown address.
+        $this->post(route('login.magic'), ['email' => 'unknown@example.com'])
+            ->assertRedirect(route('register.sent'));
+
+        \Illuminate\Support\Facades\Mail::assertNothingSent();
+    }
+
+    #[Test]
+    public function magic_login_verify_logs_in(): void
+    {
+        $token = MagicLinkToken::generate($this->organisator->email, 'login');
+
+        $this->get(route('login.magic-verify', $token->token))->assertRedirect();
+
+        $this->assertAuthenticatedAs($this->organisator, 'organisator');
+    }
+
+    #[Test]
+    public function magic_login_verify_rejects_invalid_token(): void
+    {
+        $this->get(route('login.magic-verify', 'invalid-token'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest('organisator');
+    }
 }
