@@ -2,12 +2,52 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-23
+last_updated: 2026-06-28
 ---
 
 # JudoToernooi — Handover
 
 > Vul dit aan aan het einde van elke sessie.
+
+## SESSIE 28-06 — HavunClub: weegkaart-koppeling + judoka-identiteit (OVERLEG, nog geen code)
+
+**Branch `feat/havunclub-koppeling`. QR-fix gecommit (`625f3f61`); de HavunClub-uitbreiding staat
+nog in /mpc fase 1/2 — wacht op 2 beslissingen + "ga maar".**
+
+**Wat al staat (commit `9102e6fd`):** 3 endpoints op `club.token`-patroon — `POST /api/judokas`
+(stam-upsert), `POST /api/inschrijvingen`, `GET /api/toernooien/{toernooi}/resultaten`. Henk's
+"resultaten terugsturen" is dus **al klaar**. Contract: `HavunCore/docs/kb/contracts/havunclub-koppelingen.md`.
+
+**Henk wil erbij:** (1) weegkaart ophalen voor de HavunClub-PWA (knop "bekijken/downloaden" per
+toernooi waarvoor judoka is ingeschreven), (2) ingeschrevenen kunnen ophalen.
+
+**Voorgestelde aanpak (Claude):**
+- Weegkaart = **URL teruggeven**, niet PDF. De pagina bestaat al publiek: `judotournament.org/weegkaart/{token}`
+  waar `token` = `Judoka.qr_code` (lange onraadbare code, staat al op de fysieke kaart). Die pagina kan
+  al bekijken + downloaden (PDF client-side). HavunClub embedt/linkt 'm.
+- Eén nieuw endpoint dekt beide gaten: `GET /api/judokas/{stam}/inschrijvingen` → per toernooi
+  `{toernooi_id, naam, datum, weegkaart_url|null, weegkaart_beschikbaar}`.
+
+**KERNPROBLEEM judoka-identiteit (door Henk aangekaart):**
+- StamJudoka heeft **geen** licentienummer en **geen** volledige geboortedatum — alleen `geboortejaar`.
+  Unieke sleutel = DB-constraint `unique(organisator_id, naam, geboortejaar)`.
+- JBN-nummer is uniek maar **niet altijd aanwezig** (Henk) → kan niet dé sleutel zijn.
+- **Oplossing (besproken, nog te bevestigen):** HavunClub's eigen judoka-id wordt het gedeelde
+  "identieke nummer" → kolom `havunclub_ref` bestaat al, maar is nu **optioneel**. Verplicht maken +
+  tot primaire koppelsleutel maken. Naamgenoten dan geen koppelprobleem (match op id, niet op naam).
+- **Twee bestaande zwakke plekken:** (a) huidige upsert kan **500'en** — synct HavunClub zonder
+  `judotoernooi_id` en zonder eerdere `havunclub_ref`-match terwijl de judoka al handmatig bestaat →
+  `create()` botst op de unique-constraint. (b) Echte **naamgenoten met zelfde geboortejaar** kunnen
+  niet naast elkaar bestaan — de unique-constraint blokkeert de 2e, óók mét uniek HavunClub-nummer.
+
+**TWEE OPENSTAANDE BESLISSINGEN (Henk):**
+1. [ ] Bevestig: HavunClub's bestaande judoka-id = het gedeelde nummer (altijd meesturen, verplicht).
+2. [ ] Naamgenoten écht ondersteunen → `unique(organisator_id, naam, geboortejaar)` **versoepelen**
+   (sleutel wordt het nummer; solo-flow verliest DB-dubbelcheck → verschuift naar UI-waarschuwing,
+   SaaS-blast-radius). Of: naamgenoten-met-zelfde-geboortejaar als niet-ondersteund randgeval accepteren?
+
+**Open richting HavunClub-contract:** base-URL JT, `geslacht`-waarden, of HavunClub altijd z'n
+judoka-id meestuurt. Staat in het HavunCore-contract onder "Open punten".
 
 ## SESSIE 26-06 — auth-UX: oogje, beeldvullende login, magic-link-login
 

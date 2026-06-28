@@ -2,6 +2,12 @@
 
 > Kleine bugs/typo's die geen /arch of plan nodig hebben. Log + fix + klaar.
 
+## 28-06-2026
+- **QR-codes op coach-weegkaarten zwart i.p.v. blauw** (`625f3f61`) — `coach/weegkaarten.blade.php`
+  zette `colorDark: '#1d4ed8'` (blue-700) op de kleine én grote QR. Naar `#000000` voor
+  scancontrast. De overige QR's (weegkaart/show, noodplan-weeg/coachkaarten, coach-kaart/show)
+  zetten geen kleur → al zwart (default). Runtime qrcodejs-optie, geen Tailwind-build nodig.
+
 ## 21-06-2026
 - **Tab springt naar Organisatie bij open/intern-toernooi keuze** — bij wijzigen van
   `toernooi_type` herlaadde `toernooi/edit.blade.php` de pagina met een kale
