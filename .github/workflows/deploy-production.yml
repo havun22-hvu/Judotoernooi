@@ -1,0 +1,26 @@
+name: Deploy to Production
+
+# Handmatige deploy — geen auto-deploy op push (prod = bewuste keuze).
+on:
+  workflow_dispatch:
+    inputs:
+      migrate:
+        description: 'Database-migraties draaien tijdens deploy?'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+        default: 'no'
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 188.245.159.115
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: bash /root/deploy-havun.sh /var/www/judotoernooi main laravel yes ${{ inputs.migrate }}
