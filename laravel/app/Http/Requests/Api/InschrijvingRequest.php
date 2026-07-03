@@ -25,6 +25,7 @@ class InschrijvingRequest extends FormRequest
             'judoka_id' => ['required', 'integer'],
             'naam' => ['nullable', 'string', 'max:255'],
             'band' => ['nullable', 'string', 'max:30'],
+            'gewicht' => ['nullable', 'numeric', 'min:0', 'max:300'],
         ];
     }
 }

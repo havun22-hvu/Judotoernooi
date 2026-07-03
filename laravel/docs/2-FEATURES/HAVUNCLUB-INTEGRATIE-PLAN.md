@@ -79,18 +79,23 @@ Auth: `Authorization: Bearer <ClubApiToken>` (token = tenant/Organisator; géén
 JT mapt server-side (`naam`, `geboortejaar`, `geslacht → M/V`). Idempotentie via (`organisator`, `havunclub_judoka_id`→`havunclub_ref`). `resultaat` = eindpositie (1=goud …).
 
 ## Wat JudoToernooi nog moet leveren (handoff)
-1. **Base-URL bevestigen:** `https://judotournament.org/api`.
-2. **Portal-vul-endpoint (judoschool-portals):** de API waarmee HavunClub een uitgenodigde portal vult met
-   **portal-link + pincode** als autorisatie (i.p.v. het ClubApiToken). Specificeer: het endpoint/pad (uit de
-   portal-link af te leiden?), hoe de **pincode** wordt meegestuurd/geverifieerd, en de velden per judoka
-   (incl. `havunclub_judoka_id`, geboortedatum, band, gewicht). B mag alleen de eigen portal muteren.
-3. **Weegkaart-lookup-endpoint (nieuw):** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` (op stam-id /
+1. ✅ **Base-URL bevestigd:** `https://judotournament.org/api`.
+2. ⏳ **Portal-vul-endpoint (judoschool-portals) — NOG OPEN:** de API waarmee HavunClub een uitgenodigde
+   portal vult met **portal-link + pincode** als autorisatie (i.p.v. het ClubApiToken). Specificeer: het
+   endpoint/pad (uit de portal-link af te leiden?), hoe de **pincode** wordt meegestuurd/geverifieerd, en de
+   velden per judoka (incl. `havunclub_judoka_id`, geboortedatum, band, gewicht). B mag alleen de eigen portal
+   muteren. **De API-vorm is nog niet ontworpen — dit is de resterende JT-taak (aparte ontwerpronde).**
+3. ✅ **Weegkaart-lookup-endpoint (geleverd):** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` (op stam-id /
    `havunclub_ref`) → `{ "token": "<uuid>", "url": "https://judotournament.org/weegkaart/<uuid>" }`, of `404`
-   als nog niet aangemaakt.
-4. **Iframe-toestemming (config):** op de weegkaart-route
-   `Content-Security-Policy: frame-ancestors https://havunclub.havun.nl` (i.p.v. `X-Frame-Options: DENY`),
-   zodat HavunClub de weegkaart-page kan inbedden.
-5. **`gewicht`** accepteren bij `POST /api/inschrijvingen` (voor de weging).
+   als de judoka niet in dit toernooi is ingeschreven.
+4. ✅ **Iframe-toestemming (geleverd):** op de weegkaart-route
+   `Content-Security-Policy: frame-ancestors 'self' https://havunclub.havun.nl` (en géén `X-Frame-Options`),
+   zodat HavunClub de weegkaart-page kan inbedden. Overige routes blijven `SAMEORIGIN`.
+5. ✅ **`gewicht` (geleverd):** `POST /api/inschrijvingen` accepteert nu een optioneel `gewicht`
+   (`nullable|numeric|min:0|max:300`) dat de gewichtsklasse-bepaling voedt.
+
+> **Stand JT-kant:** punten 1, 3, 4, 5 geïmplementeerd (`feat/havunclub-koppeling`). Alleen punt 2
+> (portal-vul-API, scenario 2) is nog open — vergt eerst een ontwerpbeslissing over de pincode-autorisatie.
 
 ## Wat HavunClub gaat bouwen (eigen scope, aparte MPC-taak)
 - Base-URL `judotoernooi.nl` → `judotournament.org` in `JudoToernooiService`.

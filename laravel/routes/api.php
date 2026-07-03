@@ -59,4 +59,5 @@ Route::middleware(['club.token', 'throttle:api'])->name('api.club.')->group(func
     Route::post('/judokas', [ClubSyncController::class, 'upsertJudoka'])->name('judokas.upsert');
     Route::post('/inschrijvingen', [ClubSyncController::class, 'inschrijven'])->name('inschrijvingen.store');
     Route::get('/toernooien/{toernooi}/resultaten', [ClubSyncController::class, 'resultaten'])->name('resultaten');
+    Route::get('/toernooien/{toernooi}/weegkaart/{judoka}', [ClubSyncController::class, 'weegkaart'])->name('weegkaart');
 });

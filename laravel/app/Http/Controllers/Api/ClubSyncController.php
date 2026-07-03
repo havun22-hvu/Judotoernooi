@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\InschrijvingRequest;
 use App\Http\Requests\Api\SyncJudokaRequest;
+use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\StamJudoka;
 use App\Models\Toernooi;
@@ -82,9 +83,45 @@ class ClubSyncController extends Controller
             $stam,
             $request->input('naam'),
             $request->input('band'),
+            $request->filled('gewicht') ? (float) $request->input('gewicht') : null,
         );
 
         return response()->json(['id' => $judoka->id]);
+    }
+
+    /**
+     * GET /api/toernooien/{toernooi}/weegkaart/{judoka} — weegkaart lookup.
+     *
+     * `{judoka}` is the JT stam-judoka id (as returned by POST /judokas) or the
+     * HavunClub ref. Returns the weegkaart token + public URL so HavunClub can
+     * embed the card, or 404 when the judoka is not entered in this tournament.
+     */
+    public function weegkaart(Request $request, int $toernooi, string $judoka): JsonResponse
+    {
+        $org = $this->organisator($request);
+
+        $toernooiModel = Toernooi::where('organisator_id', $org->id)
+            ->findOrFail($toernooi);
+
+        // Resolve the stam judoka within this tenant by JT id or HavunClub ref.
+        $stam = StamJudoka::where('organisator_id', $org->id)
+            ->where(function ($q) use ($judoka) {
+                if (ctype_digit($judoka)) {
+                    $q->where('id', (int) $judoka);
+                }
+                $q->orWhere('havunclub_ref', $judoka);
+            })
+            ->firstOrFail();
+
+        // The tournament-specific Judoka row carries the weegkaart qr_code.
+        $judokaRow = Judoka::where('toernooi_id', $toernooiModel->id)
+            ->where('stam_judoka_id', $stam->id)
+            ->firstOrFail();
+
+        return response()->json([
+            'token' => $judokaRow->qr_code,
+            'url' => route('weegkaart.show', ['token' => $judokaRow->qr_code]),
+        ]);
     }
 
     /**

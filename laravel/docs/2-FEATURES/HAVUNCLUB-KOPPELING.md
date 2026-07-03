@@ -40,8 +40,9 @@ token → JSON `401` (zelfde shape als de scoreboard-API).
 | Methode + pad | Doel | Request | Response |
 |---|---|---|---|
 | `POST /api/judokas` | upsert stam judoka | `judotoernooi_id?`, `havunclub_judoka_id?`, `voornaam`, `achternaam`, `geboortedatum`, `geslacht`, `band?` | `{ "id": <stam-judoka-id> }` |
-| `POST /api/inschrijvingen` | judoka in toernooi | `toernooi_id`, `judoka_id` (stam-id), `naam?`, `band?` | `{ "id": <judoka-id> }` |
+| `POST /api/inschrijvingen` | judoka in toernooi | `toernooi_id`, `judoka_id` (stam-id), `naam?`, `band?`, `gewicht?` | `{ "id": <judoka-id> }` |
 | `GET /api/toernooien/{toernooi}/resultaten` | uitslagen | — | `[ { judoka_id, stam_judoka_id, naam, gewichtsklasse, resultaat, partijen } ]` |
+| `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` | weegkaart-lookup | — (`{judoka}` = stam-id óf `havunclub_ref`) | `{ "token": "<uuid>", "url": "https://judotournament.org/weegkaart/<uuid>" }` of `404` |
 
 ### Veld-mapping (belangrijk)
 HavunClub stuurt `voornaam`/`achternaam`/`geboortedatum`; `StamJudoka` slaat **`naam`** +
@@ -62,6 +63,23 @@ gewonnen + verloren + gelijk. (Terug te koppelen in het centrale contract.)
 ### Guards (inschrijving)
 Dezelfde organisator-regels als het coach-portaal: inschrijving open, max deelnemers, freemium-limiet.
 Bij overtreding → `JudoToernooiException` → JSON `422` met `message` + `error_code` (4001/4002/4003).
+
+### `gewicht` bij inschrijving (optioneel)
+HavunClub mag een weeg-gewicht meesturen (`nullable|numeric|min:0|max:300`). Aanwezig → het
+overschrijft `stam.gewicht` op de toernooi-`Judoka` en drijft de gewichtsklasse-bepaling. Afwezig →
+val terug op het gewicht van de stam-judoka. Bij een herhaalde (idempotente) inschrijving wordt het
+gewicht niet opnieuw gezet (net als `naam`/`band`).
+
+### Weegkaart-lookup
+`GET /api/toernooien/{toernooi}/weegkaart/{judoka}` — `{judoka}` is de stam-judoka-id (zoals
+teruggegeven door `POST /judokas`) óf de `havunclub_ref`. Zoekt de toernooi-`Judoka` van die stam en
+geeft `{ token, url }` terug (`token` = `Judoka.qr_code`, `url` = de publieke `weegkaart.show`-route).
+`404` als de judoka niet in dit toernooi is ingeschreven. Tenant-gescoped op het token.
+
+### Weegkaart in HavunClub inbedden (iframe/CSP)
+De publieke weegkaart-page (`weegkaart/{token}`) mag ingebed worden vanuit de HavunClub-app. Alleen
+voor die route zet `SecurityHeaders` `frame-ancestors 'self' https://havunclub.havun.nl` en laat het
+`X-Frame-Options` weg (die kent geen multi-origin-vorm). Alle andere pagina's blijven `SAMEORIGIN`.
 
 ## Tenant-isolatie
 Toernooi en stam judoka worden altijd gescoped op de organisator uit het token (`findOrFail` →

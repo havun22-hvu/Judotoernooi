@@ -17,7 +17,7 @@ use App\Models\Toernooi;
  */
 class ClubInschrijvingService
 {
-    public function inschrijf(Toernooi $toernooi, StamJudoka $stam, ?string $naam = null, ?string $band = null): Judoka
+    public function inschrijf(Toernooi $toernooi, StamJudoka $stam, ?string $naam = null, ?string $band = null, ?float $gewicht = null): Judoka
     {
         if (!$toernooi->isInschrijvingOpen()) {
             throw new JudoToernooiException(
@@ -58,7 +58,9 @@ class ClubInschrijvingService
         $band = $band ?: $stam->band;
         $geboortejaar = $stam->geboortejaar;
         $geslacht = $stam->geslacht;
-        $gewicht = $stam->gewicht;
+        // HavunClub may send a weigh-in weight at entry; otherwise fall back to
+        // the stam judoka's known weight. Drives the gewichtsklasse below.
+        $gewicht = $gewicht ?? $stam->gewicht;
 
         $leeftijdsklasse = null;
         $gewichtsklasse = null;

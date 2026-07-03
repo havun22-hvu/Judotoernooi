@@ -141,6 +141,110 @@ class ClubSyncTest extends TestCase
     }
 
     #[Test]
+    public function enters_stam_judoka_with_weight_from_havunclub(): void
+    {
+        $org = Organisator::factory()->create();
+        $token = $this->tokenFor($org);
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $stam = StamJudoka::factory()->create([
+            'organisator_id' => $org->id, 'gewicht' => null,
+        ]);
+
+        $response = $this->withHeaders($this->auth($token))->postJson('/api/inschrijvingen', [
+            'toernooi_id' => $toernooi->id,
+            'judoka_id' => $stam->id,
+            'gewicht' => 33.5,
+        ]);
+
+        $response->assertOk();
+        $this->assertSame(33.5, (float) Judoka::find($response->json('id'))->gewicht);
+    }
+
+    #[Test]
+    public function rejects_invalid_weight(): void
+    {
+        $org = Organisator::factory()->create();
+        $token = $this->tokenFor($org);
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $stam = StamJudoka::factory()->create(['organisator_id' => $org->id]);
+
+        $this->withHeaders($this->auth($token))->postJson('/api/inschrijvingen', [
+            'toernooi_id' => $toernooi->id,
+            'judoka_id' => $stam->id,
+            'gewicht' => 'zwaar',
+        ])->assertStatus(422);
+    }
+
+    #[Test]
+    public function weegkaart_lookup_returns_token_and_url(): void
+    {
+        $org = Organisator::factory()->create();
+        $token = $this->tokenFor($org);
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $stam = StamJudoka::factory()->create([
+            'organisator_id' => $org->id, 'havunclub_ref' => 'hcl-77',
+        ]);
+        $judoka = Judoka::factory()->create([
+            'toernooi_id' => $toernooi->id, 'stam_judoka_id' => $stam->id,
+        ]);
+
+        $response = $this->withHeaders($this->auth($token))
+            ->getJson("/api/toernooien/{$toernooi->id}/weegkaart/{$stam->id}");
+
+        $response->assertOk()->assertJson([
+            'token' => $judoka->qr_code,
+            'url' => route('weegkaart.show', ['token' => $judoka->qr_code]),
+        ]);
+    }
+
+    #[Test]
+    public function weegkaart_lookup_resolves_by_havunclub_ref(): void
+    {
+        $org = Organisator::factory()->create();
+        $token = $this->tokenFor($org);
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $stam = StamJudoka::factory()->create([
+            'organisator_id' => $org->id, 'havunclub_ref' => 'hcl-99',
+        ]);
+        $judoka = Judoka::factory()->create([
+            'toernooi_id' => $toernooi->id, 'stam_judoka_id' => $stam->id,
+        ]);
+
+        $this->withHeaders($this->auth($token))
+            ->getJson("/api/toernooien/{$toernooi->id}/weegkaart/hcl-99")
+            ->assertOk()
+            ->assertJsonPath('token', $judoka->qr_code);
+    }
+
+    #[Test]
+    public function weegkaart_lookup_404_when_not_entered(): void
+    {
+        $org = Organisator::factory()->create();
+        $token = $this->tokenFor($org);
+        $toernooi = Toernooi::factory()->create(['organisator_id' => $org->id]);
+        $stam = StamJudoka::factory()->create(['organisator_id' => $org->id]);
+
+        $this->withHeaders($this->auth($token))
+            ->getJson("/api/toernooien/{$toernooi->id}/weegkaart/{$stam->id}")
+            ->assertStatus(404);
+    }
+
+    #[Test]
+    public function weegkaart_page_allows_havunclub_iframe(): void
+    {
+        $judoka = Judoka::factory()->create();
+
+        $response = $this->get("/weegkaart/{$judoka->qr_code}");
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            "frame-ancestors 'self' https://havunclub.havun.nl",
+            $response->headers->get('Content-Security-Policy')
+        );
+        $this->assertNull($response->headers->get('X-Frame-Options'));
+    }
+
+    #[Test]
     public function returns_results_with_placements(): void
     {
         $org = Organisator::factory()->create();
