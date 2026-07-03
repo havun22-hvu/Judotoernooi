@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
             'local-sync.auth' => \App\Http\Middleware\LocalSyncAuth::class,
             'scoreboard.token' => \App\Http\Middleware\CheckScoreboardToken::class,
+            'club.token' => \App\Http\Middleware\CheckClubToken::class,
             'track.response-time' => \App\Http\Middleware\TrackResponseTime::class,
         ]);
 

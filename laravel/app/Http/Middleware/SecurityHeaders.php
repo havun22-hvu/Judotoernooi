@@ -31,8 +31,16 @@ class SecurityHeaders
 
         $response = $next($request);
 
+        // The public weegkaart page is embedded inside the HavunClub app (same
+        // owner). Allow that one cross-origin ancestor via CSP frame-ancestors;
+        // X-Frame-Options has no multi-origin form, so it is dropped for this
+        // route and the CSP directive governs. Everything else stays SAMEORIGIN.
+        $embedAncestors = $request->routeIs('weegkaart.show') ? ' https://havunclub.havun.nl' : '';
+
         // Prevent clickjacking - page cannot be embedded in iframe
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        if ($embedAncestors === '') {
+            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        }
 
         // Prevent MIME type sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
@@ -71,7 +79,7 @@ class SecurityHeaders
                 "font-src 'self'",
                 "connect-src 'self' wss://*.pusher.com https://js.pusher.com https://nominatim.openstreetmap.org" . $reverbSources,
                 "form-action 'self'",
-                "frame-ancestors 'self'",
+                "frame-ancestors 'self'" . $embedAncestors,
                 "base-uri 'self'",
                 "object-src 'none'",
                 "manifest-src 'self'",

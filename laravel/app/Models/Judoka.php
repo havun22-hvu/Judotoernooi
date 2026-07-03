@@ -49,6 +49,7 @@ class Judoka extends Model
         'telefoon',
         'overpouled_van_poule_id',
         'stam_judoka_id',
+        'havunclub_ref',
     ];
 
     protected $casts = [

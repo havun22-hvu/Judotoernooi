@@ -216,14 +216,14 @@
                 text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
                 width: 56,
                 height: 56,
-                colorDark: '#1d4ed8'
+                colorDark: '#000000'
             });
             // Large QR
             new QRCode(document.getElementById('qr-weeg-large-{{ $judoka->id }}'), {
                 text: '{{ route('weegkaart.show', $judoka->qr_code) }}',
                 width: 200,
                 height: 200,
-                colorDark: '#1d4ed8'
+                colorDark: '#000000'
             });
             @endforeach
         });
