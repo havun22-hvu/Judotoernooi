@@ -43,30 +43,21 @@ onbekende code 404). Club-gescopede `Judoka` (`club_id`, geen stam). Nieuwe kolo
 portal-vul-API, of vult het alleen de lijst en gebeurt definitief inschrijven op de JT-portal-page? De
 API ondersteunt de push; deep-linken blijft ook mogelijk. HavunClubs keuze.
 
-### ⚠️ PRODUCTIE-DEPLOY — runbook (Henk moet 'm draaien; 2 blokkades)
+### ✅ PRODUCTIE-DEPLOY VOLTOOID (03-07) — HavunClub-API LIVE
 
-Prod staat nog op `ba9e76dc`. Deployen brengt de HELE HavunClub-API voor het eerst live **+ draait 3
-migraties**. Twee redenen dat ik dit NIET autonoom deed:
-1. **Prod-migraties = verboden zonder overleg** (CLAUDE.md).
-2. **`jobs`-landmijn (pre-existing):** op prod staat `2026_04_17_create_jobs_table` als **Pending**
-   terwijl de tabel al bestaat → `php artisan migrate --force` faalt met `1050 Table 'jobs' already
-   exists` VÓÓR onze migraties draaien. **Eerst rechtzetten**, dan pas deployen.
-
-**Stappen (na go):**
-```bash
-# 0. jobs-landmijn wegwerken (kies één; queue-infra → met Henk):
-#    a) markeer als uitgevoerd:  INSERT INTO migrations (migration,batch) VALUES
-#       ('2026_04_17_062440_create_jobs_table', <max_batch>);   -- als tabel al bestaat
-#    b) of maak de jobs-migratie idempotent (Schema::hasTable) en commit.
-# 1. backup:  cd laravel && php artisan backup:milestone voor-havunclub-api
-# 2. cd /var/www/judotoernooi/repo-prod && git pull --ff-only
-# 3. cd laravel && php artisan migrate --force        # 3 additieve migraties
-# 4. php artisan optimize:clear && php artisan queue:restart
-# 5. smoke: home/login 200, POST /api/judokas (geen token) → 401,
-#           POST /api/school-portal/NOPE/inschrijvingen → 404
-```
-Rollback: `git checkout ba9e76dc` (geen destructieve migraties — kolommen/tabel mogen blijven staan).
-Staging draaide alles al groen als canary.
+**Prod + staging beide op `50bda4c9`** (was prod `ba9e76dc`). De hele HavunClub-API draait nu live.
+- **`jobs`-landmijn DUURZAAM opgelost:** `create_jobs_table` idempotent gemaakt (`Schema::hasTable`-guard,
+  commit `50bda4c9`) + regressietest (`JobsMigrationIdempotencyTest`). Op prod liep 'ie in 4.74ms door
+  (guard → alleen record) → staat nu op **[83] Ran** i.p.v. Pending. Elke toekomstige deploy-met-migratie
+  struikelt hier niet meer over. (Geen handmatige SQL — de migratie self-heal't zichzelf overal.)
+- **4 migraties gedraaid:** jobs (record) + `create_club_api_tokens` + `add_havunclub_ref_to_stam_judokas`
+  + `add_havunclub_ref_to_judokas`. Alle additief.
+- **Backup vóór deploy:** `/var/backups/havun/milestones/judo_toernooi_voor-havunclub-api_2026-07-03_08-39-06.sql.gz`.
+- **Geverifieerd op prod:** home/login 200, `POST /api/judokas` (geen token) → 401,
+  `POST /api/school-portal/NOPE/inschrijvingen` → 404, CSP intact (login = SAMEORIGIN + frame-ancestors
+  'self', realtime connect-src ongewijzigd), geen verse errors in het log.
+- Rollback indien nodig: `git checkout ba9e76dc` (migraties additief → kolommen/tabel mogen blijven staan)
+  of DB-backup hierboven.
 
 ## SESSIE 28-06 — HavunClub: weegkaart-koppeling + judoka-identiteit (OVERLEG, nog geen code)
 
