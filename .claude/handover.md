@@ -9,25 +9,64 @@ last_updated: 2026-06-28
 
 > Vul dit aan aan het einde van elke sessie.
 
-## SESSIE 03-07 — HavunClub handoff-punten 3/4/5 GEBOUWD (`722c3318`, branch `feat/havunclub-koppeling`)
+## SESSIE 03-07 — HavunClub: ALLE 5 handoff-punten GEBOUWD + op main + STAGING LIVE (prod wacht)
 
-**Uit de integratiespec (`HAVUNCLUB-INTEGRATIE-PLAN.md`, nu gecommit `38af0406`) vroeg HavunClub 5
-dingen van JT. Punt 1 was al klaar; 3/4/5 nu gebouwd + getest; punt 2 blijft open (ontwerp nodig).**
+**Autonome sessie (Henk sliep, "werk gewoon door"). Alle 5 JT-deliverables uit de integratiespec
+geïmplementeerd, getest, gemerged naar `main` (`501ee140`) en gedeployd naar STAGING (groen).
+Productie bewust NIET gedeployd — zie runbook onderaan.**
 
-- **Weegkaart-lookup (nieuw endpoint):** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` →
-  `{token, url}` (token = `Judoka.qr_code`, url = publieke `weegkaart.show`), `404` als niet
-  ingeschreven. `{judoka}` matcht op stam-id óf `havunclub_ref`, tenant-gescoped.
-- **`gewicht` bij inschrijving:** `POST /api/inschrijvingen` accepteert optioneel `gewicht`
-  (`nullable|numeric|min:0|max:300`) → voedt gewichtsklasse; val terug op `stam.gewicht`.
+**Punt 1 — base-URL:** al klaar (`https://judotournament.org/api`).
+
+**Punten 3/4/5 (`722c3318`):**
+- **Weegkaart-lookup:** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` → `{token, url}` (token =
+  `Judoka.qr_code`), `404` als niet ingeschreven. `{judoka}` = stam-id óf `havunclub_ref`, tenant-gescoped.
+- **`gewicht` bij inschrijving:** `POST /api/inschrijvingen` accepteert optioneel `gewicht` → voedt
+  gewichtsklasse; val terug op `stam.gewicht`.
 - **iframe-embed:** `SecurityHeaders` zet op de `weegkaart.show`-route `frame-ancestors 'self'
-  https://havunclub.havun.nl` en laat `X-Frame-Options` weg; alle andere routes blijven `SAMEORIGIN`.
-- **6 nieuwe tests** (ClubSyncTest = 13 groen), SecurityHeaders-suite 20 groen (geen regressie).
-- **NIET gedeployd** (branch, geen deploy-cue). Merge naar main + deploy = Henks beslissing.
+  https://havunclub.havun.nl` + laat `X-Frame-Options` weg; alle andere routes blijven `SAMEORIGIN`
+  (op staging geverifieerd: login = SAMEORIGIN, geen regressie).
 
-**NOG OPEN — punt 2: portal-vul-API (scenario 2, judoschool-portals).** HavunClub wil een
-uitgenodigde portal vullen met **portal-link + pincode** als autorisatie (niet het ClubApiToken). De
-**API-vorm is nog niet ontworpen** (staat zo in de spec). Dit is de resterende JT-taak — vergt eerst
-een ontwerpronde (endpoint-vorm, pincode-verificatie, velden per judoka). Kandidaat voor `/arch`.
+**Punt 2 — portal-vul-API (`a6effd6c`), scenario 2:** `POST /api/school-portal/{code}/inschrijvingen`.
+Autorisatie = per-toernooi **portal-code** (`{code}`, uit uitnodigingslink) + **5-cijfer PIN** in body —
+NIET het ClubApiToken. Hergebruikt bestaande primitives (`Toernooi::getClubByPortalCode` +
+`Club::checkPincodeForToernooi`) + de coach-portaal PIN-bruteforce-guard (5/300s → 429, fout PIN 401,
+onbekende code 404). Club-gescopede `Judoka` (`club_id`, geen stam). Nieuwe kolom `judokas.havunclub_ref`
+→ deterministische idempotentie op de HavunClub-id, anders naam+geboortejaar-dedup.
+
+**Tests:** ClubSyncTest 13 + SchoolPortalTest 7 = 20 Api-tests groen; SecurityHeaders 20 groen.
+**Docs:** `HAVUNCLUB-KOPPELING.md` (§Scenario 2) + `HAVUNCLUB-INTEGRATIE-PLAN.md` bijgewerkt (alle 5 ✅).
+
+**3 migraties** in dit pakket: `create_club_api_tokens`, `add_havunclub_ref_to_stam_judokas`,
+`add_havunclub_ref_to_judokas`. Alle additief (2 kolommen + 1 tabel). Op staging gedraaid (DONE).
+
+**Openstaande BUSINESS-keuze (geen JT-code):** pusht HavunClub de volledige inschrijving via de
+portal-vul-API, of vult het alleen de lijst en gebeurt definitief inschrijven op de JT-portal-page? De
+API ondersteunt de push; deep-linken blijft ook mogelijk. HavunClubs keuze.
+
+### ⚠️ PRODUCTIE-DEPLOY — runbook (Henk moet 'm draaien; 2 blokkades)
+
+Prod staat nog op `ba9e76dc`. Deployen brengt de HELE HavunClub-API voor het eerst live **+ draait 3
+migraties**. Twee redenen dat ik dit NIET autonoom deed:
+1. **Prod-migraties = verboden zonder overleg** (CLAUDE.md).
+2. **`jobs`-landmijn (pre-existing):** op prod staat `2026_04_17_create_jobs_table` als **Pending**
+   terwijl de tabel al bestaat → `php artisan migrate --force` faalt met `1050 Table 'jobs' already
+   exists` VÓÓR onze migraties draaien. **Eerst rechtzetten**, dan pas deployen.
+
+**Stappen (na go):**
+```bash
+# 0. jobs-landmijn wegwerken (kies één; queue-infra → met Henk):
+#    a) markeer als uitgevoerd:  INSERT INTO migrations (migration,batch) VALUES
+#       ('2026_04_17_062440_create_jobs_table', <max_batch>);   -- als tabel al bestaat
+#    b) of maak de jobs-migratie idempotent (Schema::hasTable) en commit.
+# 1. backup:  cd laravel && php artisan backup:milestone voor-havunclub-api
+# 2. cd /var/www/judotoernooi/repo-prod && git pull --ff-only
+# 3. cd laravel && php artisan migrate --force        # 3 additieve migraties
+# 4. php artisan optimize:clear && php artisan queue:restart
+# 5. smoke: home/login 200, POST /api/judokas (geen token) → 401,
+#           POST /api/school-portal/NOPE/inschrijvingen → 404
+```
+Rollback: `git checkout ba9e76dc` (geen destructieve migraties — kolommen/tabel mogen blijven staan).
+Staging draaide alles al groen als canary.
 
 ## SESSIE 28-06 — HavunClub: weegkaart-koppeling + judoka-identiteit (OVERLEG, nog geen code)
 
