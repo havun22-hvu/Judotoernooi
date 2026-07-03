@@ -80,11 +80,12 @@ JT mapt server-side (`naam`, `geboortejaar`, `geslacht → M/V`). Idempotentie v
 
 ## Wat JudoToernooi nog moet leveren (handoff)
 1. ✅ **Base-URL bevestigd:** `https://judotournament.org/api`.
-2. ⏳ **Portal-vul-endpoint (judoschool-portals) — NOG OPEN:** de API waarmee HavunClub een uitgenodigde
-   portal vult met **portal-link + pincode** als autorisatie (i.p.v. het ClubApiToken). Specificeer: het
-   endpoint/pad (uit de portal-link af te leiden?), hoe de **pincode** wordt meegestuurd/geverifieerd, en de
-   velden per judoka (incl. `havunclub_judoka_id`, geboortedatum, band, gewicht). B mag alleen de eigen portal
-   muteren. **De API-vorm is nog niet ontworpen — dit is de resterende JT-taak (aparte ontwerpronde).**
+2. ✅ **Portal-vul-endpoint (geleverd):** `POST /api/school-portal/{code}/inschrijvingen`. Autorisatie =
+   per-toernooi **portal-code** (`{code}`, uit de uitnodigingslink) + **5-cijfer PIN** in de body — niet het
+   ClubApiToken. PIN-bruteforce-guard (5/300s → `429`), verkeerde PIN `401`, onbekende code `404`. Velden per
+   judoka: `pincode`, `havunclub_judoka_id?`, `voornaam`, `achternaam`, `geboortedatum?`, `geslacht?`, `band?`,
+   `gewicht?`. Idempotent op `havunclub_judoka_id` (kolom `judokas.havunclub_ref`), anders naam+geboortejaar.
+   De school kan alleen de eigen portal vullen (code+PIN scoping). Details: `HAVUNCLUB-KOPPELING.md` §"Scenario 2".
 3. ✅ **Weegkaart-lookup-endpoint (geleverd):** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` (op stam-id /
    `havunclub_ref`) → `{ "token": "<uuid>", "url": "https://judotournament.org/weegkaart/<uuid>" }`, of `404`
    als de judoka niet in dit toernooi is ingeschreven.
@@ -94,8 +95,10 @@ JT mapt server-side (`naam`, `geboortejaar`, `geslacht → M/V`). Idempotentie v
 5. ✅ **`gewicht` (geleverd):** `POST /api/inschrijvingen` accepteert nu een optioneel `gewicht`
    (`nullable|numeric|min:0|max:300`) dat de gewichtsklasse-bepaling voedt.
 
-> **Stand JT-kant:** punten 1, 3, 4, 5 geïmplementeerd (`feat/havunclub-koppeling`). Alleen punt 2
-> (portal-vul-API, scenario 2) is nog open — vergt eerst een ontwerpbeslissing over de pincode-autorisatie.
+> **Stand JT-kant:** alle 5 punten geïmplementeerd (`feat/havunclub-koppeling`). Openstaande
+> **business**-keuze (geen JT-code): pusht HavunClub de volledige inschrijving via de portal-vul-API, of
+> vult het alleen de lijst en gebeurt het definitieve inschrijven op de JT-portal-page? De API ondersteunt
+> de push-variant; deep-linken naar de portal-page blijft ook mogelijk. Dat is HavunClubs keuze, niet JT-werk.
 
 ## Wat HavunClub gaat bouwen (eigen scope, aparte MPC-taak)
 - Base-URL `judotoernooi.nl` → `judotournament.org` in `JudoToernooiService`.

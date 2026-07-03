@@ -81,6 +81,29 @@ De publieke weegkaart-page (`weegkaart/{token}`) mag ingebed worden vanuit de Ha
 voor die route zet `SecurityHeaders` `frame-ancestors 'self' https://havunclub.havun.nl` en laat het
 `X-Frame-Options` weg (die kent geen multi-origin-vorm). Alle andere pagina's blijven `SAMEORIGIN`.
 
+## Scenario 2 — school-portal vullen (portal-code + PIN, GEEN token)
+
+Wordt een judoschool uitgenodigd bij **andermans** toernooi (organisator gebruikt de optionele
+judoschool-portals), dan is de autorisatie **niet** het globale `ClubApiToken` (dat scoped op de hele
+Organisator) maar de **per-toernooi portal-code + 5-cijfer PIN** die de organisator per uitnodiging
+stuurde. Endpoint:
+
+| Methode + pad | Doel | Request | Response |
+|---|---|---|---|
+| `POST /api/school-portal/{code}/inschrijvingen` | judoka in de portal van een uitgenodigde school | `pincode`, `havunclub_judoka_id?`, `voornaam`, `achternaam`, `geboortedatum?`, `geslacht?`, `band?`, `gewicht?` | `{ "id": <judoka-id> }` |
+
+- **`{code}`** = de per-toernooi unieke `portal_code` uit de uitnodigingslink (pivot `club_toernooi`);
+  lokaliseert club + toernooi zonder toernooi-id.
+- **PIN** in de body (`size:5`). Bruteforce-guard identiek aan het webportaal: 5 pogingen / 300s per
+  `(toernooi, code)` → `429`; verkeerde PIN → `401`; onbekende code → `404`.
+- **Judoka-shape** gelijk aan `POST /api/judokas` (server-side gemapt naar `naam`/`geboortejaar`/`M`/`V`).
+  De resulterende `Judoka` krijgt **`club_id`** (net als het webportaal) — géén `stam_judoka_id`.
+- **Deterministische idempotentie:** match op (`toernooi`, `club`, `havunclub_ref` ← `havunclub_judoka_id`);
+  zonder id valt het terug op de webportaal-dedup (naam + geboortejaar). Nieuwe kolom `judokas.havunclub_ref`.
+- Guards: `portaal_modus = 'volledig'`, inschrijving open, max deelnemers, freemium → `422`.
+- Controller `Api\SchoolPortalController`, service `Services\HavunClub\SchoolPortalInschrijvingService`,
+  request `SchoolPortalInschrijvingRequest`. Tests: `SchoolPortalTest` (7). Route: `throttle:api`, geen `club.token`.
+
 ## Tenant-isolatie
 Toernooi en stam judoka worden altijd gescoped op de organisator uit het token (`findOrFail` →
 `404` bij vreemde tenant). Token A kan niets doen in de data van organisator B. Gedekt door de test

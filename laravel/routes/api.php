@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ClubSyncController;
 use App\Http\Controllers\Api\ScoreboardController;
+use App\Http\Controllers\Api\SchoolPortalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,4 +61,16 @@ Route::middleware(['club.token', 'throttle:api'])->name('api.club.')->group(func
     Route::post('/inschrijvingen', [ClubSyncController::class, 'inschrijven'])->name('inschrijvingen.store');
     Route::get('/toernooien/{toernooi}/resultaten', [ClubSyncController::class, 'resultaten'])->name('resultaten');
     Route::get('/toernooien/{toernooi}/weegkaart/{judoka}', [ClubSyncController::class, 'weegkaart'])->name('weegkaart');
+});
+
+/*
+|--------------------------------------------------------------------------
+| HavunClub school-portal fill API (integration scenario 2)
+|--------------------------------------------------------------------------
+| A judoschool invited to another organiser's tournament fills its portal from
+| HavunClub, authorised by the per-tournament portal code + 5-digit PIN (not the
+| ClubApiToken). Auth happens inside the controller; throttle:api caps abuse.
+*/
+Route::middleware('throttle:api')->name('api.school-portal.')->group(function () {
+    Route::post('/school-portal/{code}/inschrijvingen', [SchoolPortalController::class, 'inschrijven'])->name('inschrijven');
 });
