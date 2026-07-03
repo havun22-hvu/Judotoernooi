@@ -39,9 +39,22 @@ onbekende code 404). Club-gescopede `Judoka` (`club_id`, geen stam). Nieuwe kolo
 **3 migraties** in dit pakket: `create_club_api_tokens`, `add_havunclub_ref_to_stam_judokas`,
 `add_havunclub_ref_to_judokas`. Alle additief (2 kolommen + 1 tabel). Op staging gedraaid (DONE).
 
-**Openstaande BUSINESS-keuze (geen JT-code):** pusht HavunClub de volledige inschrijving via de
-portal-vul-API, of vult het alleen de lijst en gebeurt definitief inschrijven op de JT-portal-page? De
-API ondersteunt de push; deep-linken blijft ook mogelijk. HavunClubs keuze.
+**Bedoelde flow (Henk, 03-07):** HavunClub-judoschool zet wedstrijden in de HavunClub-agenda → judoka
+schrijft zich in HavunClub in op een wedstrijd → geboortedatum + actueel gewicht + band gaan naar de
+organisator. Is het een **judotournament.org-toernooi**, dan moet HavunClub de aangemelde judoka's in
+de **JT-portal van die judoschool** zetten.
+
+**BESLIST (03-07): PUSH, niet pull.** HavunClub roept `POST /api/school-portal/{code}/inschrijvingen`
+aan zodra een judoka inschrijft. Redenen: (1) veiliger — JT blijft passief, geen uitgaande calls/geen
+HavunClub-credentials op JT; (2) event-driven, geen polling (past bij "geen polling"-regel); (3)
+consistent met de hele bestaande koppeling (HavunClub = pusher); (4) betrouwbaar bij storing via
+retry-queue + onze idempotentie (`havunclub_ref`). JT-kant is hiervoor **klaar** — rest is HavunClub-werk.
+
+**OPEN — te beslissen (kleine JT-aanpassing):** het portal-vul-endpoint is nu **create-only** — een
+herhaalde push van dezelfde judoka geeft de bestaande rij terug **zonder** velden bij te werken. Voor
+**"actueel gewicht"** (verandert op weegdag) wil je waarschijnlijk **upsert**: bij match op `havunclub_ref`
+het gewicht/band bijwerken i.p.v. no-op. Henk moet nog zeggen of HavunClub inschrijvingen kan wijzigen;
+zo ja → deze upsert inbouwen (`SchoolPortalInschrijvingService::vulPortal`, veilige kleine change + test).
 
 ### ✅ PRODUCTIE-DEPLOY VOLTOOID (03-07) — HavunClub-API LIVE
 
