@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Idempotent: on some environments the `jobs` table already exists while
+        // this migration lingers as "Pending" (its record was lost). Guarding on
+        // hasTable makes `migrate --force` safe everywhere — it records the
+        // migration as run without erroring on 1050 (table already exists).
+        if (Schema::hasTable('jobs')) {
+            return;
+        }
+
         Schema::create('jobs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('queue')->index();
