@@ -9,6 +9,26 @@ last_updated: 2026-06-28
 
 > Vul dit aan aan het einde van elke sessie.
 
+## SESSIE 03-07 — HavunClub handoff-punten 3/4/5 GEBOUWD (`722c3318`, branch `feat/havunclub-koppeling`)
+
+**Uit de integratiespec (`HAVUNCLUB-INTEGRATIE-PLAN.md`, nu gecommit `38af0406`) vroeg HavunClub 5
+dingen van JT. Punt 1 was al klaar; 3/4/5 nu gebouwd + getest; punt 2 blijft open (ontwerp nodig).**
+
+- **Weegkaart-lookup (nieuw endpoint):** `GET /api/toernooien/{toernooi}/weegkaart/{judoka}` →
+  `{token, url}` (token = `Judoka.qr_code`, url = publieke `weegkaart.show`), `404` als niet
+  ingeschreven. `{judoka}` matcht op stam-id óf `havunclub_ref`, tenant-gescoped.
+- **`gewicht` bij inschrijving:** `POST /api/inschrijvingen` accepteert optioneel `gewicht`
+  (`nullable|numeric|min:0|max:300`) → voedt gewichtsklasse; val terug op `stam.gewicht`.
+- **iframe-embed:** `SecurityHeaders` zet op de `weegkaart.show`-route `frame-ancestors 'self'
+  https://havunclub.havun.nl` en laat `X-Frame-Options` weg; alle andere routes blijven `SAMEORIGIN`.
+- **6 nieuwe tests** (ClubSyncTest = 13 groen), SecurityHeaders-suite 20 groen (geen regressie).
+- **NIET gedeployd** (branch, geen deploy-cue). Merge naar main + deploy = Henks beslissing.
+
+**NOG OPEN — punt 2: portal-vul-API (scenario 2, judoschool-portals).** HavunClub wil een
+uitgenodigde portal vullen met **portal-link + pincode** als autorisatie (niet het ClubApiToken). De
+**API-vorm is nog niet ontworpen** (staat zo in de spec). Dit is de resterende JT-taak — vergt eerst
+een ontwerpronde (endpoint-vorm, pincode-verificatie, velden per judoka). Kandidaat voor `/arch`.
+
 ## SESSIE 28-06 — HavunClub: weegkaart-koppeling + judoka-identiteit (OVERLEG, nog geen code)
 
 **Branch `feat/havunclub-koppeling`. QR-fix gecommit (`625f3f61`); de HavunClub-uitbreiding staat
