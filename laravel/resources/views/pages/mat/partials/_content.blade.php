@@ -93,6 +93,13 @@
         saveSelectionError: @json(__('Fout bij opslaan selectie')),
         selectMatFirst: @json(__('Selecteer eerst een mat.')),
         allSlotsTaken: @json(__('Alle slots zijn bezet (groen + geel + blauw). Klik op een gekleurde wedstrijd om te deselecteren.')),
+        allSlotsTakenHidden: @json(__('Alle slots zijn bezet, maar de markeringen staan buiten deze weergave. Gebruik de wis-knop in de gele balk bovenaan om ze vrij te geven.')),
+        hiddenSelectionSlot: @json(__(':kleur staat nog op poule #:poule (blok :blok, mat :mat)')),
+        hiddenSelectionsIntro: @json(__('Kleurmarkeringen buiten deze weergave:')),
+        clearHiddenSelectionsConfirm: @json(__('Markeringen buiten deze weergave wissen? Doe dit alleen als die wedstrijden daar niet meer (gaan) spelen.')),
+        slotGroen: @json(__('Groen (speelt nu)')),
+        slotGeel: @json(__('Geel (klaar staan)')),
+        slotBlauw: @json(__('Blauw (gereed maken)')),
         stopGreenMatch: @json(__('Groene wedstrijd stoppen? Geel wordt groen, blauw wordt geel.')),
         noMatSelected: @json(__('Geen mat geselecteerd. Ververs de pagina.')),
         maxSeedingSwaps: @json(__('Maximum aantal seeding swaps bereikt (:max). De bracket is nu vastgezet.')),
@@ -248,6 +255,18 @@
                 </span>
             </div>
         </div>
+    </div>
+
+    <!-- Selecties buiten deze weergave (ander blok / verplaatste poule): de
+         gekleurde rijen zijn hier onzichtbaar, dus toon waar ze staan + wis-knop -->
+    <div x-show="heeftVerborgenSelecties" class="mb-3 bg-amber-50 border border-amber-400 rounded-lg p-3 flex items-start justify-between gap-3">
+        <div class="text-sm text-amber-800">
+            <span class="font-bold">{{ __('Let op:') }}</span>
+            <span x-text="verborgenSelectiesTekst"></span>
+        </div>
+        <button @click="wisVerborgenSelecties()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-xs font-medium shrink-0">
+            {{ __('Wis markeringen') }}
+        </button>
     </div>
 
     <template x-for="poule in poules" :key="poule.poule_id">
@@ -2474,8 +2493,10 @@ document.addEventListener('alpine:init', () => {
                     console.log('[Mat] Match', wedstrijd.id, '→ BLUE');
                 }
                 else {
-                    // Alle slots bezet
-                    alert(__t.allSlotsTaken);
+                    // Alle slots bezet — als (een deel van) de markeringen buiten
+                    // deze weergave staat, is "klik op een gekleurde wedstrijd"
+                    // onmogelijk → verwijs naar de banner met de wis-knop.
+                    alert(this.heeftVerborgenSelecties ? __t.allSlotsTakenHidden : __t.allSlotsTaken);
                     return;
                 }
             }
@@ -2576,6 +2597,37 @@ document.addEventListener('alpine:init', () => {
         // --- CSP-safe getters/helpers ---
         get refreshingClass() { return this.isRefreshing ? 'animate-spin' : ''; },
         get notRefreshing() { return !this.isRefreshing; },
+        // Selecties (groen/geel/blauw) waarvan de wedstrijd niet in de getoonde
+        // poules zit (ander blok / verplaatste poule) — zie banner bovenaan.
+        get verborgenSelecties() {
+            return (this.matSelectie && this.matSelectie.selecties_buiten_weergave)
+                ? this.matSelectie.selecties_buiten_weergave
+                : [];
+        },
+        get heeftVerborgenSelecties() { return this.verborgenSelecties.length > 0; },
+        get verborgenSelectiesTekst() {
+            const kleurLabels = { groen: __t.slotGroen, geel: __t.slotGeel, blauw: __t.slotBlauw };
+            const delen = this.verborgenSelecties.map(s => __t.hiddenSelectionSlot
+                .replace(':kleur', kleurLabels[s.slot] || s.slot)
+                .replace(':poule', s.poule_nummer ?? '?')
+                .replace(':blok', s.blok_nummer ?? '?')
+                .replace(':mat', s.mat_nummer ?? '?'));
+            return `${__t.hiddenSelectionsIntro} ${delen.join(' · ')}`;
+        },
+        // Wis alléén de slots buiten deze weergave; selecties van het getoonde
+        // blok blijven staan.
+        async wisVerborgenSelecties() {
+            if (!this.heeftVerborgenSelecties) return;
+            if (!confirm(__t.clearHiddenSelectionsConfirm)) return;
+            const wisIds = this.verborgenSelecties.map(s => s.wedstrijd_id);
+            const sel = this.matSelectie;
+            const behoud = (id) => (id && !wisIds.includes(id)) ? id : null;
+            await this.setWedstrijdStatus(
+                behoud(sel.actieve_wedstrijd_id),
+                behoud(sel.volgende_wedstrijd_id),
+                behoud(sel.gereedmaken_wedstrijd_id)
+            );
+        },
         get huidigBlokNummer() {
             const b = this.blokkenData.find(x => x.id == this.blokId);
             return b ? b.nummer : '';

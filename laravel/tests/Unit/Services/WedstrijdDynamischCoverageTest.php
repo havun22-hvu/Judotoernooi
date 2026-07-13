@@ -324,6 +324,69 @@ class WedstrijdDynamischCoverageTest extends TestCase
     }
 
     // ========================================================================
+    // WedstrijdSchemaService — getSchemaVoorMat selecties_buiten_weergave
+    // ========================================================================
+
+    #[Test]
+    public function selectie_in_getoond_blok_geeft_geen_selecties_buiten_weergave(): void
+    {
+        [$poule, $judokas, $toernooi, $blok, $mat] = $this->createPouleWithJudokas(3);
+        $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+        $wedstrijd = $poule->wedstrijden()->first();
+
+        $mat->update(['actieve_wedstrijd_id' => $wedstrijd->id]);
+
+        $result = $this->wedstrijdService->getSchemaVoorMat($blok, $mat);
+
+        $this->assertArrayHasKey('selecties_buiten_weergave', $result['mat']);
+        $this->assertEmpty($result['mat']['selecties_buiten_weergave']);
+    }
+
+    #[Test]
+    public function selectie_uit_ander_blok_verschijnt_in_selecties_buiten_weergave(): void
+    {
+        [$poule, $judokas, $toernooi, $blok, $mat, $club] = $this->createPouleWithJudokas(3);
+        $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+
+        // Tweede blok met eigen poule + wedstrijden op dezelfde mat
+        $anderBlok = Blok::factory()->create(['toernooi_id' => $toernooi->id, 'nummer' => 99]);
+        $anderePoule = Poule::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'blok_id' => $anderBlok->id,
+            'mat_id' => $mat->id,
+            'doorgestuurd_op' => now(),
+        ]);
+        foreach (range(1, 3) as $i) {
+            $judoka = Judoka::factory()->create([
+                'toernooi_id' => $toernooi->id,
+                'club_id' => $club->id,
+                'aanwezigheid' => 'aanwezig',
+            ]);
+            $anderePoule->judokas()->attach($judoka->id, ['positie' => $i]);
+        }
+        $this->wedstrijdService->genereerWedstrijdenVoorPoule($anderePoule);
+        [$w1, $w2] = $anderePoule->wedstrijden()->take(2)->get();
+
+        // Groen wijst naar het andere blok, geel naar het getoonde blok
+        $eigenWedstrijd = $poule->wedstrijden()->first();
+        $mat->update([
+            'actieve_wedstrijd_id' => $w1->id,
+            'volgende_wedstrijd_id' => $eigenWedstrijd->id,
+            'gereedmaken_wedstrijd_id' => $w2->id,
+        ]);
+
+        $result = $this->wedstrijdService->getSchemaVoorMat($blok, $mat);
+
+        $buiten = $result['mat']['selecties_buiten_weergave'];
+        $this->assertCount(2, $buiten);
+        $this->assertEquals(['groen', 'blauw'], array_column($buiten, 'slot'));
+        $this->assertEquals($w1->id, $buiten[0]['wedstrijd_id']);
+        $this->assertEquals(99, $buiten[0]['blok_nummer']);
+        $this->assertEquals($mat->nummer, $buiten[0]['mat_nummer']);
+        $this->assertEquals($anderePoule->nummer, $buiten[0]['poule_nummer']);
+    }
+
+    // ========================================================================
     // WedstrijdSchemaService — getSchemaVoorMat with eliminatie
     // Covers lines 449-465 (eliminatie-specific fields)
     // ========================================================================

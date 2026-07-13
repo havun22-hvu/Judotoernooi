@@ -478,9 +478,47 @@ class WedstrijdSchemaService
                 'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
                 'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
                 'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
+                'selecties_buiten_weergave' => $this->getSelectiesBuitenWeergave($mat, $pouleSchemas),
             ],
             'poules' => $pouleSchemas,
         ];
+    }
+
+    /**
+     * Mat selections (groen/geel/blauw) whose wedstrijd is not in the poules
+     * currently shown (e.g. another blok, or the poule moved to another mat).
+     * The jury can't see or deselect those rows, so the UI needs context to
+     * show a banner with a clear-button instead of a dead-end "all slots
+     * taken" alert.
+     */
+    private function getSelectiesBuitenWeergave(Mat $mat, array $pouleSchemas): array
+    {
+        $zichtbareIds = collect($pouleSchemas)
+            ->flatMap(fn ($p) => array_column($p['wedstrijden'], 'id'))
+            ->flip();
+
+        $slots = [
+            'groen' => $mat->actieve_wedstrijd_id,
+            'geel' => $mat->volgende_wedstrijd_id,
+            'blauw' => $mat->gereedmaken_wedstrijd_id,
+        ];
+
+        $buitenWeergave = [];
+        foreach ($slots as $slot => $wedstrijdId) {
+            if (!$wedstrijdId || isset($zichtbareIds[$wedstrijdId])) {
+                continue;
+            }
+            $wedstrijd = Wedstrijd::with(['poule.blok', 'poule.mat'])->find($wedstrijdId);
+            $buitenWeergave[] = [
+                'slot' => $slot,
+                'wedstrijd_id' => $wedstrijdId,
+                'blok_nummer' => $wedstrijd?->poule?->blok?->nummer,
+                'mat_nummer' => $wedstrijd?->poule?->mat?->nummer,
+                'poule_nummer' => $wedstrijd?->poule?->nummer,
+            ];
+        }
+
+        return $buitenWeergave;
     }
 
     /**
