@@ -32,8 +32,14 @@ alleen de doodlopende UX was het probleem.
 - CSP-patroon gevolgd: component-getters, geen `?.` in x-expressies. 2 service-tests
   (`WedstrijdDynamischCoverageTest`), EN-vertalingen. 416 Mat-raakvlaktests groen.
 
-**Open:** prod-deploy (na Henks staging-beoordeling). De stale blok-1-selecties op prod Mat 1
-staan er nog — met de banner kan Henk ze straks zelf wissen (of eerder handmatig via tinker).
+**✅ PROD-DEPLOY VOLTOOID (14-07, Henks akkoord):** staging + prod beide op `28891b31`
+(= fix `ec4058c4` + handover + CSS-bundle-rebuild `28891b31` — de oude bundle miste
+`hover:bg-amber-600`; les 25-06 toegepast: bundle herbouwd + meegecommit). Backup vóór deploy:
+`/var/backups/havun/milestones/judo_toernooi_voor-mat-banner_2026-07-13_22-41-56.sql.gz`.
+Geen migrations/composer. Smoke: home/login 200, geen verse errors, nieuwe bundle in manifest.
+
+**Open:** de stale blok-1-selecties op prod Mat 1 (test-toernooi-2026) staan er nog — Henk kan
+ze nu zelf wissen via de banner (Blok 2 + Mat 1 openen → "Wis markeringen").
 
 ## SESSIE 03-07 — HavunClub: ALLE 5 handoff-punten GEBOUWD + op main + STAGING LIVE (prod wacht)
 
