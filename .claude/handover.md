@@ -2,12 +2,38 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-06-28
+last_updated: 2026-07-13
 ---
 
 # JudoToernooi — Handover
 
 > Vul dit aan aan het einde van elke sessie.
+
+## SESSIE 13-07 — mat-interface: banner voor kleurmarkeringen buiten de weergave
+
+**Op main + staging (`ec4058c4`). NIET op prod (deploy = Henks cue).**
+
+**Melding Henk:** mat-interface (prod, test-toernooi-2026, Blok 2/Mat 1) gaf "Alle slots zijn
+bezet" terwijl niets gekleurd zichtbaar was. **Oorzaak (geen bug in de kleurlogica):** Mat 1 had
+selecties uit **Blok 1** (gezet 02-06, poules #1/#2/#3, ongespeeld) — selecties zijn mat-breed,
+de weergave is per blok. De rijen waren onzichtbaar én ondeselecteerbaar; de zelf-heal
+(`cleanupGespeeldeSelecties`/`cleanupOngeldigeSelecties`) vangt alleen gespeeld/niet-bestaand.
+Henk bevestigde: blok-1-selecties laten staan is correct gedrag (blok 1 kan nog bezig zijn) —
+alleen de doodlopende UX was het probleem.
+
+**Fix (`ec4058c4`):**
+- `WedstrijdSchemaService::getSchemaVoorMat` → `mat.selecties_buiten_weergave[]` met
+  slot/blok/mat/poule-context voor elke selectie waarvan de wedstrijd niet in de getoonde poules
+  zit (dekt ook verplaatste poules, niet alleen andere blokken).
+- Amber banner in `_content.blade.php` (onder de legenda): benoemt per kleur wáár de markering
+  staat + "Wis markeringen"-knop (confirm; wist alléén de onzichtbare slots via het bestaande
+  huidige-wedstrijd endpoint — zichtbare selecties blijven).
+- "Alle slots bezet"-alert verwijst naar de banner als de markeringen buiten de weergave staan.
+- CSP-patroon gevolgd: component-getters, geen `?.` in x-expressies. 2 service-tests
+  (`WedstrijdDynamischCoverageTest`), EN-vertalingen. 416 Mat-raakvlaktests groen.
+
+**Open:** prod-deploy (na Henks staging-beoordeling). De stale blok-1-selecties op prod Mat 1
+staan er nog — met de banner kan Henk ze straks zelf wissen (of eerder handmatig via tinker).
 
 ## SESSIE 03-07 — HavunClub: ALLE 5 handoff-punten GEBOUWD + op main + STAGING LIVE (prod wacht)
 
