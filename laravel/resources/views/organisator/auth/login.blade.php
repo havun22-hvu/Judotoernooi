@@ -290,8 +290,8 @@
 const __t = {
     somethingWrong: @json(__('Er ging iets mis')),
     biometricNotSupported: @json(__('Biometrie niet ondersteund op dit apparaat')),
-    noPasskeyFound: @json(__('Geen passkey gevonden. Log eerst in met wachtwoord.')),
-    biometricFailed: @json(__('Biometrie mislukt. Gebruik je wachtwoord.')),
+    noPasskeyFound: @json(__('Geen passkey gevonden. Log in via de e-mail-inloglink; daarna kun je biometrie instellen.')),
+    biometricFailed: @json(__('Biometrie mislukt. Gebruik de e-mail-inloglink (knop hieronder) of je wachtwoord.')),
     qrLoading: @json(__('QR code laden...')),
     scanWithPhone: @json(__('Scan met je telefoon')),
     qrLoadFailed: @json(__('QR laden mislukt')),
@@ -542,14 +542,24 @@ document.getElementById('registerForm')?.addEventListener('submit', function() {
     const fpInput = document.getElementById('fingerprint-input');
     if (fpInput) fpInput.value = fingerprint;
 
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    const isSmartphone = isTouchDevice && Math.min(screen.width, screen.height) < 768;
+    // Havun mobile-login beslislogica — HavunCore kb/patterns/havun-mobile-login.md.
+    // Geen schermbreedte-drempels: die zagen grote telefoons/foldables/desktopmodus
+    // als desktop en toonden dan een QR op een handheld.
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const uaMobiel = /Mobi|Android|iPhone|iPod/i.test(navigator.userAgent)
+        || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1); // iPadOS
+    const touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    const isSmartphone = coarse && (uaMobiel || touch);
 
     if (isSmartphone) {
-        // Smartphone: show biometric button if available
-        if (window.PublicKeyCredential) {
+        // Smartphone: bio-knop alleen na geslaagde detectie mét timeout (nooit
+        // laat "binnenploffen"); QR NOOIT op een smartphone.
+        if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
             try {
-                const canBiometric = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                const canBiometric = await Promise.race([
+                    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+                    new Promise((r) => setTimeout(() => r(false), 2000)),
+                ]);
                 if (canBiometric) {
                     document.getElementById('biometric-login-btn').classList.remove('hidden');
                 }
