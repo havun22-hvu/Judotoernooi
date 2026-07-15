@@ -4,8 +4,8 @@
 > via `docs:search`. 13 docs stonden boven de 200-regelnorm uit CLAUDE.md; de grootste
 > (`CLASSIFICATIE.md`, 63k tekens) was voor ~85% onvindbaar. Gebleken bij het documenteren van de
 > device-toegangen-fix op 15-07: de nieuwe sectie stond op regel 517 en kwam niet boven.
-> **Status:** ronde 1 klaar (13/13, commits `34ce77ad`..`dc4684ff`). Docs: 48 → 145. Niets boven
-> 8k tekens behalve één ASCII-diagram. Ronde 2 (hieronder) staat open.
+> **Status: klaar.** Ronde 1 (13 docs, `34ce77ad`..`dc4684ff`) + ronde 2 (9 docs, `c6b9f517`).
+> Docs: 48 → ~190. Alles binnen het indexvenster op twee na, zie onderaan.
 
 ## Meet in tekens, niet in regels
 
@@ -62,28 +62,34 @@ stilzwijgend. `ELIMINATIE/README.md` heeft geen inkomende links en blijft zoals 
 | 12 | `2-FEATURES/FREEMIUM.md` | 488 | index + deeldocs |
 | 13 | `4-PLANNING/MULTI-TENANCY-ROADMAP.md` | 355 | index + fasen |
 
-Alle 13 zijn gesplitst (commits `34ce77ad` t/m `4bcf6ea2`).
+Alle 13 gesplitst (`34ce77ad` t/m `4bcf6ea2`, plus `dc4684ff` voor de deeldocs die op tekens
+alsnog te groot bleken).
 
-## Nog te doen — de tekenmaat, niet de regelmaat
+## Ronde 2 — op tekens (`c6b9f517`)
 
-Deze bleven onder de 200 regels en vielen daarom buiten de eerste ronde, maar zitten boven de
-8k tekens en zijn dus deels onvindbaar. Volgende ronde:
+Negen docs die onder de 200 regels bleven maar boven 8k tekens zaten: `ELIMINATIE/README` (15.7k),
+`PRINTBARE-BRACKETS` (13.8k), `MAT-WEDSTRIJD-SELECTIE`, `DATABASE`, `CHAT`, `URL-STRUCTUUR`,
+`WEDSTRIJDSCHEMA`, `ONTWIKKELAAR`, `ELIMINATIE/FORMULES`. Allemaal gesplitst, deeldocs onder ~4000.
 
-| Doc | Regels | Tekens |
+`ELIMINATIE/` had al een index (`README.md`) + deeldocs. Daar dus **geen** `README/`-map: README
+ingekort, overloop naar nieuwe deeldocs náást de bestaande. Zo hoort het bij een map die het
+patroon al volgt.
+
+## Wat bewust blijft staan
+
+| Doc | Tekens | Waarom |
 |-----|--------|--------|
-| `2-FEATURES/ELIMINATIE/README.md` | 358 | 15.692 |
-| `2-FEATURES/PRINTBARE-BRACKETS.md` | 308 | 13.848 |
-| `2-FEATURES/MAT-WEDSTRIJD-SELECTIE.md` | 362 | 11.809 |
-| `3-DEVELOPMENT/DATABASE.md` | 273 | 11.384 |
-| `2-FEATURES/CHAT.md` | 365 | 11.056 |
-| `URL-STRUCTUUR.md` | 302 | 9.784 |
-| `2-FEATURES/WEDSTRIJDSCHEMA.md` | 265 | 9.507 |
-| `3-DEVELOPMENT/ONTWIKKELAAR.md` | 360 | 8.320 |
-| `2-FEATURES/ELIMINATIE/FORMULES.md` | 305 | 8.161 |
+| `3-DEVELOPMENT/REDUNDANTIE/ARCHITECTUUR.md` | 9.252 | Eén ASCII-diagram van 84 regels. Ondeelbaar; knippen maakt het onleesbaar. |
+| `3-DEVELOPMENT/DATABASE/ERD.md` | 4.653 | Idem: één ERD-codeblok. |
+| `2-FEATURES/HAVUNCLUB-INTEGRATIE-PLAN.md` | 8.933 | Niet gedaan — kan alsnog. |
 
-`ELIMINATIE/` heeft al een index (`README.md`) — daar hoeft alleen de README zelf ingekort.
-Onder de 8k tekens (`SLOT-SYSTEEM` 7.151, `ROLLEN_HIERARCHIE` 7.901, `JBN-REGLEMENT` 7.786,
-`FUNCTIES` 6.422, `LOKALE-SERVER-HANDLEIDING` 5.091): met rust laten.
+Onder de 8k (`SLOT-SYSTEEM` 7.151, `ROLLEN_HIERARCHIE` 7.901, `JBN-REGLEMENT` 7.786, `FUNCTIES`
+6.422, `LOKALE-SERVER-HANDLEIDING` 5.091): met rust laten.
+
+## Nog te doen buiten dit project
+
+`HavunCore/docs/kb/standards/md-doc-grootte.md` schrijft nog "max 200 regels" voor. Dat is de norm
+die deze hele operatie nodig maakte én misleidde. Zou tekens moeten worden — SaaS-breed.
 
 ## Regels bij het splitsen
 
