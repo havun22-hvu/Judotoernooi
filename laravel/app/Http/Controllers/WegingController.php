@@ -158,7 +158,7 @@ class WegingController extends Controller
     {
         $toernooi->load('blokken');
 
-        // Admin versie: live weeglijst (zie docs: INTERFACES.md)
+        // Admin versie: live weeglijst (zie docs: 2-FEATURES/INTERFACES/WEGING.md)
         $judokas = $this->getJudokasVoorLijst($toernooi);
 
         return view('pages.weging.interface-admin', compact('toernooi', 'judokas'));

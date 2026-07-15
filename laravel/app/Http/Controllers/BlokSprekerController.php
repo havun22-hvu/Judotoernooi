@@ -182,7 +182,7 @@ class BlokSprekerController extends Controller
             ->sortBy('milestone.punten')
             ->values();
 
-        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
+        // Admin versie met layouts.app menu (zie docs: 2-FEATURES/INTERFACES/MAT-DOJO-SPREKER.md)
         return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok', 'wimpelUitreikingen'));
     }
 

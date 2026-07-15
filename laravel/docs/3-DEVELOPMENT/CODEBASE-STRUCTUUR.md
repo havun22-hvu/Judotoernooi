@@ -100,7 +100,7 @@ bootstrap/app.php (routing, rate limiters, schedule, middleware, exceptions), bo
 - **package.json** (laravel/): Vite, Alpine.js, @alpinejs/collapse, Tailwind, laravel-vite-plugin.
 - **vite.config.js**: Laravel plugin, entry resources/css/app.css + resources/js/app.js.
 - **tailwind.config.js**: content = resources/**/*.blade.php, resources/**/*.js.
-- Geen Vue/React; Blade + Alpine + Tailwind. Zie INTERFACES.md voor PWA-manifests.
+- Geen Vue/React; Blade + Alpine + Tailwind. Zie `2-FEATURES/INTERFACES.md` voor PWA-manifests.
 
 ## 6. Externe referenties
 

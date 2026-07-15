@@ -64,7 +64,7 @@ class MatController extends Controller
         $blokken = $toernooi->blokken;
         $matten = $toernooi->matten;
 
-        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
+        // Admin versie met layouts.app menu (zie docs: 2-FEATURES/INTERFACES/MAT-DOJO-SPREKER.md)
         return view('pages.mat.interface-admin', compact('toernooi', 'blokken', 'matten'));
     }
 
