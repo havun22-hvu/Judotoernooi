@@ -49,8 +49,10 @@ Dit document beschrijft de technische architectuur voor een fail-safe toernooi s
 
 | Deeldoc | Wanneer je het nodig hebt |
 |---------|---------------------------|
-| [OFFLINE-PAKKET.md](REDUNDANTIE/OFFLINE-PAKKET.md) | Je werkt aan de download-flow, license keys, de gecompileerde player app of anti-piraterij. |
-| [ARCHITECTUUR.md](REDUNDANTIE/ARCHITECTUUR.md) | Je wilt het volledige plaatje zien: cloud layer, primary/standby laptops en het Deco M4 mesh netwerk. |
+| [OFFLINE-PAKKET.md](REDUNDANTIE/OFFLINE-PAKKET.md) | Anti-piraterij, wat er in het pakket zit en de license-key-specs. |
+| [OFFLINE-DOWNLOAD.md](REDUNDANTIE/OFFLINE-DOWNLOAD.md) | De player-app-techniek, de download-flow en de beveiligingslagen. |
+| [ARCHITECTUUR.md](REDUNDANTIE/ARCHITECTUUR.md) | Het volledige plaatje in één diagram: cloud, primary/standby laptops, mesh. |
+| [COMPONENTEN.md](REDUNDANTIE/COMPONENTEN.md) | Wat elk onderdeel doet: cloud-server, primary, standby, Deco M4. |
 | [SYNC-EN-FAILOVER.md](REDUNDANTIE/SYNC-EN-FAILOVER.md) | Je raakt cloud↔lokaal of primary↔standby sync, of wilt weten wat er gebeurt bij internet-uitval of een crash. |
 | [DEVICES-EN-PREFLIGHT.md](REDUNDANTIE/DEVICES-EN-PREFLIGHT.md) | Je moet weten welke devices kritiek zijn, of je loopt de checks van de dag vóór het toernooi af. |
 | [DISASTER-RECOVERY.md](REDUNDANTIE/DISASTER-RECOVERY.md) | Er gaat iets stuk tijdens het toernooi, of je bouwt aan het health dashboard. |

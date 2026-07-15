@@ -64,8 +64,6 @@ PaymentProviderFactory::forToernooi($toernooi) → juiste provider
 | [CONFIGURATIE-EN-TESTEN.md](./BETALINGEN/CONFIGURATIE-EN-TESTEN.md) | Je zet simulatie-mode op staging aan, zoekt een env var of Mollie-status, bekijkt het admin-factuuroverzicht/factuurnummers, of gaat betalingen testen. |
 | [STRIPE.md](./BETALINGEN/STRIPE.md) | Je bouwt of debugt iets Stripe-specifieks: Checkout, Stripe Connect voor inschrijfgeld, Stripe Direct voor upgrades, de Stripe-velden, -routes of -env vars. |
 
----
-
 ## Referenties
 
 - [Mollie API Docs](https://docs.mollie.com/)

@@ -71,7 +71,7 @@ Organisator kan ALTIJD zelf judoka's toevoegen via:
 portaal_modus    ENUM('uit', 'mutaties', 'volledig') DEFAULT 'uit'
 ```
 
-> **Mollie velden:** Zie `BETALINGEN.md` voor `betaling_actief` etc.
+> **Mollie velden:** Zie `BETALINGEN/MODI.md` voor `betaling_actief` etc.
 
 #### Tab: Test
 - Test/debug functies voor development

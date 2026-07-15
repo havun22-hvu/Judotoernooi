@@ -75,7 +75,8 @@ Spreker draait op **iPad/tablet met mobiele data** (groter scherm voor tekst lez
 | [COACHKAARTEN-QR](INTERFACES/COACHKAARTEN-QR.md) | Time-based QR tegen screenshot-misbruik. |
 | [COACHKAART-OVERDRACHT](INTERFACES/COACHKAART-OVERDRACHT.md) | Kaart doorgeven aan een andere coach. |
 | [COACH-INCHECK](INTERFACES/COACH-INCHECK.md) | In/uitcheck-flow en de database erachter (optioneel systeem). |
-| [COACH-HISTORY](INTERFACES/COACH-HISTORY.md) | Check-in history-overzichten. |
+| [COACH-HISTORY](INTERFACES/COACH-HISTORY.md) | Check-in history in de dojo-scanner. |
+| [COACH-HISTORY-PORTAL](INTERFACES/COACH-HISTORY-PORTAL.md) | Wat de club in het portal ziet: wie wanneer in/uit ging. |
 | [COACH-OVERRULE](INTERFACES/COACH-OVERRULE.md) | Hoofdjury die een check-in overrulet. |
 | [MAT-DOJO-SPREKER](INTERFACES/MAT-DOJO-SPREKER.md) | Dojo-scanner, mat-, spreker- en hoofdjury-interface. |
 | [WEEGKAART](INTERFACES/WEEGKAART.md) | De kaart van de judoka zelf. |

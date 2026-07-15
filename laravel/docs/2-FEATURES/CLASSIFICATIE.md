@@ -107,7 +107,9 @@ last_check: 2026-07-15
 | [SOLVER](CLASSIFICATIE/SOLVER.md) | Waarom er een Python-solver is, de architectuur en de scorefunctie. |
 | [SOLVER-ALGORITME](CLASSIFICATIE/SOLVER-ALGORITME.md) | Greedy++ zelf en de implementatiestappen. |
 | [TECHNISCH](CLASSIFICATIE/TECHNISCH.md) | Randgevallen en implementatiedetails. |
-| [OVERPOULEN](CLASSIFICATIE/OVERPOULEN.md) | Wedstrijddag: overpoulen per categorietype. |
+| [OVERPOULEN](CLASSIFICATIE/OVERPOULEN.md) | Wedstrijddag: wanneer overpoulen nodig is en welke regels gelden. |
+| [OVERPOULEN-AFWEZIGEN](CLASSIFICATIE/OVERPOULEN-AFWEZIGEN.md) | Afwezigen, lege poules en de zoek-match op de dag zelf. |
+| [OVERPOULEN-UI](CLASSIFICATIE/OVERPOULEN-UI.md) | De schermen erbij: problematische poules, zoek-match, nieuwe poule. |
 | [HANDMATIG](CLASSIFICATIE/HANDMATIG.md) | Poule met de hand aanmaken + legacy. |
 
 ## Implementatie Status

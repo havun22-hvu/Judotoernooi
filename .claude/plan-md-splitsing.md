@@ -1,11 +1,25 @@
 # Plan — MD-docs terugbrengen tot leesbare grootte
 
-> **Aanleiding:** de KB indexeert alleen het **begin** van een bestand (~2000-8000 tekens). Alles
-> daarna is onvindbaar via `docs:search`. 13 docs staan boven de 200-regelnorm uit CLAUDE.md; de
-> grootste (`CLASSIFICATIE.md`, 63k tekens) is voor ~85% onvindbaar. Gebleken bij het documenteren
-> van de device-toegangen-fix op 15-07: de nieuwe sectie stond op regel 517 en kwam niet boven.
-> **Norm:** `HavunCore/docs/kb/standards/md-doc-grootte.md` — KB-doc/runbook max 200 regels.
-> **Status:** in uitvoering.
+> **Aanleiding:** de KB indexeert alleen het **begin** van een bestand. Alles daarna is onvindbaar
+> via `docs:search`. 13 docs stonden boven de 200-regelnorm uit CLAUDE.md; de grootste
+> (`CLASSIFICATIE.md`, 63k tekens) was voor ~85% onvindbaar. Gebleken bij het documenteren van de
+> device-toegangen-fix op 15-07: de nieuwe sectie stond op regel 517 en kwam niet boven.
+> **Status:** 13/13 gesplitst. Rest: docs boven 8k tekens die net onder de regelnorm bleven.
+
+## Meet in tekens, niet in regels
+
+Nagekeken in de echte indexer (`HavunCore/app/Services/DocIntelligence/DocIndexer.php:123,751`):
+`EMBEDDING_CHAR_LIMITS = [8000, 4000, 2000]`. Ollama's `nomic-embed-text` draait op een ~2048-token
+context en **weigert** (HTTP 500) wat langer is in plaats van af te kappen; de indexer knipt daarom
+op 8000 tekens en halveert bij een context-error naar 4000, dan 2000. Alleen dát deel krijgt een
+echte embedding — de rest van het bestand valt buiten de semantische zoekindex.
+
+**Dus: de regelnorm van 200 is een proxy en soms een misleidende.** `CLASSIFICATIE/OVERPOULEN.md`
+kwam uit op 198 regels — netjes binnen de norm — maar 12.411 tekens, want het bestaat uit brede
+tabellen. Dat doc was nog steeds voor tweederde onvindbaar.
+
+**Hanteer: max ~4000 tekens per deeldoc.** Dat is de eerste halvering en dus de veilige bovengrens
+voor tabelrijke markdown; 8000 haal je alleen met ijle prose. `wc -c`, niet `wc -l`.
 
 ## Het patroon
 
@@ -47,10 +61,28 @@ stilzwijgend. `ELIMINATIE/README.md` heeft geen inkomende links en blijft zoals 
 | 12 | `2-FEATURES/FREEMIUM.md` | 488 | index + deeldocs |
 | 13 | `4-PLANNING/MULTI-TENANCY-ROADMAP.md` | 355 | index + fasen |
 
-Docs van 200-360 regels (`CHAT`, `MAT-WEDSTRIJD-SELECTIE`, `ONTWIKKELAAR`, `PRINTBARE-BRACKETS`,
-`URL-STRUCTUUR`, `DATABASE`, `WEDSTRIJDSCHEMA`, `JBN-REGLEMENT`, `FUNCTIES`,
-`LOKALE-SERVER-HANDLEIDING`, `ROLLEN_HIERARCHIE`) zitten net over de norm maar wél binnen het
-index-venster van de KB. **Lage prioriteit** — pas aanpakken als ze verder groeien.
+Alle 13 zijn gesplitst (commits `34ce77ad` t/m `4bcf6ea2`).
+
+## Nog te doen — de tekenmaat, niet de regelmaat
+
+Deze bleven onder de 200 regels en vielen daarom buiten de eerste ronde, maar zitten boven de
+8k tekens en zijn dus deels onvindbaar. Volgende ronde:
+
+| Doc | Regels | Tekens |
+|-----|--------|--------|
+| `2-FEATURES/ELIMINATIE/README.md` | 358 | 15.692 |
+| `2-FEATURES/PRINTBARE-BRACKETS.md` | 308 | 13.848 |
+| `2-FEATURES/MAT-WEDSTRIJD-SELECTIE.md` | 362 | 11.809 |
+| `3-DEVELOPMENT/DATABASE.md` | 273 | 11.384 |
+| `2-FEATURES/CHAT.md` | 365 | 11.056 |
+| `URL-STRUCTUUR.md` | 302 | 9.784 |
+| `2-FEATURES/WEDSTRIJDSCHEMA.md` | 265 | 9.507 |
+| `3-DEVELOPMENT/ONTWIKKELAAR.md` | 360 | 8.320 |
+| `2-FEATURES/ELIMINATIE/FORMULES.md` | 305 | 8.161 |
+
+`ELIMINATIE/` heeft al een index (`README.md`) — daar hoeft alleen de README zelf ingekort.
+Onder de 8k tekens (`SLOT-SYSTEEM` 7.151, `ROLLEN_HIERARCHIE` 7.901, `JBN-REGLEMENT` 7.786,
+`FUNCTIES` 6.422, `LOKALE-SERVER-HANDLEIDING` 5.091): met rust laten.
 
 ## Regels bij het splitsen
 

@@ -13,7 +13,7 @@ Een doorlopend puntensysteem per organisator, waarbij judoka's over meerdere **p
 
 ## Abonnement
 
-Organisatoren die regelmatig wimpeltoernooien organiseren (bijv. 4x/jaar) kunnen een **wimpel jaarabonnement** afnemen. Zie `FREEMIUM.md` → "Wimpel Abonnement" voor details.
+Organisatoren die regelmatig wimpeltoernooien organiseren (bijv. 4x/jaar) kunnen een **wimpel jaarabonnement** afnemen. Zie `FREEMIUM/WIMPEL-EN-DATABASE.md` → "Wimpel Abonnement" voor details.
 
 - Jaarprijs ~€50 (vs 4x €20 = €80 los)
 - Onbeperkt puntencompetitie toernooien
