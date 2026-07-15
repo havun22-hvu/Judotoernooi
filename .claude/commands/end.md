@@ -67,25 +67,57 @@ Voor elke fix in smallwork.md:
 | How-to procedure | `HavunCore/docs/kb/runbooks/` |
 | Architectuur beslissing | `HavunCore/docs/kb/decisions/` |
 
-## 3. Maak een Handover voor Volgende Sessie
+## 3. Handover bijwerken (ALTIJD, EERST)
 
-Voeg toe aan het einde van `{project}/.claude/context.md` of maak `{project}/.claude/handover.md`:
+> **Er is één handover: `.claude/handover.md`. Die WERK JE BIJ — je plakt er nooit een sessie
+> onderaan of bovenaan.** De handover is een **levende status** ("hoe staat dit project ervoor"),
+> geen logboek ("wat deed ik wanneer"). Git bewaart de historie al; een tweede kopie in het doc
+> maakt hem alleen onbetrouwbaar.
+
+Wat je bij elke `/end` doet:
+
+1. **Afgeronde taken WEGHALEN.** Niet doorstrepen, niet naar "Afgerond" verplaatsen — weg.
+   Klaar is klaar. Zit er waarde in voor later? → KB (`patterns/`, `runbooks/`, `decisions/`).
+2. **Nieuwe open punten TOEVOEGEN** aan de bestaande lijst.
+3. **Bestaande punten BIJWERKEN** als er iets veranderd is (status, oorzaak, volgende stap).
+4. **Achterhaalde tekst SCHRAPPEN.** Klopt een ⚠️ of "wacht op deploy" niet meer? Weg ermee —
+   verifieer het desnoods (`git log`, `composer.json`, server) in plaats van te laten staan.
+
+Structuur van `.claude/handover.md` — hou het hierbij, geen extra sessie-koppen:
 
 ```markdown
-## Laatste Sessie: [DATUM]
+---
+title: <Project> Handover
+last_updated: YYYY-MM-DD
+---
 
-### Wat is gedaan:
-[1-2 zinnen lopende tekst. Geen bullets. Bv: "Betalingsstroom gebouwd en getest."]
+# <Project> — Handover
 
-### Openstaande items:
-[Lopende tekst of leeg. Bv: "Checkout-redirect nog testen op staging."]
+**Branch:** <branch> · **Status:** <1 zin: draait het, wat is er gaande>
 
-### Belangrijke context voor volgende keer:
-[Lopende tekst. Bv: "Mollie sandbox key tijdelijk, swap voor live bij deploy."]
+## Open — wacht op Henk
+| Wat | Waar |
+|-----|------|
+| ... | ... |
 
-### Bekende issues/bugs:
-[Lopende tekst of leeg.]
+## Open — te doen
+- ...
+
+## Recent afgerond (max ~10 regels, alleen wat de volgende sessie nog nodig heeft)
+- ...
+
+## Vaste context voor dit project
+- ...
 ```
+
+**Grootte:** max ~120 regels. Groeit hij daarboven, dan staat er te veel afgeronde geschiedenis in —
+weghalen, niet splitsen. Regel: `HavunCore/docs/kb/standards/md-doc-grootte.md`.
+
+**Waarom dit hard is:** JudoToernooi's handover groeide zo naar **842 regels** met 20+ sessieblokken,
+waarin "(Afgerond) Laravel 12 — GEDEPLOYED" pal boven "⚠️ Laravel 12 — NOG NIET gedeployed" stond,
+plus taken die al weken klaar waren. Zo'n doc kost context én liegt. Bovendien indexeert de KB alleen
+het begin van een bestand — de onderkant van een lange handover is onvindbaar.
+
 
 ## 4. Update Doc Intelligence Index (indien beschikbaar)
 
