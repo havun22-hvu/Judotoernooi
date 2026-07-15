@@ -494,7 +494,7 @@ class Poule extends Model
      * Without this, poule warnings (orange border, warning icon, problematic list) will NOT update.
      *
      * Checks: max_kg_verschil, max_leeftijd_verschil from category config.
-     * See CLASSIFICATIE.md "Harde Criteria voor POULE-INDELING (Stap 4)"
+     * See docs/2-FEATURES/CLASSIFICATIE/CRITERIA.md "Harde Criteria voor POULE-INDELING (Stap 4)"
      *
      * @see PouleController::buildPouleResponse() — includes problemen in every API response
      * @see resources/views/pages/poule/index.blade.php — initial render + JS updatePouleStats()
