@@ -38,8 +38,9 @@ Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
     ->middleware('throttle:login')
     ->name('api.scoreboard.auth');
 
-// Protected: require valid Bearer token
-Route::middleware('scoreboard.token')->prefix('scoreboard')->name('api.scoreboard.')->group(function () {
+// Protected: require valid Bearer token. Throttled per token (see the 'scoreboard'
+// limiter in bootstrap/app.php) so one misbehaving device cannot hammer the API.
+Route::middleware(['scoreboard.token', 'throttle:scoreboard'])->prefix('scoreboard')->name('api.scoreboard.')->group(function () {
     Route::get('/current-match', [ScoreboardController::class, 'currentMatch'])->name('current-match');
     Route::post('/result', [ScoreboardController::class, 'result'])->name('result');
     Route::post('/event', [ScoreboardController::class, 'event'])->name('event');

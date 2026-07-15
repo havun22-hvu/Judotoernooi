@@ -136,14 +136,38 @@ Het display draait zijn eigen timer lokaal. ~20-30 requests per wedstrijd totaal
 ### Authenticatie
 
 - Hergebruikt `DeviceToegang` systeem met nieuwe rol `scoreboard`
-- App logt in met **code + pincode** → ontvangt Bearer **api_token**
-- Token opgeslagen in AsyncStorage, meegestuurd als `Authorization: Bearer {token}`
+- App logt in met de **12-teken code** → ontvangt Bearer **api_token**.
+  De pincode is verwijderd (migratie `2026_04_10_120000`): hij voegde geen entropie
+  toe bovenop de code (~62 bits) en kostte alleen tikwerk aan de tafel.
+- Token opgeslagen in **SecureStore** (Android Keystore) aan app-zijde, meegestuurd als
+  `Authorization: Bearer {token}`
 - Geen CSRF nodig (API routes buiten web middleware)
+
+### Autorisatie — wat een token mag (security-review 15 jul 2026)
+
+Het token is gebonden aan **één toernooi en één mat** (`device_toegangen.toernooi_id`
++ `mat_nummer`). Dat is geen administratief detail maar de tenant-grens:
+
+- `CheckScoreboardToken` zet het device op **`$request->attributes`**, bewust niet via
+  `$request->merge()`. Merge schrijft in de input-bag, waardoor het model in
+  `$request->all()` opdook en zijn `api_token` meelekte in de publieke broadcast van
+  `/event`. Zet het hier nooit terug naar `merge()`.
+- `DeviceToegang` heeft `$hidden = ['api_token', 'device_token', 'code']` als vangnet
+  voor toekomstige serialisatie.
+- `result()` controleert dat de wedstrijd tot `$toegang->toernooi_id` behoort en geeft
+  anders **404** (isolatie-conventie, net als `ClubSyncController`). Zonder die check kon
+  elk scorebord-token de uitslag van elk toernooi in het systeem zetten.
+- Beschermde routes draaien op `throttle:scoreboard` = **120/min per token**, niet per IP:
+  alle matten in een zaal delen één NAT-IP.
+
+Nog open (bewust, aparte taak): Reverb-kanalen zijn publiek (`Channel`, niet
+`PrivateChannel`), en tokens hebben geen expiry/revocatie. Zie de review in HavunCore:
+`docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
 
 ### API Endpoints
 
 ```
-POST /api/scoreboard/auth            → Login: code + pincode → token + config
+POST /api/scoreboard/auth            → Login: 12-teken code → token + config
 GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (alleen bij (re)connect)
 POST /api/scoreboard/result          → Uitslag terugsturen
 POST /api/scoreboard/event           → Sync event naar display (event-based, niet continu)
@@ -155,8 +179,7 @@ POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) —
 **Request:**
 ```json
 {
-  "code": "ABC123DEF456",
-  "pincode": "1234"
+  "code": "ABC123DEF456"
 }
 ```
 **Response:**
@@ -205,6 +228,18 @@ POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) —
   "updated_at": "2026-03-21T14:30:00Z"
 }
 ```
+
+`updated_at` is optioneel (optimistic locking); laat je het weg, dan wint de laatste schrijver.
+
+**Responses:**
+
+| Status | Wanneer |
+|--------|---------|
+| 200 | Uitslag verwerkt |
+| 400 | `winnaar_id` is geen deelnemer van deze wedstrijd |
+| 404 | Wedstrijd bestaat niet **of hoort niet bij het toernooi van je token** (tenant-isolatie) |
+| 409 | `updated_at` wijkt af — een ander apparaat was je voor |
+| 429 | Meer dan 120 requests/min met dit token |
 
 ---
 

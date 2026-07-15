@@ -44,6 +44,18 @@ class Wedstrijd extends Model
         return $this->belongsTo(Poule::class);
     }
 
+    /**
+     * The tournament this match belongs to, or null when it cannot be resolved.
+     * Elimination poules hang under a blok; pool matches carry toernooi_id directly.
+     * Callers that authorise on tenant must treat null as "deny".
+     */
+    public function toernooiId(): ?int
+    {
+        $this->loadMissing('poule.blok');
+
+        return $this->poule?->blok?->toernooi_id ?? $this->poule?->toernooi_id;
+    }
+
     public function judokaWit(): BelongsTo
     {
         return $this->belongsTo(Judoka::class, 'judoka_wit_id');

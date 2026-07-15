@@ -30,6 +30,17 @@ class DeviceToegang extends Model
         'laatst_actief' => 'datetime',
     ];
 
+    /**
+     * Credentials never belong in a serialised payload. Safety net: if this model
+     * ever ends up in a JSON response or a broadcast again, the secrets stay behind.
+     * Read them explicitly ($toegang->api_token) where they are genuinely needed.
+     */
+    protected $hidden = [
+        'api_token',
+        'device_token',
+        'code',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (DeviceToegang $toegang) {

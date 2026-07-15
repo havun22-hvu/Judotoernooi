@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Rate limiters moeten hier gedefinieerd worden (voor routes laden)
         RateLimiter::for('login', fn ($request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('api', fn ($request) => Limit::perMinute(60)->by($request->ip()));
+        // Scoreboard devices: keyed by token, NOT by IP — every mat in a sports hall
+        // shares one NAT IP, so an IP limit would throttle a whole tournament.
+        // 120/min is far above real use (~30 events per match + heartbeat every 30s).
+        RateLimiter::for('scoreboard', fn ($request) => Limit::perMinute(120)->by($request->bearerToken() ?: $request->ip()));
         RateLimiter::for('public-api', fn ($request) => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('form-submit', fn ($request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('webhook', fn ($request) => Limit::perMinute(100)->by($request->ip()));

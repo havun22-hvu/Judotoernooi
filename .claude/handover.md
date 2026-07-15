@@ -2,12 +2,51 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-07-13
+last_updated: 2026-07-15
 ---
 
 # JudoToernooi — Handover
 
 > Vul dit aan aan het einde van elke sessie.
+
+## SESSIE 15-07 — Scoreboard-API security fixes (vanuit een HavunCore-sessie)
+
+**Aanleiding:** Henk wil externe testers toelaten op de scorebord-app en vroeg om een
+veiligheidsbeoordeling. Twee blokkerende lekken gevonden, beide gefixt. Plan +
+bevindingen: `.claude/plan-scoreboard-security.md`; volledige review staat in HavunCore
+`docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
+
+**Gefixt:**
+- 🔴 **Cross-tenant write.** `POST /scoreboard/result` haalde de wedstrijd op ID op zonder te
+  checken of die bij het toernooi van het token hoorde → elk scorebord-token kon de uitslag van
+  élk toernooi zetten (ook van andere organisatoren). Nu 404, via nieuwe `Wedstrijd::toernooiId()`.
+  Fail closed: wedstrijd zonder herleidbaar toernooi wordt óók geweigerd.
+- 🔴 **Token-lek op een publiek kanaal.** `CheckScoreboardToken` deed `$request->merge()`, waardoor
+  het `DeviceToegang`-model in `$request->all()` zat; `/event` broadcast dat rechtstreeks naar het
+  publieke Reverb-kanaal `scoreboard-display.*` — inclusief `api_token`, `code`, telefoon en e-mail.
+  **Empirisch bevestigd vóór de fix.** Nu `$request->attributes` + `$hidden` op het model als vangnet.
+- 🟡 **Geen rate limit** op de beschermde routes → `throttle:scoreboard` = **120/min per token**.
+  Bewust niet per IP: alle matten in een zaal delen één NAT-IP, dat zou een toernooi platleggen.
+- 🔵 **CORS** stond op de framework-default `*` voor `/api/*` → `config/cors.php` beperkt tot `app.url`.
+- **Bijvangst (bestaande bug):** `result()` gaf een 500 ("Undefined array key: updated_at") als de
+  optionele `updated_at` niet werd meegestuurd. Nu `?? null`.
+
+**Tests:** `tests/Feature/Api/ScoreboardApiSecurityTest.php` (6). Alle drie de regressie-tests zijn
+geverifieerd door de fix tijdelijk terug te draaien — ze worden dan rood.
+
+**Bewust NIET gedaan (aparte taak, vereist app-release of UI-werk):**
+- Reverb-kanalen zijn nog **publiek** (`Channel`, geen `PrivateChannel`). Meeluisteren op
+  wedstrijd-events kan met de app_key. Ná deze fix lekt daar geen token meer; de data is
+  wedstrijdinfo die in de zaal sowieso zichtbaar is. Vereist `withBroadcasting()` + auth-callbacks
+  + app-wijziging (de app doet geen `/broadcasting/auth`). `routes/channels.php` is nu dode code.
+- **Tokens hebben geen expiry/revocatie** — je kunt een uitgegeven code niet intrekken. Dit is het
+  échte blocker-item vóór onbekende externe testers. Raakt de organisator-UI.
+- `CheckDeviceBinding` heeft hetzelfde `merge()`-patroon. Lekt nu niet (geen enkele controller in dat
+  pad broadcast `$request->all()`) en `$hidden` dekt het af, maar het is dezelfde tikkende bom —
+  omzetten raakt 12+ call-sites incl. de `$request->device_toegang` magic getter.
+
+**Advies aan Henk (staat ook in de review):** geef externe testers een eigen staging-instance met
+eigen DB en wegwerp-toernooien — nooit een code op de productie-DB, zolang revocatie ontbreekt.
 
 ## SESSIE 13-07 — mat-interface: banner voor kleurmarkeringen buiten de weergave
 

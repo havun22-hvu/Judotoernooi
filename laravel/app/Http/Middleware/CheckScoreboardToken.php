@@ -32,8 +32,10 @@ class CheckScoreboardToken
         // Update last active timestamp
         $toegang->updateLaatstActief();
 
-        // Store toegang in request for controller access
-        $request->merge(['device_toegang' => $toegang]);
+        // Store on attributes, NOT via merge(): merge() writes into the input bag,
+        // so the model would surface in $request->all() and leak its api_token into
+        // anything that echoes or broadcasts the request body.
+        $request->attributes->set('device_toegang', $toegang);
 
         return $next($request);
     }

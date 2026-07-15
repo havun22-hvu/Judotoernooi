@@ -87,7 +87,7 @@ class ScoreboardController extends Controller
      */
     public function currentMatch(Request $request): JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
 
         $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
             ->where('nummer', $toegang->mat_nummer)
@@ -133,8 +133,17 @@ class ScoreboardController extends Controller
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
 
-        // Optimistic locking
-        if ($validated['updated_at'] && $wedstrijd->updated_at) {
+        // Tenant isolation: the token is bound to one tournament, so a match from
+        // another tournament is "not found" for this device. Unresolvable tournament
+        // (orphaned poule) is denied too — never fall back to the token's tournament.
+        $toegang = $request->attributes->get('device_toegang');
+        if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
+            return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        }
+
+        // Optimistic locking. The field is optional, so it may be absent entirely —
+        // reading it directly used to raise an "Undefined array key" 500.
+        if (($validated['updated_at'] ?? null) && $wedstrijd->updated_at) {
             $clientTime = $validated['updated_at'];
             $serverTime = $wedstrijd->updated_at->toISOString();
             if ($clientTime !== $serverTime) {
@@ -214,14 +223,13 @@ class ScoreboardController extends Controller
         }
 
         // Auto-advance green slot: clear active match after result
-        $toegang = $request->get('device_toegang');
         $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
             ->where('nummer', $toegang->mat_nummer)
             ->first();
 
-        // Broadcast score update — use device mat as fallback for elimination poules (no mat_id)
-        $wedstrijd->load('poule.blok');
-        $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule?->toernooi_id ?? $toegang->toernooi_id;
+        // Broadcast score update — use device mat as fallback for elimination poules (no mat_id).
+        // The tenant check above already proved these two are the same tournament.
+        $toernooiId = $toegang->toernooi_id;
         $broadcastMatId = $wedstrijd->poule?->mat_id ?? $mat?->id;
         if ($broadcastMatId) {
             MatUpdate::dispatch($toernooiId, $broadcastMatId, 'score', [
@@ -277,10 +285,12 @@ class ScoreboardController extends Controller
             'event' => 'required|string|in:match.start,timer.start,timer.stop,timer.reset,score.update,osaekomi.start,osaekomi.stop,osaekomi.warning,osaekomi.ippon,match.end',
         ]);
 
-        // Allow any additional data alongside the event type
+        // Allow any additional data alongside the event type. Safe to pass on as-is:
+        // the authenticated device lives on $request->attributes, not in the input bag,
+        // so nothing secret rides along into the public broadcast below.
         $eventData = $request->all();
 
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
 
         $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
             ->where('nummer', $toegang->mat_nummer)
@@ -315,7 +325,7 @@ class ScoreboardController extends Controller
             'code' => 'required|string|size:4',
         ]);
 
-        $toegang = $request->input('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
 
         if (!$toegang->toernooi_id || !$toegang->mat_nummer) {
             return response()->json([
