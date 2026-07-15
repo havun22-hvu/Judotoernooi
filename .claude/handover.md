@@ -12,15 +12,14 @@ last_updated: 2026-07-15
 > `HavunCore/docs/kb/standards/md-doc-grootte.md`.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** stabiel, Laravel 12.62, scoreboard 1.1.6.
-**Staging = main** (gesynct 15-07). **Prod loopt achter op main** — security-fixes 15-07 nog niet gedeployd.
+**Prod = staging = main** (15-07). Security-fixes staan live.
 
 ## Open — wacht op Henk
 
 | Wat | Details |
 |-----|---------|
-| **Prod-deploy** (`f3445e46`, `34bd9549`, `9f728fc0`) | Scoreboard-API-security: tenant-isolatie, token-lek, Reset trekt nu echt in, throttle, CORS. Plus device-toegangen UI-fix. Staat op main + staging, **niet op prod**. Deploy = jouw cue |
-| **Staging bekijken/goedkeuren** | Blauw-positie scorebord (in Device Toegangen), gear-icoontje in header, Hantei (W) + Gelijkspel (G) in JP-dropdown, mat-rij Device Toegangen (mat boven, LCD onder, geen LCD-QR) |
-| **Scoreboard end-to-end testen** | Nooit door jou geverifieerd na de scoreboard-wijzigingen |
+| **Prod controleren na deploy 15-07** | Security-fixes + login-herbouw + device-toegangen staan nu **live op prod** (`20ff55bb`), zonder dat jij ze in de browser had gezien. Homepage 200, `/api/scoreboard/event` 401 (geen 500), 0 alerts, geen errors in de log. Backup vóór deploy: `judo_toernooi_handmatig_2026-07-15_16-57-43.sql.gz` |
+| **Scoreboard end-to-end testen** | Nooit door jou geverifieerd, en de security-fix raakt precies dat pad (`CheckScoreboardToken`, `DeviceToegang`, `ScoreboardController`). Staat nu op prod |
 | **Device-sweep** | Fysieke sweep op je P10 — `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md`. Kan Claude niet zelf |
 | **Stale blok-1-selecties op prod** | Mat 1 / test-toernooi-2026: wis ze zelf via de amber banner (Blok 2 + Mat 1 → "Wis markeringen") |
 
@@ -54,7 +53,16 @@ last_updated: 2026-07-15
   origineel. **Les:** de norm is tekens, niet regels. De indexer embed de eerste 8000 tekens en
   halveert bij een context-error naar 4000/2000 (`HavunCore DocIndexer:123`); `OVERPOULEN.md` was
   198 regels maar 12.411 tekens en dus grotendeels onvindbaar. Ronde 2 staat bij "Open — te doen".
-- **15-07 — Device Toegangen mat-rij rechtgezet** (`9f728fc0`, staging). Code-kolom links en
+- **15-07 — prod-deploy** (`20ff55bb`). Prod liep 20 commits achter; de scoreboard-API-security van
+  die ochtend stond een dag ongedeployd. Geen migraties, geen dependency-wijzigingen — pull +
+  cache-clear. Backup vooraf. Meegegaan zonder browser-goedkeuring: login-herbouw (`140045ab`) en
+  de device-toegangen-fix.
+- **15-07 — Device Toegangen mat-rij: één label per rij** (`9f728fc0` → `a6d98d3d`, prod). Codes en
+  knoppen waren twee losse kolommen naast elkaar, dus een schermregel las
+  `Mat interface | HQ6QALCGS9AQ | LCD | Kort Volledig Koppel TV` — twee labels op één regel.
+  Eerst probeerde ik de linkerkolom om te draaien; dat zette het label er dubbel op. Fix: codes de
+  knoppentabel in, één rij = label + code + knoppen. **Niet weer uit elkaar trekken.** LCD-QR weg
+  (TV heeft geen camera). Doc: `docs/2-FEATURES/SCOREBORD/TV-LCD-URLS.md`. Code-kolom links en
   knop-kolom rechts hadden LCD/Mat in omgekeerde volgorde. Nu beide mat-boven; "Interface" heet
   overal "Mat interface"; LCD-QR weg (TV heeft geen camera → koppelen via 4-cijferige code of
   korte URL); LCD-code toont alleen nog bij de mat-rol.
