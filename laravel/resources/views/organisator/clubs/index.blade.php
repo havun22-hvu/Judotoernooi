@@ -160,31 +160,31 @@
                         <div class="grid grid-cols-1 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Naam') }} *</label>
-                                <input type="text" name="naam" x-model="editData.naam" required class="w-full border rounded px-3 py-2">
+                                <input type="text" name="naam" x-model="editModel('naam')" required class="w-full border rounded px-3 py-2">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Plaats') }}</label>
-                                    <input type="text" name="plaats" x-model="editData.plaats" class="w-full border rounded px-3 py-2">
+                                    <input type="text" name="plaats" x-model="editModel('plaats')" class="w-full border rounded px-3 py-2">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Contactpersoon') }}</label>
-                                    <input type="text" name="contact_naam" x-model="editData.contact_naam" class="w-full border rounded px-3 py-2">
+                                    <input type="text" name="contact_naam" x-model="editModel('contact_naam')" class="w-full border rounded px-3 py-2">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Email') }}</label>
-                                    <input type="email" name="email" x-model="editData.email" class="w-full border rounded px-3 py-2">
+                                    <input type="email" name="email" x-model="editModel('email')" class="w-full border rounded px-3 py-2">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Telefoon') }}</label>
-                                    <input type="text" name="telefoon" x-model="editData.telefoon" class="w-full border rounded px-3 py-2">
+                                    <input type="text" name="telefoon" x-model="editModel('telefoon')" class="w-full border rounded px-3 py-2">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Website') }}</label>
-                                <input type="text" name="website" x-model="editData.website" class="w-full border rounded px-3 py-2" placeholder="havun.nl">
+                                <input type="text" name="website" x-model="editModel('website')" class="w-full border rounded px-3 py-2" placeholder="havun.nl">
                             </div>
                         </div>
                     </div>
@@ -225,6 +225,20 @@ document.addEventListener('alpine:init', () => {
         editModal: false,
         editClubId: null,
         editData: { naam: '', plaats: '', contact_naam: '', email: '', telefoon: '', website: '' },
+
+        /**
+         * x-model binding for a field inside editData.
+         *
+         * The @alpinejs/csp build compiles a nested x-model path to `a.b = __placeholder`
+         * and throws on any assignment to a member expression. It does honour a
+         * {get, set} pair, so route nested fields through this instead.
+         */
+        editModel(veld) {
+            return {
+                get: () => this.editData[veld],
+                set: (waarde) => { this.editData[veld] = waarde; },
+            };
+        },
 
         get updateAction() {
             return this.editClubId ? updateUrlTemplate.replace('__ID__', this.editClubId) : '#';

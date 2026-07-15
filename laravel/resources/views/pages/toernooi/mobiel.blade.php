@@ -164,24 +164,24 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">{{ __('Naam') }} *</label>
-                    <input type="text" x-model="nieuweJudoka.naam" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
+                    <input type="text" x-model="njModel('naam')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">{{ __('Geboortejaar') }}</label>
-                        <input type="number" x-model="nieuweJudoka.geboortejaar" min="1990" max="{{ date('Y') }}"
+                        <input type="number" x-model="njModel('geboortejaar')" min="1990" max="{{ date('Y') }}"
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">{{ __('Gewicht (kg)') }}</label>
-                        <input type="number" x-model="nieuweJudoka.gewicht" step="0.1" min="10" max="200"
+                        <input type="number" x-model="njModel('gewicht')" step="0.1" min="10" max="200"
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">{{ __('Band') }}</label>
-                        <select x-model="nieuweJudoka.band" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
+                        <select x-model="njModel('band')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                             <option value="">-</option>
                             <option value="wit">{{ __('Wit') }}</option>
                             <option value="geel">{{ __('Geel') }}</option>
@@ -194,7 +194,7 @@
                     </div>
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">{{ __('Club') }}</label>
-                        <select x-model="nieuweJudoka.club_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
+                        <select x-model="njModel('club_id')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                             <option value="">-</option>
                             @foreach($clubs as $club)
                                 <option value="{{ $club->id }}">{{ $club->naam }}</option>
@@ -204,7 +204,7 @@
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">{{ __('Poule') }} *</label>
-                    <select x-model="nieuweJudoka.poule_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
+                    <select x-model="njModel('poule_id')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                         <option value="">{{ __('Kies poule...') }}</option>
                         <template x-for="poule in beschikbarePoules" :key="poule.id">
                             <option :value="poule.id" x-text="'Poule ' + poule.nummer + ' - ' + poule.leeftijdsklasse + (poule.gewichtsklasse ? ' (' + poule.gewichtsklasse + ')' : '')"></option>
@@ -367,6 +367,20 @@ document.addEventListener('alpine:init', () => {
 
         // Add judoka
         nieuweJudoka: { naam: '', geboortejaar: '', gewicht: '', band: '', club_id: '', poule_id: '' },
+
+        /**
+         * x-model binding for a field inside nieuweJudoka.
+         *
+         * The @alpinejs/csp build compiles a nested x-model path to `a.b = __placeholder`
+         * and throws on any assignment to a member expression. It does honour a
+         * {get, set} pair, so route nested fields through this instead.
+         */
+        njModel(veld) {
+            return {
+                get: () => this.nieuweJudoka[veld],
+                set: (waarde) => { this.nieuweJudoka[veld] = waarde; },
+            };
+        },
         toevoegenLoading: false,
 
         // Mat progress

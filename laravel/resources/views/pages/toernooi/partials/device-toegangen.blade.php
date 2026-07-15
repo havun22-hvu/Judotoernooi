@@ -226,19 +226,21 @@
                 {{-- Add new vrijwilliger --}}
                 <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                     <div class="grid grid-cols-12 gap-2">
+                        {{-- x-model MOET een getter/setter-call zijn, geen pad: de CSP-build weigert
+                             `newVrijwilliger.voornaam = ...`. Zie nvModel() in de component. --}}
                         <input type="text"
-                               x-model="newVrijwilliger.voornaam"
+                               x-model="nvModel('voornaam')"
                                placeholder="{{ __('Voornaam') }}"
                                class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <input type="text"
-                               x-model="newVrijwilliger.telefoonnummer"
+                               x-model="nvModel('telefoonnummer')"
                                placeholder="{{ __('Telefoon') }}"
                                class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <input type="email"
-                               x-model="newVrijwilliger.email"
+                               x-model="nvModel('email')"
                                placeholder="{{ __('Email') }}"
                                class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
-                        <select x-model="newVrijwilliger.functie"
+                        <select x-model="nvModel('functie')"
                                 class="col-span-2 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                             <template x-for="rol in rollen" :key="rol.key">
                                 <option :value="rol.key" x-text="rol.naam"></option>
@@ -299,6 +301,20 @@ document.addEventListener('alpine:init', () => {
         vrijwilligers: [],
         showVrijwilligersModal: false,
         newVrijwilliger: { voornaam: '', telefoonnummer: '', email: '', functie: 'mat' },
+
+        /**
+         * x-model binding for a field inside newVrijwilliger.
+         *
+         * The @alpinejs/csp build compiles a nested x-model path to `a.b = __placeholder`
+         * and throws on any assignment to a member expression. It does honour a
+         * {get, set} pair, so route nested fields through this instead.
+         */
+        nvModel(veld) {
+            return {
+                get: () => this.newVrijwilliger[veld],
+                set: (waarde) => { this.newVrijwilliger[veld] = waarde; },
+            };
+        },
         toernooiNaam: @js($toernooi->naam),
         toernooiId: {{ $toernooi->id }},
         rollen: [

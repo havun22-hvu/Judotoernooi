@@ -5,6 +5,56 @@
 > directives via `Alpine.data()` registraties lopen i.p.v. inline
 > `x-data="{...}"` of inline expressions zoals `@click="open = !open"`.
 
+## ⚠️ De assignment-regel: `foo = x` mag, `foo.bar = x` niet (16-07-2026)
+
+Dit is de scherpste regel van de CSP-build en de bron van meerdere bugs. In
+`node_modules/@alpinejs/csp/dist/module.esm.js` (`case "AssignmentExpression"`):
+
+```js
+if (node.left.type === "Identifier") {
+  scope[node.left.name] = value;    // ✅ `open = false` werkt
+} else if (node.left.type === "MemberExpression") {
+  throw new Error("Property assignments are prohibited in the CSP build");  // ❌ `form.naam = x`
+}
+```
+
+Drie gevallen, met verschillend gedrag:
+
+| Expressie | Gedrag |
+|---|---|
+| `open = false` — property op de **eigen** component | ✅ Werkt. |
+| `open = false` — property op een **ancestor**-component | ⚠️ **Stil fout.** De assignment schrijft naar `scope[name]` = de *eigen* scope, dus de ancestor-property verandert nooit. Geen error. Verplaats naar een methode op de component die de property bezit. |
+| `form.naam = x` — elk pad met een punt | ❌ **Harde error** `Property assignments are prohibited`. |
+
+### `x-model` op een genest pad is dus altijd stuk
+
+`x-model` bouwt intern letterlijk de string `<expressie> = __placeholder` en evalueert die.
+Bij `x-model="form.naam"` wordt dat `form.naam = __placeholder` → MemberExpression → **throw**.
+Werkt lokaal (CSP staat alleen aan buiten `local`), breekt op staging/prod.
+
+**Fix — geef `x-model` een getter/setter-paar.** Alpine's `x-model` checkt eerst
+`isGetterSetter(result)`, en gebruikt dan `result.set(value)` zonder de assignment-string ooit
+te parsen (die wordt lazy geëvalueerd, dus hij ontploft niet):
+
+```js
+// In de Alpine.data() component:
+formModel(veld) {
+    return {
+        get: () => this.form[veld],
+        set: (waarde) => { this.form[veld] = waarde; },
+    };
+},
+```
+```blade
+<input x-model="formModel('naam')">   {{-- i.p.v. x-model="form.naam" --}}
+```
+
+De datastructuur blijft intact, dus `JSON.stringify(this.form)` bij submit blijft werken.
+Toegepast op `device-toegangen` (`nvModel`), `clubs/index` (`editModel`),
+`stambestand/index` (`formModel`) en `toernooi/mobiel` (`njModel`).
+
+**Guard:** `grep -rn 'x-model="[a-zA-Z_$]*\.' resources/views/` moet leeg blijven.
+
 ## ⚠️ cspActions load-order race (fix 20-06-2026)
 
 **Symptoom:** intermitterend `window.cspActions is not a function` op admin-

@@ -41,6 +41,18 @@ last_updated: 2026-07-15
 
 ## Recent afgerond (context die nog nut heeft)
 
+- **16-07 — genest `x-model` brak vier formulieren op staging/prod.** Symptoom: `Uncaught Error:
+  Property assignments are prohibited in the CSP build` bij vrijwilliger toevoegen. Oorzaak: de
+  `@alpinejs/csp`-evaluator staat `foo = x` (Identifier) toe maar gooit op `foo.bar = x`
+  (MemberExpression) — en `x-model` compileert intern naar `<expressie> = __placeholder`. Dus élke
+  `x-model="a.b"` is stuk zodra je typt. Werkte lokaal (strikte CSP staat uit in `local`).
+  22 bindings over 4 views: vrijwilligers, clubs bewerken, stambestand, toernooi/mobiel — alle vier
+  de toevoeg/bewerk-formulieren. Fix: getter/setter-methode per component (`nvModel`/`editModel`/
+  `formModel`/`njModel`); Alpine's `x-model` honoreert een `{get, set}`-paar en parset de
+  assignment-string dan nooit. Guard: `AlpineCspBindingTest` (statisch, scant alle blades) —
+  geverifieerd dat hij op de oude code rood is. De e2e CSP-specs misten dit omdat die alleen
+  page-load checken, niet interactie. Doc: `docs/alpine-csp-migration.md` → "De assignment-regel".
+
 - **15-07 — alle MD-docs binnen het KB-indexvenster** (`34ce77ad`..`c6b9f517`). 23 docs → index (op
   de oude bestandsnaam, want code linkt erheen) + deeldocs in een gelijknamige map. Docs: 48 → ~190.
   Inhoud verhuisd, niet herschreven — elke kop geverifieerd tegen het origineel, geen dode links.

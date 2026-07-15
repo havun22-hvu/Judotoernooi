@@ -81,34 +81,34 @@
         <form @submit.prevent="saveJudoka()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
-                <input type="text" x-model="form.naam" required
+                <input type="text" x-model="formModel('naam')" required
                        class="w-full border rounded px-3 py-2 text-sm" placeholder="Voornaam Achternaam">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Geboortejaar *</label>
-                <input type="number" x-model="form.geboortejaar" required min="1950" max="{{ date('Y') }}"
+                <input type="number" x-model="formModel('geboortejaar')" required min="1950" max="{{ date('Y') }}"
                        class="w-full border rounded px-3 py-2 text-sm" placeholder="{{ date('Y') - 10 }}">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Geslacht *</label>
-                <select x-model="form.geslacht" required class="w-full border rounded px-3 py-2 text-sm">
+                <select x-model="formModel('geslacht')" required class="w-full border rounded px-3 py-2 text-sm">
                     <option value="M">Man</option>
                     <option value="V">Vrouw</option>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Band *</label>
-                <input type="text" x-model="form.band" required
+                <input type="text" x-model="formModel('band')" required
                        class="w-full border rounded px-3 py-2 text-sm" placeholder="bijv. wit, geel, oranje">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
-                <input type="number" x-model="form.gewicht" step="0.1" min="10" max="200"
+                <input type="number" x-model="formModel('gewicht')" step="0.1" min="10" max="200"
                        class="w-full border rounded px-3 py-2 text-sm" placeholder="Optioneel">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Notities</label>
-                <input type="text" x-model="form.notities"
+                <input type="text" x-model="formModel('notities')"
                        class="w-full border rounded px-3 py-2 text-sm" placeholder="Optioneel">
             </div>
             <div class="md:col-span-3 flex gap-3">
@@ -243,6 +243,20 @@ document.addEventListener('alpine:init', () => {
         saving: false,
         editId: null,
         form: { naam: '', geboortejaar: '', geslacht: 'M', band: 'wit', gewicht: '', notities: '' },
+
+        /**
+         * x-model binding for a field inside form.
+         *
+         * The @alpinejs/csp build compiles a nested x-model path to `a.b = __placeholder`
+         * and throws on any assignment to a member expression. It does honour a
+         * {get, set} pair, so route nested fields through this instead.
+         */
+        formModel(veld) {
+            return {
+                get: () => this.form[veld],
+                set: (waarde) => { this.form[veld] = waarde; },
+            };
+        },
         judokas: @php
             $judokaData = $judokas->map(function($j) {
                 return [
