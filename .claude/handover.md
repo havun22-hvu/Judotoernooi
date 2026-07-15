@@ -26,6 +26,11 @@ last_updated: 2026-07-15
 
 ## Open — te doen
 
+- **MD-docs ronde 2** — negen docs zitten boven 8k tekens en zijn dus deels onvindbaar via
+  `docs:search`, maar bleven onder de 200-regelnorm (`ELIMINATIE/README` 15.7k,
+  `PRINTBARE-BRACKETS` 13.8k, `MAT-WEDSTRIJD-SELECTIE`, `DATABASE`, `CHAT`, `URL-STRUCTUUR`,
+  `WEDSTRIJDSCHEMA`, `ONTWIKKELAAR`, `ELIMINATIE/FORMULES`). Recept + lijst:
+  `.claude/plan-md-splitsing.md`. **Meet in tekens (`wc -c`), niet in regels.**
 - **CSP/HSTS-hardening** — uit de security-sweep van 25-06, bewust uitgesteld: vereist
   browser-verificatie.
 - **Login/biometrie-punten (verifiëren, mogelijk achterhaald).** De login is 14-07 herbouwd op de
@@ -43,6 +48,12 @@ last_updated: 2026-07-15
 
 ## Recent afgerond (context die nog nut heeft)
 
+- **15-07 — MD-docs gesplitst tot index + deeldocs** (`34ce77ad`..`dc4684ff`). 13 docs van 355-1465
+  regels → index (op de oude bestandsnaam, want code linkt erheen) + deeldocs in een gelijknamige
+  map. Docs: 48 → 145. Inhoud verhuisd, niet herschreven — elke kop geverifieerd tegen het
+  origineel. **Les:** de norm is tekens, niet regels. De indexer embed de eerste 8000 tekens en
+  halveert bij een context-error naar 4000/2000 (`HavunCore DocIndexer:123`); `OVERPOULEN.md` was
+  198 regels maar 12.411 tekens en dus grotendeels onvindbaar. Ronde 2 staat bij "Open — te doen".
 - **15-07 — Device Toegangen mat-rij rechtgezet** (`9f728fc0`, staging). Code-kolom links en
   knop-kolom rechts hadden LCD/Mat in omgekeerde volgorde. Nu beide mat-boven; "Interface" heet
   overal "Mat interface"; LCD-QR weg (TV heeft geen camera → koppelen via 4-cijferige code of

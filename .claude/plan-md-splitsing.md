@@ -4,7 +4,8 @@
 > via `docs:search`. 13 docs stonden boven de 200-regelnorm uit CLAUDE.md; de grootste
 > (`CLASSIFICATIE.md`, 63k tekens) was voor ~85% onvindbaar. Gebleken bij het documenteren van de
 > device-toegangen-fix op 15-07: de nieuwe sectie stond op regel 517 en kwam niet boven.
-> **Status:** 13/13 gesplitst. Rest: docs boven 8k tekens die net onder de regelnorm bleven.
+> **Status:** ronde 1 klaar (13/13, commits `34ce77ad`..`dc4684ff`). Docs: 48 → 145. Niets boven
+> 8k tekens behalve één ASCII-diagram. Ronde 2 (hieronder) staat open.
 
 ## Meet in tekens, niet in regels
 
