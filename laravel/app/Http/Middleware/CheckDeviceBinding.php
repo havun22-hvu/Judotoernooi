@@ -48,8 +48,10 @@ class CheckDeviceBinding
         // Update last active
         $toegang->updateLaatstActief();
 
-        // Store toegang in request for controllers
-        $request->merge(['device_toegang' => $toegang]);
+        // attributes, not merge(): merge() puts the model in the input bag, where it rides
+        // along with $request->all() into anything that echoes input back -- that is how the
+        // api_token leaked onto a public channel (f3445e46). Attributes stay out of input.
+        $request->attributes->set('device_toegang', $toegang);
 
         return $next($request);
     }

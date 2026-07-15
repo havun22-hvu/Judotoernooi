@@ -323,7 +323,7 @@ class MatController extends Controller
 
     public function checkAdminWachtwoordDevice(Request $request): JsonResponse
     {
-        $toernooi = $request->device_toegang->toernooi;
+        $toernooi = $request->attributes->get('device_toegang')->toernooi;
         return $this->doCheckAdminWachtwoord($request, $toernooi);
     }
 

@@ -170,7 +170,7 @@ class RoleToegang extends Controller
      */
     public function wegingDeviceBound(Request $request): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         return view('pages.weging.interface', [
@@ -186,7 +186,7 @@ class RoleToegang extends Controller
      */
     public function matDeviceBound(Request $request): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi->load('organisator');
 
         return view('pages.mat.interface', [
@@ -204,7 +204,7 @@ class RoleToegang extends Controller
      */
     public function matShowDeviceBound(Request $request, string $organisator, string $toernooiSlug, string $toegangId, int $mat): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         $matModel = Mat::where('toernooi_id', $toernooi->id)
@@ -235,7 +235,7 @@ class RoleToegang extends Controller
      */
     public function juryDeviceBound(Request $request): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         // Get age class order from preset config (youngest to oldest)
@@ -264,7 +264,7 @@ class RoleToegang extends Controller
      */
     public function sprekerDeviceBound(Request $request): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         // Klare poules (spreker_klaar gezet, nog niet afgeroepen)
@@ -449,7 +449,7 @@ class RoleToegang extends Controller
      */
     public function sprekerNotitiesSave(Request $request): \Illuminate\Http\JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         $validated = $request->validate([
@@ -469,7 +469,7 @@ class RoleToegang extends Controller
      */
     public function sprekerNotitiesGet(Request $request): \Illuminate\Http\JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         return response()->json([
@@ -504,7 +504,7 @@ class RoleToegang extends Controller
 
     public function sprekerAfgeroepen(Request $request): \Illuminate\Http\JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         $validated = $request->validate([
@@ -529,7 +529,7 @@ class RoleToegang extends Controller
      */
     public function sprekerTerug(Request $request): \Illuminate\Http\JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         $validated = $request->validate([
@@ -554,7 +554,7 @@ class RoleToegang extends Controller
      */
     public function sprekerStandings(Request $request): \Illuminate\Http\JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         $validated = $request->validate([
@@ -717,7 +717,7 @@ class RoleToegang extends Controller
      */
     public function dojoDeviceBound(Request $request): View
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
         return view('pages.dojo.scanner', [

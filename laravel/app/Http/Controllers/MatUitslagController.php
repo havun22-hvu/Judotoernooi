@@ -276,7 +276,7 @@ class MatUitslagController extends Controller
 
     public function pouleKlaarDevice(Request $request): JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         return $this->doPouleKlaar($request, $toegang->toernooi_id);
     }
 
@@ -404,7 +404,7 @@ class MatUitslagController extends Controller
      */
     public function setHuidigeWedstrijdDevice(Request $request): JsonResponse
     {
-        $toegang = $request->get('device_toegang');
+        $toegang = $request->attributes->get('device_toegang');
         return $this->doSetHuidigeWedstrijd($request, $toegang->toernooi_id);
     }
 
