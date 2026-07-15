@@ -38,8 +38,6 @@ last_updated: 2026-07-15
   waar niemand kijkt. Het incident van 04-04 is al opgelost — met de trait, niet met de queue.
 - **`REDUNDANTIE/ARCHITECTUUR.md` (9.2k)** is het laatste doc boven het KB-indexvenster: één
   ASCII-diagram van 84 regels — bewust heel gelaten, splitsen maakt het onleesbaar.
-- **Norm in HavunCore klopt niet** — `docs/kb/standards/md-doc-grootte.md` zegt "max 200 regels",
-  maar de indexer meet tekens. SaaS-breed fout. Ander project, dus niet vanuit deze sessie gedaan.
 
 ## Recent afgerond (context die nog nut heeft)
 
