@@ -291,7 +291,7 @@ class EliminatieService
 
         // Gebruik centrale berekening
         $params = $this->berekenBracketParams($n);
-        // B-start = a2 wedstrijden (zie FORMULES.md §B-Start Ronde Bepalen)
+        // B-start = a2 wedstrijden (zie FORMULES-AFLEIDING.md §B-Start Ronde Bepalen)
         // SAMEN: a1 op WIT, a2 op BLAUW, (a2 - a1) byes op WIT
         // DUBBEL: extra (1) ronde ervoor voor a1 onderling
         $bStartWedstrijden = $params['a2Verliezers'];

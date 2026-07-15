@@ -321,7 +321,7 @@ class MatchScheduler
                     break;
 
                 case 'samen_fairness':
-                    // SAMEN (a1 < a2): 4-stappen vulvolgorde (FORMULES.md §Fairness)
+                    // SAMEN (a1 < a2): 4-stappen vulvolgorde (FORMULES-BYES.md §Fairness)
                     $overigeWeds = count($bWedstrijden) - $a1Count; // = a2 - a1
 
                     if ($idx < $overigeWeds) {

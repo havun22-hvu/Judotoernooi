@@ -94,7 +94,7 @@ Eliminatie poules kunnen de B-groep op een aparte mat draaien. De mat interface 
 
 De "Afronden" knop verschijnt als alle wedstrijden van de zichtbare groep gespeeld zijn. Backend controleert of ALLE wedstrijden (A+B) klaar zijn voordat `spreker_klaar` wordt gezet.
 
-> **Zie:** `ELIMINATIE/README.md` → "B-groep op Aparte Mat"
+> **Zie:** `ELIMINATIE/B-MAT-EN-WEERGAVE.md` → "B-groep op Aparte Mat"
 
 ---
 

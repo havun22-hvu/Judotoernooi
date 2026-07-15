@@ -90,7 +90,7 @@ Eliminatie poules hebben A-groep (hoofdboom) en B-groep (herkansing). De B-groep
 - **API**: `verplaatsPoule` accepteert `groep` parameter (A of B) → update `mat_id` of `b_mat_id`
 - **Mat interface**: Toont alleen de relevante groep (A of B) per mat
 
-> **Zie:** `ELIMINATIE/README.md` → "B-groep op Aparte Mat" voor technische details
+> **Zie:** `ELIMINATIE/B-MAT-EN-WEERGAVE.md` → "B-groep op Aparte Mat" voor technische details
 
 **Tussen blokken:**
 - Blok 1 = jongste/lichtste categorieën
