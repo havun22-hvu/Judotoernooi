@@ -110,14 +110,32 @@ class DeviceToegang extends Model
         ]);
     }
 
-    public function reset(): void
+    /**
+     * Reset a toegang: withdraw access completely and issue a fresh code.
+     *
+     * All three parts are needed for a reset to actually mean something:
+     *  - api_token — the only thing CheckScoreboardToken looks at, so leaving it
+     *    behind lets a "reset" device carry on writing results;
+     *  - device_token/binding — releases the physical device;
+     *  - code — the old code can otherwise be traded for a new token straight away,
+     *    so anyone who wrote it down still gets back in.
+     *
+     * The mat re-registers with the new code, which the organiser reads off screen.
+     * Returns the new code so the caller can show it.
+     */
+    public function reset(): string
     {
         $this->update([
             'device_token' => null,
+            'api_token' => null,
             'device_info' => null,
             'gebonden_op' => null,
+            'code' => self::generateCode(),
         ]);
+
+        return $this->code;
     }
+
 
     public function updateLaatstActief(): void
     {

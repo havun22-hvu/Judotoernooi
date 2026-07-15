@@ -126,15 +126,20 @@ class DeviceToegangBeheerController extends Controller
     }
 
     /**
-     * Reset device binding.
+     * Reset a toegang: revoke the token, release the device and issue a new code.
+     * The old code stops working, so the response carries the new one — the mat
+     * cannot get back in without it.
      */
     public function reset(Organisator $organisator, Toernooi $toernooi, Request $request, DeviceToegang $toegang): JsonResponse
     {
-        $toegang->reset();
+        $nieuweCode = $toegang->reset();
 
         return response()->json([
             'success' => true,
-            'message' => 'Device binding gereset',
+            'message' => 'Toegang ingetrokken. De oude code werkt niet meer — geef de mat de nieuwe code.',
+            'code' => $nieuweCode,
+            'display_code' => $toegang->getDisplayCode(),
+            'url' => $toegang->getUrl(),
         ]);
     }
 
@@ -156,15 +161,13 @@ class DeviceToegangBeheerController extends Controller
      */
     public function resetAll(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
-        $toernooi->deviceToegangen()->update([
-            'device_token' => null,
-            'device_info' => null,
-            'gebonden_op' => null,
-        ]);
+        // Per row, not a bulk update: every toegang needs its own unique code, and
+        // reset() is the single place that defines what a reset means.
+        $toernooi->deviceToegangen()->each(fn (DeviceToegang $toegang) => $toegang->reset());
 
         return response()->json([
             'success' => true,
-            'message' => 'Alle device bindings gereset',
+            'message' => 'Alle toegangen ingetrokken. Alle codes zijn vernieuwd — deel de nieuwe codes opnieuw uit.',
         ]);
     }
 

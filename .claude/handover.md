@@ -34,19 +34,26 @@ bevindingen: `.claude/plan-scoreboard-security.md`; volledige review staat in Ha
 **Tests:** `tests/Feature/Api/ScoreboardApiSecurityTest.php` (6). Alle drie de regressie-tests zijn
 geverifieerd door de fix tijdelijk terug te draaien — ze worden dan rood.
 
-**Bewust NIET gedaan (aparte taak, vereist app-release of UI-werk):**
-- Reverb-kanalen zijn nog **publiek** (`Channel`, geen `PrivateChannel`). Meeluisteren op
-  wedstrijd-events kan met de app_key. Ná deze fix lekt daar geen token meer; de data is
-  wedstrijdinfo die in de zaal sowieso zichtbaar is. Vereist `withBroadcasting()` + auth-callbacks
-  + app-wijziging (de app doet geen `/broadcasting/auth`). `routes/channels.php` is nu dode code.
-- **Tokens hebben geen expiry/revocatie** — je kunt een uitgegeven code niet intrekken. Dit is het
-  échte blocker-item vóór onbekende externe testers. Raakt de organisator-UI.
+**Ook gefixt — Reset trok niets in (correctie op een aanname):** `DeviceToegang::reset()` nulde
+alleen de device-binding en **liet `api_token` staan**, terwijl dat het enige is dat
+`CheckScoreboardToken` controleert → een "gereset" apparaat schreef gewoon door. Henk ging ervan uit
+dat resetten toegang wegnam; dat was niet zo. Reset doet nu alle drie: token weg, device los, **nieuwe
+code** (de oude code kon anders direct weer voor een nieuw token geruild worden). `resetAll` idem
+(per rij i.p.v. bulk-update, want elke code moet uniek zijn). UI: knop is nu altijd zichtbaar (ook bij
+"wacht op binding" — juist handig als een code lekte), toont de nieuwe code na afloop, en resetAll
+herlaadt de lijst i.p.v. dode codes te tonen. Daarmee is token-revocatie **geen open punt meer**.
+
+**Bewust NIET gedaan:**
+- **Reverb-kanalen blijven publiek** — Henk 15 jul: *"publiek-openbaar: prima (als je de url weet)"*.
+  Data = wat in de zaal op het scherm staat; ná fix #2 lekt er geen token meer. `routes/channels.php`
+  is dode code (wordt nooit geladen) — opruimen hoort bij een eventuele private-channels-taak.
 - `CheckDeviceBinding` heeft hetzelfde `merge()`-patroon. Lekt nu niet (geen enkele controller in dat
   pad broadcast `$request->all()`) en `$hidden` dekt het af, maar het is dezelfde tikkende bom —
   omzetten raakt 12+ call-sites incl. de `$request->device_toegang` magic getter.
 
-**Advies aan Henk (staat ook in de review):** geef externe testers een eigen staging-instance met
-eigen DB en wegwerp-toernooien — nooit een code op de productie-DB, zolang revocatie ontbreekt.
+**Advies aan Henk:** geef onbekende externe partijen een eigen staging-instance met eigen DB —
+nooit een code op de productie-DB. Voor een bekende tester is Reset nu voldoende om achteraf dicht
+te zetten.
 
 ## SESSIE 13-07 — mat-interface: banner voor kleurmarkeringen buiten de weergave
 

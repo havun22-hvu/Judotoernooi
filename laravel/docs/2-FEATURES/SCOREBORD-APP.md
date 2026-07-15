@@ -160,9 +160,20 @@ Het token is gebonden aan **één toernooi en één mat** (`device_toegangen.toe
 - Beschermde routes draaien op `throttle:scoreboard` = **120/min per token**, niet per IP:
   alle matten in een zaal delen één NAT-IP.
 
-Nog open (bewust, aparte taak): Reverb-kanalen zijn publiek (`Channel`, niet
-`PrivateChannel`), en tokens hebben geen expiry/revocatie. Zie de review in HavunCore:
-`docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
+### Toegang intrekken (Reset)
+
+**Reset** bij Instellingen → Device Toegangen trekt de toegang écht in:
+`api_token` weg (het apparaat kan niets meer), device losgekoppeld, én **een nieuwe code**.
+De oude code is daarna waardeloos — geef de mat de nieuwe code van het scherm.
+"Alle toegangen intrekken" doet dit voor het hele toernooi.
+
+> Tot 15 jul 2026 nulde Reset alleen de device-binding en **liet het `api_token` staan** — een
+> "gereset" apparaat schreef gewoon door. Zet dat niet terug: `reset()` moet alle drie
+> (token, binding, code) doen, anders is intrekken een illusie.
+
+Publieke Reverb-kanalen zijn een bewuste keuze (Henk, 15 jul): meeluisteren kan als je de URL
+kent, maar de data is wat in de zaal op het scherm staat. Zie
+HavunCore `docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
 
 ### API Endpoints
 

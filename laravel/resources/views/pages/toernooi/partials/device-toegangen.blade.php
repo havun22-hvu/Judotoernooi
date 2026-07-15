@@ -90,8 +90,11 @@
                                                 </button>
                                                 <button type="button" @click="toggleQrMat(toegang)"
                                                         class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs" title="{{ __('QR code') }}">QR</button>
-                                                <button type="button" @click="resetToegang(toegang)" x-show="toegang.is_gebonden"
-                                                        class="text-orange-600 hover:text-orange-800 text-xs px-1">{{ __('Reset') }}</button>
+                                                {{-- Also available when unbound: a reset replaces the code, which is
+                                                     exactly what you need when a code leaked but was never used. --}}
+                                                <button type="button" @click="resetToegang(toegang)"
+                                                        class="text-orange-600 hover:text-orange-800 text-xs px-1"
+                                                        title="{{ __('Trekt de toegang in en geeft een nieuwe code') }}">{{ __('Reset') }}</button>
                                                 <a x-show="rolIsNietMat(rol)" :href="toegang.url" target="_blank"
                                                    class="text-gray-500 hover:text-gray-700 text-xs px-1">{{ __('Test') }}</a>
                                                 <button type="button" x-show="rolIsNietMat(rol)" @click="deleteToegang(toegang)"
@@ -196,9 +199,9 @@
         <button type="button"
                 @click="resetAll()"
                 class="text-red-600 hover:text-red-800 text-sm">
-            {{ __('Alle device bindings resetten') }}
+            {{ __('Alle toegangen intrekken') }}
         </button>
-        <span class="text-xs text-gray-400 ml-2">{{ __('(voor nieuw toernooi of bij problemen)') }}</span>
+        <span class="text-xs text-gray-400 ml-2">{{ __('(nieuw toernooi of bij problemen — alle codes worden vervangen)') }}</span>
     </div>
 
     {{-- WhatsApp voorbeeld --}}
@@ -329,9 +332,9 @@ document.addEventListener('alpine:init', () => {
             toegang: '{{ __("Toegang") }}',
             klikLink: '{{ __("Klik op de link om in te loggen — het apparaat wordt automatisch gekoppeld.") }}',
             wachtOpBinding: '{{ __("Wacht op binding") }}',
-            bevestigReset: '{{ __("Device binding resetten? Het volgende apparaat dat de link opent wordt automatisch gekoppeld.") }}',
+            bevestigReset: '{{ __("Toegang intrekken? Het apparaat verliest direct toegang en de code wordt vervangen — je moet de nieuwe code aan de mat geven.") }}',
             bevestigVerwijder: '{{ __("Deze toegang verwijderen?") }}',
-            bevestigResetAll: '{{ __("ALLE device bindings resetten?") }}',
+            bevestigResetAll: '{{ __("ALLE toegangen intrekken? Alle codes worden vervangen — je moet iedereen zijn nieuwe code geven.") }}',
             ongeldigeCode: '{{ __("Voer een 4-cijferige code in") }}',
             koppelingMislukt: '{{ __("Koppeling mislukt") }}',
             netwerkfout: '{{ __("Netwerkfout") }}',
@@ -614,9 +617,17 @@ document.addEventListener('alpine:init', () => {
                     headers: { 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
                 });
                 if (response.ok) {
+                    const data = await response.json();
                     toegang.is_gebonden = false;
                     toegang.device_info = null;
                     toegang.status = this.teksten.wachtOpBinding;
+                    // A reset issues a new code — show it, the old one is dead and the
+                    // mat cannot register without the new one.
+                    if (data.code) {
+                        toegang.code = data.code;
+                        toegang.display_code = data.display_code;
+                        toegang.url = data.url;
+                    }
                     window.dispatchEvent(new CustomEvent('toegangen-updated'));
                 }
             } catch (e) {}
@@ -646,11 +657,9 @@ document.addEventListener('alpine:init', () => {
                     headers: { 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
                 });
                 if (response.ok) {
-                    this.toegangen.forEach(t => {
-                        t.is_gebonden = false;
-                        t.device_info = null;
-                        t.status = this.teksten.wachtOpBinding;
-                    });
+                    // Every code was replaced, so reload rather than patch state —
+                    // showing stale codes here would send volunteers to dead links.
+                    await this.loadToegangen();
                     window.dispatchEvent(new CustomEvent('toegangen-updated'));
                 }
             } catch (e) {}

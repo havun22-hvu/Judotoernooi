@@ -140,6 +140,48 @@ class ScoreboardApiSecurityTest extends TestCase
         });
     }
 
+    /**
+     * Resetting a mat used to leave api_token intact, so a "reset" device kept full
+     * write access with the Bearer token it already held.
+     */
+    public function test_reset_revokes_the_api_token(): void
+    {
+        $eigen = $this->maakToernooiMetScorebord();
+
+        $this->withHeader('Authorization', 'Bearer ' . $eigen['token'])
+            ->postJson('/api/scoreboard/heartbeat')
+            ->assertOk();
+
+        $eigen['toegang']->reset();
+
+        $this->withHeader('Authorization', 'Bearer ' . $eigen['token'])
+            ->postJson('/api/scoreboard/heartbeat')
+            ->assertUnauthorized();
+    }
+
+    /**
+     * A reset must withdraw access for real: the old code may not be tradeable for a
+     * new token, or anyone who wrote it down simply walks back in.
+     */
+    public function test_reset_issues_a_new_code_and_kills_the_old_one(): void
+    {
+        $eigen = $this->maakToernooiMetScorebord();
+        $oudeCode = $eigen['toegang']->code;
+
+        $nieuweCode = $eigen['toegang']->reset();
+
+        $this->assertNotSame($oudeCode, $nieuweCode);
+
+        $this->postJson('/api/scoreboard/auth', ['code' => $oudeCode])->assertUnauthorized();
+
+        $response = $this->postJson('/api/scoreboard/auth', ['code' => $nieuweCode])->assertOk();
+        $this->assertNotSame($eigen['token'], $response->json('token'));
+
+        $this->withHeader('Authorization', 'Bearer ' . $response->json('token'))
+            ->postJson('/api/scoreboard/heartbeat')
+            ->assertOk();
+    }
+
     public function test_device_record_hides_credentials_when_serialised(): void
     {
         $toegang = $this->maakToernooiMetScorebord()['toegang'];
