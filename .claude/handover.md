@@ -30,15 +30,14 @@ last_updated: 2026-07-15
   browser-verificatie en Chrome-integratie staat uit.
 - **ShouldQueue voor MatUpdate/ScoreboardEvent** — `ShouldBroadcastNow` → queued broadcast geeft
   retry bij tijdelijke Reverb-uitval. Lage prioriteit.
-- **`HAVUNCLUB-INTEGRATIE-PLAN.md` (8.9k) en `REDUNDANTIE/ARCHITECTUUR.md` (9.2k)** zijn de laatste
-  twee docs boven het KB-indexvenster. De tweede is één ASCII-diagram van 84 regels — bewust heel
-  gelaten, splitsen maakt het onleesbaar. De eerste kan alsnog.
+- **`REDUNDANTIE/ARCHITECTUUR.md` (9.2k)** is het laatste doc boven het KB-indexvenster: één
+  ASCII-diagram van 84 regels — bewust heel gelaten, splitsen maakt het onleesbaar.
 - **Norm in HavunCore klopt niet** — `docs/kb/standards/md-doc-grootte.md` zegt "max 200 regels",
   maar de indexer meet tekens. SaaS-breed fout. Ander project, dus niet vanuit deze sessie gedaan.
 
 ## Recent afgerond (context die nog nut heeft)
 
-- **15-07 — alle MD-docs binnen het KB-indexvenster** (`34ce77ad`..`c6b9f517`). 22 docs → index (op
+- **15-07 — alle MD-docs binnen het KB-indexvenster** (`34ce77ad`..`c6b9f517`). 23 docs → index (op
   de oude bestandsnaam, want code linkt erheen) + deeldocs in een gelijknamige map. Docs: 48 → ~190.
   Inhoud verhuisd, niet herschreven — elke kop geverifieerd tegen het origineel, geen dode links.
   **Les:** de norm is tekens, niet regels. De indexer embed de eerste 8000 tekens en halveert bij een

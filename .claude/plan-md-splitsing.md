@@ -5,7 +5,7 @@
 > (`CLASSIFICATIE.md`, 63k tekens) was voor ~85% onvindbaar. Gebleken bij het documenteren van de
 > device-toegangen-fix op 15-07: de nieuwe sectie stond op regel 517 en kwam niet boven.
 > **Status: klaar.** Ronde 1 (13 docs, `34ce77ad`..`dc4684ff`) + ronde 2 (9 docs, `c6b9f517`).
-> Docs: 48 → ~190. Alles binnen het indexvenster op twee na, zie onderaan.
+> Docs: 48 → ~193. Alles binnen het indexvenster op één ondeelbaar ASCII-diagram na, zie onderaan.
 
 ## Meet in tekens, niet in regels
 
@@ -81,7 +81,7 @@ patroon al volgt.
 |-----|--------|--------|
 | `3-DEVELOPMENT/REDUNDANTIE/ARCHITECTUUR.md` | 9.252 | Eén ASCII-diagram van 84 regels. Ondeelbaar; knippen maakt het onleesbaar. |
 | `3-DEVELOPMENT/DATABASE/ERD.md` | 4.653 | Idem: één ERD-codeblok. |
-| `2-FEATURES/HAVUNCLUB-INTEGRATIE-PLAN.md` | 8.933 | Niet gedaan — kan alsnog. |
+| ~~`2-FEATURES/HAVUNCLUB-INTEGRATIE-PLAN.md`~~ | ~~8.933~~ | **Alsnog gesplitst (15-07):** index (3.940) + `SCENARIOS`/`ENDPOINTS`/`HAVUNCLUB-SCOPE`, elk onder 3.2k. Geen inkomende code-links. |
 
 Onder de 8k (`SLOT-SYSTEEM` 7.151, `ROLLEN_HIERARCHIE` 7.901, `JBN-REGLEMENT` 7.786, `FUNCTIES`
 6.422, `LOKALE-SERVER-HANDLEIDING` 5.091): met rust laten.
