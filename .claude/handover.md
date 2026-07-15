@@ -28,8 +28,14 @@ last_updated: 2026-07-15
 
 - **CSP/HSTS-hardening** — uit de security-sweep van 25-06, bewust uitgesteld: vereist
   browser-verificatie en Chrome-integratie staat uit.
-- **ShouldQueue voor MatUpdate/ScoreboardEvent** — `ShouldBroadcastNow` → queued broadcast geeft
-  retry bij tijdelijke Reverb-uitval. Lage prioriteit.
+- ~~ShouldQueue voor MatUpdate/ScoreboardEvent~~ — **geschrapt 15-07, niet bouwen.** Drie redenen:
+  (1) de worker draait `queue:work --sleep=3`, dus bij een lege queue — de normale toestand tussen
+  twee scores — komt een score pas na gem. 1,5s / max 3s aan. Voor een scorebord is een verouderde
+  score erger dan geen score. (2) De 8 `failed_jobs` van 04-04 wáren queued (`NewChatMessage`,
+  `database@default`) en faalden tóch na 3 tries — de queue redde ze niet. (3) `ShouldQueue` zou de
+  circuit breaker in `SafelyBroadcasts` betekenisloos maken: die zou dan het wegschrijven naar de
+  `jobs`-tabel meten (lukt altijd) i.p.v. de broadcast, en de echte fout verdwijnt naar `failed_jobs`
+  waar niemand kijkt. Het incident van 04-04 is al opgelost — met de trait, niet met de queue.
 - **`REDUNDANTIE/ARCHITECTUUR.md` (9.2k)** is het laatste doc boven het KB-indexvenster: één
   ASCII-diagram van 84 regels — bewust heel gelaten, splitsen maakt het onleesbaar.
 - **Norm in HavunCore klopt niet** — `docs/kb/standards/md-doc-grootte.md` zegt "max 200 regels",

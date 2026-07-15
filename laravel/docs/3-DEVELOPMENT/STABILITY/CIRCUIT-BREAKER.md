@@ -95,6 +95,26 @@ MatUpdate::dispatch($toernooiId, $matId, 'score', $data);
 
 **Belangrijk:** Bij het aanmaken van een nieuw broadcast event ALTIJD `use SafelyBroadcasts;` toevoegen met de `insteadof` syntax hierboven. De trait overschrijft `dispatch()` zodat het automatisch werkt — geen speciale method nodig.
 
+### Waarom geen `ShouldQueue` op broadcast events (besluit 15-07-2026)
+
+Terugkerend voorstel: `ShouldBroadcastNow` → `ShouldQueue` zou retry geven bij Reverb-uitval.
+**Niet doen.** Drie redenen, in volgorde van belang:
+
+1. **Latency.** De worker draait `queue:work --sleep=3` (`/etc/supervisor/conf.d/laravel-worker.conf`).
+   Bij een lege queue — de normale toestand tussen twee scores — slaapt hij, dus een score komt pas na
+   gemiddeld 1,5s en maximaal 3s aan. Op een scorebord is een verouderde score erger dan geen score:
+   de volgende update overschrijft 'm toch.
+2. **Retry lost het niet op.** De 8 `failed_jobs` van 04-04-2026 wáren queued (`NewChatMessage`,
+   `database@default`) en faalden alsnog na 3 pogingen. Ligt Reverb langer plat dan het retry-venster,
+   dan helpt de queue niet; ligt hij korter plat, dan is de data al achterhaald.
+3. **Het sloopt de circuit breaker.** `SafelyBroadcasts` meet of de broadcast zélf lukt. Met
+   `ShouldQueue` meet de breaker nog maar het wegschrijven naar de `jobs`-tabel — dat lukt altijd, ook
+   als Reverb dood is. De bescherming wordt betekenisloos en de echte fout verdwijnt naar `failed_jobs`,
+   waar niemand kijkt.
+
+Het incident van 04-04 is opgelost met deze trait, niet met een queue. Broadcast is best-effort;
+de data staat altijd in de DB.
+
 ### Reverb Config Regels
 
 | Regel | Waarom |
