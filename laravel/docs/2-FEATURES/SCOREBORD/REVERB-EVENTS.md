@@ -9,6 +9,20 @@ last_check: 2026-07-15
 
 > Onderdeel van [Scorebord-app](../SCOREBORD-APP.md).
 
+## Alle kanalen zijn publiek — bewust
+
+Er is **geen** `withBroadcasting()` in `bootstrap/app.php` en dus ook geen `/broadcasting/auth`.
+Elk Reverb-kanaal hier is publiek: wie de kanaalnaam kent, kan meeluisteren. Dat is een keuze
+(Henk, 15-07: *"prima, als je de url weet"*) — wat er overheen gaat is wedstrijdinfo die in de zaal
+sowieso op een scherm staat. Sinds de security-fix van 15-07 (`f3445e46`) lekt er geen `api_token`
+meer over deze kanalen; dát was het echte probleem, niet het meeluisteren.
+
+`routes/channels.php` is op 15-07 **verwijderd**. Het werd nooit geladen (geen `withBroadcasting()`)
+en al zijn callbacks deden `return true` — het suggereerde autorisatie die er niet was. Wie de
+kanalen ooit privé maakt, voegt `withBroadcasting()` toe en schrijft echte callbacks; dan is een
+ontbrekend bestand (default deny) veiliger dan een bestand vol `return true`. Let op: de
+scorebord-app doet geen `/broadcasting/auth`, dus dat vraagt ook een nieuwe APK.
+
 ## Reverb Events
 
 ### ScoreboardAssignment (Server → Scorebord App)
