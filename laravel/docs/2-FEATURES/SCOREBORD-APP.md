@@ -514,6 +514,20 @@ location ~ ^/tvs/(.+)$ { return 301 https://staging.judotournament.org/tv/$1; } 
 > viel door naar de Node-proxy → 404. Opgelost met de regex-locations die de code (`$1`) meenemen.
 > Bij wijziging van het pad-formaat: deze nginx-regels mee aanpassen.
 
+### Mat-rij in Instellingen → Device Toegangen
+
+Elke mat-rij toont links de codes en rechts de knoppen. Beide kolommen houden **dezelfde volgorde**:
+Mat interface boven, LCD eronder.
+
+| Rij | Links (code) | Rechts (knoppen) |
+|-----|--------------|------------------|
+| **Mat interface** | volledige 12-teken code + kopieerknop | URL · QR · Reset |
+| **LCD** | eerste 4 tekens (de `havun.nl/tv`-code) | Kort · Volledig · Koppel TV |
+
+**Geen QR bij LCD.** Een QR is bedoeld om met een camera te scannen; een TV heeft er geen. De TV
+koppel je met de 4-cijferige code ("Koppel TV") of door de korte URL over te typen. De QR hoort
+dus alleen bij Mat interface — die scan je wél, met de scorebord-app of tablet.
+
 CSP: `scoreboard-live.blade.php` draait onder strikte CSP — alle `<script>`/`<style>` met `@nonce`,
 knoppen via `data-action`, Pusher-CDN met `integrity`+`@nonce`. De `?.`/`??` in die view staan in
 **vanilla JS** (geen Alpine-expressies) → CSP-veilig.

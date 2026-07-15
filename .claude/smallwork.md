@@ -2,6 +2,17 @@
 
 > Kleine bugs/typo's die geen /arch of plan nodig hebben. Log + fix + klaar.
 
+## 15-07-2026
+- **Device Toegangen — mat-rij: LCD/Mat omgedraaid + zinloze LCD-QR** —
+  `toernooi/partials/device-toegangen.blade.php`. Links stond de code-kolom als LCD-boven /
+  Mat-onder, rechts de knop-kolom als Mat-boven ("Interface") / LCD-onder: precies omgekeerd,
+  dus je las de regel kriskras. Links omgedraaid naar mat-boven, en "Interface" heet nu overal
+  "Mat interface". De QR bij LCD is weg: een TV heeft geen camera, koppelen gaat via de
+  4-cijferige code of de korte URL. QR blijft bij Mat (scorebord-app/tablet scant die wél).
+  De LCD-code toont nu alleen bij de mat-rol — bij hoofdjury/weging had die geen betekenis.
+  Dode code opgeruimd (`toggleQrLcd`, `qrIsLcd`, `labelLcd`, `captionLcd`). Doc:
+  `docs/2-FEATURES/SCOREBORD-APP.md` → "Mat-rij in Instellingen → Device Toegangen".
+
 ## 28-06-2026
 - **QR-codes op coach-weegkaarten zwart i.p.v. blauw** (`625f3f61`) — `coach/weegkaarten.blade.php`
   zette `colorDark: '#1d4ed8'` (blue-700) op de kleine én grote QR. Naar `#000000` voor

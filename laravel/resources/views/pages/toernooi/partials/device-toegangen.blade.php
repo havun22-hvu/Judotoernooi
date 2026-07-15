@@ -58,19 +58,19 @@
                                         ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
-                                {{-- Codes --}}
+                                {{-- Codes — zelfde volgorde als de knoppen rechts: mat boven, LCD eronder --}}
                                 <div class="text-left space-y-1">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-400 w-20">LCD</span>
-                                        <span class="font-mono font-bold text-gray-500" x-text="tokenPrefix(toegang)"></span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-400 w-20">{{ __('Mat interface') }}</span>
+                                        <span class="text-xs text-gray-400 w-24">{{ __('Mat interface') }}</span>
                                         <span class="font-mono text-xs text-gray-500" x-text="toegang.code"></span>
                                         <button type="button" @click="copyCode(toegang)" class="text-gray-400 hover:text-gray-600 text-xs" title="{{ __('Kopieer code') }}">
                                             <span x-show="notCopied('code', toegang)">⎘</span>
                                             <span x-show="isCopied('code', toegang)" x-cloak class="text-green-500">✓</span>
                                         </button>
+                                    </div>
+                                    <div class="flex items-center gap-2" x-show="rolIsMat(rol)">
+                                        <span class="text-xs text-gray-400 w-24">LCD</span>
+                                        <span class="font-mono font-bold text-gray-500" x-text="tokenPrefix(toegang)"></span>
                                     </div>
                                 </div>
                             </div>
@@ -115,8 +115,8 @@
                                                         class="bg-green-700 hover:bg-green-800 text-white px-2.5 py-1 rounded text-xs">
                                                     <span x-show="notCopied('full', toegang)">{{ __('Volledig') }}</span><span x-show="isCopied('full', toegang)" x-cloak>✓</span>
                                                 </button>
-                                                <button type="button" @click="toggleQrLcd(toegang)"
-                                                        class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded text-xs">QR</button>
+                                                {{-- Geen QR: een TV heeft geen camera. Koppelen gaat via de
+                                                     4-cijferige code of de korte URL. --}}
                                                 <button type="button" @click="toggleTvLink(toegang)"
                                                         class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">{{ __('Koppel TV') }}</button>
                                             </div>
@@ -338,11 +338,8 @@ document.addEventListener('alpine:init', () => {
             ongeldigeCode: '{{ __("Voer een 4-cijferige code in") }}',
             koppelingMislukt: '{{ __("Koppeling mislukt") }}',
             netwerkfout: '{{ __("Netwerkfout") }}',
-            labelInterface: '{{ __("Interface") }}',
-            labelLcd: '{{ __("LCD Scorebord") }}',
-            labelMatInterface: '{{ __("Mat Interface") }}',
+            labelMatInterface: '{{ __("Mat interface") }}',
             labelMatPrefix: '{{ __("Mat") }}',
-            captionLcd: '{{ __("Scan met telefoon of open op de TV browser") }}',
             captionMat: '{{ __("Scan met scorebord-app of open op de tablet") }}',
             toevoegenSuffix: '{{ __("toegang toevoegen") }}',
         },
@@ -365,7 +362,7 @@ document.addEventListener('alpine:init', () => {
         // --- Rendering helpers ---
         statusClass(toegang) { return toegang.is_gebonden ? 'text-green-600' : 'text-gray-400'; },
         tokenPrefix(toegang) { return toegang.code ? toegang.code.substring(0, 4) : ''; },
-        interfaceLabel(rol) { return rol.key === 'mat' ? this.teksten.labelInterface : ''; },
+        interfaceLabel(rol) { return rol.key === 'mat' ? this.teksten.labelMatInterface : ''; },
         addToegangLabel(rol) { return `${rol.naam} ${this.teksten.toevoegenSuffix}`; },
         isVrijwilligerSelected(toegang, v) { return toegang.naam === v.voornaam; },
         vrijwilligerLabel(v) {
@@ -380,19 +377,18 @@ document.addEventListener('alpine:init', () => {
         isCopied(prefix, toegang) { return this.copiedId === `${prefix}_${toegang.id}`; },
         notCopied(prefix, toegang) { return this.copiedId !== `${prefix}_${toegang.id}`; },
         qrVisibleVoor(toegang) {
-            return this.showQr === `mat_${toegang.id}` || this.showQr === `lcd_${toegang.id}`;
+            return this.showQr === `mat_${toegang.id}`;
         },
-        get qrIsLcd() { return !!this.showQr && this.showQr.startsWith('lcd_'); },
         qrPopupTitel(toegang) {
             if (!this.showQr) return '';
-            const type = this.qrIsLcd ? this.teksten.labelLcd : this.teksten.labelMatInterface;
+            const type = this.teksten.labelMatInterface;
             if (toegang.mat_nummer) {
                 return `${this.teksten.labelMatPrefix} ${toegang.mat_nummer} — ${type}`;
             }
             return type;
         },
         qrPopupCaption() {
-            return this.qrIsLcd ? this.teksten.captionLcd : this.teksten.captionMat;
+            return this.teksten.captionMat;
         },
         qrImageUrl() { return `${this.urls.qr}?url=${encodeURIComponent(this.qrUrl)}`; },
         tvLinkVisible(toegang) { return this.showTvLink === toegang.id; },
@@ -429,12 +425,6 @@ document.addEventListener('alpine:init', () => {
             const key = `mat_${toegang.id}`;
             this.showQr = this.showQr === key ? null : key;
             this.qrUrl = toegang.url;
-        },
-        toggleQrLcd(toegang) {
-            const key = `lcd_${toegang.id}`;
-            this.showQr = this.showQr === key ? null : key;
-            const suffix = toegang.code ? toegang.code.substring(0, 4) : '';
-            this.qrUrl = `${this.urls.tvBase}/${suffix}`;
         },
         toggleTvLink(toegang) {
             this.showTvLink = this.showTvLink === toegang.id ? null : toegang.id;
