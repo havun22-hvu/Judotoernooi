@@ -58,27 +58,22 @@
                                         ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
-                                {{-- Codes — zelfde volgorde als de knoppen rechts: mat boven, LCD eronder --}}
-                                <div class="text-left space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-400 w-24">{{ __('Mat interface') }}</span>
-                                        <span class="font-mono text-xs text-gray-500" x-text="toegang.code"></span>
-                                        <button type="button" @click="copyCode(toegang)" class="text-gray-400 hover:text-gray-600 text-xs" title="{{ __('Kopieer code') }}">
-                                            <span x-show="notCopied('code', toegang)">⎘</span>
-                                            <span x-show="isCopied('code', toegang)" x-cloak class="text-green-500">✓</span>
-                                        </button>
-                                    </div>
-                                    <div class="flex items-center gap-2" x-show="rolIsMat(rol)">
-                                        <span class="text-xs text-gray-400 w-24">LCD</span>
-                                        <span class="font-mono font-bold text-gray-500" x-text="tokenPrefix(toegang)"></span>
-                                    </div>
-                                </div>
                             </div>
+                            {{-- Eén rij = één label + de bijbehorende code + de bijbehorende knoppen.
+                                 Codes en knoppen niet uit elkaar trekken: dan staan er twee labels op
+                                 één schermregel en lezen de LCD-knoppen als Mat-knoppen. --}}
                             <table class="text-sm">
                                 <tbody>
-                                    {{-- Rij 1: Interface --}}
+                                    {{-- Rij 1: Mat interface --}}
                                     <tr>
                                         <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap" x-text="interfaceLabel(rol)"></td>
+                                        <td class="pr-3 py-1 whitespace-nowrap">
+                                            <span class="font-mono text-xs text-gray-500" x-text="toegang.code"></span>
+                                            <button type="button" @click="copyCode(toegang)" class="text-gray-400 hover:text-gray-600 text-xs ml-1" title="{{ __('Kopieer code') }}">
+                                                <span x-show="notCopied('code', toegang)">⎘</span>
+                                                <span x-show="isCopied('code', toegang)" x-cloak class="text-green-500">✓</span>
+                                            </button>
+                                        </td>
                                         <td class="py-1">
                                             <div class="flex items-center gap-1.5">
                                                 <a x-show="kanWhatsApp(rol, toegang)" :href="getWhatsAppUrl(toegang)" target="_blank"
@@ -105,6 +100,9 @@
                                     {{-- Rij 2: LCD (alleen voor mat) --}}
                                     <tr x-show="rolIsMat(rol)">
                                         <td class="pr-3 py-1 text-xs text-gray-400 font-medium align-middle whitespace-nowrap">{{ __('LCD') }}</td>
+                                        <td class="pr-3 py-1 whitespace-nowrap">
+                                            <span class="font-mono font-bold text-gray-500" x-text="tokenPrefix(toegang)"></span>
+                                        </td>
                                         <td class="py-1">
                                             <div class="flex items-center gap-1.5">
                                                 <button type="button" @click="copyTvUrl(toegang)" title="{{ __('Korte URL (havun.nl/tv) — vereist redirect') }}"
@@ -338,6 +336,7 @@ document.addEventListener('alpine:init', () => {
             ongeldigeCode: '{{ __("Voer een 4-cijferige code in") }}',
             koppelingMislukt: '{{ __("Koppeling mislukt") }}',
             netwerkfout: '{{ __("Netwerkfout") }}',
+            labelInterface: '{{ __("Interface") }}',
             labelMatInterface: '{{ __("Mat interface") }}',
             labelMatPrefix: '{{ __("Mat") }}',
             captionMat: '{{ __("Scan met scorebord-app of open op de tablet") }}',
@@ -362,7 +361,9 @@ document.addEventListener('alpine:init', () => {
         // --- Rendering helpers ---
         statusClass(toegang) { return toegang.is_gebonden ? 'text-green-600' : 'text-gray-400'; },
         tokenPrefix(toegang) { return toegang.code ? toegang.code.substring(0, 4) : ''; },
-        interfaceLabel(rol) { return rol.key === 'mat' ? this.teksten.labelMatInterface : ''; },
+        // Elke rij hoort een label te hebben nu de code in de tabel staat; alleen mat heeft
+        // een LCD-rij eronder waar het van onderscheiden moet worden.
+        interfaceLabel(rol) { return rol.key === 'mat' ? this.teksten.labelMatInterface : this.teksten.labelInterface; },
         addToegangLabel(rol) { return `${rol.naam} ${this.teksten.toevoegenSuffix}`; },
         isVrijwilligerSelected(toegang, v) { return toegang.naam === v.voornaam; },
         vrijwilligerLabel(v) {

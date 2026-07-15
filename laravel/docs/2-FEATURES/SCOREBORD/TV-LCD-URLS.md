@@ -32,13 +32,17 @@ location ~ ^/tvs/(.+)$ { return 301 https://staging.judotournament.org/tv/$1; } 
 
 ### Mat-rij in Instellingen → Device Toegangen
 
-Elke mat-rij toont links de codes en rechts de knoppen. Beide kolommen houden **dezelfde volgorde**:
-Mat interface boven, LCD eronder.
+Eén tabel, **één label per rij**, en label + code + knoppen horen bij elkaar:
 
-| Rij | Links (code) | Rechts (knoppen) |
-|-----|--------------|------------------|
+| Label | Code | Knoppen |
+|-------|------|---------|
 | **Mat interface** | volledige 12-teken code + kopieerknop | URL · QR · Reset |
 | **LCD** | eerste 4 tekens (de `havun.nl/tv`-code) | Kort · Volledig · Koppel TV |
+
+**Waarom één tabel.** Codes en knoppen stonden in twee losse kolommen naast elkaar. Daardoor las
+één schermregel als `Mat interface | HQ6QALCGS9AQ | LCD | Kort Volledig Koppel TV` — twee labels op
+één regel, en LCD-knoppen achter een Mat-label. De volgorde omdraaien loste dat niet op (dan staat
+het label er dubbel); de kolommen moesten samen. Niet meer uit elkaar trekken.
 
 **Geen QR bij LCD.** Een QR is bedoeld om met een camera te scannen; een TV heeft er geen. De TV
 koppel je met de 4-cijferige code ("Koppel TV") of door de korte URL over te typen. De QR hoort
