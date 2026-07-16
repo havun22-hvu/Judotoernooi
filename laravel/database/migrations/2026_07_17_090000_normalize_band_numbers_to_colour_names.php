@@ -18,15 +18,21 @@ return new class extends Migration
 {
     private const TABELLEN = ['judokas', 'stam_judokas'];
 
-    /** Band enum value => stored colour name */
+    /**
+     * [legacy enum value, stored colour name] — a list, not a map.
+     *
+     * PHP silently casts numeric array keys to int, which would make this `WHERE band = 0`.
+     * MySQL then casts every belt to a number to compare, 'groen' becomes 0, and the update
+     * would rewrite every colour name to zwart. Keep the value a string, always.
+     */
     private const NUMMER_NAAR_KLEUR = [
-        '0' => 'zwart',
-        '1' => 'bruin',
-        '2' => 'blauw',
-        '3' => 'groen',
-        '4' => 'oranje',
-        '5' => 'geel',
-        '6' => 'wit',
+        ['0', 'zwart'],
+        ['1', 'bruin'],
+        ['2', 'blauw'],
+        ['3', 'groen'],
+        ['4', 'oranje'],
+        ['5', 'geel'],
+        ['6', 'wit'],
     ];
 
     public function up(): void
@@ -36,8 +42,10 @@ return new class extends Migration
                 continue;
             }
 
-            foreach (self::NUMMER_NAAR_KLEUR as $nummer => $kleur) {
-                DB::table($tabel)->where('band', $nummer)->update(['band' => $kleur]);
+            foreach (self::NUMMER_NAAR_KLEUR as [$nummer, $kleur]) {
+                // (string) is load-bearing: binding an int makes MySQL compare numerically,
+                // which matches every colour name too.
+                DB::table($tabel)->where('band', (string) $nummer)->update(['band' => $kleur]);
             }
         }
     }

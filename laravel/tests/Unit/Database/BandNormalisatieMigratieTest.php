@@ -87,6 +87,24 @@ class BandNormalisatieMigratieTest extends TestCase
     }
 
     #[Test]
+    public function leaves_all_existing_colour_names_alone(): void
+    {
+        // On MySQL, `WHERE band = 0` (int) casts every belt to a number, so 'groen' matches 0
+        // and the update would rewrite the lot to zwart. Staging caught this; SQLite does not
+        // juggle types, so this test only guards the intent, not the binding.
+        $ids = [];
+        foreach (['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $kleur) {
+            $ids[$kleur] = $this->maakJudokaMetRuweBand($kleur);
+        }
+
+        $this->draaiMigratie();
+
+        foreach ($ids as $kleur => $id) {
+            $this->assertSame($kleur, $this->bandVan($id), "kleurnaam {$kleur} moest onaangeroerd blijven");
+        }
+    }
+
+    #[Test]
     public function does_not_touch_values_that_merely_contain_a_digit(): void
     {
         $id = $this->maakJudokaMetRuweBand('geel (5e kyu)');
