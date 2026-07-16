@@ -610,11 +610,13 @@ class JudokaController extends Controller
                 $wijzigingen['naam'] = $naamNieuw;
             }
 
-            // Normalize band to lowercase base value (Geel (5e kyu) → geel, GROEN → groen)
-            if (!empty($judoka->band)) {
-                $bandEnum = Band::fromString($judoka->band);
+            // Normalize band to the lowercase colour name (Geel (5e kyu) → geel, GROEN → groen).
+            // Storing the enum value would write "0" for zwart, which every empty() check reads
+            // as a missing band.
+            if (Band::isIngevuld($judoka->band)) {
+                $bandEnum = Band::fromString((string) $judoka->band);
                 if ($bandEnum) {
-                    $bandNieuw = strtolower($bandEnum->value);
+                    $bandNieuw = strtolower($bandEnum->label());
                     if ($judoka->band !== $bandNieuw) {
                         $wijzigingen['band'] = $bandNieuw;
                     }
@@ -662,7 +664,7 @@ class JudokaController extends Controller
             if (empty($judoka->naam)) $ontbreekt[] = 'naam';
             if (empty($judoka->geboortejaar)) $ontbreekt[] = 'geboortejaar';
             if (empty($judoka->geslacht)) $ontbreekt[] = 'geslacht';
-            if (empty($judoka->band)) $ontbreekt[] = 'band';
+            if (!Band::isIngevuld($judoka->band)) $ontbreekt[] = 'band';
 
             if (!empty($ontbreekt)) {
                 $fouten[] = "{$judoka->naam}: ontbreekt " . implode(', ', $ontbreekt);

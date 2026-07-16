@@ -17,6 +17,11 @@ namespace App\Enums;
  *   - niveau()     → beginner eerst (wit=0, zwart=6) - voor UI lijsten
  *   - sortNiveau() → beginner eerst, 1-indexed (wit=1, zwart=7) - voor database sort_band
  *   - value        → expert eerst (zwart=0, wit=6) - voor filtering
+ *
+ * LET OP - zwart is value 0 en dus falsy in PHP:
+ *   NOOIT `empty($judoka->band)` of `!$band` om te checken of er een band is: zowel 0 als "0"
+ *   is falsy, waardoor een zwarte band als "band ontbreekt" wordt gemeld. Gebruik isIngevuld().
+ *   Sla ook nooit `$enum->value` op als band - dat schrijft "0" weg. Gebruik de kleurnaam.
  */
 enum Band: int
 {
@@ -101,6 +106,11 @@ enum Band: int
     {
         $band = strtolower(trim($band));
 
+        // Numeric notation ("0".."6"): zwart is 0, so never use a falsy check here
+        if (is_numeric($band)) {
+            return self::tryFrom((int) $band);
+        }
+
         // Direct match
         $direct = match($band) {
             'zwart' => self::ZWART,
@@ -169,6 +179,21 @@ enum Band: int
         }
         $enum = self::fromString($band);
         return $enum ? $enum->sortNiveau() : 7;
+    }
+
+    /**
+     * Check of er een band is ingevuld.
+     *
+     * Gebruik dit NOOIT via empty()/!$band: zwart is enum value 0, dus zowel 0 als "0"
+     * is falsy in PHP. Een zwarte band werd daardoor als "band ontbreekt" gemeld.
+     */
+    public static function isIngevuld(mixed $band): bool
+    {
+        if ($band === null || $band === '' || $band === []) {
+            return false;
+        }
+
+        return self::toKleur($band) !== '';
     }
 
     /**

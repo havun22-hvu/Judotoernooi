@@ -110,6 +110,33 @@ class EnumsTest extends TestCase
     }
 
     #[Test]
+    public function band_is_ingevuld_accepts_zwart_in_every_notation(): void
+    {
+        // Zwart is enum value 0, so empty()/!$band would call it missing. Regression:
+        // 21 judokas with a black belt were reported as "band ontbreekt".
+        $this->assertTrue(Band::isIngevuld('zwart'));
+        $this->assertTrue(Band::isIngevuld('Zwart'));
+        $this->assertTrue(Band::isIngevuld('zwart (1e dan)'));
+        $this->assertTrue(Band::isIngevuld('0'));
+        $this->assertTrue(Band::isIngevuld(0));
+    }
+
+    #[Test]
+    public function band_is_ingevuld_rejects_only_truly_empty_values(): void
+    {
+        $this->assertFalse(Band::isIngevuld(null));
+        $this->assertFalse(Band::isIngevuld(''));
+    }
+
+    #[Test]
+    public function band_from_string_reads_numeric_notation(): void
+    {
+        $this->assertEquals(Band::ZWART, Band::fromString('0'));
+        $this->assertEquals(Band::WIT, Band::fromString('6'));
+        $this->assertNull(Band::fromString('7'));
+    }
+
+    #[Test]
     public function band_past_in_filter_tm(): void
     {
         // tm_groen = wit, geel, oranje, groen

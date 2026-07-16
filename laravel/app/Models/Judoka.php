@@ -341,7 +341,7 @@ class Judoka extends Model
         return !empty($this->naam)
             && !empty($this->geboortejaar)
             && !empty($this->geslacht)
-            && !empty($this->band)
+            && Band::isIngevuld($this->band)
             && $this->gewicht !== null && $this->gewicht > 0;
     }
 
@@ -371,7 +371,7 @@ class Judoka extends Model
         if (empty($this->naam)) $ontbrekend[] = 'naam';
         if (empty($this->geboortejaar)) $ontbrekend[] = 'geboortejaar';
         if (empty($this->geslacht)) $ontbrekend[] = 'geslacht';
-        if (empty($this->band)) $ontbrekend[] = 'band';
+        if (!Band::isIngevuld($this->band)) $ontbrekend[] = 'band';
         if ($this->gewicht === null || $this->gewicht <= 0) $ontbrekend[] = 'gewicht';
 
         return $ontbrekend;
