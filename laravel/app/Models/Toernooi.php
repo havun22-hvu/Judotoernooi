@@ -837,16 +837,8 @@ class Toernooi extends Model
      */
     public static function getStaffelPrijs(string $tier): ?float
     {
-        $staffels = [
-            '51-100' => 20,
-            '101-150' => 30,
-            '151-200' => 40,
-            '201-250' => 50,
-            '251-300' => 60,
-            '301-350' => 70,
-            '351-400' => 80,
-            '401-500' => 100,
-        ];
-        return $staffels[$tier] ?? null;
+        $prijs = \App\Services\FreemiumService::STAFFELS[$tier]['prijs'] ?? null;
+
+        return $prijs === null ? null : (float) $prijs;
     }
 }

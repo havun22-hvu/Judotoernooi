@@ -61,21 +61,26 @@ JudoToernooi hanteert een freemium model:
 
 | Staffel | Max Judoka's | Prijs |
 |---------|--------------|-------|
-| Klein | 100 | €20 |
-| Medium | 150 | €30 |
-| Groot | 200 | €40 |
-| XL | 250 | €50 |
-| XXL | 300+ | €60+ |
+| 51-100 | 100 | €20 |
+| 101-150 | 150 | €30 |
+| 151-200 | 200 | €40 |
+| 201-250 | 250 | €50 |
+| 251-300 | 300 | €60 |
+| 301-350 | 350 | €70 |
+| 351-400 | 400 | €80 |
+| 401-500 | 500 | €100 |
+| 501-600 | 600 | €120 |
 
-**Formule:** Basis €20 + €10 per extra 50 judoka's
+**Prijsregel:** `max judoka's × €0,20`. Elke trede volgt deze regel — ook 401-500 en 501-600,
+die 100 judoka's breed zijn in plaats van 50.
 
-```php
-// FreemiumService::getStaffelPrijs()
-$basis = 20;
-$perExtra50 = 10;
-$staffels = ceil(($maxJudokas - 50) / 50);
-return $basis + (($staffels - 1) * $perExtra50);
-```
+De staffels zijn **geen formule maar een lookup**: `FreemiumService::STAFFELS` is de enige bron
+(`app/Services/FreemiumService.php`). `Toernooi::getStaffelPrijs()` leest diezelfde const —
+niet opnieuw een lijst hardcoden, dat liep eerder uit elkaar.
+
+Nieuwe trede toevoegen = één regel in `STAFFELS`. De upgrade-UI vult zich dynamisch en er is
+geen DB-migratie nodig (`tier` is een vrije string). Staging rekent automatisch de helft via
+`STAGING_KORTING`.
 
 ---
 

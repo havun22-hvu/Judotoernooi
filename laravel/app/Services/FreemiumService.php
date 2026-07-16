@@ -19,7 +19,7 @@ class FreemiumService
     // Staging discount factor (0.5 = 50% off)
     public const STAGING_KORTING = 0.5;
 
-    // Pricing tiers
+    // Pricing tiers — price always equals max judokas * 0.20
     public const STAFFELS = [
         '51-100' => ['min' => 51, 'max' => 100, 'prijs' => 20],
         '101-150' => ['min' => 101, 'max' => 150, 'prijs' => 30],
@@ -29,6 +29,7 @@ class FreemiumService
         '301-350' => ['min' => 301, 'max' => 350, 'prijs' => 70],
         '351-400' => ['min' => 351, 'max' => 400, 'prijs' => 80],
         '401-500' => ['min' => 401, 'max' => 500, 'prijs' => 100],
+        '501-600' => ['min' => 501, 'max' => 600, 'prijs' => 120],
     ];
 
     /**

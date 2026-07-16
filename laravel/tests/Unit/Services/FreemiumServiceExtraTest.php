@@ -89,6 +89,47 @@ class FreemiumServiceExtraTest extends TestCase
     {
         $this->assertEquals(20, $this->service->getStaffelPrijs('51-100'));
         $this->assertEquals(100, $this->service->getStaffelPrijs('401-500'));
+        $this->assertEquals(120, $this->service->getStaffelPrijs('501-600'));
+    }
+
+    #[Test]
+    public function every_staffel_costs_twenty_cents_per_judoka(): void
+    {
+        foreach (FreemiumService::STAFFELS as $tier => $staffel) {
+            $this->assertEquals(
+                $staffel['max'] * 0.20,
+                $staffel['prijs'],
+                "Staffel {$tier} wijkt af van de prijsregel: max * 0.20"
+            );
+        }
+    }
+
+    #[Test]
+    public function staffels_are_contiguous_and_ascending(): void
+    {
+        $vorigeMax = FreemiumService::FREE_MAX_JUDOKAS;
+
+        foreach (FreemiumService::STAFFELS as $tier => $staffel) {
+            $this->assertEquals(
+                $vorigeMax + 1,
+                $staffel['min'],
+                "Staffel {$tier} laat een gat of overlap achter na max {$vorigeMax}"
+            );
+            $this->assertGreaterThan($staffel['min'], $staffel['max']);
+            $vorigeMax = $staffel['max'];
+        }
+    }
+
+    #[Test]
+    public function model_and_service_agree_on_every_staffel_price(): void
+    {
+        foreach (FreemiumService::STAFFELS as $tier => $staffel) {
+            $this->assertEquals(
+                $this->service->getStaffelPrijs($tier),
+                \App\Models\Toernooi::getStaffelPrijs($tier),
+                "Toernooi::getStaffelPrijs({$tier}) wijkt af van FreemiumService"
+            );
+        }
     }
 
     #[Test]

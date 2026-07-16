@@ -298,7 +298,7 @@
         @if($isReUpgrade ?? false)
             <p class="text-sm text-gray-500 text-center">{{ __('Je betaalt alleen het verschil met je huidige staffel') }}</p>
         @else
-            <p class="text-sm text-gray-500 text-center">{{ __('Prijzen: €10 per 50 judoka\'s (boven de gratis 50)') }}</p>
+            <p class="text-sm text-gray-500 text-center">{{ __('Prijzen: €0,20 per judoka (tot 50 judoka\'s gratis)') }}</p>
         @endif
     @endif
     @endif
