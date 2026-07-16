@@ -211,7 +211,8 @@ class ValueParser
      */
     public static function parseBand(mixed $waarde): string
     {
-        if (empty($waarde)) {
+        // Niet empty(): zwart is enum value 0, dus "0" zou hier stilzwijgend wit worden
+        if (!Band::isIngevuld($waarde)) {
             return 'wit';
         }
 

@@ -2,9 +2,11 @@
 
 namespace App\Services\HavunClub;
 
+use App\Enums\Band;
 use App\Models\Club;
 use App\Models\Judoka;
 use App\Models\Toernooi;
+use App\Services\Import\ValueParser;
 
 /**
  * Enters a judoka into an invited school portal on behalf of HavunClub
@@ -33,7 +35,9 @@ class SchoolPortalInschrijvingService
             ? (int) date('Y', strtotime((string) $data['geboortedatum']))
             : null;
         $geslacht = !empty($data['geslacht']) ? $this->normalizeGeslacht((string) $data['geslacht']) : null;
-        $band = $data['band'] ?? null;
+        // Normalize: HavunClub may send "0".."6" (legacy numeric) or "Geel (5e kyu)".
+        // Null stays null — a missing belt must not silently become wit.
+        $band = Band::isIngevuld($data['band'] ?? null) ? ValueParser::parseBand($data['band']) : null;
         $gewicht = isset($data['gewicht']) && $data['gewicht'] !== null ? (float) $data['gewicht'] : null;
 
         // Idempotency: prefer the deterministic HavunClub id, else fall back to

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Band;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\InschrijvingRequest;
 use App\Http\Requests\Api\SyncJudokaRequest;
@@ -10,6 +11,7 @@ use App\Models\Organisator;
 use App\Models\StamJudoka;
 use App\Models\Toernooi;
 use App\Services\HavunClub\ClubInschrijvingService;
+use App\Services\Import\ValueParser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,7 +51,7 @@ class ClubSyncController extends Controller
             'naam' => trim($request->input('voornaam') . ' ' . $request->input('achternaam')),
             'geboortejaar' => (int) date('Y', strtotime($request->input('geboortedatum'))),
             'geslacht' => $this->normalizeGeslacht($request->input('geslacht')),
-            'band' => $request->input('band'),
+            'band' => $this->normalizeBand($request->input('band')),
             'actief' => true,
         ];
         if ($ref) {
@@ -82,7 +84,7 @@ class ClubSyncController extends Controller
             $toernooi,
             $stam,
             $request->input('naam'),
-            $request->input('band'),
+            $this->normalizeBand($request->input('band')),
             $request->filled('gewicht') ? (float) $request->input('gewicht') : null,
         );
 
@@ -161,6 +163,17 @@ class ClubSyncController extends Controller
     private function organisator(Request $request): Organisator
     {
         return $request->attributes->get('club_organisator');
+    }
+
+    /**
+     * Normalize an externally supplied belt to the stored colour name.
+     *
+     * An external system may send "0".."6" (legacy numeric) or "Geel (5e kyu)". Null stays
+     * null: the caller treats that as "not supplied", which must not become wit.
+     */
+    private function normalizeBand(mixed $band): ?string
+    {
+        return Band::isIngevuld($band) ? ValueParser::parseBand($band) : null;
     }
 
     private function normalizeGeslacht(string $value): string
