@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-07-15
+last_updated: 2026-07-17
 ---
 
 # JudoToernooi — Handover
@@ -12,22 +12,32 @@ last_updated: 2026-07-15
 > `HavunCore/docs/kb/standards/md-doc-grootte.md`.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** stabiel, Laravel 12.62, scoreboard 1.1.6.
-**Prod = staging = main** (16-07, `f46e77ed`). Geverifieerd na deploy: homepage + login 200, 0 alerts,
-log schoon, 0 oude `x-model`-bindings. Terugweg: `judo_toernooi_voor-csp-fix_2026-07-15_23-08-39.sql.gz`.
+**Prod = staging = main** (17-07, `a5d1776c`). Geverifieerd op prod ná de band-migratie: 0 ontbrekende
+banden, 0 niet-gecategoriseerd, 0 numerieke banden over, homepage 200, 0 alerts.
+Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
 
 ## Open — alleen jij kunt dit
 
 | Wat | Details |
 |-----|---------|
-| **CSP-fix in de browser testen (prod + staging)** | `f46e77ed` staat op beide. Elk toevoeg/bewerk-formulier was stuk zodra je typte; ik kon het niet zelf zien (Chrome-integratie uit). Test: vrijwilliger toevoegen (Instellingen → Device Toegangen), club bewerken, judoka toevoegen in stambestand + op toernooi/mobiel |
-| **Prod bekijken na de deploy van 15-07** | Security-fixes, login-herbouw en de device-toegangen-fix staan live zonder dat je ze in de browser zag. Geverifieerd: homepage 200, `/api/scoreboard/event` 401 (geen 500), 0 alerts, log schoon. Terugweg: backup `judo_toernooi_handmatig_2026-07-15_16-57-43.sql.gz` |
+| **Poules- en judoka-pagina bekijken (prod)** | Na 17-07: op poules hoort nog **één** rode banner te staan (was twee), en de gele "judoka's met ontbrekende gegevens"-balk hoort weg te zijn. Data zegt 0/0, maar de UI is niet door mij gezien |
 | **Scoreboard end-to-end testen** | Nooit geverifieerd, en de security-fix raakt precies dat pad (`CheckScoreboardToken`, `DeviceToegang`, `ScoreboardController`). Een 401 op een leeg request bewijst dat de middleware leeft, niet dat een echte app een wedstrijd rond krijgt |
 | **Device-sweep** | Fysieke sweep op je P10 — `docs/3-DEVELOPMENT/DEVICE-TEST-CHECKLIST.md` |
 | **Stale blok-1-selecties op prod** | Mat 1 / test-toernooi-2026: wis ze via de amber banner (Blok 2 + Mat 1 → "Wis markeringen") |
 | **Login/biometrie: nog gewenst?** | De login is 14-07 herbouwd op `patterns/havun-mobile-login.md` (`140045ab`). Twee open wensen van 26-06, mogelijk achterhaald: passkey-registratie alleen in account/`setup-pin` (niet op het loginscherm), en de smartphone-PWA beperken tot QR-scannen + intro |
 
 ## Open — te doen
-
+- **Melding bij een te oude judoka is nietszeggend** — voorgesteld op 17-07, Henk heeft niet
+  geantwoord. Nu: "Past niet in categorie (leeftijd 17)". Beter: "geen categorie voor 17 jaar —
+  hoogste is 16". Dit kostte deze sessie een half onderzoek: het kwam binnen als "de mini's worden
+  geweigerd" terwijl het de 17/18-jarigen waren. `Judoka.php:427-432`, `ImportService.php:740-744`.
+- **`DynamischeIndelingService::bandNaarNummer()` (`:412-417`) heeft een stille `?? 0`-fallback**
+  = wit. Met kleurnamen in de DB klopt het weer, maar élke onbekende bandnotatie wordt zonder
+  melding een witte band en `max_band_verschil` doet dan niets. Niet aangeraakt: buiten de scope
+  van de band-migratie.
+- **Band-validatie accepteert nog alles** (`'band' => 'nullable|string|max:20'`, alle Form Requests).
+  Bewust géén `in:wit,geel,...` toegevoegd: dat zou HavunClub-inschrijvingen met "Geel (5e kyu)"
+  hard weigeren. De normalisatie via `ValueParser::parseBand()` is de tolerante variant.
 - **CSP/HSTS-hardening** — uit de security-sweep van 25-06, bewust uitgesteld: vereist
   browser-verificatie en Chrome-integratie staat uit.
 - **Feature-suite is onwerkbaar traag** (>15 min, geen uitkomst; Unit-suite is 1875 tests in 3:53 en
@@ -42,41 +52,50 @@ log schoon, 0 oude `x-model`-bindings. Terugweg: `judo_toernooi_voor-csp-fix_202
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
-
+- **17-07 — zwart is enum value 0, en dat brak vier dingen tegelijk** (`f1213ff2`, `be2afa82`,
+  `a5d1776c`, prod). Binnengekomen als "zwart wordt niet als band gezien": 21 judoka's stonden in
+  "ontbrekende gegevens" terwijl de kolom "Zwart" toonde. `empty($judoka->band)` is waar voor `0`
+  én `"0"`. Fix: `Band::isIngevuld()`; nooit meer `empty()` op een band. Meegepakt:
+  `ValueParser::parseBand()` maakte van een geïmporteerde zwarte band stilzwijgend **wit**;
+  `voerValidatieUit()` schreef `$enum->value` weg (= de bron van de `"0"`); de HavunClub-paden
+  lieten de band ongefilterd door (nu genormaliseerd, **null blijft null** — anders overschrijft
+  een inschrijving de band uit het stambestand). Alle 541 judoka's + 18 stam-records gemigreerd van
+  nummers naar kleurnamen; die nummers kwamen uit het oude Google Apps Script (`wit=6 … zwart=0`).
+  **Bijvangst die niemand zag:** met nummers in de DB viel `DynamischeIndelingService::bandNaarNummer()`
+  voor élke waarde terug op wit → de poule-solver zag iedereen als witte band en `max_band_verschil`
+  deed niets.
+- **17-07 — de migratie was bijna een ramp; staging ving het.** `WHERE band = 0` (int) laat MySQL
+  élke kleurnaam naar een getal casten → `'groen'` = 0 → de eerste ronde had alle 190 bestaande
+  kleurnamen naar 'zwart' herschreven. Oorzaak: PHP cast numerieke array-keys stil naar int.
+  Strict mode brak af, 0 rijen geraakt. **SQLite juggelt niet** → lokaal groen terwijl de migratie
+  stuk was. Les: een data-migratie draai je op staging vóór prod, altijd, ook als de suite groen is.
+- **17-07 — "de mini's worden geweigerd" was geen bug.** De 70 niet-gecategoriseerden waren de
+  17/18-jarigen: de hoogste categorie stond op `max_leeftijd 16`. Mini's (2020-2022) werden keurig
+  ingedeeld. Henk heeft zelf een categorie toegevoegd. Leeftijd = **kalenderjaar** (toernooijaar −
+  geboortejaar), niet de leeftijd op de wedstrijddag: "tot 6 jaar" = geboren in 2020 of later.
+- **17-07 — staffel 501-600 (€120)** (`7fde5288`, prod). De prijsregel is `max × €0,20` en gold al
+  voor élke bestaande trede; nu vastgelegd in een test, net als de aaneensluiting van de tredes.
+  `Toernooi::getStaffelPrijs()` had een eigen kopie van de lijst → las `null` voor nieuwe tredes,
+  leest nu de const. Nieuwe trede = één regel in `FreemiumService::STAFFELS`, geen migratie
+  (`tier` is een vrije string), UI vult zich dynamisch, staging rekent automatisch de helft.
 - **16-07 — genest `x-model` brak vier formulieren op staging/prod.** Symptoom: `Uncaught Error:
   Property assignments are prohibited in the CSP build` bij vrijwilliger toevoegen. Oorzaak: de
   `@alpinejs/csp`-evaluator staat `foo = x` (Identifier) toe maar gooit op `foo.bar = x`
   (MemberExpression) — en `x-model` compileert intern naar `<expressie> = __placeholder`. Dus élke
   `x-model="a.b"` is stuk zodra je typt. Werkte lokaal (strikte CSP staat uit in `local`).
-  22 bindings over 4 views: vrijwilligers, clubs bewerken, stambestand, toernooi/mobiel — alle vier
-  de toevoeg/bewerk-formulieren. Fix: getter/setter-methode per component (`nvModel`/`editModel`/
-  `formModel`/`njModel`); Alpine's `x-model` honoreert een `{get, set}`-paar en parset de
-  assignment-string dan nooit. Guard: `AlpineCspBindingTest` (statisch, scant alle blades) —
-  geverifieerd dat hij op de oude code rood is. De e2e CSP-specs misten dit omdat die alleen
-  page-load checken, niet interactie. Doc: `docs/alpine-csp-migration.md` → "De assignment-regel".
-
-- **15/16-07 — alle MD-docs binnen het KB-indexvenster** (`34ce77ad`..`01f37106`, 23 docs → index +
-  deeldocs; docs 48 → ~193). **Les:** de KB-norm is tékens, niet regels — de indexer embed de eerste
-  8000 tekens, de rest is onvindbaar. Meet met `wc -c`, streef naar ~4000. Recept + status:
-  `.claude/plan-md-splitsing.md`.
-- **15-07 — Device Toegangen mat-rij: één label per rij** (`a6d98d3d`, prod). Codes en knoppen waren
-  twee losse kolommen naast elkaar, dus een schermregel las
-  `Mat interface | HQ6QALCGS9AQ | LCD | Kort Volledig Koppel TV` — twee labels op één regel. Eerst
-  de linkerkolom omdraaien hielp niet (label dubbel); de kolommen moesten samen. Nu één rij = label
-  + code + knoppen. **Niet weer uit elkaar trekken.** LCD-QR weg: een TV heeft geen camera.
-  Doc: `docs/2-FEATURES/SCOREBORD/TV-LCD-URLS.md`.
-- **15-07 — Scoreboard-API security** (`f3445e46`, `34bd9549`, prod). Vier lekken: `/result` scoopte
-  niet op het toernooi van het token (elk token kon élk toernooi schrijven); `/event` broadcastte het
-  hele `DeviceToegang`-record incl. `api_token` op een publiek kanaal; **Reset nulde `api_token`
-  niet** (gereset apparaat schreef door); geen rate limit → nu 120/min per token (niet per IP: één
-  NAT-IP per zaal). Review:
+  Fix: getter/setter-methode per component (`nvModel`/`editModel`/`formModel`/`njModel`).
+  Guard: `AlpineCspBindingTest` (statisch, scant alle blades). Doc: `docs/alpine-csp-migration.md`
+  → "De assignment-regel". **17-07: categorie toevoegen via Instellingen werkte** — indirect bewijs
+  dat de fix het doet, maar de vier formulieren zelf zijn nog niet stuk voor stuk getest.
+- **15-07 — Scoreboard-API security** (`f3445e46`, `34bd9549`, prod). Vier lekken dicht (toernooi-scope
+  op `/result`, `api_token` lekte via een publiek kanaal, Reset nulde het token niet, geen rate limit
+  → nu 120/min per token, niet per IP: één NAT-IP per zaal). Review:
   `HavunCore/docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
   **Bewust:** Reverb-kanalen blijven publiek (Henk: "prima, als je de url weet").
 - **03-07 — HavunClub-koppeling live op prod**: weegkaart-lookup, judoka-upsert, inschrijvingen,
   resultaten, school-portal. Contract: `HavunCore/docs/kb/contracts/havunclub-koppelingen.md`.
 
 ## Vaste context voor dit project
-
 - Artisan altijd met `cd laravel &&` prefix.
 - Auth guard is `organisator` — **niet** `web`.
 - DB: SQLite lokaal, MySQL productie. **Nooit tests draaien op staging/productie.**

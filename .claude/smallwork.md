@@ -2,6 +2,15 @@
 
 > Kleine bugs/typo's die geen /arch of plan nodig hebben. Log + fix + klaar.
 
+## 17-07-2026
+- **Poules: waarschuwing "X judoka's niet gecategoriseerd" stond er twee keer** (`f414be79`) —
+  twee losse blokken in `poule/index.blade.php`, elk met een eigen `countNietGecategoriseerd()`,
+  dus ook twee keer dezelfde telling per pageload. De bovenste gehouden: die staat bij de
+  overlap-waarschuwing en verdwijnt tijdens lockdown, wat de onderste negeerde. Wel de betere
+  tekst en de deeplink (`#categorieen`) van de onderste overgenomen. **Niet weer splitsen.**
+- **Upgrade-pagina beloofde "€10 per 50 judoka's"** — klopte al niet sinds de trede 401-500
+  (100 breed, +€20). Nu "€0,20 per judoka", wat de werkelijke regel is voor élke trede.
+
 ## 15-07-2026
 - **Device Toegangen — mat-rij: LCD/Mat omgedraaid + zinloze LCD-QR** —
   `toernooi/partials/device-toegangen.blade.php`. Links stond de code-kolom als LCD-boven /
