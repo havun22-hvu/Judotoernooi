@@ -141,7 +141,7 @@
                         class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
                     Deelnemers
                 </button>
-                <button @click="activeTab = 'favorieten'; loadFavorieten()"
+                <button @click="openFavorietenTab()"
                         :class="activeTab === 'favorieten' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
                         class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition relative whitespace-nowrap text-sm sm:text-base">
                     <span class="hidden sm:inline">Mijn </span>Favorieten
@@ -421,17 +421,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.groen.wit?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.groen.wit ? mat.groen.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.wit?.club || ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.wit ? mat.groen.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.groen.blauw?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.groen.blauw ? mat.groen.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.blauw?.club || ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.blauw ? mat.groen.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -448,17 +448,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.geel.wit?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.geel.wit ? mat.geel.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.wit?.club || ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.wit ? mat.geel.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.geel.blauw?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.geel.blauw ? mat.geel.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.blauw?.club || ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.blauw ? mat.geel.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -475,17 +475,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.blauw.wit?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.blauw.wit ? mat.blauw.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.wit?.club || ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.wit ? mat.blauw.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.blauw.blauw?.naam || '?'"></span>
+                                            <span class="font-medium" x-text="mat.blauw.blauw ? mat.blauw.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.blauw?.club || ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.blauw ? mat.blauw.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -889,7 +889,7 @@
                         <button @click="openScorebord(mat.nummer)"
                                 class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 text-center hover:from-blue-700 hover:to-blue-800 transition">
                             <div class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></div>
-                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="mat.groen?.wit?.naam + ' vs ' + mat.groen?.blauw?.naam"></div>
+                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="(mat.groen && mat.groen.wit ? mat.groen.wit.naam : '?') + ' vs ' + (mat.groen && mat.groen.blauw ? mat.groen.blauw.naam : '?')"></div>
                             <div x-show="!mat.groen" class="text-blue-300 text-xs mt-1">{{ __('Wacht op wedstrijd') }}</div>
                         </button>
                     </template>
@@ -1379,6 +1379,13 @@
 
                 getFirstFavorietId() {
                     return this.favorieten.length > 0 ? this.favorieten[0] : null;
+                },
+
+                // Wrapper because compound @click (assignment + method call) fails silently
+                // on the @alpinejs/csp build. Everything on `this` is fine to touch here.
+                openFavorietenTab() {
+                    this.activeTab = 'favorieten';
+                    this.loadFavorieten();
                 },
 
                 async loadFavorieten() {
