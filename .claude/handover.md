@@ -52,6 +52,18 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — WhatsApp's link-preview brandde device-toegangslinks op.** Symptoom: "toegang al aan een
+  ander apparaat gekoppeld" op een link die niemand had geopend. Nginx-log bewees het:
+  `"GET …/toegang/{code}" 302 "WhatsApp/2.2628.101 W"`, 2 min vóór de 404 van de echte browser.
+  De messenger haalt elke gedeelde link zelf op voor een preview en liep door `show()` → `bind()`.
+  Dit raakt élke klant: `TOEGANG.md` schríjft WhatsApp-delen voor als de normale flow. Fix:
+  `show()` bindt alleen nog bij `Sec-Fetch-Mode: navigate` (echte browsernavigatie); al het andere
+  krijgt een bevestigpagina (`pages/toegang/bevestig.blade.php`) met een knop → `POST
+  toegang/{code}/koppel`. Bewust geen UA-blacklist (mist de volgende messenger; WhatsApp stuurt zelf
+  `Accept: text/html`). Guard: `DeviceBindingConfirmTest` (5 tests, geverifieerd rood zonder de fix).
+  Doc: `INTERFACES/TOEGANG.md` → "Alleen een echte browser-navigatie bindt".
+  **NB:** de eerdere aanname dat de scoreboard-app het slot pakte was fout — de app zet alleen
+  `api_token` via `/api/scoreboard/auth`, raakt `device_token` niet.
 - **17-07 — LCD toonde 3:00 bij een wedstrijd van 4 minuten.** De views renderden
   `floor($toernooi->getMatchDuration() / 60) . ':00'` — de toernooi-brede default i.p.v. de
   `shiai_time` van de categorie, die de app via de API wél kreeg. Bijvangst: die `floor(…):00` gooide

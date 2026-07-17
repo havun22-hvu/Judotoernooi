@@ -803,6 +803,9 @@ Route::prefix('{organisator}/{toernooi}')->group(function () {
         // Automatic device binding — the 12-char code in the URL is the secret.
         // Throttled to mitigate brute-force attempts against the code itself.
         Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show')->middleware('throttle:30,1');
+        // Explicit bind from the confirmation page (non-browser clients, e.g. a
+        // WhatsApp link-preview fetch, land there instead of auto-binding).
+        Route::post('{code}/koppel', [DeviceToegangController::class, 'koppel'])->name('koppel')->middleware('throttle:30,1');
     });
 
     // Device-bound interfaces

@@ -31,6 +31,51 @@ class DeviceToegangController extends Controller
             return $this->redirectToInterface($toegang);
         }
 
+        // Deze links worden via WhatsApp gedeeld, en zulke diensten halen elke
+        // link eerst zelf op voor een preview. Zo'n fetch mag de binding niet
+        // claimen — anders is de link dood voor de vrijwilliger die hem krijgt.
+        // Alleen een echte browser-navigatie bindt automatisch; al het andere
+        // moet eerst op de knop drukken. Zie TOEGANG.md.
+        if (!$this->isBrowserNavigatie($request)) {
+            return response()->view('pages.toegang.bevestig', [
+                'toegang' => $toegang,
+                'organisatorSlug' => $organisator,
+                'toernooiSlug' => $toernooi,
+            ]);
+        }
+
+        return $this->bindDevice($request, $toegang);
+    }
+
+    /**
+     * Bind after an explicit tap on the confirmation page. A link preview fetch
+     * never gets here: it does not POST, and it does not carry a CSRF token.
+     */
+    public function koppel(Request $request, string $organisator, string $toernooi, string $code)
+    {
+        $toegang = DeviceToegang::where('code', $code)->first();
+
+        if (!$toegang) {
+            return $this->vrijwilligerError('Deze link is niet meer actief. Vraag een nieuwe link bij de jurytafel.');
+        }
+
+        return $this->bindDevice($request, $toegang);
+    }
+
+    /**
+     * A browser navigating to a URL sends Sec-Fetch-Mode: navigate; a link
+     * preview fetch does not. Deliberately not a User-Agent blacklist: that
+     * misses the next messenger, and WhatsApp does send Accept: text/html —
+     * it wants the og-tags. Browsers too old for the header (Safari < 16.4)
+     * fall through to the confirmation page and bind via the button.
+     */
+    private function isBrowserNavigatie(Request $request): bool
+    {
+        return $request->header('Sec-Fetch-Mode') === 'navigate';
+    }
+
+    private function bindDevice(Request $request, DeviceToegang $toegang)
+    {
         // De ingelogde organisator/beheerder van dit toernooi mag een toegang
         // altijd openen en de binding overnemen (bv. om mat/LCD op een ander
         // apparaat te gebruiken of te testen). Voor vrijwilligers (niet ingelogd)

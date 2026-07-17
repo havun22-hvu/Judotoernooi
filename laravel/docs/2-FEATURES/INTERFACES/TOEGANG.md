@@ -76,6 +76,29 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 4. Eerste keer: opent URL → device wordt automatisch gebonden
 5. Daarna: device wordt herkend → direct naar interface
 
+### Alleen een echte browser-navigatie bindt
+
+Stap 4 bindt **alleen** als de request `Sec-Fetch-Mode: navigate` stuurt — dat doet een browser
+waarin iemand de link opent, en verder niemand. Een client zonder dat signaal krijgt een
+bevestigingspagina met een knop ("Dit apparaat koppelen", `POST toegang/{code}/koppel`) en bindt
+pas ná die klik.
+
+> **Was kapot (juli 2026):** de link wordt via WhatsApp gedeeld — en WhatsApp haalt elke link
+> eerst zelf op om een preview te maken. Die crawler liep door `show()` heen en **claimde de
+> binding**; de vrijwilliger kreeg daarna "al aan een ander apparaat gekoppeld" op een link die
+> nooit iemand had geopend. Bewijs stond in de nginx-log: `"GET …/toegang/{code}" 302
+> "WhatsApp/2.2628.101 W"`, twee minuten vóór de 404 van de echte browser. Google-Read-Aloud deed
+> hetzelfde. Elke via WhatsApp gedeelde link was dus eenmalig dood — precies de flow die stap 3
+> voorschrijft.
+
+**Waarom `Sec-Fetch-Mode` en niet de User-Agent of `Accept`:** een UA-blacklist mist de volgende
+crawler (Signal, Telegram, Slack, …), en WhatsApp stúúrt `Accept: text/html` — het wíl HTML voor de
+og-tags. `Sec-Fetch-Mode: navigate` is een positief signaal dat geen enkele link-preview-fetch zet.
+Browsers zonder die header (Safari < 16.4) vallen op de knop terug, dus ze kunnen nog steeds koppelen.
+
+**De knop is geen extra beveiliging** — de 12-teken code blijft het geheim. Hij scheidt alleen
+"een machine haalt deze URL op" van "een mens opent deze link".
+
 ### Beheer (Instellingen → Organisatie)
 - Toegangen aanmaken/verwijderen per rol
 - Device status zien (gebonden / wachtend)
