@@ -3,6 +3,8 @@ title: Start Session Command
 type: claude
 scope: judotoernooi
 last_check: 2026-04-22
+
+> **Deploy-discipline:** Codeer lokaal. Staging is een poort, geen werkplek. Eén atomaire feature/fix = één staging-test = één production-deploy — zelfde moment. Zodra staging groen is: direct production-knop klikken, niet uitstellen.
 ---
 
 # Start Session Command
