@@ -170,9 +170,9 @@
             line-height: 1;
             color: #EF4444;
             background: #111827;
-            padding: 0.4vh 1vw;
-            border-radius: 6px;
-            min-width: clamp(36px, 6vw, 110px);
+            padding: 1.6vh 0.7vw;
+            border-radius: 8px;
+            min-width: clamp(32px, 5vw, 90px);
             text-align: center;
         }
 
