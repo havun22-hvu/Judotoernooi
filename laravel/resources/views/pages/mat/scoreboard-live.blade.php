@@ -128,7 +128,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin-top: -12vh;
+            /* Scores starten net onder de onderkant van de timer-box. */
+            margin-top: -2vh;
             position: relative;
             z-index: 1;
         }
@@ -468,7 +469,7 @@
                 <div class="timer-side half-{{ $blauwRechts ? 'blauw' : 'wit' }}"></div>
                 <div class="timer-center">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                    <div class="timer" id="timer-display">{{ floor(($toernooi->getMatchDuration()) / 60) }}:00</div>
+                    <div class="timer" id="timer-display">{{ $initieleWedstrijdtijd }}</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
                 </div>
                 <div class="timer-side half-{{ $blauwRechts ? 'wit' : 'blauw' }}"></div>
