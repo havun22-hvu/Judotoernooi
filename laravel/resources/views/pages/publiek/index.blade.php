@@ -143,10 +143,10 @@
                 </button>
                 <button @click="openFavorietenTab()"
                         :class="activeTab === 'favorieten' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition relative whitespace-nowrap text-sm sm:text-base">
-                    <span class="hidden sm:inline">Mijn </span>Favorieten
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base inline-flex items-center gap-1.5">
+                    <span><span class="hidden sm:inline">Mijn </span>Favorieten</span>
                     <span x-show="favorieten.length > 0"
-                          class="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                          class="bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full min-w-[1.25rem] h-5 px-1.5 inline-flex items-center justify-center"
                           x-text="favorieten.length"></span>
                 </button>
                 @if($poulesGegenereerd)
