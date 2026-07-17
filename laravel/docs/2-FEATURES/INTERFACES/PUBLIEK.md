@@ -137,6 +137,26 @@ In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
 - Groene banner: "🥋 NU! [Naam] is aan het vechten!"
 - Gele banner: "⚡ Maak je klaar! [Naam] is bijna aan de beurt"
 
+### Push-meldingen bij favorieten
+
+Bij favorieten stuurt de app een browsermelding zodra een favoriet **klaar moet staan** (geel) of
+**aan de beurt** is (groen). `checkAndNotify()` vergelijkt elke Reverb-update met `notifiedState`
+(in localStorage, zodat een herladen niet dubbel meldt) en roept `toonMelding()` aan.
+
+**Melden gaat via de service worker, niet via `new Notification()`.** Android Chrome verbiedt de
+Notification-constructor (`Illegal constructor`) en eist `registration.showNotification()`. De
+`toonMelding()`-helper haalt daarom `navigator.serviceWorker.ready` op en gebruikt
+`showNotification`; alleen desktop zonder service worker valt terug op de constructor. `sw.js` heeft
+een `notificationclick`-handler die de open tab focust (of `/` opent).
+
+> **Was kapot (juli 2026):** de code deed `new Notification(...)` in een `try/catch` die de fout stil
+> in `console.log` gooide → op Android verscheen **nooit** een melding, zonder zichtbaar spoor.
+
+**Diagnose zonder console.** Een tablet heeft geen DevTools. De "Aanzetten"-knop toont daarom bij
+elke afloop een `notificatieStatus`-regel onder de banner: geblokkeerd (permission `denied`), geen
+toestemming (`default`), browser zonder ondersteuning (bijv. een in-app webview), of een fout bij
+het tonen. Blijft de banner staan zonder tekst? Dan werd de knop niet aangeroepen (Alpine/CSP).
+
 ### Real-time Updates via Reverb
 
 De publiek app ontvangt real-time updates via WebSockets (Laravel Reverb):

@@ -3,7 +3,8 @@
 // v1.4.0 - 2026-03-30: Biometric login fix, QR scanner PWA
 // v1.5.0 - 2026-06-11: CSP fix (Vite nonce, Alpine csp migration) — force fresh assets
 // v1.5.1 - 2026-06-25: force fresh assets (homepage mobile hardening + security sweep)
-const VERSION = '1.5.1';
+// v1.5.2 - 2026-07-17: favorieten-meldingen via showNotification (Android) + notificationclick
+const VERSION = '1.5.2';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -57,6 +58,19 @@ self.addEventListener('activate', (event) => {
                     });
                 });
             });
+        })
+    );
+});
+
+// Notification click — focus an open toernooi tab, otherwise open one.
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+            for (const client of clients) {
+                if ('focus' in client) return client.focus();
+            }
+            if (self.clients.openWindow) return self.clients.openWindow('/');
         })
     );
 });

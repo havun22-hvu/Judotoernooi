@@ -52,6 +52,17 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — favorieten-meldingen kwamen nooit op Android.** `checkAndNotify()` deed
+  `new Notification(...)` in een `try/catch` die de fout stil in `console.log` gooide — en Android
+  Chrome verbiedt die constructor (`Illegal constructor`), dus nul meldingen, geen spoor. Fix:
+  `toonMelding()`-helper via `navigator.serviceWorker.ready` → `registration.showNotification()`;
+  desktop zonder SW valt terug op de constructor. `sw.js` → v1.5.2 met een `notificationclick`-handler.
+  **Knop "Aanzetten" deed ogenschijnlijk niets** (permission-popup verscheen niet): oorzaak nog niet
+  hard vastgesteld — een tablet heeft geen console. Daarom toont de knop nu een zichtbare
+  `notificatieStatus`-regel onder de banner (geblokkeerd / geen toestemming / geen ondersteuning /
+  toon-fout). **Wacht op Henk's hertest op de tablet**: die tekst wijst de oorzaak aan. Blijft de
+  banner leeg-zonder-tekst staan, dan werd de `@click` niet aangeroepen (Alpine/CSP).
+  Bestand: `pages/publiek/index.blade.php`, doc: `INTERFACES/PUBLIEK.md`.
 - **17-07 — WhatsApp's link-preview brandde device-toegangslinks op.** Symptoom: "toegang al aan een
   ander apparaat gekoppeld" op een link die niemand had geopend. Nginx-log bewees het:
   `"GET …/toegang/{code}" 302 "WhatsApp/2.2628.101 W"`, 2 min vóór de 404 van de echte browser.

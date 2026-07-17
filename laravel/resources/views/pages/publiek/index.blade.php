@@ -711,6 +711,8 @@
                         Aanzetten
                     </button>
                 </div>
+                <p x-show="notificatieStatus" x-cloak x-text="notificatieStatus"
+                   class="text-red-700 text-xs mt-2"></p>
             </div>
             <div x-show="favorieten.length > 0 && notificatiesAan" class="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
                 <div class="flex items-center gap-2 text-green-700 text-sm">
@@ -1200,6 +1202,7 @@
                 selectedMatId: null,
                 scorebordMatNummer: null,
                 notificatiesAan: false,
+                notificatieStatus: '', // Zichtbare uitleg als meldingen niet aangaan (vervangt de console op tablets)
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
                 isConnected: false, // WebSocket verbinding status
                 isRefreshing: false, // Bezig met forceren refresh
@@ -1426,21 +1429,56 @@
 
                 // Vraag notificatie permissie
                 async vraagNotificatiePermissie() {
+                    this.notificatieStatus = '';
+
                     if (!('Notification' in window)) {
-                        alert('Je browser ondersteunt geen notificaties');
+                        this.notificatieStatus = 'Deze browser ondersteunt geen meldingen. Open de pagina in Chrome (niet vanuit een app-venster).';
                         return;
                     }
 
-                    const permission = await Notification.requestPermission();
+                    let permission;
+                    try {
+                        permission = await Notification.requestPermission();
+                    } catch (e) {
+                        this.notificatieStatus = 'Meldingen aanvragen mislukte: ' + (e.message || e);
+                        return;
+                    }
+
                     this.notificatiesAan = permission === 'granted';
 
                     if (permission === 'granted') {
                         this.speelGeluid('klaar');
-                        new Notification('Notificaties aan! 🔔', {
+                        await this.toonMelding('Meldingen aan! 🔔', {
                             body: 'Je krijgt nu een melding als je favoriet moet klaar staan of aan de beurt is.',
                             icon: '/icon-192x192.png',
                             tag: 'test'
                         });
+                    } else if (permission === 'denied') {
+                        this.notificatieStatus = 'Meldingen zijn geblokkeerd. Zet ze aan via het slotje (of de drie puntjes) in de adresbalk → Instellingen → Meldingen → Toestaan.';
+                    } else {
+                        this.notificatieStatus = 'Geen toestemming gegeven. Tik nogmaals op Aanzetten en kies "Toestaan".';
+                    }
+                },
+
+                // Toon een melding. Android Chrome verbiedt de Notification-constructor
+                // ("Illegal constructor") en eist de service worker; desktop zonder SW
+                // valt terug op de constructor. Zie PUBLIEK.md.
+                async toonMelding(title, options) {
+                    try {
+                        if ('serviceWorker' in navigator) {
+                            const reg = await navigator.serviceWorker.ready;
+                            await reg.showNotification(title, options);
+                            return true;
+                        }
+                    } catch (e) {
+                        // val door naar de constructor hieronder
+                    }
+                    try {
+                        new Notification(title, options);
+                        return true;
+                    } catch (e) {
+                        this.notificatieStatus = 'Melding tonen mislukte: ' + (e.message || e);
+                        return false;
                     }
                 },
 
@@ -1492,18 +1530,14 @@
                         geluid = 'klaar';
                     }
 
-                    // Browser notificatie
-                    try {
-                        new Notification(title, {
-                            body: body,
-                            icon: '/icon-192x192.png',
-                            tag: `${naam}-${type}`,
-                            requireInteraction: true,
-                            vibrate: [200, 100, 200]
-                        });
-                    } catch (e) {
-                        console.log('Notification error:', e);
-                    }
+                    // Browser notificatie (via service worker op Android)
+                    this.toonMelding(title, {
+                        body: body,
+                        icon: '/icon-192x192.png',
+                        tag: `${naam}-${type}`,
+                        requireInteraction: true,
+                        vibrate: [200, 100, 200]
+                    });
 
                     // Geluid + vibratie
                     this.speelGeluid(geluid);
