@@ -833,6 +833,42 @@
                                         </div>
                                     </div>
                                 </div>
+                                {{-- Eliminatie: geen ranglijst maar de komende partij / eindplaats van de favoriet --}}
+                                <template x-if="poule.type === 'eliminatie'">
+                                    <div class="p-4">
+                                        <template x-if="favorietEliminatie(poule).eindpositie">
+                                            <div class="flex items-center gap-2 text-lg font-bold text-gray-800">
+                                                <span>🏅</span>
+                                                <span>{{ __('Eindplaats') }}: <span x-text="favorietEliminatie(poule).eindpositie"></span></span>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="!favorietEliminatie(poule).eindpositie && favorietEliminatie(poule).ronde_naam">
+                                            <div>
+                                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">{{ __('Volgende partij') }}</div>
+                                                <div class="flex items-baseline gap-2 flex-wrap">
+                                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm font-semibold" x-text="favorietEliminatie(poule).ronde_naam"></span>
+                                                    <template x-if="favorietEliminatie(poule).tegenstander">
+                                                        <span class="text-gray-800 font-medium">
+                                                            <span x-text="favorietEliminatie(poule).tegenstander.naam"></span>
+                                                            <span x-show="favorietEliminatie(poule).tegenstander.club" class="text-gray-500 text-sm font-normal" x-text="'(' + favorietEliminatie(poule).tegenstander.club + ')'"></span>
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="!favorietEliminatie(poule).tegenstander">
+                                                        <span class="text-gray-500 italic">{{ __('nog niet bekend') }}</span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="!favorietEliminatie(poule).eindpositie && !favorietEliminatie(poule).ronde_naam && favorietEliminatie(poule).uitgeschakeld">
+                                            <div class="text-gray-500">{{ __('Uitgeschakeld') }}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                {{-- Round-robin: de bestaande ranglijst met groen/geel highlight --}}
+                                <template x-if="poule.type !== 'eliminatie'">
                                 <div class="divide-y">
                                     <template x-for="(judoka, index) in sortJudokas(poule.judokas)" :key="judoka.id">
                                         <div class="px-3 py-2 flex justify-between items-center"
@@ -863,6 +899,7 @@
                                         </div>
                                     </template>
                                 </div>
+                                </template>
                             </div>
                         </template>
 
@@ -1382,6 +1419,14 @@
 
                 getFirstFavorietId() {
                     return this.favorieten.length > 0 ? this.favorieten[0] : null;
+                },
+
+                // Bracket-info van de actieve favoriet in een eliminatie-poule.
+                // Geeft altijd een object terug (nooit null) zodat de blade-expressies
+                // veilig .eindpositie/.ronde_naam/.tegenstander mogen lezen onder CSP.
+                favorietEliminatie(poule) {
+                    const fav = poule.judokas.find(j => j.id === this.activeFavoriet);
+                    return (fav && fav.eliminatie) ? fav.eliminatie : {};
                 },
 
                 // Wrapper because compound @click (assignment + method call) fails silently

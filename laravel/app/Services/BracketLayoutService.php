@@ -65,6 +65,23 @@ class BracketLayoutService
     ];
 
     /**
+     * Leesbare naam voor een ronde-sleutel (bv. 'kwartfinale' → '1/4').
+     * Onbekende sleutels vallen terug op een opgeschoonde variant.
+     */
+    public static function rondeNaam(string $ronde): string
+    {
+        return self::RONDE_NAMEN[$ronde] ?? str_replace(['b_', '_'], ['B ', ' '], $ronde);
+    }
+
+    /**
+     * Sorteervolgorde van een ronde (lager = eerder in het toernooi).
+     */
+    public static function rondeVolgorde(string $ronde): int
+    {
+        return self::RONDE_VOLGORDE[$ronde] ?? 99;
+    }
+
+    /**
      * Bereken de volledige A-bracket layout.
      *
      * @param array $wedstrijden Array van wedstrijd-arrays (uit getSchemaVoorMat)

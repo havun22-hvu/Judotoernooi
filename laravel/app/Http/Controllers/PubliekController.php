@@ -10,6 +10,7 @@ use App\Models\Blok;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\BracketLayoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -512,12 +513,61 @@ class PubliekController extends Controller
                             'wp' => $wp,
                             'jp' => $jp,
                             'eindpositie' => $j->pivot->eindpositie ?? null,
+                            // Alleen favorieten in een eliminatie-poule krijgen bracket-info;
+                            // round-robin blijft ongemoeid (de kaart toont daar de ranglijst).
+                            'eliminatie' => ($poule->type === 'eliminatie' && in_array($j->id, $judokaIds))
+                                ? $this->bouwEliminatieInfo($poule, $j)
+                                : null,
                         ];
                     })->sortBy('positie')->values(),
                 ];
             });
 
         return response()->json(['poules' => $poules]);
+    }
+
+    /**
+     * Bracket-info voor één favoriet in een eliminatie-poule: de eerstvolgende
+     * partij (ronde + tegenstander), of — als alles gespeeld is — de eindplaats
+     * bij een medaille, anders 'uitgeschakeld'. Round-robin gebruikt dit niet.
+     */
+    private function bouwEliminatieInfo(Poule $poule, Judoka $favoriet): array
+    {
+        $info = ['ronde_naam' => null, 'tegenstander' => null, 'eindpositie' => null, 'uitgeschakeld' => false];
+
+        // Eerstvolgende niet-gespeelde partij van de favoriet, vroegste ronde eerst.
+        $komende = $poule->wedstrijden
+            ->filter(fn($w) => !$w->is_gespeeld
+                && ($w->judoka_wit_id === $favoriet->id || $w->judoka_blauw_id === $favoriet->id))
+            ->sortBy(fn($w) => BracketLayoutService::rondeVolgorde($w->ronde ?? ''))
+            ->first();
+
+        if ($komende) {
+            $info['ronde_naam'] = BracketLayoutService::rondeNaam($komende->ronde ?? '');
+            $tegenstanderId = $komende->judoka_wit_id === $favoriet->id
+                ? $komende->judoka_blauw_id
+                : $komende->judoka_wit_id;
+            // Tegenstander zit in dezelfde poule (al geladen incl. club); NULL = vorige ronde
+            // nog niet gespeeld → de blade toont 'nog niet bekend'.
+            $tegenstander = $tegenstanderId ? $poule->judokas->firstWhere('id', $tegenstanderId) : null;
+            $info['tegenstander'] = $tegenstander
+                ? ['naam' => $tegenstander->naam, 'club' => $tegenstander->club?->naam]
+                : null;
+
+            return $info;
+        }
+
+        // Geen komende partij: medaille (1/2/3) tonen, anders uitgeschakeld (geen plaats).
+        $eindpositie = $favoriet->pivot->eindpositie !== null ? (int) $favoriet->pivot->eindpositie : null;
+        if (in_array($eindpositie, [1, 2, 3], true)) {
+            $gedeeldBrons = $eindpositie === 3
+                && $poule->judokas->filter(fn($j) => (int) ($j->pivot->eindpositie ?? 0) === 3)->count() > 1;
+            $info['eindpositie'] = $gedeeldBrons ? '3e (gedeeld)' : $eindpositie . 'e';
+        } else {
+            $info['uitgeschakeld'] = true;
+        }
+
+        return $info;
     }
 
     /**

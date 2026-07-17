@@ -137,6 +137,23 @@ In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
 - Groene banner: "🥋 NU! [Naam] is aan het vechten!"
 - Gele banner: "⚡ Maak je klaar! [Naam] is bijna aan de beurt"
 
+### Eliminatie-poules in de favorieten-tab
+
+Een eliminatie-poule heeft geen ranglijst maar een bracket, dus de round-robin-kaart (positie/WP/JP)
+past er niet op. Voor `poule.type === 'eliminatie'` toont de kaart daarom een compacte variant voor
+de **actieve favoriet**:
+
+- **Eindplaats** (🏅) als de favoriet een medaille heeft — alleen 1e/2e/3e, en `3e (gedeeld)` bij
+  meerdere bronzen. Uitgeschakeld zonder medaille → "Uitgeschakeld", géén plaats.
+- Anders de **komende partij**: rondenaam (`1/4`, `1/2`, `Finale` — via `BracketLayoutService::
+  rondeNaam()`) + tegenstander (naam + club). Tegenstander-slot nog leeg → "nog niet bekend".
+
+`PubliekController@favorieten` verrijkt elke favoriet-judoka in een eliminatie-poule met een
+`eliminatie`-object (`bouwEliminatieInfo()`); round-robin poules krijgen `eliminatie: null` en houden
+de ranglijst-kaart. De statusbanners (blauw/geel/groen) en push-meldingen draaien op de per-judoka
+flags en werken voor beide types ongewijzigd. De blade leest de info via de component-methode
+`favorietEliminatie(poule)` (CSP-safe: geen optional chaining in Alpine-expressies).
+
 ### Push-meldingen bij favorieten
 
 Bij favorieten stuurt de app een browsermelding zodra een favoriet **klaar moet staan** (geel) of

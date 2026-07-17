@@ -52,6 +52,17 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — favorieten-tab toonde niets voor een favoriet in een eliminatie-poule.** Het
+  favorieten-endpoint bouwt een round-robin ranglijst (positie/WP/JP); een eliminatie-poule heeft
+  geen ranglijst → lege kaart (namen wel, poule niet). Nu krijgt elke favoriet in een
+  eliminatie-poule een `eliminatie`-object (`PubliekController::bouwEliminatieInfo()`): komende partij
+  (rondenaam via nieuwe publieke `BracketLayoutService::rondeNaam()`/`rondeVolgorde()` + tegenstander,
+  of "nog niet bekend"), óf eindplaats bij medaille (1e/2e/`3e (gedeeld)`; uitgeschakeld zonder
+  medaille = geen plaats). Blade: `x-if` op `poule.type`, eliminatie-variant via component-methode
+  `favorietEliminatie(poule)` (CSP-safe). Round-robin ongemoeid. Guard: `FavorietenEliminatieTest`
+  (6 tests, 5 geverifieerd rood zonder de feature). Doc: `INTERFACES/PUBLIEK.md`. **Nog niet op prod;
+  door Henk te bekijken op staging.** Blueprint (Gemini-flash) was onbruikbaar (verzon Deelnemer-model,
+  cookies, x-else) → zelf herschreven op de echte codebase.
 - **17-07 — favorieten-meldingen kwamen nooit op Android.** `checkAndNotify()` deed
   `new Notification(...)` in een `try/catch` die de fout stil in `console.log` gooide — en Android
   Chrome verbiedt die constructor (`Illegal constructor`), dus nul meldingen, geen spoor. Fix:
