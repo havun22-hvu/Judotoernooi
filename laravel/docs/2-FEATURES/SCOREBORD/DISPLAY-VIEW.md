@@ -21,6 +21,26 @@ last_check: 2026-07-15
 4. Geen knoppen, alleen weergave
 5. Gespiegeld t.o.v. bediening (Wit links, Blauw rechts)
 
+### Wedstrijdtijd komt uit de categorie, niet uit het toernooi
+
+De klok hoort **altijd** `getMatchDurationForCategorie($poule->categorie_key)` te tonen — de
+`shiai_time` van de categorie. `getMatchDuration()` (= `wedstrijdtijd ?? 180`) is de toernooi-brede
+fallback en geldt alleen als er géén wedstrijd op de mat staat.
+
+`MatController::scoreboardViewData()` zet `initieleWedstrijdtijd` klaar (al `mm:ss`-geformatteerd);
+LCD en mobiel renderen dat allebei. Wijzig je de klok, doe het dáár — niet in de views.
+
+> **Was kapot (juli 2026):** de views renderden `floor($toernooi->getMatchDuration() / 60) . ':00'`.
+> Bij een categorie met 4 minuten toonde de app 4:00 en de LCD 3:00. Twee fouten tegelijk: de
+> toernooi-default i.p.v. de categorie, én `floor(…/60) . ':00'` gooide de seconden weg (210s → 3:00).
+> De engine zette `matchDuration` uit `initialMatch.match_duration` wél goed, maar riep
+> `updateTimerDisplay()` niet aan → de server-gerenderde tijd bleef in beeld tot het eerste
+> timer-event. Guard: 3 tests in `ScoreboardPublicTest`.
+
+**`eind_optie` en `golden_score_duur` leest de display bewust niet.** `ScoreboardNotifier` stuurt ze
+mee, maar het display is passief: het volgt de klok van de bediening-app en telt bij golden score op
+tot de app zegt dat het stopt. Wie hier logica op bouwt, bouwt de scheidsrechter na in de browser.
+
 ### Voordelen web display
 - TV/LCD hoeft alleen browser te openen (geen APK installeren)
 - Werkt op elk device met browser

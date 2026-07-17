@@ -4,7 +4,11 @@ type: claude
 scope: judotoernooi
 last_check: 2026-04-22
 
-> **Deploy-discipline:** Codeer lokaal. Staging is een poort, geen werkplek. Eén atomaire feature/fix = één staging-test = één production-deploy — zelfde moment. Zodra staging groen is: direct production-knop klikken, niet uitstellen.
+> **Deploy-discipline:** Codeer lokaal, tenzij de feature een externe afhankelijkheid heeft
+> die lokaal niet na te bootsen is (QR-scanner, WebAuthn/biometrie, push-notificaties,
+> WebSockets op prod-infra, camera/NFC/GPS op mobiel) — dan is staging de eerste testplek.
+> **Één atomaire feature/fix = één staging-test = één production-deploy — zelfde moment.**
+> Zodra staging groen is: direct production-knop klikken, niet uitstellen naar een volgende sessie.
 ---
 
 # Start Session Command

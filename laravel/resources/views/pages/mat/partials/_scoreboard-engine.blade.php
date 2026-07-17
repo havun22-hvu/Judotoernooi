@@ -30,8 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const matId = @js($matId);
     const initialMatch = @js($currentMatch ?? null);
 
-    // State
-    let matchDuration = @js($toernooi->getMatchDuration());
+    // State — de duur van de lopende wedstrijd is categorie-specifiek; de
+    // toernooi-brede tijd is alleen de fallback als er geen wedstrijd staat.
+    let matchDuration = @js($currentMatch['match_duration'] ?? $toernooi->getMatchDuration());
     let timeRemaining = matchDuration;
     let isRunning = false;
     let isGoldenScore = false;
@@ -109,6 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('blauw-club').textContent = initialMatch.judoka_blauw?.club || '';
         matchDuration = initialMatch.match_duration || @js($toernooi->getMatchDuration());
         timeRemaining = matchDuration;
+        // De server-gerenderde klok toont de duur bij page load; zonder deze
+        // call blijft die staan tot het eerste timer-event binnenkomt.
+        updateTimerDisplay();
     }
 
     function formatTime(seconds) {

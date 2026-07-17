@@ -325,7 +325,7 @@
                 {{-- Center — timer + osaekomi --}}
                 <div class="center-bar">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                    <div class="timer" id="timer-display">{{ floor(($toernooi->getMatchDuration()) / 60) }}:00</div>
+                    <div class="timer" id="timer-display">{{ $initieleWedstrijdtijd }}</div>
                     <div class="golden-score-badge" id="gs-badge">GOLDEN SCORE</div>
                     <div class="osaekomi-row">
                         <span class="osaekomi-label">Osaekomi</span>

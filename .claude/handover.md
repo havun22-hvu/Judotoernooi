@@ -52,6 +52,15 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — LCD toonde 3:00 bij een wedstrijd van 4 minuten.** De views renderden
+  `floor($toernooi->getMatchDuration() / 60) . ':00'` — de toernooi-brede default i.p.v. de
+  `shiai_time` van de categorie, die de app via de API wél kreeg. Bijvangst: die `floor(…):00` gooide
+  ook de seconden weg (210s → "3:00"). De engine zette `matchDuration` uit `initialMatch` goed maar
+  riep `updateTimerDisplay()` niet aan, dus de foute server-tijd bleef staan tot het eerste
+  timer-event. Nu één bron: `MatController::scoreboardViewData()` → `initieleWedstrijdtijd`, LCD +
+  mobiel renderen dat. Guard: 3 tests (geverifieerd dat ze rood zijn zónder de fix).
+  **Niet meegenomen:** `eind_optie`/`golden_score_duur` worden door de display niet gelezen — dat is
+  bewust (passief display volgt de app), niet stuk. Doc: `SCOREBORD/DISPLAY-VIEW.md`.
 - **17-07 — "Koppel TV" gaf een netwerkfout (401): kale `auth` i.p.v. `auth:organisator`.**
   `POST /tv/link` en `GET /tv/qr/{code}` waren de enige twee routes met `->middleware('auth')` →
   default guard `web`, waar nooit iemand ingelogd is. **De test was groen en bewees de verkeerde

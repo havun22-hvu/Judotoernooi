@@ -165,12 +165,18 @@ class MatController extends Controller
         $currentMatch = $matModel ? $this->getFormattedCurrentMatch($matModel, $toernooi) : null;
         $blauwRechts = (bool) ($toernooi->mat_voorkeuren['blauw_rechts'] ?? false);
 
+        // De klok die de server rendert moet de duur van de lopende wedstrijd tonen
+        // (categorie-specifiek), niet de toernooi-brede default: die twee verschillen
+        // zodra een categorie een eigen shiai_time heeft.
+        $duur = $currentMatch['match_duration'] ?? $toernooi->getMatchDuration();
+
         return [
             'toernooi' => $toernooi,
             'matId' => $matId,
             'matNummer' => $matModel?->nummer ?? $mat,
             'currentMatch' => $currentMatch,
             'blauwRechts' => $blauwRechts,
+            'initieleWedstrijdtijd' => intdiv($duur, 60) . ':' . str_pad($duur % 60, 2, '0', STR_PAD_LEFT),
         ];
     }
 

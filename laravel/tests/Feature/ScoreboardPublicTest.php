@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\DeviceToegang;
 use App\Models\Mat;
 use App\Models\Organisator;
+use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Models\Wedstrijd;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -52,6 +54,64 @@ class ScoreboardPublicTest extends TestCase
 
         // Still renders view (mat fallback), no crash
         $response->assertStatus(200);
+    }
+
+    #[Test]
+    public function scoreboard_live_renders_the_categorie_duration_not_the_toernooi_default(): void
+    {
+        [$org, $toernooi, $mat] = $this->createToernooiWithMat();
+        $toernooi->update([
+            'wedstrijdtijd' => 180,
+            'gewichtsklassen' => ['pupillen_-30' => ['shiai_time' => 240]],
+        ]);
+
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'mat_id' => $mat->id,
+            'categorie_key' => 'pupillen_-30',
+        ]);
+        $wedstrijd = Wedstrijd::factory()->create(['poule_id' => $poule->id]);
+        $mat->update(['actieve_wedstrijd_id' => $wedstrijd->id]);
+
+        $response = $this->get("/{$org->slug}/{$toernooi->slug}/mat/scoreboard-live/1");
+
+        $response->assertStatus(200);
+        $response->assertSee('>4:00</div>', false);
+        $response->assertDontSee('>3:00</div>', false);
+    }
+
+    #[Test]
+    public function scoreboard_live_falls_back_to_the_toernooi_duration_without_an_active_match(): void
+    {
+        [$org, $toernooi] = $this->createToernooiWithMat();
+        $toernooi->update(['wedstrijdtijd' => 180]);
+
+        $this->get("/{$org->slug}/{$toernooi->slug}/mat/scoreboard-live/1")
+            ->assertStatus(200)
+            ->assertSee('>3:00</div>', false);
+    }
+
+    #[Test]
+    public function scoreboard_live_renders_a_duration_that_is_not_a_whole_minute(): void
+    {
+        [$org, $toernooi, $mat] = $this->createToernooiWithMat();
+        $toernooi->update([
+            'wedstrijdtijd' => 180,
+            'gewichtsklassen' => ['pupillen_-30' => ['shiai_time' => 210]],
+        ]);
+
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'mat_id' => $mat->id,
+            'categorie_key' => 'pupillen_-30',
+        ]);
+        $wedstrijd = Wedstrijd::factory()->create(['poule_id' => $poule->id]);
+        $mat->update(['actieve_wedstrijd_id' => $wedstrijd->id]);
+
+        // floor(210/60) . ':00' rendered 3:00 — losing the seconds entirely.
+        $this->get("/{$org->slug}/{$toernooi->slug}/mat/scoreboard-live/1")
+            ->assertStatus(200)
+            ->assertSee('>3:30</div>', false);
     }
 
     // ========================================================================
