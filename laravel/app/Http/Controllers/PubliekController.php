@@ -338,9 +338,6 @@ class PubliekController extends Controller
                 // Cleanup invalid selections (gespeelde wedstrijden)
                 $mat->cleanupGespeeldeSelecties();
 
-                // Get first unfinished (not afgeroepen) poule for display title
-                $poule = $mat->poules->whereNull('afgeroepen_at')->first();
-
                 // Collect all wedstrijden from ALL poules on this mat (including afgeroepen)
                 $alleWedstrijden = $mat->poules->flatMap(fn($p) => $p->wedstrijden);
 
@@ -358,6 +355,14 @@ class PubliekController extends Controller
                 if ($mat->gereedmaken_wedstrijd_id) {
                     $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && $w->isNogTeSpelen());
                 }
+
+                // Titel volgt de huidige wedstrijd (groen), niet een willekeurige poule op de mat:
+                // meerdere categorieën kunnen dezelfde mat delen, dus vast op "eerste niet-afgeroepen
+                // poule" zou de verkeerde categorie tonen. Fallback: geel → blauw → laatste redmiddel.
+                $huidigeWedstrijd = $groeneWedstrijd ?? $geleWedstrijd ?? $blauweWedstrijd;
+                $poule = $huidigeWedstrijd
+                    ? $mat->poules->first(fn($p) => $p->wedstrijden->contains('id', $huidigeWedstrijd->id))
+                    : $mat->poules->whereNull('afgeroepen_at')->first();
 
                 // Add judoka info to wedstrijden
                 $formatWedstrijd = function ($wedstrijd) use ($mat) {
