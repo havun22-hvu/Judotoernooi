@@ -45,6 +45,39 @@ class AlpineCspBindingTest extends TestCase
         )));
     }
 
+    /**
+     * The @alpinejs/csp evaluator is a restricted parser that does NOT support
+     * optional chaining (`?.`). An expression like `list.find(...)?.naam` throws
+     * the moment it is evaluated — and because it only evaluates when the branch
+     * is reached (e.g. a favorite reaching "klaar staan"), it silently kills the
+     * whole render at exactly the wrong moment. Local has strict CSP off, so it
+     * looks fine there.
+     *
+     * DO NOT REMOVE — this blanked the favorieten poule cards on prod
+     * (17-07-2026) whenever a favorite was on the mat.
+     */
+    #[Test]
+    public function no_view_uses_optional_chaining_in_an_alpine_expression(): void
+    {
+        $overtredingen = [];
+
+        foreach ($this->bladeFiles() as $pad) {
+            foreach (file($pad) as $nr => $regel) {
+                if (preg_match('/(?:x-[\w:.-]+|:[\w-]+|@[\w.-]+)="[^"]*\?\.[^"]*"/', $regel)) {
+                    $relatief = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $pad);
+                    $overtredingen[] = sprintf('%s:%d', $relatief, $nr + 1);
+                }
+            }
+        }
+
+        $this->assertSame([], $overtredingen, implode("\n", array_merge(
+            ['Optional chaining (?.) werkt niet in de @alpinejs/csp build en breekt de render:', ''],
+            $overtredingen,
+            ['', 'Haal de waarde op via een component-methode (JS, waar ?. wel mag),',
+                'of garandeer de waarde met de omhullende x-if en laat de ?. weg.'],
+        )));
+    }
+
     /** @return list<string> */
     private function bladeFiles(): array
     {

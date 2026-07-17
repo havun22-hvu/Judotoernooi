@@ -52,6 +52,17 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — favorieten-poulekaart bleef leeg zodra een favoriet op de mat stond.** Symptoom: namen
+  (tabs) wel, poule/klaar-staan niet. Endpoint was goed (200 + data, `match=true` in de browser).
+  Oorzaak: **optional chaining in een Alpine-expressie** — `find(...)?.naam` in de drie
+  favorieten-alerts (`index.blade.php` ~783/794/805). De `@alpinejs/csp`-evaluator kent geen `?.` en
+  gooit; de expressie evalueert pas als een favoriet in gereedmaken/klaar-staan/aan-de-beurt komt →
+  render stopt precies dan → hele kaart weg. Lokaal onzichtbaar (strikte CSP uit). Fix: `?.` weg (de
+  omhullende `x-if=some(...)` garandeert dat `find` raak is). Guard: 2e test in
+  `AlpineCspBindingTest` scant álle blades op `?.` in Alpine-attributen (geverifieerd rood met de
+  `?.` terug). Diagnose liep via een tijdelijke on-screen `favDebug()`-regel (nu verwijderd) omdat de
+  tablet geen console heeft. Doc-les: [[csp-alpine-gotchas]] — `?.` is de nieuwe naast de
+  assignment-regel.
 - **17-07 — favorieten-tab toonde niets voor een favoriet in een eliminatie-poule.** Het
   favorieten-endpoint bouwt een round-robin ranglijst (positie/WP/JP); een eliminatie-poule heeft
   geen ranglijst → lege kaart (namen wel, poule niet). Nu krijgt elke favoriet in een

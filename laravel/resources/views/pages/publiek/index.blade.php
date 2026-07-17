@@ -709,8 +709,6 @@
 
         <!-- Favorieten Tab -->
         <div x-show="activeTab === 'favorieten'" x-cloak>
-            {{-- TIJDELIJK diagnose-regel — verwijderen na het vinden van de oorzaak --}}
-            <div class="bg-black text-green-300 text-xs font-mono p-2 mb-3 rounded break-all" x-text="favDebug()"></div>
             <!-- Notificatie banner -->
             <div x-show="favorieten.length > 0 && !notificatiesAan" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <div class="flex items-center justify-between">
@@ -780,7 +778,7 @@
                                 <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg mb-3 flex items-center gap-2">
                                     <span class="text-xl">📋</span>
                                     <span class="font-bold">{{ __('Op dek') }}</span>
-                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_gereedmaken && !j.is_volgende && !j.is_aan_de_beurt)?.naam + ' {{ __('moet zich gereedmaken') }}'"></span>
+                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_gereedmaken && !j.is_volgende && !j.is_aan_de_beurt).naam + ' {{ __('moet zich gereedmaken') }}'"></span>
                                 </div>
                             </template>
                         </template>
@@ -791,7 +789,7 @@
                                 <div class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg mb-3 flex items-center gap-2 animate-pulse">
                                     <span class="text-xl">⚡</span>
                                     <span class="font-bold">{{ __('Maak je klaar!') }}</span>
-                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_volgende)?.naam + ' {{ __('is bijna aan de beurt') }}'"></span>
+                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_volgende).naam + ' {{ __('is bijna aan de beurt') }}'"></span>
                                 </div>
                             </template>
                         </template>
@@ -802,7 +800,7 @@
                                 <div class="bg-green-500 text-white px-4 py-2 rounded-lg mb-3 flex items-center gap-2">
                                     <span class="text-xl">🥋</span>
                                     <span class="font-bold">{{ __('NU!') }}</span>
-                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_aan_de_beurt)?.naam + ' {{ __('is aan het vechten!') }}'"></span>
+                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_aan_de_beurt).naam + ' {{ __('is aan het vechten!') }}'"></span>
                                 </div>
                             </template>
                         </template>
@@ -1434,15 +1432,6 @@
 
                 getFirstFavorietId() {
                     return this.favorieten.length > 0 ? this.favorieten[0] : null;
-                },
-
-                // TIJDELIJK — diagnose favorieten-tab op prod (geen console op tablet).
-                favDebug() {
-                    const types = this.favorieten.map(f => typeof f).join(',');
-                    const actief = this.activeFavoriet;
-                    const match = this.favorietenPoules.some(p => p.judokas.some(j => j.id === actief));
-                    const pouleTypes = this.favorietenPoules.map(p => p.type + '#' + p.id).join(',');
-                    return `fav=[${this.favorieten.join(',')}] types=${types} | poules=${this.favorietenPoules.length} [${pouleTypes}] | actief=${actief}(${typeof actief}) | loading=${this.loadingPoules} | match=${match}`;
                 },
 
                 // Bracket-info van de actieve favoriet in een eliminatie-poule.
