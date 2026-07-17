@@ -353,6 +353,19 @@ class MatBracketController extends Controller
 
         $pouleId = $validated['poule_id'];
 
+        // Byes bestaan alleen vóór de eerste echte wedstrijd. Zodra er één gespeeld
+        // is, is een leeg blauw-slot een ronde-2 partij die op een winnaar wacht —
+        // die mag niet als bye doorschuiven. De knop is dan al verborgen; dit is de
+        // guard erachter (stale pagina / dubbelklik). Byes tellen niet als "echt".
+        $bracketLocked = Wedstrijd::where('poule_id', $pouleId)
+            ->where('is_gespeeld', true)
+            ->where(fn($q) => $q->whereNull('uitslag_type')->orWhere('uitslag_type', '!=', 'bye'))
+            ->exists();
+
+        if ($bracketLocked) {
+            return response()->json(['success' => true, 'advanced' => 0, 'locked' => true]);
+        }
+
         // Find all bye matches (A + B): wit filled, blauw null, not yet played
         $byes = Wedstrijd::where('poule_id', $pouleId)
             ->whereNotNull('judoka_wit_id')

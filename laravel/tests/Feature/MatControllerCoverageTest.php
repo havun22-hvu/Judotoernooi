@@ -764,6 +764,34 @@ class MatControllerCoverageTest extends TestCase
             ->assertJsonFragment(['advanced' => 0]);
     }
 
+    #[Test]
+    public function advance_byes_skipped_once_a_real_match_is_played(): void
+    {
+        // Half-gevulde ronde-2 partij (wit gevuld, blauw wacht op een winnaar) —
+        // ziet eruit als een bye maar is er geen.
+        $data = $this->makePouleWithWedstrijd(
+            ['type' => 'eliminatie'],
+            ['groep' => 'A', 'ronde' => 'kwartfinale', 'judoka_blauw_id' => null, 'is_gespeeld' => false]
+        );
+
+        // Eén echte, gespeelde ronde-1 wedstrijd → bracket is locked.
+        Wedstrijd::factory()->create([
+            'poule_id' => $data['poule']->id,
+            'groep' => 'A',
+            'ronde' => 'achtste_finale',
+            'is_gespeeld' => true,
+            'uitslag_type' => 'ippon',
+        ]);
+
+        $this->actAsOrg()
+            ->postJson($this->url('mat/advance-byes'), ['poule_id' => $data['poule']->id])
+            ->assertOk()
+            ->assertJsonFragment(['advanced' => 0, 'locked' => true]);
+
+        // De half-gevulde ronde-2 partij is NIET als bye doorgeschoven.
+        $this->assertFalse($data['wedstrijd']->fresh()->is_gespeeld);
+    }
+
     // ========================================================================
     // genereerWedstrijden
     // ========================================================================

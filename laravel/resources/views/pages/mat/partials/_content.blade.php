@@ -1400,10 +1400,12 @@ document.addEventListener('alpine:init', () => {
             return poule.wedstrijden.some(w => w.is_gespeeld === true && w.uitslag_type !== 'bye');
         },
 
-        // Byes komen alleen voor in de eerste ronde van een bracket.
-        // Simpele check volstaat — geen ronde-berekening nodig.
+        // Byes bestaan alleen vóór de eerste echte wedstrijd. Zodra de bracket
+        // locked is (1 echte wedstrijd gespeeld), is een leeg blauw-slot een
+        // ronde-2 partij die op een winnaar wacht — géén bye. De knop verdwijnt dan.
         heeftOnverwerkteByes(poule, groep = 'A') {
             if (poule.type !== 'eliminatie') return false;
+            if (this.isBracketLocked(poule)) return false;
             return poule.wedstrijden.some(w =>
                 w.groep === groep && w.wit && !w.blauw && !w.is_gespeeld
             );

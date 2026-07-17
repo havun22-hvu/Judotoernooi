@@ -29,3 +29,20 @@ Voorbeeld N=54: V1=22, B-cap=16, slots=32
 
 Bye wedstrijden worden **handmatig door de hoofdjury** geregistreerd → winnaar schuift door naar B(2) WIT.
 
+### De "Byes"-knop verdwijnt zodra de eerste echte wedstrijd gespeeld is
+
+Byes bestaan **alleen vóór de eerste echte wedstrijd** (A-ronde 1 en de B-start). Een leeg
+blauw-slot in een latere ronde is géén bye maar een partij die op een winnaar wacht — die mag niet
+doorschuiven.
+
+- **Knop-zichtbaarheid:** `heeftOnverwerkteByes()` geeft `false` zodra `isBracketLocked(poule)` waar
+  is (1 echte wedstrijd gespeeld; byes tellen niet). De knop verdwijnt dan.
+- **Backend-guard:** `MatBracketController::doAdvanceByes()` weigert (`advanced: 0, locked: true`)
+  als de bracket locked is — zodat een stale pagina of dubbelklik geen ronde-2-partij als bye
+  doorschuift.
+
+> **Was kapot (juli 2026):** de knop-check keek alleen naar "wit gevuld, blauw leeg, niet gespeeld"
+> zonder de lock. Na een paar gespeelde partijen schoof de knop ook ronde-2-wedstrijden zonder
+> tegenstander door. De lock-regel bestond al (`isBracketLocked`) maar was niet aan de knop of de
+> backend gekoppeld.
+
