@@ -576,11 +576,23 @@
                 $isDynamisch = $gewichtsklassen->count() === 1 && $gewichtsklassen->has('Alle');
                 $alleJudokas = $gewichtsklassen->flatten();
             @endphp
-            <div class="mb-6" x-data="nullableSelection" data-state-key="openGewicht">
-                <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
-                    <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
+            {{-- Outer x-data houdt de in/uit-klap-state. Inner x-data (op de content-div) blijft
+                 de bestaande `nullableSelection` voor de gewichtsklasse-knoppen — geen aanpassing
+                 aan een gedeelde component nodig, één klein object erbij. --}}
+            <div class="mb-6" x-data="{ collapsed: false }">
+                <h2 class="text-xl font-bold text-gray-800 mb-3">
+                    <button type="button" @click="collapsed = !collapsed"
+                            class="w-full flex items-center gap-2 text-left group">
+                        <svg class="w-4 h-4 text-gray-500 transition-transform" :class="collapsed ? '' : 'rotate-90'"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded group-hover:bg-blue-200">{{ $leeftijdsklasse }}</span>
+                        <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
+                    </button>
                 </h2>
+
+                <div x-show="!collapsed" x-collapse x-data="nullableSelection" data-state-key="openGewicht">
 
                 @if($isDynamisch)
                 {{-- Dynamische categorie: toon direct alle judoka's zonder knoppen --}}
@@ -685,6 +697,7 @@
                 </div>
                 @endforeach
                 @endif {{-- einde isDynamisch --}}
+                </div>{{-- einde x-show collapsed --}}
             </div>
             @empty
             <div class="text-center py-12 text-gray-500">
