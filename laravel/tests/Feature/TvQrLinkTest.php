@@ -55,7 +55,7 @@ class TvQrLinkTest extends TestCase
     #[Test]
     public function qr_scan_shows_ready_state_for_authed_organisator(): void
     {
-        $this->actingAs($this->org);
+        $this->actingAs($this->org, 'organisator');
         $koppeling = TvKoppeling::create([
             'code' => TvKoppeling::generateCode(),
             'expires_at' => now()->addMinutes(10),
@@ -72,7 +72,7 @@ class TvQrLinkTest extends TestCase
     #[Test]
     public function qr_scan_shows_expired_state_for_old_code(): void
     {
-        $this->actingAs($this->org);
+        $this->actingAs($this->org, 'organisator');
         $koppeling = TvKoppeling::create([
             'code' => '9999',
             'expires_at' => now()->subMinutes(5),
@@ -82,6 +82,69 @@ class TvQrLinkTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('status', 'expired');
+    }
+
+    #[Test]
+    public function web_tv_link_requires_organisator_guard(): void
+    {
+        $this->postJson('/tv/link', [
+            'code' => '1234',
+            'toernooi_id' => $this->toernooi->id,
+            'mat_nummer' => 1,
+        ])->assertStatus(401);
+    }
+
+    #[Test]
+    public function web_tv_link_couples_code_for_authed_organisator(): void
+    {
+        $this->actingAs($this->org, 'organisator');
+        $koppeling = TvKoppeling::create([
+            'code' => TvKoppeling::generateCode(),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        DeviceToegang::create([
+            'toernooi_id' => $this->toernooi->id,
+            'rol' => 'mat',
+            'mat_nummer' => 1,
+            'code' => 'MATCODE11111',
+            'gebonden_op' => now(),
+        ]);
+
+        $response = $this->postJson('/tv/link', [
+            'code' => $koppeling->code,
+            'toernooi_id' => $this->toernooi->id,
+            'mat_nummer' => 1,
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+
+        $koppeling->refresh();
+        $this->assertNotNull($koppeling->linked_at);
+        $this->assertEquals(1, $koppeling->mat_nummer);
+    }
+
+    #[Test]
+    public function web_tv_link_rejects_toernooi_of_another_organisator(): void
+    {
+        $this->actingAs($this->org, 'organisator');
+        $vreemdToernooi = Toernooi::factory()->create([
+            'organisator_id' => Organisator::factory()->kycCompleet()->create()->id,
+            'is_actief' => true,
+        ]);
+        $koppeling = TvKoppeling::create([
+            'code' => TvKoppeling::generateCode(),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $this->postJson('/tv/link', [
+            'code' => $koppeling->code,
+            'toernooi_id' => $vreemdToernooi->id,
+            'mat_nummer' => 1,
+        ])->assertStatus(403);
+
+        $this->assertNull($koppeling->refresh()->linked_at);
     }
 
     #[Test]

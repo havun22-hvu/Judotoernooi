@@ -48,7 +48,7 @@ class TvController extends Controller
             return view('pages.tv.qr-scan', ['status' => 'already-linked', 'code' => $code]);
         }
 
-        $user = $request->user();
+        $user = auth('organisator')->user();
         $toernooien = $user->is_sitebeheerder
             ? Toernooi::where('is_actief', true)->orderByDesc('datum')->get()
             : $user->toernooien()->where('is_actief', true)->orderByDesc('datum')->get();
@@ -69,9 +69,9 @@ class TvController extends Controller
         ]);
 
         $toernooi = Toernooi::with('organisator')->findOrFail($request->toernooi_id);
-        $user = $request->user();
+        $user = auth('organisator')->user();
 
-        if (!$user || (!$user->is_sitebeheerder && $toernooi->organisator_id !== $user->organisator_id)) {
+        if (!$user || !$user->hasAccessToToernooi($toernooi)) {
             return response()->json([
                 'success' => false,
                 'message' => __('Geen toegang tot dit toernooi'),

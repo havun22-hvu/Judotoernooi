@@ -48,6 +48,18 @@ het label er dubbel); de kolommen moesten samen. Niet meer uit elkaar trekken.
 koppel je met de 4-cijferige code ("Koppel TV") of door de korte URL over te typen. De QR hoort
 dus alleen bij Mat interface — die scan je wél, met de scorebord-app of tablet.
 
+### Koppel-routes vereisen de `organisator`-guard
+
+`POST /tv/link` en `GET /tv/qr/{code}` zijn de enige twee TV-routes achter auth. Ze moeten
+`auth:organisator` gebruiken — **niet** het kale `auth`.
+
+> **Was kapot (juli 2026):** beide stonden op `->middleware('auth')`. Dat kiest de default guard
+> uit `config/auth.php` (`web`), en op die guard is nooit iemand ingelogd — organisatoren zitten op
+> `organisator`. Resultaat: `POST /tv/link` gaf een 401 vóór de controller draaide (in de UI een
+> "netwerkfout" bij Koppel TV), en de QR-scan stuurde je naar het loginscherm terwijl je al ingelogd
+> was. Ook `$request->user()` leest de default guard → in `TvController` expliciet
+> `auth('organisator')->user()`.
+
 CSP: `scoreboard-live.blade.php` draait onder strikte CSP — alle `<script>`/`<style>` met `@nonce`,
 knoppen via `data-action`, Pusher-CDN met `integrity`+`@nonce`. De `?.`/`??` in die view staan in
 **vanilla JS** (geen Alpine-expressies) → CSP-veilig.

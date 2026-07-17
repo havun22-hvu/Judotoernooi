@@ -52,6 +52,17 @@ Terugweg: `judo_toernooi_voor-band-migratie_2026-07-16_23-33-57.sql.gz`.
   Volgende toevoeging → eerst splitsen (index + deeldocs).
 
 ## Recent afgerond (context die nog nut heeft)
+- **17-07 — "Koppel TV" gaf een netwerkfout (401): kale `auth` i.p.v. `auth:organisator`.**
+  `POST /tv/link` en `GET /tv/qr/{code}` waren de enige twee routes met `->middleware('auth')` →
+  default guard `web`, waar nooit iemand ingelogd is. **De test was groen en bewees de verkeerde
+  wereld:** `actingAs($org)` zonder guard-naam logt in op de default guard, ongeacht het modeltype.
+  Nu overal `actingAs($org, 'organisator')`. Tweede bug die eronder lag: de eigendoms-check las
+  `$user->organisator_id` — dat attribuut bestáát niet op `Organisator` (alleen `is_sitebeheerder`
+  + een `toernooien()`-pivot), dus null !== id → **403 voor elke niet-sitebeheerder**; de web-koppel
+  was dus sowieso stuk. Nu `hasAccessToToernooi()`, dezelfde helper als `CheckToernooiRol`.
+  Gat: `TvQrLinkTest` dekte alleen de API-variant (bearer token), niet de web-route die de UI
+  gebruikt — nu 3 tests erbij (401, happy path, 403 op andermans toernooi).
+  Codebase-breed gescand: geen tweede plek met dit patroon.
 - **17-07 — zwart is enum value 0, en dat brak vier dingen tegelijk** (`f1213ff2`, `be2afa82`,
   `a5d1776c`, prod). Binnengekomen als "zwart wordt niet als band gezien": 21 judoka's stonden in
   "ontbrekende gegevens" terwijl de kolom "Zwart" toonde. `empty($judoka->band)` is waar voor `0`

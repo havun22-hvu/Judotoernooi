@@ -742,12 +742,12 @@ Route::get('{organisator}/{toernooi}/live/scorebord/{mat}/state', [MatController
 
 // TV koppel systeem
 Route::get('tv', [\App\Http\Controllers\TvController::class, 'index'])->name('tv.koppel');
-Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->middleware('auth')->name('tv.link');
+Route::post('tv/link', [\App\Http\Controllers\TvController::class, 'link'])->middleware('auth:organisator')->name('tv.link');
 
 // QR-scan landing — organisator scant QR op TV (auth vereist; redirect naar login bij afwezigheid)
 Route::get('tv/qr/{code}', [\App\Http\Controllers\TvController::class, 'qrScan'])
     ->where('code', '[0-9]{4}')
-    ->middleware('auth')
+    ->middleware('auth:organisator')
     ->name('tv.qr-scan');
 
 // Short TV display URL — /tv/{4-char code} redirects to scoreboard-live
