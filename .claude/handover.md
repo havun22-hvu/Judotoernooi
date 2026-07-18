@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-07-18
+last_updated: 2026-07-19
 ---
 
 # JudoToernooi — Handover
@@ -11,8 +11,9 @@ last_updated: 2026-07-18
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** stabiel, Laravel 12.62, scoreboard 1.1.6.
-**Prod = staging = main** (18-07). LCD-tijd, Live Matten-namen, favorieten-tab, categorie-collapse
-allemaal live en getest. Geen open incidenten.
+**Prod = staging = main** qua code (19-07; prod/staging lopen enkele docs-only commits achter).
+LCD-tijd, Live Matten-namen, favorieten-tab, categorie-collapse live en getest. Geen open
+incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
@@ -78,8 +79,11 @@ allemaal live en getest. Geen open incidenten.
   lekte via publiek kanaal, Reset nulde het token niet, geen rate limit → nu 120/min per token, niet
   per IP). Review: `HavunCore/docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
   **Bewust:** Reverb-kanalen blijven publiek (Henk: "prima, als je de url weet").
-- **03-07 — HavunClub-koppeling live op prod**: weegkaart-lookup, judoka-upsert, inschrijvingen,
-  resultaten, school-portal. Contract: `HavunCore/docs/kb/contracts/havunclub-koppelingen.md`.
+- **19-07 — secrets gaan nooit meer via de chat.** De live Stripe-key lekte niet via git
+  (`credentials.md` is gitignored, zat nooit in de history) maar via het transcript. Methode nu:
+  verborgen invoer (`read -rs`) in een script dat Henk zelf draait, waarde via stdin naar de
+  server, verifiëren met alleen prefix+laatste-4 of een HTTP-status. Runbook:
+  `HavunCore/docs/kb/runbooks/secrets-veilig-ontvangen.md`.
 
 ## Vaste context voor dit project
 - Artisan altijd met `cd laravel &&` prefix.
