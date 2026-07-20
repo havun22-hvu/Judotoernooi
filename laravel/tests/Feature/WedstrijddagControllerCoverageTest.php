@@ -714,6 +714,7 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
             'naam' => 'Test Judoka',
             'geslacht' => 'M',
+            'gewicht' => 30.0,
             'poule_id' => $poule->id,
         ]);
         $response->assertStatus(404);
@@ -735,10 +736,10 @@ class WedstrijddagControllerCoverageTest extends TestCase
             'gewichtsklasse' => '-30',
         ]);
 
-        // Only geboortejaar, no gewicht: the poule's own gewichtsklasse should be kept.
         $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
             'naam' => 'Test Judoka Met Jaar',
             'geslacht' => 'V',
+            'gewicht' => 29.0,
             'band' => 'geel',
             'geboortejaar' => 2018,
             'club_id' => $club->id,
@@ -805,6 +806,32 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors('geslacht');
         $this->assertDatabaseMissing('judokas', ['naam' => 'Judoka Zonder Geslacht']);
+    }
+
+    #[Test]
+    public function nieuwe_judoka_without_gewicht_is_rejected(): void
+    {
+        $this->actAsOrg();
+        $blok = Blok::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $this->toernooi->id,
+            'blok_id' => $blok->id,
+            'mat_id' => $mat->id,
+            'leeftijdsklasse' => "mini's",
+            'gewichtsklasse' => '-30',
+        ]);
+
+        // Not every tournament runs a weigh-in, so the weight cannot be supplied later.
+        $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
+            'naam' => 'Judoka Zonder Gewicht',
+            'geslacht' => 'M',
+            'geboortejaar' => 2018,
+            'poule_id' => $poule->id,
+        ]);
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('gewicht');
+        $this->assertDatabaseMissing('judokas', ['naam' => 'Judoka Zonder Gewicht']);
     }
 
     // ========================================================================

@@ -116,20 +116,22 @@ class WedstrijddagMobielController extends Controller
      */
     public function nieuweJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
-        // geslacht is required here: this endpoint attaches the judoka to a poule straight away,
-        // and both the weight class and the poule seeding are sex-dependent. Incomplete judokas
-        // are allowed via import and the club portal, never via a direct add on the mat.
+        // This endpoint attaches the judoka to a poule straight away, so everything the seeding
+        // depends on has to be there. Weight class and poule seeding are sex-dependent, and not
+        // every tournament runs a weigh-in, so a weight cannot be filled in later either.
+        // Incomplete judokas are allowed via import and the club portal, never via a direct add.
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'geslacht' => 'required|in:M,V',
+            'gewicht' => 'required|numeric|min:10|max:200',
             'band' => 'nullable|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
             'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
             'club_id' => 'nullable|exists:clubs,id',
             'poule_id' => 'required|exists:poules,id',
         ], [
             'geslacht.required' => 'Geslacht is verplicht — zonder geslacht kan de judoka niet worden ingedeeld.',
             'geslacht.in' => 'Geslacht moet M of V zijn.',
+            'gewicht.required' => 'Gewicht is verplicht — niet elk toernooi heeft een weging.',
         ]);
 
         if (!$toernooi->canAddMoreJudokas()) {
@@ -152,11 +154,9 @@ class WedstrijddagMobielController extends Controller
                 $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
                 $leeftijd = $toernooiJaar - $validated['geboortejaar'];
 
-                if (!empty($validated['gewicht'])) {
-                    $bepaaldeGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $validated['band'] ?? null);
-                    if ($bepaaldeGewichtsklasse) {
-                        $gewichtsklasse = $bepaaldeGewichtsklasse;
-                    }
+                $bepaaldeGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $validated['band'] ?? null);
+                if ($bepaaldeGewichtsklasse) {
+                    $gewichtsklasse = $bepaaldeGewichtsklasse;
                 }
             }
 
@@ -167,8 +167,8 @@ class WedstrijddagMobielController extends Controller
                 'geslacht' => $validated['geslacht'],
                 'geboortejaar' => $validated['geboortejaar'] ?? null,
                 'band' => $validated['band'] ?? null,
-                'gewicht' => $validated['gewicht'] ?? null,
-                'gewicht_gewogen' => $validated['gewicht'] ?? null,
+                'gewicht' => $validated['gewicht'],
+                'gewicht_gewogen' => $validated['gewicht'],
                 'leeftijdsklasse' => $leeftijdsklasse,
                 'gewichtsklasse' => $gewichtsklasse,
                 'aanwezigheid' => 'aanwezig',

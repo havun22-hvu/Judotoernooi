@@ -747,8 +747,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Gewicht (kg)') }}</label>
-                        <input type="number" id="nj-gewicht" class="w-full border rounded px-3 py-2" step="0.1" min="10" max="200" placeholder="32.5">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Gewicht (kg)') }} *</label>
+                        <input type="number" id="nj-gewicht" class="w-full border rounded px-3 py-2" step="0.1" min="10" max="200" placeholder="32.5" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Judoschool') }}</label>
@@ -821,6 +821,7 @@ const __verwijderUitPouleBevestiging = @json(__('Weet je zeker dat je deze judok
 const __selecteerEenCategorie = @json(__('Selecteer een categorie'));
 const __naamIsVerplicht = @json(__('Naam is verplicht'));
 const __geslachtIsVerplicht = @json(__('Geslacht is verplicht — zonder geslacht kan de judoka niet worden ingedeeld.'));
+const __gewichtIsVerplicht = @json(__('Gewicht is verplicht — niet elk toernooi heeft een weging.'));
 const __selecteerEenPoule = @json(__('Selecteer een poule'));
 const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
 const __foutBijVerificatie = @json(__('Fout bij verificatie'));
@@ -1242,6 +1243,9 @@ document.getElementById('nieuwe-judoka-form').addEventListener('submit', async f
     const geslacht = document.getElementById('nj-geslacht').value;
     if (!geslacht) { alert(__geslachtIsVerplicht); return; }
 
+    const gewicht = document.getElementById('nj-gewicht').value;
+    if (!gewicht) { alert(__gewichtIsVerplicht); return; }
+
     const pouleId = document.getElementById('nj-poule').value;
     if (!pouleId) { alert(__selecteerEenPoule); return; }
 
@@ -1260,8 +1264,8 @@ document.getElementById('nieuwe-judoka-form').addEventListener('submit', async f
             body: JSON.stringify({
                 naam: naam,
                 geslacht: geslacht,
+                gewicht: gewicht,
                 band: document.getElementById('nj-band').value || null,
-                gewicht: document.getElementById('nj-gewicht').value || null,
                 geboortejaar: document.getElementById('nj-geboortejaar').value || null,
                 club_id: document.getElementById('nj-club').value || null,
                 poule_id: pouleId,

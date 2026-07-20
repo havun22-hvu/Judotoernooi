@@ -22,19 +22,23 @@ Geen aparte PWA — het bestaande dashboard met een **mobiele modus** die quick-
 | Functie | Beschrijving |
 |---------|--------------|
 | **Judoka Zoeken** | Zoek op naam/club → gewicht zien/invullen → poule bekijken → overpoulen |
-| **Judoka Toevoegen** | Aan bestaande poule toevoegen (last-minute, vergeten). **Naam, geslacht en poule zijn verplicht** — zie hieronder |
+| **Judoka Toevoegen** | Aan bestaande poule toevoegen (last-minute, vergeten). **Naam, geslacht, gewicht en poule zijn verplicht** — zie hieronder |
 | **Mat Voortgang** | Resterende wedstrijden per mat + per poule op die mat |
 | **Chat** | Berichten naar mat/weging/dojo (bestaand chat systeem) |
 
-### Judoka toevoegen — geslacht is verplicht
+### Judoka toevoegen — naam, geslacht, gewicht en poule zijn verplicht
 
-`wedstrijddag/nieuwe-judoka` koppelt de judoka **meteen** aan een poule (`poule_id` is required).
-Zowel de gewichtsklasse-bepaling (`Toernooi::bepaalGewichtsklasse()`) als de poule-indeling is
-geslachtsafhankelijk, dus zonder geslacht is de judoka niet indeelbaar.
+`wedstrijddag/nieuwe-judoka` koppelt de judoka **meteen** aan een poule (`poule_id` is required),
+dus alles waar de indeling van afhangt moet er op dat moment zijn:
 
-Daarom valideert het endpoint `geslacht => required|in:M,V` en weigert het met **422** in plaats van
-de judoka half aan te maken. Beide formulieren (`toernooi/mobiel.blade.php`,
-`wedstrijddag/poules.blade.php` → "Laatkomer") tonen een verplichte keuze Jongen/Meisje.
+| Veld | Waarom verplicht |
+|------|------------------|
+| `geslacht` (`in:M,V`) | Gewichtsklasse-bepaling én poule-indeling zijn geslachtsafhankelijk |
+| `gewicht` (`numeric\|min:10\|max:200`) | **Niet elk toernooi heeft een weging**, dus een leeg gewicht wordt nooit alsnog ingevuld |
+
+Het endpoint weigert met **422** in plaats van de judoka half aan te maken. Beide formulieren
+(`toernooi/mobiel.blade.php`, `wedstrijddag/poules.blade.php` → "Laatkomer") tonen de velden als
+verplicht en blokkeren de submit.
 
 > **Onvolledige judoka's mogen wél bestaan** — via import en het clubportaal, gemarkeerd met
 > `is_onvolledig`. Die worden pas ingedeeld nadat ze zijn aangevuld. Een directe toevoeging op de

@@ -181,8 +181,8 @@
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">{{ __('Gewicht (kg)') }}</label>
-                        <input type="number" x-model="njModel('gewicht')" step="0.1" min="10" max="200"
+                        <label class="block text-sm text-gray-600 mb-1">{{ __('Gewicht (kg)') }} *</label>
+                        <input type="number" x-model="njModel('gewicht')" step="0.1" min="10" max="200" required
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                     </div>
                 </div>
@@ -493,8 +493,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         async voegJudokaToe() {
-            // geslacht is required server-side: without it the judoka cannot be seeded.
-            if (!this.nieuweJudoka.naam || !this.nieuweJudoka.geslacht || !this.nieuweJudoka.poule_id) return;
+            // geslacht and gewicht are required server-side: without them the judoka cannot be
+            // seeded, and not every tournament has a weigh-in to fill the weight in later.
+            if (!this.nieuweJudoka.naam || !this.nieuweJudoka.geslacht
+                || !this.nieuweJudoka.gewicht || !this.nieuweJudoka.poule_id) return;
             this.toevoegenLoading = true;
             try {
                 const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
@@ -508,7 +510,7 @@ document.addEventListener('alpine:init', () => {
                         naam: this.nieuweJudoka.naam,
                         geslacht: this.nieuweJudoka.geslacht,
                         geboortejaar: this.nieuweJudoka.geboortejaar ? parseInt(this.nieuweJudoka.geboortejaar) : null,
-                        gewicht: this.nieuweJudoka.gewicht ? parseFloat(this.nieuweJudoka.gewicht) : null,
+                        gewicht: parseFloat(this.nieuweJudoka.gewicht),
                         band: this.nieuweJudoka.band || null,
                         club_id: this.nieuweJudoka.club_id ? parseInt(this.nieuweJudoka.club_id) : null,
                         poule_id: parseInt(this.nieuweJudoka.poule_id),
