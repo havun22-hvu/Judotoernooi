@@ -30,6 +30,17 @@ incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afron
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Coverage-tests cementeren bugs (21-07).** `WedstrijddagControllerCoverageTest` bevatte drie
+  `assertStatus(500)`-asserts mét comment "known bug ... but hitting the endpoint still covers
+  lines X-Y". De 500 was dus vastgelegd als verwacht gedrag om coverage te halen. Eén daarvan
+  (`$nieuweIsDynamisch` undefined) is nu gefixt. **Twee staan nog open:**
+  - `:768` — `bepaalGewichtsklasse()` verwacht `string $geslacht`, controller geeft `null`
+    → TypeError bij nieuwe judoka toevoegen zonder geslacht (`WedstrijddagController.php:861`).
+  - `:789` — `herstelJudoka()` zet `aanwezigheid = null` maar de kolom is NOT NULL → elke
+    herstel-actie geeft 500 (`WedstrijddagController.php:918-927`). Waarschijnlijk moet dit
+    `'aanwezig'` zijn, maar dat is een domeinkeuze: betekent null "nog niet gewogen"?
+  Les: een test die een 500 vastlegt is geen dekking, die maakt de bug permanent. Zoek bij
+  twijfel op `assertStatus(500)` in de coverage-tests.
 - **`mat_label` bestaat niet in de favorieten-payload.** `index.blade.php:1556/1561` geven
   `poule.mat_label` mee aan `stuurNotificatie()`, maar `PubliekController.php:460` emit
   `'mat' => $mat?->nummer`. Altijd `undefined` → push-melding zegt "Nu op **de mat**" i.p.v.

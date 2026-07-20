@@ -84,14 +84,13 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $judoka = $this->makeJudoka(['aanwezigheid' => 'aanwezig']);
         $poule1->judokas()->attach($judoka->id, ['positie' => 1]);
 
-        // Note: verplaatsJudoka has a known bug ($nieuweIsDynamisch undefined on line 259)
-        // but hitting the endpoint still covers lines 171-258
         $response = $this->postJson($this->url('wedstrijddag/verplaats-judoka'), [
             'judoka_id' => $judoka->id,
             'poule_id' => $poule2->id,
             'from_poule_id' => $poule1->id,
         ]);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
+        $this->assertTrue($poule2->judokas()->where('judoka_id', $judoka->id)->exists());
     }
 
     #[Test]
@@ -119,12 +118,11 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $judoka = $this->makeJudoka(['aanwezigheid' => 'aanwezig']);
         $poule1->judokas()->attach($judoka->id, ['positie' => 1]);
 
-        // Note: verplaatsJudoka has a known bug ($nieuweIsDynamisch undefined)
         $response = $this->postJson($this->url('wedstrijddag/verplaats-judoka'), [
             'judoka_id' => $judoka->id,
             'poule_id' => $poule2->id,
         ]);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
     }
 
     #[Test]
@@ -183,7 +181,6 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $poule->judokas()->attach($judoka1->id, ['positie' => 1]);
 
         // Move judoka2 into poule with positions
-        // Note: verplaatsJudoka has a known bug ($nieuweIsDynamisch undefined)
         $response = $this->postJson($this->url('wedstrijddag/verplaats-judoka'), [
             'judoka_id' => $judoka2->id,
             'poule_id' => $poule->id,
@@ -191,7 +188,8 @@ class WedstrijddagControllerCoverageTest extends TestCase
                 ['id' => $judoka1->id, 'positie' => 2],
             ],
         ]);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
+        $this->assertSame(2, $poule->judokas()->where('judoka_id', $judoka1->id)->first()->pivot->positie);
     }
 
     // ========================================================================

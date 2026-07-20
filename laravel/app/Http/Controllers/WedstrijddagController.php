@@ -272,7 +272,7 @@ class WedstrijddagController extends Controller
 
             // Check if judoka fits: dynamic = check pool range, fixed = check weight class limits
             $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-            $judokaPastInPoule = $nieuweIsDynamisch
+            $judokaPastInPoule = $nieuwePoule->isDynamisch()
                 ? ($nieuwePoule->isProblematischNaWeging() === null)
                 : $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
 
