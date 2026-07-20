@@ -941,8 +941,8 @@
                         <button @click="openScorebord(mat.nummer)"
                                 class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 text-center hover:from-blue-700 hover:to-blue-800 transition">
                             <div class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></div>
-                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="(mat.groen && mat.groen.wit && mat.groen.wit.naam ? mat.groen.wit.naam : '?') + ' vs ' + (mat.groen && mat.groen.blauw && mat.groen.blauw.naam ? mat.groen.blauw.naam : '?')"></div>
-                            <div x-show="!mat.groen" class="text-blue-300 text-xs mt-1">{{ __('Wacht op wedstrijd') }}</div>
+                            <div x-show="mat && mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="mat && mat.groen && mat.groen.wit && mat.groen.wit.naam ? (mat.groen.wit.naam + ' vs ' + (mat.groen.blauw && mat.groen.blauw.naam ? mat.groen.blauw.naam : '?')) : ''"></div>
+                            <div x-show="mat && !mat.groen" class="text-blue-300 text-xs mt-1">{{ __('Wacht op wedstrijd') }}</div>
                         </button>
                     </template>
                 </div>
