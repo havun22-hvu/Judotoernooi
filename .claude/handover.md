@@ -30,6 +30,13 @@ incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afron
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **`mat_label` bestaat niet in de favorieten-payload.** `index.blade.php:1556/1561` geven
+  `poule.mat_label` mee aan `stuurNotificatie()`, maar `PubliekController.php:460` emit
+  `'mat' => $mat?->nummer`. Altijd `undefined` → push-melding zegt "Nu op **de mat**" i.p.v.
+  "Nu op Mat 3". Accessor `Mat::label` bestaat en is getest. Naam in de melding klopt wél.
+- **Dode payload in favorieten-endpoint:** `huidige_wedstrijd`/`volgende_wedstrijd`/
+  `gereedmaken_wedstrijd` (`PubliekController.php:463-474`) bevatten alleen ID's en worden in de
+  frontend nergens gelezen. Namen komen uit de `judokas`-array.
 - **Melding bij een te oude judoka is nietszeggend.** Nu: "Past niet in categorie (leeftijd 17)".
   Beter: "geen categorie voor 17 jaar — hoogste is 16". `Judoka.php:427-432`,
   `ImportService.php:740-744`. Kostte een halve sessie omdat het binnenkwam als "de mini's worden

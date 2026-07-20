@@ -186,6 +186,10 @@ De publiek app ontvangt real-time updates via WebSockets (Laravel Reverb):
 
 > **Zie:** `CHAT.md` voor volledige Reverb documentatie
 
+De events dragen **alleen wedstrijd-ID's**, geen namen (`MatUpdate` → `MatUitslagController.php:482`).
+De browser gebruikt het event als signaal en haalt de namen op via `PubliekController@favorieten`.
+Dat namen en wedstrijdgegevens sowieso publiek mogen: zie `6-INTERNAL/GEGEVENS-EN-PRIVACY.md`.
+
 ### Geen polling meer
 Polling is volledig verwijderd (feb 2026). Reverb WebSocket events zijn de enige
 bron van updates. Handmatige refresh-knop beschikbaar als fallback.
