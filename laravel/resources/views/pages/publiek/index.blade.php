@@ -421,17 +421,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.groen.wit ? mat.groen.wit.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.groen && mat.groen.wit ? mat.groen.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.wit ? mat.groen.wit.club : ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen && mat.groen.wit ? mat.groen.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.groen.blauw ? mat.groen.blauw.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.groen && mat.groen.blauw ? mat.groen.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen.blauw ? mat.groen.blauw.club : ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.groen && mat.groen.blauw ? mat.groen.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -448,17 +448,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.geel.wit ? mat.geel.wit.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.geel && mat.geel.wit ? mat.geel.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.wit ? mat.geel.wit.club : ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel && mat.geel.wit ? mat.geel.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.geel.blauw ? mat.geel.blauw.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.geel && mat.geel.blauw ? mat.geel.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel.blauw ? mat.geel.blauw.club : ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.geel && mat.geel.blauw ? mat.geel.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -475,17 +475,17 @@
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-white border-2 border-gray-400"></span>
-                                            <span class="font-medium" x-text="mat.blauw.wit ? mat.blauw.wit.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.blauw && mat.blauw.wit ? mat.blauw.wit.naam : '?'"></span>
                                         </div>
-                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.wit ? mat.blauw.wit.club : ''"></div>
+                                        <div class="text-gray-500 ml-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw && mat.blauw.wit ? mat.blauw.wit.club : ''"></div>
                                     </div>
                                     <span class="text-gray-400 font-bold mx-3">vs</span>
                                     <div class="flex-1 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <span class="font-medium" x-text="mat.blauw.blauw ? mat.blauw.blauw.naam : '?'"></span>
+                                            <span class="font-medium" x-text="mat.blauw && mat.blauw.blauw ? mat.blauw.blauw.naam : '?'"></span>
                                             <span :class="selectedMatId === mat.id ? 'w-5 h-5' : 'w-4 h-4'" class="rounded-full bg-blue-500"></span>
                                         </div>
-                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw.blauw ? mat.blauw.blauw.club : ''"></div>
+                                        <div class="text-gray-500 mr-6" :class="selectedMatId === mat.id ? 'text-sm' : 'text-xs'" x-text="mat.blauw && mat.blauw.blauw ? mat.blauw.blauw.club : ''"></div>
                                     </div>
                                 </div>
                             </div>
@@ -941,7 +941,7 @@
                         <button @click="openScorebord(mat.nummer)"
                                 class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 text-center hover:from-blue-700 hover:to-blue-800 transition">
                             <div class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></div>
-                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="(mat.groen && mat.groen.wit ? mat.groen.wit.naam : '?') + ' vs ' + (mat.groen && mat.groen.blauw ? mat.groen.blauw.naam : '?')"></div>
+                            <div x-show="mat.groen" class="text-blue-200 text-xs mt-1 truncate" x-text="(mat.groen && mat.groen.wit && mat.groen.wit.naam ? mat.groen.wit.naam : '?') + ' vs ' + (mat.groen && mat.groen.blauw && mat.groen.blauw.naam ? mat.groen.blauw.naam : '?')"></div>
                             <div x-show="!mat.groen" class="text-blue-300 text-xs mt-1">{{ __('Wacht op wedstrijd') }}</div>
                         </button>
                     </template>
