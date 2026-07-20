@@ -202,7 +202,7 @@ class ImportService
                     }
 
                     try {
-                        $judoka = $this->verwerkRij($toernooi, $rij, $mapping);
+                        $judoka = $this->verwerkRij($toernooi, $rij, $mapping, $rijNummer);
                         if ($judoka) {
                             $resultaat['geimporteerd']++;
                             if (!$judoka->club_id) {
@@ -211,6 +211,11 @@ class ImportService
                         } else {
                             $resultaat['overgeslagen']++;
                         }
+                    } catch (ImportException $e) {
+                        // Row rejected on purpose (e.g. no weight): the message is already
+                        // user-facing, so don't run it through maakFoutLeesbaar().
+                        $resultaat['fouten'][] = $e->getUserMessage();
+                        $resultaat['overgeslagen']++;
                     } catch (\Exception $e) {
                         $naam = $this->getWaarde($rij, $mapping['naam']) ?? '(geen naam)';
                         $leesbareFout = $this->maakFoutLeesbaar($e->getMessage(), $naam);
@@ -261,7 +266,7 @@ class ImportService
     /**
      * Process a single row of import data
      */
-    private function verwerkRij(Toernooi $toernooi, array $rij, array $mapping): ?Judoka
+    private function verwerkRij(Toernooi $toernooi, array $rij, array $mapping, int $rijNummer = 0): ?Judoka
     {
         // Get values from row using mapping
         $naam = $this->getWaarde($rij, $mapping['naam']);
@@ -277,9 +282,20 @@ class ImportService
             return null;
         }
 
+        // A row with neither a weight nor a weight class is rejected, not imported half-done:
+        // not every tournament runs a weigh-in, so nothing fills the gap later and the judoka
+        // would be dropped from the seeding without anyone noticing. Rejecting one row leaves
+        // the rest of the file untouched -- the caller reports it per row.
+        if (empty($gewicht) && empty($gewichtsklasseRaw)) {
+            throw ImportException::rowValidation(
+                $rijNummer,
+                "gewicht ontbreekt voor '{$naam}' — vul een gewicht of gewichtsklasse in"
+            );
+        }
+
         // Track if judoka has incomplete data
-        // Weight is not required if weight class is provided
-        $isOnvolledig = empty($geboortejaarRaw) || empty($geslachtRaw) || (empty($gewicht) && empty($gewichtsklasseRaw));
+        // Weight is not required if weight class is provided (it is derived from it below)
+        $isOnvolledig = empty($geboortejaarRaw) || empty($geslachtRaw);
 
         // Collect warnings during parsing
         $warnings = [];

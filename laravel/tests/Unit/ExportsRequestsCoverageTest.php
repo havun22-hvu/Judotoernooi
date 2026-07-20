@@ -405,7 +405,9 @@ class ExportsRequestsCoverageTest extends TestCase
 
         $this->assertStringContainsString('required', $rules['naam']);
         $this->assertStringContainsString('nullable', $rules['club_id']);
-        $this->assertStringContainsString('nullable', $rules['geslacht']);
+        // geslacht and gewicht drive the seeding, so manual entry requires both.
+        $this->assertStringContainsString('required', $rules['geslacht']);
+        $this->assertStringContainsString('required', $rules['gewicht']);
     }
 
     #[Test]

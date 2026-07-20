@@ -41,10 +41,14 @@ incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afron
     `'aanwezig'` zijn, maar dat is een domeinkeuze: betekent null "nog niet gewogen"?
   Les: een test die een 500 vastlegt is geen dekking, die maakt de bug permanent. Zoek bij
   twijfel op `assertStatus(500)` in de coverage-tests. **Alle drie zijn nu gefixt** (21-07).
-- **Nog te controleren: overige invoerpaden voor `geslacht`.** De wedstrijddag-toevoeging eist het
-  nu (422). Import, clubportaal en HavunClub-sync laten onvolledige judoka's bewust toe
-  (`is_onvolledig`), maar er is niet geverifieerd dat die ook écht geblokkeerd worden vóór
-  indeling. `Judoka::isVolledig()` bestaat; wordt die overal aangeroepen waar ingedeeld wordt?
+- **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
+  invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
+  gewichtloze judoka's uit met een melding. Doc: `2-FEATURES/JUDOKA-GEWICHT-VERPLICHT.md`.
+  **Te beoordelen op staging:** coach-portaal (nieuw + inline bewerken), Laatkomer-modal op
+  poules-pagina, mobiele toevoeg-modal, en een import met een rij zonder gewicht.
+  **Let op bestaande data:** toernooien met judoka's zonder gewicht krijgen die nu niet meer
+  ingedeeld — ze verschijnen als waarschuwing bij het genereren. Dat is de bedoeling (ze belandden
+  eerst in een "Onbekend"-poule), maar het kan bij een lopend toernooi verrassen.
 - **`mat_label` bestaat niet in de favorieten-payload.** `index.blade.php:1556/1561` geven
   `poule.mat_label` mee aan `stuurNotificatie()`, maar `PubliekController.php:460` emit
   `'mat' => $mat?->nummer`. Altijd `undefined` → push-melding zegt "Nu op **de mat**" i.p.v.

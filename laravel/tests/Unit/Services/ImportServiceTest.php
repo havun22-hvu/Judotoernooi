@@ -713,9 +713,9 @@ class ImportServiceTest extends TestCase
         $toernooi = $this->createToernooiWithOrganisator();
         $service = app(ImportService::class);
 
-        // Missing geboortejaar and gewicht
+        // Missing geboortejaar, but a weight is present so the row is importable
         $data = [
-            ['naam' => 'Jan Jansen', 'club' => 'Club A', 'geboortejaar' => '', 'geslacht' => 'M', 'gewicht' => '', 'band' => 'wit'],
+            ['naam' => 'Jan Jansen', 'club' => 'Club A', 'geboortejaar' => '', 'geslacht' => 'M', 'gewicht' => '25', 'band' => 'wit'],
         ];
 
         $result = $service->importeerDeelnemers($toernooi, $data);
@@ -724,6 +724,47 @@ class ImportServiceTest extends TestCase
 
         $judoka = Judoka::where('toernooi_id', $toernooi->id)->first();
         $this->assertTrue((bool) $judoka->is_onvolledig);
+    }
+
+    #[Test]
+    public function importeer_deelnemers_rejects_row_without_gewicht(): void
+    {
+        $toernooi = $this->createToernooiWithOrganisator();
+        $service = app(ImportService::class);
+
+        // Neither gewicht nor gewichtsklasse: the row is rejected, the rest of the file is not.
+        $data = [
+            ['naam' => 'Zonder Gewicht', 'club' => 'Club A', 'geboortejaar' => '2015', 'geslacht' => 'M', 'gewicht' => '', 'band' => 'wit'],
+            ['naam' => 'Met Gewicht', 'club' => 'Club A', 'geboortejaar' => '2015', 'geslacht' => 'M', 'gewicht' => '30', 'band' => 'wit'],
+        ];
+
+        $result = $service->importeerDeelnemers($toernooi, $data);
+
+        $this->assertEquals(1, $result['geimporteerd']);
+        $this->assertEquals(1, $result['overgeslagen']);
+        $this->assertCount(1, $result['fouten']);
+        $this->assertStringContainsString('gewicht ontbreekt', $result['fouten'][0]);
+        $this->assertStringContainsString('Zonder Gewicht', $result['fouten'][0]);
+
+        $this->assertDatabaseMissing('judokas', ['naam' => 'Zonder Gewicht', 'toernooi_id' => $toernooi->id]);
+        $this->assertDatabaseHas('judokas', ['naam' => 'Met Gewicht', 'toernooi_id' => $toernooi->id]);
+    }
+
+    #[Test]
+    public function importeer_deelnemers_accepts_gewichtsklasse_without_gewicht(): void
+    {
+        $toernooi = $this->createToernooiWithOrganisator();
+        $service = app(ImportService::class);
+
+        // A weight class is enough: the weight is derived from it.
+        $data = [
+            ['naam' => 'Klasse Only', 'club' => 'Club A', 'geboortejaar' => '2015', 'geslacht' => 'M', 'gewicht' => '', 'gewichtsklasse' => '-30', 'band' => 'wit'],
+        ];
+
+        $result = $service->importeerDeelnemers($toernooi, $data);
+
+        $this->assertEquals(1, $result['geimporteerd']);
+        $this->assertEmpty($result['fouten']);
     }
 
     #[Test]

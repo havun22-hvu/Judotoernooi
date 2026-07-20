@@ -282,9 +282,10 @@ class ImportServiceExtraTest extends TestCase
         $toernooi = $this->createToernooiWithOrganisator();
         $service = app(ImportService::class);
 
-        // Missing geboortejaar and gewicht → onvolledig
+        // Missing geboortejaar → onvolledig. A weight is present; a row without one is rejected
+        // outright, see importeer_deelnemers_rejects_row_without_gewicht in ImportServiceTest.
         $data = [
-            ['naam' => 'Jan Jansen', 'club' => 'Club A', 'geboortejaar' => '', 'geslacht' => 'M', 'gewicht' => '', 'band' => 'wit'],
+            ['naam' => 'Jan Jansen', 'club' => 'Club A', 'geboortejaar' => '', 'geslacht' => 'M', 'gewicht' => '25', 'band' => 'wit'],
         ];
 
         $result = $service->importeerDeelnemers($toernooi, $data);

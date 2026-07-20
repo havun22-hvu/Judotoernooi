@@ -27,6 +27,20 @@ class JudokaGrouper
      * @param  string[]            $prioriteiten          Ordered priorities: any of 'leeftijd','gewicht','band'.
      * @return Collection<string, Collection<int, Judoka>>
      */
+    /**
+     * Judokas excluded from the seeding because they have no usable weight.
+     *
+     * Mirrors the filter in group() so the caller can report them instead of letting them
+     * disappear silently.
+     */
+    public function zonderGewicht(Toernooi $toernooi): Collection
+    {
+        return $toernooi->judokas()
+            ->where(fn($q) => $q->whereNull('gewicht')->orWhere('gewicht', '<=', 0))
+            ->orderBy('naam')
+            ->get();
+    }
+
     public function group(Toernooi $toernooi, array $gewichtsklassenConfig, array $prioriteiten): Collection
     {
         $leeftijdIdx = array_search('leeftijd', $prioriteiten);
@@ -41,7 +55,14 @@ class JudokaGrouper
         if ($bandIdx !== false) $sortFields[$bandIdx] = ['sort_band', 'ASC'];
         ksort($sortFields);
 
-        $query = $toernooi->judokas()->orderBy('sort_categorie');
+        // Backstop: a judoka without a usable weight cannot be seeded. Every input path validates
+        // this, but old data, offline sync (LocalSyncService bypasses validation) and any future
+        // path land here too. Without the filter they end up in an "Onbekend" weight group, which
+        // reads as a real poule. Excluded judokas are reported via zonderGewicht().
+        $query = $toernooi->judokas()
+            ->whereNotNull('gewicht')
+            ->where('gewicht', '>', 0)
+            ->orderBy('sort_categorie');
         foreach ($sortFields as [$field, $direction]) {
             $query->orderBy($field, $direction);
         }

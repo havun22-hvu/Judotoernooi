@@ -659,12 +659,15 @@ class JudokaController extends Controller
                 }
             }
 
-            // Check required fields
+            // Check required fields. Keep this in step with Judoka::getOntbrekendeVelden() --
+            // gewicht used to be missing here, so "Valideren" reported a weightless judoka as fine
+            // while the seeding could not place them.
             $ontbreekt = [];
             if (empty($judoka->naam)) $ontbreekt[] = 'naam';
             if (empty($judoka->geboortejaar)) $ontbreekt[] = 'geboortejaar';
             if (empty($judoka->geslacht)) $ontbreekt[] = 'geslacht';
             if (!Band::isIngevuld($judoka->band)) $ontbreekt[] = 'band';
+            if ($judoka->gewicht === null || $judoka->gewicht <= 0) $ontbreekt[] = 'gewicht';
 
             if (!empty($ontbreekt)) {
                 $fouten[] = "{$judoka->naam}: ontbreekt " . implode(', ', $ontbreekt);

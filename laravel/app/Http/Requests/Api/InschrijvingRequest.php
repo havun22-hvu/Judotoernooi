@@ -25,7 +25,10 @@ class InschrijvingRequest extends FormRequest
             'judoka_id' => ['required', 'integer'],
             'naam' => ['nullable', 'string', 'max:255'],
             'band' => ['nullable', 'string', 'max:30'],
-            'gewicht' => ['nullable', 'numeric', 'min:0', 'max:300'],
+            // Required: an entry without a weight cannot be seeded, and not every tournament has
+            // a weigh-in to fill it in later. Bounds match every other judoka path -- 0.5 kg and
+            // 280 kg are data-entry errors, not judokas. See JudokaStoreRequest.
+            'gewicht' => ['required', 'numeric', 'min:10', 'max:200'],
         ];
     }
 }

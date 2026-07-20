@@ -133,8 +133,8 @@
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geslacht') }}</label>
-                        <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="w-full border rounded px-3 py-2">
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geslacht') }} *</label>
+                        <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" required class="w-full border rounded px-3 py-2">
                             <option value="">{{ __('Selecteer...') }}</option>
                             <option value="M">{{ __('Man') }}</option>
                             <option value="V">{{ __('Vrouw') }}</option>
@@ -154,8 +154,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">{{ __('Gewicht (kg)') }}</label>
-                        <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" min="10" max="200"
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Gewicht (kg)') }} *</label>
+                        <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" min="10" max="200" required
                                class="w-full border rounded px-3 py-2" placeholder="bijv. 32.5">
                     </div>
                     <div>
@@ -451,8 +451,8 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <input type="text" name="naam" value="{{ $judoka->naam }}" required class="border rounded px-3 py-2" placeholder="Naam">
                                 <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" class="border rounded px-3 py-2" placeholder="Geboortejaar">
-                                <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="border rounded px-3 py-2">
-                                    <option value="">Geslacht</option><option value="M">Man</option><option value="V">Vrouw</option>
+                                <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" required class="border rounded px-3 py-2">
+                                    <option value="">Geslacht *</option><option value="M">Man</option><option value="V">Vrouw</option>
                                 </select>
                                 <select name="band" x-model="band" class="border rounded px-3 py-2">
                                     <option value="">Band</option>
@@ -464,7 +464,7 @@
                                     <option value="bruin">Bruin</option>
                                     <option value="zwart">Zwart</option>
                                 </select>
-                                <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" class="border rounded px-3 py-2" placeholder="Gewicht (kg)">
+                                <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" min="10" max="200" required class="border rounded px-3 py-2" placeholder="Gewicht (kg) *">
                                 <select name="gewichtsklasse" x-model="gewichtsklasse" class="border rounded px-3 py-2">
                                     <option value="">Gewichtsklasse (auto)</option>
                                     <template x-for="gw in gewichtsopties" :key="gw"><option :value="gw" x-text="gwLabel(gw)"></option></template>

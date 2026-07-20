@@ -164,6 +164,20 @@ class PouleIndelingService
                 'waarschuwingen' => [],
             ];
 
+            // Report judokas the grouper left out for lack of a weight, so they are visible
+            // instead of quietly missing from the draw.
+            $zonderGewicht = $this->grouper->zonderGewicht($toernooi);
+            if ($zonderGewicht->isNotEmpty()) {
+                $namen = $zonderGewicht->pluck('naam')->all();
+                $statistieken['waarschuwingen'][] = [
+                    'type' => 'warning',
+                    'categorie' => null,
+                    'bericht' => $zonderGewicht->count() . " judoka's zonder gewicht niet ingedeeld: "
+                        . implode(', ', array_slice($namen, 0, 5)) . (count($namen) > 5 ? '...' : ''),
+                    'onvolledige_judokas' => $zonderGewicht->all(),
+                ];
+            }
+
             // Track voorrondepoules per categorie (leeftijdsklasse + gewichtsklasse) for kruisfinale creation
             $voorrondesPerCategorie = [];
 

@@ -19,7 +19,9 @@ class JudokaUpdateRequest extends FormRequest
             'geslacht' => 'required|in:M,V',
             'band' => 'required|string|max:20',
             'jbn_lidnummer' => 'nullable|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
+            // Everything else here is already required; a weight that can be blanked out on edit
+            // would reintroduce exactly the gap the other rules close.
+            'gewicht' => 'required|numeric|min:10|max:200',
         ];
     }
 
@@ -32,6 +34,7 @@ class JudokaUpdateRequest extends FormRequest
             'geslacht.required' => 'Geslacht is verplicht',
             'geslacht.in' => 'Geslacht moet M of V zijn',
             'band.required' => 'Band is verplicht',
+            'gewicht.required' => 'Gewicht is verplicht — niet elk toernooi heeft een weging',
             'gewicht.numeric' => 'Gewicht moet een getal zijn',
             'gewicht.min' => 'Gewicht moet minimaal 10 kg zijn',
             'gewicht.max' => 'Gewicht mag maximaal 200 kg zijn',

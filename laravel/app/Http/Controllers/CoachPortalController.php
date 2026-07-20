@@ -272,31 +272,36 @@ class CoachPortalController extends Controller
                 ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt. Neem contact op met de organisator om te upgraden.');
         }
 
+        // geslacht and gewicht are required: both drive the seeding, and not every tournament
+        // runs a weigh-in that could fill a missing weight in later.
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
-            'geslacht' => 'nullable|in:M,V',
+            'geslacht' => 'required|in:M,V',
             'band' => 'nullable|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'gewicht' => 'required|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
             'telefoon' => 'nullable|string|max:20',
             'jbn_lidnummer' => 'nullable|string|max:20',
+        ], [
+            'geslacht.required' => 'Geslacht is verplicht — zonder geslacht kan de judoka niet worden ingedeeld.',
+            'gewicht.required' => 'Gewicht is verplicht — niet elk toernooi heeft een weging.',
         ]);
 
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
         $band = $validated['band'] ?? null;
 
-        if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
+        if (!empty($validated['geboortejaar'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
             $leeftijdsklasse = $toernooiModel->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
-            if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
+            if (empty($gewichtsklasse)) {
                 $gewichtsklasse = $toernooiModel->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
-        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+        if (empty($gewichtsklasse)) {
             $gewichtsklasse = '-' . (int) $validated['gewicht'];
         }
 
@@ -357,15 +362,20 @@ class CoachPortalController extends Controller
                 ->with('error', 'De inschrijving is gesloten');
         }
 
+        // Same as the create path: geslacht and gewicht both drive the seeding and cannot be
+        // filled in later at a tournament without a weigh-in.
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
-            'geslacht' => 'nullable|in:M,V',
+            'geslacht' => 'required|in:M,V',
             'band' => 'nullable|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'gewicht' => 'required|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
             'telefoon' => 'nullable|string|max:20',
             'jbn_lidnummer' => 'nullable|string|max:20',
+        ], [
+            'geslacht.required' => 'Geslacht is verplicht — zonder geslacht kan de judoka niet worden ingedeeld.',
+            'gewicht.required' => 'Gewicht is verplicht — niet elk toernooi heeft een weging.',
         ]);
 
         // Keep existing values if not provided (prevent losing data on partial edit)
@@ -373,16 +383,16 @@ class CoachPortalController extends Controller
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
 
-        if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
+        if (!empty($validated['geboortejaar'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
             $leeftijdsklasse = $toernooiModel->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
-            if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
+            if (empty($gewichtsklasse)) {
                 $gewichtsklasse = $toernooiModel->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
-        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+        if (empty($gewichtsklasse)) {
             $gewichtsklasse = '-' . (int) $validated['gewicht'];
         }
 
