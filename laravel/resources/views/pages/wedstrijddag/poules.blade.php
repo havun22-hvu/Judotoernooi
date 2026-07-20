@@ -718,6 +718,14 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Naam') }} *</label>
                     <input type="text" id="nj-naam" class="w-full border rounded px-3 py-2" required placeholder="{{ __('Achternaam, Voornaam') }}">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Geslacht') }} *</label>
+                    <select id="nj-geslacht" class="w-full border rounded px-3 py-2" required>
+                        <option value="">{{ __('Kies...') }}</option>
+                        <option value="M">{{ __('Jongen') }}</option>
+                        <option value="V">{{ __('Meisje') }}</option>
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Geboortejaar') }}</label>
@@ -812,6 +820,7 @@ const __foutBijVerwijderen = @json(__('Fout bij verwijderen'));
 const __verwijderUitPouleBevestiging = @json(__('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?'));
 const __selecteerEenCategorie = @json(__('Selecteer een categorie'));
 const __naamIsVerplicht = @json(__('Naam is verplicht'));
+const __geslachtIsVerplicht = @json(__('Geslacht is verplicht — zonder geslacht kan de judoka niet worden ingedeeld.'));
 const __selecteerEenPoule = @json(__('Selecteer een poule'));
 const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
 const __foutBijVerificatie = @json(__('Fout bij verificatie'));
@@ -1202,6 +1211,7 @@ function openNieuweJudokaModal(leeftijdsklasse, gewichtsklasse, poules) {
     document.getElementById('nj-leeftijdsklasse').value = leeftijdsklasse;
     document.getElementById('nj-gewichtsklasse').value = gewichtsklasse;
     document.getElementById('nj-naam').value = '';
+    document.getElementById('nj-geslacht').value = '';
     document.getElementById('nj-geboortejaar').value = '';
     document.getElementById('nj-band').value = '';
     document.getElementById('nj-gewicht').value = '';
@@ -1229,6 +1239,9 @@ document.getElementById('nieuwe-judoka-form').addEventListener('submit', async f
     const naam = document.getElementById('nj-naam').value.trim();
     if (!naam) { alert(__naamIsVerplicht); return; }
 
+    const geslacht = document.getElementById('nj-geslacht').value;
+    if (!geslacht) { alert(__geslachtIsVerplicht); return; }
+
     const pouleId = document.getElementById('nj-poule').value;
     if (!pouleId) { alert(__selecteerEenPoule); return; }
 
@@ -1246,6 +1259,7 @@ document.getElementById('nieuwe-judoka-form').addEventListener('submit', async f
             },
             body: JSON.stringify({
                 naam: naam,
+                geslacht: geslacht,
                 band: document.getElementById('nj-band').value || null,
                 gewicht: document.getElementById('nj-gewicht').value || null,
                 geboortejaar: document.getElementById('nj-geboortejaar').value || null,

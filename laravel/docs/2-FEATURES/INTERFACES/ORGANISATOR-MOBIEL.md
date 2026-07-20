@@ -22,9 +22,25 @@ Geen aparte PWA — het bestaande dashboard met een **mobiele modus** die quick-
 | Functie | Beschrijving |
 |---------|--------------|
 | **Judoka Zoeken** | Zoek op naam/club → gewicht zien/invullen → poule bekijken → overpoulen |
-| **Judoka Toevoegen** | Aan bestaande poule toevoegen (last-minute, vergeten) |
+| **Judoka Toevoegen** | Aan bestaande poule toevoegen (last-minute, vergeten). **Naam, geslacht en poule zijn verplicht** — zie hieronder |
 | **Mat Voortgang** | Resterende wedstrijden per mat + per poule op die mat |
 | **Chat** | Berichten naar mat/weging/dojo (bestaand chat systeem) |
+
+### Judoka toevoegen — geslacht is verplicht
+
+`wedstrijddag/nieuwe-judoka` koppelt de judoka **meteen** aan een poule (`poule_id` is required).
+Zowel de gewichtsklasse-bepaling (`Toernooi::bepaalGewichtsklasse()`) als de poule-indeling is
+geslachtsafhankelijk, dus zonder geslacht is de judoka niet indeelbaar.
+
+Daarom valideert het endpoint `geslacht => required|in:M,V` en weigert het met **422** in plaats van
+de judoka half aan te maken. Beide formulieren (`toernooi/mobiel.blade.php`,
+`wedstrijddag/poules.blade.php` → "Laatkomer") tonen een verplichte keuze Jongen/Meisje.
+
+> **Onvolledige judoka's mogen wél bestaan** — via import en het clubportaal, gemarkeerd met
+> `is_onvolledig`. Die worden pas ingedeeld nadat ze zijn aangevuld. Een directe toevoeging op de
+> mat is het enige pad waar de indeling onmiddellijk volgt, en daar is aanvullen-achteraf dus geen
+> optie. Zie `Judoka::isVolledig()` / `getOntbrekendeVelden()` voor de volledige eis
+> (naam, geboortejaar, geslacht, band, gewicht).
 
 ### UX: Verwijzing naar volledige app
 

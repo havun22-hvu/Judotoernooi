@@ -166,6 +166,14 @@
                     <label class="block text-sm text-gray-600 mb-1">{{ __('Naam') }} *</label>
                     <input type="text" x-model="njModel('naam')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
                 </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">{{ __('Geslacht') }} *</label>
+                    <select x-model="njModel('geslacht')" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base">
+                        <option value="">{{ __('Kies...') }}</option>
+                        <option value="M">{{ __('Jongen') }}</option>
+                        <option value="V">{{ __('Meisje') }}</option>
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">{{ __('Geboortejaar') }}</label>
@@ -366,7 +374,7 @@ document.addEventListener('alpine:init', () => {
         verplaatsLoading: false,
 
         // Add judoka
-        nieuweJudoka: { naam: '', geboortejaar: '', gewicht: '', band: '', club_id: '', poule_id: '' },
+        nieuweJudoka: { naam: '', geslacht: '', geboortejaar: '', gewicht: '', band: '', club_id: '', poule_id: '' },
 
         /**
          * x-model binding for a field inside nieuweJudoka.
@@ -485,7 +493,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         async voegJudokaToe() {
-            if (!this.nieuweJudoka.naam || !this.nieuweJudoka.poule_id) return;
+            // geslacht is required server-side: without it the judoka cannot be seeded.
+            if (!this.nieuweJudoka.naam || !this.nieuweJudoka.geslacht || !this.nieuweJudoka.poule_id) return;
             this.toevoegenLoading = true;
             try {
                 const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
@@ -497,6 +506,7 @@ document.addEventListener('alpine:init', () => {
                     },
                     body: JSON.stringify({
                         naam: this.nieuweJudoka.naam,
+                        geslacht: this.nieuweJudoka.geslacht,
                         geboortejaar: this.nieuweJudoka.geboortejaar ? parseInt(this.nieuweJudoka.geboortejaar) : null,
                         gewicht: this.nieuweJudoka.gewicht ? parseFloat(this.nieuweJudoka.gewicht) : null,
                         band: this.nieuweJudoka.band || null,
@@ -507,7 +517,7 @@ document.addEventListener('alpine:init', () => {
                 const data = await response.json();
                 if (data.success) {
                     this.showToast(data.message || 'Judoka toegevoegd', 'success');
-                    this.nieuweJudoka = { naam: '', geboortejaar: '', gewicht: '', band: '', club_id: '', poule_id: '' };
+                    this.nieuweJudoka = { naam: '', geslacht: '', geboortejaar: '', gewicht: '', band: '', club_id: '', poule_id: '' };
                 } else {
                     this.showToast(data.message || 'Toevoegen mislukt', 'error');
                 }

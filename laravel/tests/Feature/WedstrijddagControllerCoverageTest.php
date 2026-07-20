@@ -713,6 +713,7 @@ class WedstrijddagControllerCoverageTest extends TestCase
 
         $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
             'naam' => 'Test Judoka',
+            'geslacht' => 'M',
             'poule_id' => $poule->id,
         ]);
         $response->assertStatus(404);
@@ -734,9 +735,10 @@ class WedstrijddagControllerCoverageTest extends TestCase
             'gewichtsklasse' => '-30',
         ]);
 
-        // Only geboortejaar (no gewicht) to cover lines 855-857 without triggering bepaalGewichtsklasse bug
+        // Only geboortejaar, no gewicht: the poule's own gewichtsklasse should be kept.
         $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
             'naam' => 'Test Judoka Met Jaar',
+            'geslacht' => 'V',
             'band' => 'geel',
             'geboortejaar' => 2018,
             'club_id' => $club->id,
@@ -765,15 +767,44 @@ class WedstrijddagControllerCoverageTest extends TestCase
             'gewichtsklasse' => '-30',
         ]);
 
-        // Note: bepaalGewichtsklasse expects string $geslacht but controller passes null (line 861)
-        // This covers lines 855-861 before the TypeError
         $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
             'naam' => 'Test Judoka Met Gewicht',
+            'geslacht' => 'M',
             'gewicht' => 28.5,
             'geboortejaar' => 2018,
             'poule_id' => $poule->id,
         ]);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('judokas', [
+            'naam' => 'Test Judoka Met Gewicht',
+            'geslacht' => 'M',
+        ]);
+    }
+
+    #[Test]
+    public function nieuwe_judoka_without_geslacht_is_rejected(): void
+    {
+        $this->actAsOrg();
+        $blok = Blok::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id, 'nummer' => 1]);
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $this->toernooi->id,
+            'blok_id' => $blok->id,
+            'mat_id' => $mat->id,
+            'leeftijdsklasse' => "mini's",
+            'gewichtsklasse' => '-30',
+        ]);
+
+        // Without geslacht the judoka cannot be seeded into a poule, so this must not be stored.
+        $response = $this->postJson($this->url('wedstrijddag/nieuwe-judoka'), [
+            'naam' => 'Judoka Zonder Geslacht',
+            'gewicht' => 28.5,
+            'geboortejaar' => 2018,
+            'poule_id' => $poule->id,
+        ]);
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('geslacht');
+        $this->assertDatabaseMissing('judokas', ['naam' => 'Judoka Zonder Geslacht']);
     }
 
     // ========================================================================
@@ -786,12 +817,12 @@ class WedstrijddagControllerCoverageTest extends TestCase
         $this->actAsOrg();
         $judoka = $this->makeJudoka(['aanwezigheid' => 'afwezig']);
 
-        // Note: herstelJudoka sets aanwezigheid=null but column is NOT NULL in SQLite
-        // This still covers lines 918-927 before the DB write fails
         $response = $this->postJson($this->url('wedstrijddag/herstel-judoka'), [
             'judoka_id' => $judoka->id,
         ]);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
+        // Back to the column default, not 'aanwezig' — undoing an afmelding is not a check-in.
+        $this->assertSame('onbekend', $judoka->fresh()->aanwezigheid);
     }
 
     // ========================================================================

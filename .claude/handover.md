@@ -40,7 +40,11 @@ incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afron
     herstel-actie geeft 500 (`WedstrijddagController.php:918-927`). Waarschijnlijk moet dit
     `'aanwezig'` zijn, maar dat is een domeinkeuze: betekent null "nog niet gewogen"?
   Les: een test die een 500 vastlegt is geen dekking, die maakt de bug permanent. Zoek bij
-  twijfel op `assertStatus(500)` in de coverage-tests.
+  twijfel op `assertStatus(500)` in de coverage-tests. **Alle drie zijn nu gefixt** (21-07).
+- **Nog te controleren: overige invoerpaden voor `geslacht`.** De wedstrijddag-toevoeging eist het
+  nu (422). Import, clubportaal en HavunClub-sync laten onvolledige judoka's bewust toe
+  (`is_onvolledig`), maar er is niet geverifieerd dat die ook écht geblokkeerd worden vóór
+  indeling. `Judoka::isVolledig()` bestaat; wordt die overal aangeroepen waar ingedeeld wordt?
 - **`mat_label` bestaat niet in de favorieten-payload.** `index.blade.php:1556/1561` geven
   `poule.mat_label` mee aan `stuurNotificatie()`, maar `PubliekController.php:460` emit
   `'mat' => $mat?->nummer`. Altijd `undefined` → push-melding zegt "Nu op **de mat**" i.p.v.
