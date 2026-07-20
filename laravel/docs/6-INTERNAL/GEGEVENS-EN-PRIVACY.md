@@ -27,9 +27,15 @@ de publieke live-pagina. Dit is de reden dat de Reverb-kanalen publiek mogen zij
 ## Niet publiek — nooit in een publieke payload
 
 - `telefoon` (`Judoka.php:49`)
-- `jbn_lidnummer` (`Judoka.php:30`)
 - Alles rond betaling (`betaling_id`, `betaald_op`) en inlog/toegang
 - Organisator- en clubcontactgegevens
+
+### `jbn_lidnummer` — niet geheim, wel weglaten
+
+Het lidnummer is opvraagbaar via de JBN zelf, dus het is geen vertrouwelijk gegeven
+(Henk, 20-07-2026). Toch niet meesturen in publieke payloads: het is een **koppelsleutel** naar een
+landelijke ledenadministratie en voegt op een uitslagen- of live-pagina niets toe. Wel bruikbaar in
+organisator-schermen, import/export en HavunClub-synchronisatie.
 
 ## Geslacht ≠ gender
 
