@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-07-21
+last_updated: 2026-07-22
 ---
 
 # JudoToernooi — Handover
@@ -11,16 +11,17 @@ last_updated: 2026-07-21
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Favorieten/publieks-page fix staat live op production** (21-07, prod op `1cf930e0`,
-HTTP 200, CSS-bundle `app-z7K1Ju_X.css` serveert): favorieten-card, eliminatie-status,
-beurt-gekleurde tabs, volledig ronde-veld. Nog te verifiëren in de browser: het eliminatie-veld
-op een echt eliminatie-toernooi. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat —
-afronding hieronder.
+**Prod staat op `1cf930e0`** (favorieten/publieks-page live). **Staging loopt vóór (`8c59aa01`)**
+met een stapel eliminatie/tenant/scoreboard-fixes van 21-22/07, door Henk op staging bevestigd —
+**wacht op prod-deploy** (zie tabel hieronder). Live Stripe-sleutel 19-07 geroteerd na een
+chat-lek — afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
 | Wat | Details |
 |-----|---------|
+| **Prod-deploy staging-stapel (22-07)** | Prod `1cf930e0` → staging `8c59aa01`. Bevat, door Henk op staging bevestigd: (1) correctie propageert naar herkansing B + self-healing corrupte uitslag, (2) blind/onvolledige wedstrijd krijgt geen beurtkleur + deselect werkt + drag-groen ruimt op, (3) "mijn toernooien" alleen eigenaar (tenant-lek C-01), (4) scoreboard her-broadcast bij deelnemer-wijziging. Geen migraties. Deploy: `git pull` op `repo-prod` + `repo-staging`, caches clear. Docs: `plan-correctie-propagatie` / `plan-blind-beurtkleur` / `plan-mijn-toernooien-scope` / `plan-scoreboard-deelnemer-refresh` + `ELIMINATIE/BEURTKLEUR.md`. |
+| **Scoreboard client-side reload (jouw project)** | Server stuurt nu een verse `ScoreboardAssignment` (`event: match.assign`) bij deelnemer-wijziging. In de Android-app moet een nieuwe assign de al-getoonde wedstrijd **vervangen** i.p.v. negeren. |
 | **Tijdzone-keuze `APP_TIMEZONE`** | LCD toonde 16:57 CEST i.p.v. 18:57. Systemisch: `APP_TIMEZONE=UTC` op alle `->format('H:i')` op DB-timestamps. Twee opties: (a) `.env` op prod+staging → `APP_TIMEZONE=Europe/Amsterdam` (jij, wachtwoord/prod-access), (b) hardcoded in `config/app.php` (ik, één commit). Optie a is flexibeler voor multi-timezone SaaS ooit; b is meteen klaar. Backup vóór (`cp .env .env.bak.YYYYMMDD`). |
 | **Stripe: afronden na key-lek (morgen)** | De live secret is 19-07 al geroteerd — prod draait op `sk_live_…dkIA3`, API geeft HTTP 200, config gecached, staging op testsleutels. Nog te doen: (1) oude `…4l13` in het Stripe-dashboard écht ingetrokken zien (was met 24u-expiry gerold), (2) Developers → Logs nakijken op requests met `…4l13` vanaf een ander IP dan `188.245.159.115`, (3) verouderde Stripe-regel in `HavunCore/.claude/credentials.md` opruimen. Lek liep via de chat, niet via git (`credentials.md` is gitignored, nooit in history). |
 | **Stripe webhook-secret: rollen? (morgen)** | `STRIPE_WEBHOOK_SECRET` (`whsec_…anY7Q`) is **niet** meegerold met de key. Vraag: is die ooit door de chat gegaan? Zo ja rollen — met die secret kan iemand valse webhooks vervalsen en betalingen als betaald markeren. App verifieert via `\Stripe\Webhook::constructEvent()` met één secret uit config (`StripePaymentProvider.php:292`). Stripe's "roll" houdt de oude tot expiry geldig, dus de nieuwe direct plaatsen geeft géén gat. Script nog te schrijven, patroon van `HavunCore/scripts/rotate-stripe-secret.sh` (verborgen `read -rs`, jij draait 'm). `pk_live_` is publishable, geen actie. |
@@ -32,54 +33,6 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
-- **Scoreboard ververst nu bij deelnemer-wijziging — fix op staging (22-07).** Android
-  scoreboard-app toonde oude judoka's als de deelnemers van de actieve wedstrijd wijzigden
-  (drag-plaatsing, correctie, winnaar-doorschuiven): `notifyActiveMatchChanged` draaide alleen
-  bij een beurt-wissel. Nieuw: `ScoreboardNotifier::notifyForPoule` her-broadcast de toewijzing
-  voor elke mat met een actieve match in die poule; aangehaakt in `plaatsJudoka` +
-  `MatUitslagController` + `ScoreboardController` (na `verwerkUitslag`). **Client-side reload doet
-  Henk in het scoreboard-project.** Doc: `.claude/plan-scoreboard-deelnemer-refresh.md`. 12 tests
-  groen. **Te verifiëren:** deelnemer wijzigen terwijl scoreboard live → app toont nieuwe naam.
-- **Eliminatie: uitslagcorrectie propageert nu naar de herkansing (B) — fix op staging (21-07).**
-  Matscheids voert fout in, jury corrigeert → A-groep werd herzien, **B (herkansing) niet** →
-  stale winnaar (wed#25275: winnaar Vince geen deelnemer), speler zat vast, bracket ≠ live-mat.
-  Fix: `WinnerCalculator::verwijderUitB` reset nu uitslag + cascade in B (symmetrisch met
-  `verwijderUitLatereRondes`); `plaatsVerliezer*` reset een reeds-gespeelde doelwedstrijd;
-  `Wedstrijd::isEchtGespeeld` self-healing (winnaar moet deelnemer zijn — geneest bestaande
-  corruptie zónder reset); `PouleEliminatieController` geeft nu de oude winnaar door. **Niets
-  gereset** (bewust — dit klooien moet opgevangen worden). Doc:
-  `.claude/plan-correctie-propagatie.md`. 107+ tests groen incl. correctie-scenario.
-  **Te verifiëren op staging (Henk):** corrigeer een A-uitslag → herkansing schuift correct mee,
-  Sam-vs-Guus is weer speelbaar, bracht en live-mat gelijk.
-  Óók probleem 1 hierin: onvolledige/blind wedstrijd → beurtkleur; server weigert al (400) maar
-  de optimistische kleur bleef staan → `setWedstrijdStatus`-rollback roept nu
-  `applyBeurtaanduiding()` aan.
-  **Vervolg (B-bracket symptomen, na staging-test):** (a) mijn beurt-guard blokkeerde óók het
-  *deselecteren* van een onvolledige wedstrijd → guard nu alleen bij NIEUWE selectie; blind-guard
-  uit `dblClickBracket`. (b) drag-check `MatBracketController:120/165` gebruikt nu `isEchtGespeeld()`
-  (corrupte rij blokkeert de echte winnaar niet meer). (c) **actieve self-healing** (Henk akkoord):
-  `WedstrijdSchemaService::geneesCorrupteUitslagen` reset bij elke mat/bracket-load een
-  eliminatie-wedstrijd waarvan `winnaar_id` geen deelnemer is → geneest de bestaande corruptie
-  (wed#25275 Sam/Guus/Vince) definitief zodra de mat wordt geopend. Doc:
-  `.claude/plan-correctie-propagatie.md`.
-- **Eliminatie: blind kreeg beurtkleur + drag-groen bleef hangen — fix op staging (21-07).**
-  Blind (bye, wit gevuld/blauw leeg) kon via dubbelklik groen/blauw worden (guard testte op
-  `uitslag_type==='bye'`, maar dat wordt pas ná advance-byes gezet). Nu 3 guard-lagen op
-  `wit && blauw && !is_gespeeld` (`toggleVolgendeWedstrijd` + `dblClickBracket` +
-  `MatUitslagController` 400). Drag-groen bleef staan na terugzetten door asymmetrische reset:
-  `applyBeurtaanduiding` wist nu ook `outline/boxShadow`, `_clearBracketTargetMarks` ook `border`.
-  Groen tijdens slepen blijft (gewenst); drag-blokkade op geel/blauw ongewijzigd. Docs:
-  `2-FEATURES/ELIMINATIE/BEURTKLEUR.md` + `.claude/plan-blind-beurtkleur.md`. 11+2 tests groen.
-  **Te verifiëren op staging (Henk):** blind dubbelklik → geen kleur; blind slepen → groen tijdens
-  sleep, weg na loslaten/terugzetten; geen twee-keer-groen.
-- **"Mijn toernooien" lekte soms een vreemd toernooi — fix op staging (21-07).** De dashboard-lijst
-  toonde élke pivot-rol; nu `->wherePivot('rol', 'eigenaar')` → alleen zelf-aangemaakte toernooien
-  (andere blijven via /admin). Ook `getActiefToernooi()` org-gescoped (was globaal `is_actief`,
-  latente C-01-lek via dode code). Explore-sweep vond géén side-effect-getter; pivot is in rust
-  schoon, dus wat Henk "soms" zag was vermoedelijk een historische spookrij. 7 tests groen
-  (`TenantScopeTest` + `WimpelToernooiCoverageTest::get_actief_*`). Doc:
-  `.claude/plan-mijn-toernooien-scope.md`. **Te verifiëren op staging:** open "mijn toernooien" →
-  alleen Generale + test2, geen "test toernooi bsh".
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
@@ -90,11 +43,6 @@ afronding hieronder.
   **Wacht op 3 antwoorden van Henk vóór docs+plan:** (1) meerdere gewichtsklassen tegelijk open of
   één tegelijk? (2) beginstand categorieën én gewichtsklassen open/dicht? (3) dynamische categorie
   blijft platte lijst zonder extra laag — akkoord?
-
-- **Favorieten-tab: LIVE op production (21-07).** Render-fix + tab-beurtkleur + eliminatie-status
-  (`komt` = hele veld van die ronde, favoriet vet; `afgevallen — B · 1/8`; medaille). Round-robin
-  render + tab-kleur door Henk bevestigd. **Nog te doen:** Henk bekijkt het eliminatie-veld op een
-  echt eliminatie-toernooi. Docs: `PUBLIEK.md` + `.claude/plan-favorieten-eliminatie.md`.
 
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
