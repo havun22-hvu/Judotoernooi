@@ -2,7 +2,7 @@
 title: JudoToernooi Handover
 type: claude
 scope: judotoernooi
-last_updated: 2026-07-19
+last_updated: 2026-07-21
 ---
 
 # JudoToernooi — Handover
@@ -10,10 +10,10 @@ last_updated: 2026-07-19
 > **Één handover, bijwerken — nooit een sessieblok toevoegen.** Levende status, geen logboek.
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
-**Branch:** main (enige branch, geen open PR's) · **Status:** stabiel, Laravel 12.62, scoreboard 1.1.6.
-**Prod = staging = main** qua code (19-07; prod/staging lopen enkele docs-only commits achter).
-LCD-tijd, Live Matten-namen, favorieten-tab, categorie-collapse live en getest. Geen open
-incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hieronder.
+**Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
+**Prod = staging = main** qua code. **Open regressie (21-07): favorieten-tab op de publieke
+live-app rendert leeg terwijl endpoint + state kloppen — zie eerste open punt.**
+Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
