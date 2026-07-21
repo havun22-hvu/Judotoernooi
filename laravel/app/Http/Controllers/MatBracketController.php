@@ -162,7 +162,7 @@ class MatBracketController extends Controller
                 // Als wedstrijd AL gespeeld is en dit is NIET de winnaar:
                 // - Bij correctie: toegestaan (winnaar wordt gewijzigd)
                 // - Zonder correctie-flag: blokkeer
-                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId && !$isCorrectie) {
+                if ($bronWedstrijd->isEchtGespeeld() && $bronWedstrijd->winnaar_id != $judokaId && !$isCorrectie) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',

@@ -42,3 +42,22 @@ Scenario (Henk, echte test): matscheids voert verkeerde winnaar in (Guus), jury 
 ## Risico
 Hoog-risico bracket-correctheid, maar patroon bestaat al (`verwijderUitLatereRondes`). `===`
 vs `==`: deelnemer-vergelijking met `==` (int/string tolerant, conform codebase-conventie).
+
+## Vervolg (21-07, na staging-test) — B-bracket symptomen
+
+Reconstructie uit activiteiten-log poule 33: 20:12 Guus als A-kf-winnaar ingevoerd (fout),
+20:14 gecorrigeerd naar Vince — met de **oude** `verwijderUitB` (vóór deze fix) → wed#25275
+bleef `winnaar=Vince` terwijl slots Sam+Guus werden. Bestaande corruptie, ontstaan vóór de fix.
+
+Symptomen + fixes:
+1. **Ravi Prins (onvolledige wed#25278) zit vast op geel, niet uit te zetten.** Mijn beurt-guard
+   blokkeerde óók het *deselecteren*. → guard alleen in de **nieuwe-selectie**-tak van
+   `toggleVolgendeWedstrijd`; blind-guard uit `dblClickBracket` (deselect moet altijd kunnen).
+2. **Sam/Guus onspeelbaar** ("Dit is niet de winnaar"): de drag-check leest rauwe `is_gespeeld`
+   + `winnaar_id`. → `MatBracketController:120,165` gebruiken `isEchtGespeeld()`.
+3. **Actieve self-healing** (Henk akkoord): `getSchemaVoorMat` reset bij elke mat/bracket-load
+   een eliminatie-wedstrijd waarvan `winnaar_id` geen deelnemer is → geneest wed#25275 definitief.
+   Idempotent, gelogd.
+
+Test: self-healing reset een corrupte wedstrijd bij schema-load; deselect van een onvolledige
+wedstrijd werkt. Bestaande wed#25275 wordt genezen zodra Henk de mat opent.

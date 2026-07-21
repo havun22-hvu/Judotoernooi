@@ -46,6 +46,14 @@ afronding hieronder.
   Óók probleem 1 hierin: onvolledige/blind wedstrijd → beurtkleur; server weigert al (400) maar
   de optimistische kleur bleef staan → `setWedstrijdStatus`-rollback roept nu
   `applyBeurtaanduiding()` aan.
+  **Vervolg (B-bracket symptomen, na staging-test):** (a) mijn beurt-guard blokkeerde óók het
+  *deselecteren* van een onvolledige wedstrijd → guard nu alleen bij NIEUWE selectie; blind-guard
+  uit `dblClickBracket`. (b) drag-check `MatBracketController:120/165` gebruikt nu `isEchtGespeeld()`
+  (corrupte rij blokkeert de echte winnaar niet meer). (c) **actieve self-healing** (Henk akkoord):
+  `WedstrijdSchemaService::geneesCorrupteUitslagen` reset bij elke mat/bracket-load een
+  eliminatie-wedstrijd waarvan `winnaar_id` geen deelnemer is → geneest de bestaande corruptie
+  (wed#25275 Sam/Guus/Vince) definitief zodra de mat wordt geopend. Doc:
+  `.claude/plan-correctie-propagatie.md`.
 - **Eliminatie: blind kreeg beurtkleur + drag-groen bleef hangen — fix op staging (21-07).**
   Blind (bye, wit gevuld/blauw leeg) kon via dubbelklik groen/blauw worden (guard testte op
   `uitslag_type==='bye'`, maar dat wordt pas ná advance-byes gezet). Nu 3 guard-lagen op

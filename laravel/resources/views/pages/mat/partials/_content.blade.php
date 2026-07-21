@@ -1254,9 +1254,9 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
     if (!poule) return;
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
     if (!wedstrijd) return;
-    // Blind (bye): één deelnemer, niet speelbaar → geen beurtkleur. Test op de aanwezigheid
-    // van beide deelnemers, NIET op uitslag_type (dat wordt pas 'bye' ná advance-byes).
-    if (!wedstrijd.wit || !wedstrijd.blauw) return;
+    // De blind-/onvolledig-guard zit in toggleVolgendeWedstrijd (alleen bij NIEUWE selectie),
+    // zodat het deselecteren van een reeds gekleurde onvolledige wedstrijd hier niet wordt
+    // geblokkeerd. Echt-gespeelde wedstrijden krijgen sowieso geen beurtkleur.
     if (wedstrijd.is_gespeeld) return;
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
@@ -2432,13 +2432,6 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            // Een blind (bye) of nog-lege wedstrijd heeft geen twee deelnemers en is niet
-            // speelbaar → mag geen beurtkleur krijgen. Centrale guard voor elke aanroeper.
-            if (!wedstrijd.wit || !wedstrijd.blauw) {
-                console.log('[Mat] Match', wedstrijd.id, 'is a blind (no two participants), skip beurtkleur');
-                return;
-            }
-
             // === HUIDIGE STATUS OPHALEN ===
             // Initialiseer matSelectie als het null is
             if (!this.matSelectie) {
@@ -2492,7 +2485,14 @@ document.addEventListener('alpine:init', () => {
                 console.log('[Mat] Blue deselected');
             }
             else {
-                // NIEUWE SELECTIE - wedstrijd is nog niet geselecteerd
+                // NIEUWE SELECTIE - wedstrijd is nog niet geselecteerd.
+                // Een blind (bye) of nog-onvolledige wedstrijd heeft geen twee deelnemers en
+                // is niet speelbaar → mag geen NIEUWE beurtkleur krijgen. (Deselecteren van een
+                // reeds gekleurde wedstrijd blijft wél mogelijk — die takken staan hierboven.)
+                if (!wedstrijd.wit || !wedstrijd.blauw) {
+                    console.log('[Mat] Match', wedstrijd.id, 'is a blind (no two participants), skip new beurtkleur');
+                    return;
+                }
                 if (!matActieveId) {
                     // Geen groen → wordt groen
                     nieuweGroen = wedstrijd.id;

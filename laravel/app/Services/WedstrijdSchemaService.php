@@ -357,6 +357,29 @@ class WedstrijdSchemaService
      * Get match schedule for a mat in a block
      * Returns mat-level green/yellow/blue selection plus all poules
      */
+    /**
+     * Self-healing: reset elke wedstrijd waarvan de winnaar geen deelnemer (wit/blauw) is.
+     * Zo'n stale winnaar ontstaat als een uitslagcorrectie niet volledig naar de herkansing
+     * is gepropageerd (zie WinnerCalculator::verwijderUitB). Idempotent — doet niets als de
+     * data al klopt. Muteert de meegegeven (al geladen) collectie én de database.
+     *
+     * @param \Illuminate\Support\Collection<\App\Models\Wedstrijd> $wedstrijden
+     */
+    private function geneesCorrupteUitslagen($wedstrijden): void
+    {
+        foreach ($wedstrijden as $w) {
+            if ($w->winnaar_id !== null
+                && $w->winnaar_id != $w->judoka_wit_id
+                && $w->winnaar_id != $w->judoka_blauw_id) {
+                $w->winnaar_id = null;
+                $w->is_gespeeld = false;
+                $w->gespeeld_op = null;
+                $w->save();
+                \Log::warning("Self-healing: corrupte uitslag gereset voor wedstrijd {$w->id} ({$w->ronde}) — winnaar was geen deelnemer");
+            }
+        }
+    }
+
     public function getSchemaVoorMat(Blok $blok, Mat $mat): array
     {
         // Refresh mat to get latest wedstrijd selectie
@@ -382,6 +405,13 @@ class WedstrijdSchemaService
 
         foreach ($poules as $poule) {
             $isEliminatie = $poule->type === 'eliminatie';
+
+            // Self-healing: ruim eliminatie-wedstrijden op waarvan de winnaar geen deelnemer
+            // (meer) is — het gevolg van een niet-gepropageerde uitslagcorrectie. Zo'n wedstrijd
+            // zou anders als "gespeeld" gelden en de echte partij blokkeren. Idempotent.
+            if ($isEliminatie) {
+                $this->geneesCorrupteUitslagen($poule->wedstrijden);
+            }
 
             // Determine groep_filter for eliminatie poules with split mats
             $groepFilter = null;

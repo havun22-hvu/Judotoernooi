@@ -428,4 +428,40 @@ class WedstrijdSchemaServiceExtraTest extends TestCase
         $result = $this->callPrivate('optimaliseerVolgorde', [$wedstrijden, 4]);
         $this->assertEquals($wedstrijden, $result);
     }
+
+    #[Test]
+    public function self_healing_reset_alleen_corrupte_uitslag(): void
+    {
+        [$poule, $judokas] = $this->createPouleWithJudokas(2);
+        $sam = $judokas[0]->id;
+        $guus = $judokas[1]->id;
+        $vince = Judoka::factory()->create(['toernooi_id' => $poule->toernooi_id])->id;
+
+        // Corrupt: winnaar (Vince) is geen deelnemer van deze wedstrijd.
+        $corrupt = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $sam,
+            'judoka_blauw_id' => $guus,
+            'winnaar_id' => $vince,
+            'is_gespeeld' => true,
+        ]);
+        // Geldig: winnaar is deelnemer — moet ongemoeid blijven.
+        $geldig = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $sam,
+            'judoka_blauw_id' => $guus,
+            'winnaar_id' => $sam,
+            'is_gespeeld' => true,
+        ]);
+
+        $this->callPrivate('geneesCorrupteUitslagen', [collect([$corrupt, $geldig])]);
+
+        $corrupt->refresh();
+        $this->assertNull($corrupt->winnaar_id, 'Stale winnaar moet gereset zijn');
+        $this->assertFalse((bool) $corrupt->is_gespeeld, 'Corrupte wedstrijd is niet meer gespeeld');
+
+        $geldig->refresh();
+        $this->assertEquals($sam, $geldig->winnaar_id, 'Geldige uitslag blijft ongemoeid');
+        $this->assertTrue((bool) $geldig->is_gespeeld);
+    }
 }
