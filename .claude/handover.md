@@ -30,6 +30,13 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Deelnemers-tab: H-15/D-15 klappen niet uit (21-07).** Op Generale-toernooi (staging): klik
+  op de leeftijdsklasse-header verandert niks visueel. Jeugd toont wél judoka-namen zonder
+  gewichtsklasse-groepering — dat is by design (variabele indeling, `max_kg_verschil > 0`),
+  bevestigd in `PUBLIEK.md`. Plan met vier hypotheses (x-collapse-cache, CSP-error, nested
+  x-data init, click-lek) + diagnose-stappen: `.claude/plan-deelnemers-tab.md`. Doc bijgewerkt.
+  Wacht op console-output van Henk vóór code.
+
 - **Favorieten-tab: render-fix + eliminatie-status + tab-beurtkleur (plan geschreven 21-07).**
   Plan: `.claude/plan-favorieten-eliminatie.md`, doc bijgewerkt (`PUBLIEK.md`). Drie delen:
   (A) render-leeg robuust fixen — `activeFavoriet` blijft null → kaart-`x-for` filter (`index.blade.php:835`)
