@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\ScoreboardAssignment;
 use App\Events\ScoreboardEvent;
 use App\Models\Mat;
+use App\Models\Poule;
 use App\Models\Wedstrijd;
 
 /**
@@ -18,6 +19,24 @@ use App\Models\Wedstrijd;
  */
 class ScoreboardNotifier
 {
+    /**
+     * Her-broadcast de scoreboard-toewijzing voor elke mat waarvan de actieve wedstrijd
+     * in deze poule zit. Aanroepen nadat de DEELNEMERS van poule-wedstrijden zijn gewijzigd
+     * (drag-plaatsing, uitslagcorrectie, winnaar-doorschuiven) — zonder dit blijft de Android
+     * scoreboard-app de oude judoka's tonen. Idempotent: geen actieve match in deze poule → niets.
+     */
+    public function notifyForPoule(int $toernooiId, Poule $poule): void
+    {
+        $wedstrijdIds = $poule->wedstrijden()->pluck('id');
+        if ($wedstrijdIds->isEmpty()) {
+            return;
+        }
+
+        Mat::whereIn('actieve_wedstrijd_id', $wedstrijdIds)
+            ->get()
+            ->each(fn (Mat $mat) => $this->notifyActiveMatchChanged($toernooiId, $mat));
+    }
+
     /**
      * Roep aan NADAT $mat->actieve_wedstrijd_id is bijgewerkt.
      */

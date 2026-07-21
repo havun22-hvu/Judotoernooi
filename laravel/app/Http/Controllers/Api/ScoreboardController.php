@@ -194,6 +194,12 @@ class ScoreboardController extends Controller
                 $correcties = $this->eliminatieService->verwerkUitslag(
                     $wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType
                 );
+
+                // Deelnemers van volgende ronde/B kunnen gewijzigd zijn (winnaar-advance,
+                // correctie). Her-broadcast de scoreboard-toewijzing voor betrokken matten.
+                if ($wedstrijd->poule) {
+                    app(\App\Services\ScoreboardNotifier::class)->notifyForPoule($toernooi->id, $wedstrijd->poule);
+                }
             }
         } else {
             // Regular pool match

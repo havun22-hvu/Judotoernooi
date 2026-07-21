@@ -218,4 +218,40 @@ class MatControllerTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    #[Test]
+    public function scoreboard_wordt_geherbroadcast_bij_deelnemer_wijziging(): void
+    {
+        \Illuminate\Support\Facades\Event::fake([\App\Events\ScoreboardAssignment::class]);
+
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $poule = Poule::factory()->create(['toernooi_id' => $this->toernooi->id, 'mat_id' => $mat->id]);
+        $wit = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $blauw = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $wedstrijd = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $wit->id,
+            'judoka_blauw_id' => $blauw->id,
+        ]);
+        $mat->update(['actieve_wedstrijd_id' => $wedstrijd->id]);
+
+        app(\App\Services\ScoreboardNotifier::class)->notifyForPoule($this->toernooi->id, $poule->fresh());
+
+        \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\ScoreboardAssignment::class);
+    }
+
+    #[Test]
+    public function scoreboard_niet_geherbroadcast_zonder_actieve_match_in_poule(): void
+    {
+        \Illuminate\Support\Facades\Event::fake([\App\Events\ScoreboardAssignment::class]);
+
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $poule = Poule::factory()->create(['toernooi_id' => $this->toernooi->id, 'mat_id' => $mat->id]);
+        Wedstrijd::factory()->create(['poule_id' => $poule->id]);
+        // Mat heeft GEEN actieve wedstrijd in deze poule
+
+        app(\App\Services\ScoreboardNotifier::class)->notifyForPoule($this->toernooi->id, $poule->fresh());
+
+        \Illuminate\Support\Facades\Event::assertNotDispatched(\App\Events\ScoreboardAssignment::class);
+    }
 }

@@ -100,6 +100,12 @@ class MatUitslagController extends Controller
                 }
                 $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
                 $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
+
+                // Winnaar doorgeschoven → deelnemers van volgende ronde/B zijn gewijzigd.
+                // Her-broadcast de scoreboard-toewijzing voor matten met een actieve match hier.
+                if ($wedstrijd->poule) {
+                    app(\App\Services\ScoreboardNotifier::class)->notifyForPoule($toernooi->id, $wedstrijd->poule);
+                }
             }
 
             $winnaarNaam = $validated['winnaar_id'] ? Judoka::find($validated['winnaar_id'])?->naam : null;

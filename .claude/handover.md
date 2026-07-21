@@ -32,6 +32,14 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Scoreboard ververst nu bij deelnemer-wijziging — fix op staging (22-07).** Android
+  scoreboard-app toonde oude judoka's als de deelnemers van de actieve wedstrijd wijzigden
+  (drag-plaatsing, correctie, winnaar-doorschuiven): `notifyActiveMatchChanged` draaide alleen
+  bij een beurt-wissel. Nieuw: `ScoreboardNotifier::notifyForPoule` her-broadcast de toewijzing
+  voor elke mat met een actieve match in die poule; aangehaakt in `plaatsJudoka` +
+  `MatUitslagController` + `ScoreboardController` (na `verwerkUitslag`). **Client-side reload doet
+  Henk in het scoreboard-project.** Doc: `.claude/plan-scoreboard-deelnemer-refresh.md`. 12 tests
+  groen. **Te verifiëren:** deelnemer wijzigen terwijl scoreboard live → app toont nieuwe naam.
 - **Eliminatie: uitslagcorrectie propageert nu naar de herkansing (B) — fix op staging (21-07).**
   Matscheids voert fout in, jury corrigeert → A-groep werd herzien, **B (herkansing) niet** →
   stale winnaar (wed#25275: winnaar Vince geen deelnemer), speler zat vast, bracket ≠ live-mat.

@@ -323,6 +323,12 @@ class MatBracketController extends Controller
             ]);
         }
 
+        // Deelnemers van poule-wedstrijden zijn gewijzigd (plaatsing + eventuele correctie-
+        // cascade): her-broadcast de scoreboard-toewijzing zodat de app niet de oude judoka's toont.
+        if ($wedstrijd->poule) {
+            app(\App\Services\ScoreboardNotifier::class)->notifyForPoule($toernooi->id, $wedstrijd->poule);
+        }
+
         return response()->json([
             'success' => true,
             'correcties' => $correcties,
