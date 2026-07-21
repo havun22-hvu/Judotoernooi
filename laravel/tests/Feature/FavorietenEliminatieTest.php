@@ -13,8 +13,8 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * De favorieten-tab toont voor eliminatie-poules de komende partij (ronde +
- * tegenstander) of de eindplaats, niet de round-robin ranglijst.
+ * De favorieten-tab toont voor eliminatie-poules de status van dat moment
+ * (komende partij / medaille / afgevallen), niet de round-robin ranglijst.
  */
 class FavorietenEliminatieTest extends TestCase
 {
@@ -62,7 +62,7 @@ class FavorietenEliminatieTest extends TestCase
     }
 
     #[Test]
-    public function toont_komende_partij_met_ronde_en_tegenstander(): void
+    public function toont_komende_partij_met_groep_ronde_en_tegenstander(): void
     {
         $abel = $this->judoka('Abel');
         $rival = $this->judoka('Rival');
@@ -80,10 +80,11 @@ class FavorietenEliminatieTest extends TestCase
         $json = $this->postFavorieten([$abel->id])->assertOk()->json();
         $elim = $this->favoriet($json, $abel->id)['eliminatie'];
 
+        $this->assertSame('komt', $elim['status']);
+        $this->assertSame('A', $elim['groep']);
         $this->assertSame('1/2', $elim['ronde_naam']);
         $this->assertSame('Rival', $elim['tegenstander']['naam']);
         $this->assertNull($elim['eindpositie']);
-        $this->assertFalse($elim['uitgeschakeld']);
     }
 
     #[Test]
@@ -102,6 +103,8 @@ class FavorietenEliminatieTest extends TestCase
 
         $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
 
+        $this->assertSame('komt', $elim['status']);
+        $this->assertSame('A', $elim['groep']);
         $this->assertSame('1/4', $elim['ronde_naam']);
         $this->assertNull($elim['tegenstander']);
     }
@@ -122,8 +125,8 @@ class FavorietenEliminatieTest extends TestCase
 
         $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
 
+        $this->assertSame('medaille', $elim['status']);
         $this->assertSame('1e', $elim['eindpositie']);
-        $this->assertFalse($elim['uitgeschakeld']);
     }
 
     #[Test]
@@ -136,27 +139,67 @@ class FavorietenEliminatieTest extends TestCase
 
         $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
 
+        $this->assertSame('medaille', $elim['status']);
         $this->assertSame('3e (gedeeld)', $elim['eindpositie']);
     }
 
     #[Test]
-    public function uitgeschakeld_zonder_medaille_toont_geen_plaats(): void
+    public function afgevallen_toont_groep_en_ronde_van_de_verloren_partij(): void
     {
         $abel = $this->judoka('Abel');
+        $rival = $this->judoka('Rival');
         $this->poule->judokas()->attach($abel->id, ['positie' => 5, 'eindpositie' => 5]);
+        $this->poule->judokas()->attach($rival->id, ['positie' => 6]);
 
+        // Abel verloor in de B-1/8 finale (winnaar = rival).
         Wedstrijd::factory()->create([
             'poule_id' => $this->poule->id,
             'judoka_wit_id' => $abel->id,
-            'judoka_blauw_id' => $this->judoka('Rival')->id,
-            'ronde' => 'kwartfinale',
+            'judoka_blauw_id' => $rival->id,
+            'ronde' => 'b_achtste_finale',
             'is_gespeeld' => true,
+            'winnaar_id' => $rival->id,
         ]);
 
         $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
 
+        $this->assertSame('afgevallen', $elim['status']);
+        $this->assertSame('B', $elim['groep']);
+        $this->assertSame('1/8', $elim['ronde_naam']);
         $this->assertNull($elim['eindpositie']);
-        $this->assertTrue($elim['uitgeschakeld']);
+    }
+
+    #[Test]
+    public function afgevallen_kiest_de_laatste_verloren_partij_B_na_A(): void
+    {
+        $abel = $this->judoka('Abel');
+        $rival = $this->judoka('Rival');
+        $this->poule->judokas()->attach($abel->id, ['positie' => 5, 'eindpositie' => 5]);
+        $this->poule->judokas()->attach($rival->id, ['positie' => 6]);
+
+        // Eerst verloren in de A-kwartfinale (zakt naar B), daarna definitief in de B-halve finale.
+        Wedstrijd::factory()->create([
+            'poule_id' => $this->poule->id,
+            'judoka_wit_id' => $abel->id,
+            'judoka_blauw_id' => $rival->id,
+            'ronde' => 'kwartfinale',
+            'is_gespeeld' => true,
+            'winnaar_id' => $rival->id,
+        ]);
+        Wedstrijd::factory()->create([
+            'poule_id' => $this->poule->id,
+            'judoka_wit_id' => $abel->id,
+            'judoka_blauw_id' => $rival->id,
+            'ronde' => 'b_halve_finale',
+            'is_gespeeld' => true,
+            'winnaar_id' => $rival->id,
+        ]);
+
+        $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
+
+        $this->assertSame('afgevallen', $elim['status']);
+        $this->assertSame('B', $elim['groep']);
+        $this->assertSame('1/2', $elim['ronde_naam']);
     }
 
     #[Test]

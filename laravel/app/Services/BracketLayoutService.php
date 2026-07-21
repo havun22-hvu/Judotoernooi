@@ -82,6 +82,15 @@ class BracketLayoutService
     }
 
     /**
+     * Groep (poulehelft) van een ronde: 'B' bij een verliezersbracket-ronde
+     * (prefix `b_`), anders 'A'. Gebruikt in de publieke favorieten-tab.
+     */
+    public static function rondeGroep(string $ronde): string
+    {
+        return str_starts_with($ronde, 'b_') ? 'B' : 'A';
+    }
+
+    /**
      * Bereken de volledige A-bracket layout.
      *
      * @param array $wedstrijden Array van wedstrijd-arrays (uit getSchemaVoorMat)

@@ -30,15 +30,14 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
-- **Favorieten-tab render leeg op staging (21-07 avond).** Endpoint werkt (POST retourneert
-  2 poules met `is_favoriet:true` bij Bram + Emma), state klopt (`toonFavorietPoules` = true,
-  container zonder `display:none` in DevTools), maar op scherm alleen de tabjes Bram/Emma —
-  geen alerts, geen poule-kaart. Twee losse Alpine expression-errors uit de scorebord-picker
-  zijn vandaag verhard (`mat.groen.wit`-guards + JS-methoden `matPreviewTekst`) maar dat
-  fixte de tab niet. Volgende stap: klap `<template x-for="poule in favorietenPoules.filter(...)">`
-  in DevTools open en kijk of Alpine 'm rendert (verwacht 1 kind voor Bram als
-  activeFavoriet). Verdacht: `activeFavoriet` blijft null → filter geeft niks. Check
-  `$watch('favorietenPoules', ...)` + `getFirstFavorietId()` in `index.blade.php:1264-1270`.
+- **Favorieten-tab: render-fix + eliminatie-status + tab-beurtkleur (plan geschreven 21-07).**
+  Plan: `.claude/plan-favorieten-eliminatie.md`, doc bijgewerkt (`PUBLIEK.md`). Drie delen:
+  (A) render-leeg robuust fixen — `activeFavoriet` blijft null → kaart-`x-for` filter (`index.blade.php:835`)
+  leeg; imperatief zetten ná load + `actievePoules()`/`kiesActieveFavoriet()` i.p.v. losse `$watch`.
+  (B) eliminatie: A/B-groep + ronde + tegenstander + Mat, of "Afgevallen — B · 1/8 finale", of medaille
+  (`bouwEliminatieInfo()` uitbreiden). (C) naam-tabs kleuren naar beurt (groen/geel/blauw), geselecteerde
+  tab = oranje ring. **Wacht op "ga maar" voor code.** Niet in browser reproduceerbaar (Chrome uit) → Henk
+  verifieert op staging.
 
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit

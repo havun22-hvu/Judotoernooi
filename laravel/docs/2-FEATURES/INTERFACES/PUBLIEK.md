@@ -47,8 +47,23 @@ De deelnemers worden gegroepeerd op basis van de **toernooi-instellingen** (`$to
 4. Als `max_kg_verschil == 0` → vaste klassen → groepeer op `gewichten` array uit config
 
 **View toont:**
-- **Dynamische categorie**: Alle judoka's direct zichtbaar, gesorteerd op leeftijd + gewicht
-- **Vaste categorie**: Knoppen per gewichtsklasse (uit config), klik voor judoka lijst
+- **Dynamische categorie**: Alle judoka's direct zichtbaar, gesorteerd op leeftijd + gewicht.
+  Géén gewichtsklasse-groepering — categorie-label (leeftijdsklasse) staat bovenaan, dan de
+  lijst met judoka-namen, leeftijd en gewicht. Dit is by design (variabele indeling: er zíjn
+  geen vaste gewichtsklassen).
+- **Vaste categorie**: Knoppen per gewichtsklasse (uit config), klik voor judoka lijst.
+
+**Inklap-gedrag per leeftijdsklasse (`resources/views/pages/publiek/index.blade.php:582`).**
+Elke leeftijdsklasse zit in een `<div x-data="{ collapsed: false }">`. De header is een knop
+die `collapsed` toggelt; de content-`<div>` staat `x-show="!collapsed" x-collapse`. Bij open
+verschijnt de dynamische-lijst of gewichtsklasse-knoppen; bij dicht alleen de header met het
+totaal-aantal judoka's. Chevron draait naar rechts als dicht, naar beneden als open.
+`collapsed` is een Identifier op de eigen component-scope → CSP-safe.
+
+**Open bug (21-07): H-15 / D-15 klappen niet uit** op het Generale-toernooi. Vast klasse-
+type (`max_kg_verschil: 0`, `gewichten: ['-55','-60',...]`), zou de gewichtsklasse-knoppen
+moeten tonen bij een klik op de header. Klap-gedrag is by design (`collapsed` toggle op de
+knop), maar visueel blijft de content dicht. Diagnose loopt — zie `.claude/plan-deelnemers-tab.md`.
 
 **Voorbeeld configuratie:**
 ```php
@@ -137,22 +152,47 @@ In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
 - Groene banner: "🥋 NU! [Naam] is aan het vechten!"
 - Gele banner: "⚡ Maak je klaar! [Naam] is bijna aan de beurt"
 
+### Naam-tabs kleuren naar de beurt
+
+De naam-tabs onder "mijn favorieten" nemen de **beurtkleur** aan als achtergrond, zodat je in één
+oogopslag ziet of je favoriet moet spelen / klaar staan / klaar maken:
+
+| Beurt | Kleur | Bron-flag |
+|-------|-------|-----------|
+| Speelt nu | groen | `is_aan_de_beurt` |
+| Klaar staan | geel | `is_volgende` |
+| Klaar maken | blauw | `is_gereedmaken` |
+| Geen beurt | grijs | — |
+
+De **geselecteerde** tab krijgt een **oranje ring** (`ring-2 ring-orange-500`) + vet — oranje omdat
+groen/geel/blauw al beurtkleuren zijn, zo blijven beurt én selectie beide zichtbaar. De beurt komt uit
+de component-methode `favorietBeurt(id)` (CSP-safe; houdt de `.some()`-logica uit de blade).
+
 ### Eliminatie-poules in de favorieten-tab
 
 Een eliminatie-poule heeft geen ranglijst maar een bracket, dus de round-robin-kaart (positie/WP/JP)
-past er niet op. Voor `poule.type === 'eliminatie'` toont de kaart daarom een compacte variant voor
-de **actieve favoriet**:
+past er niet op. Voor `poule.type === 'eliminatie'` toont de kaart daarom de **status van dat moment**
+voor de actieve favoriet (`eliminatie.status`):
 
-- **Eindplaats** (🏅) als de favoriet een medaille heeft — alleen 1e/2e/3e, en `3e (gedeeld)` bij
-  meerdere bronzen. Uitgeschakeld zonder medaille → "Uitgeschakeld", géén plaats.
-- Anders de **komende partij**: rondenaam (`1/4`, `1/2`, `Finale` — via `BracketLayoutService::
-  rondeNaam()`) + tegenstander (naam + club). Tegenstander-slot nog leeg → "nog niet bekend".
+| status | Weergave |
+|--------|----------|
+| `komt` | Badge `A · 1/4 finale` (groep + rondenaam) + tegenstander (naam + club, of "nog niet bekend") + `Mat X` |
+| `afgevallen` | `Afgevallen — B · 1/8 finale` (groep + ronde van de laatste verloren partij) |
+| `medaille` | 🏅 eindplaats — 1e/2e/3e, `3e (gedeeld)` bij meerdere bronzen |
+
+De **groep** (`A`/`B`) komt uit de ronde-key: prefix `b_` → B-groep, anders A
+(`BracketLayoutService::rondeGroep()`). Rondenamen via `BracketLayoutService::rondeNaam()`.
 
 `PubliekController@favorieten` verrijkt elke favoriet-judoka in een eliminatie-poule met een
 `eliminatie`-object (`bouwEliminatieInfo()`); round-robin poules krijgen `eliminatie: null` en houden
 de ranglijst-kaart. De statusbanners (blauw/geel/groen) en push-meldingen draaien op de per-judoka
 flags en werken voor beide types ongewijzigd. De blade leest de info via de component-methode
 `favorietEliminatie(poule)` (CSP-safe: geen optional chaining in Alpine-expressies).
+
+> **Render-robuustheid:** de actieve poule-kaart wordt gekozen via component-methodes
+> (`actievePoules()` / `kiesActieveFavoriet()`), niet via een losse `$watch`-timing. `activeFavoriet`
+> wordt imperatief gezet ná het laden en valt terug op de eerste favoriet mét poule — zo kan de kaart
+> nooit stil leeg blijven zolang er data is.
 
 ### Push-meldingen bij favorieten
 

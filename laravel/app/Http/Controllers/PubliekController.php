@@ -527,15 +527,23 @@ class PubliekController extends Controller
     }
 
     /**
-     * Bracket-info voor één favoriet in een eliminatie-poule: de eerstvolgende
-     * partij (ronde + tegenstander), of — als alles gespeeld is — de eindplaats
-     * bij een medaille, anders 'uitgeschakeld'. Round-robin gebruikt dit niet.
+     * Status-info voor één favoriet in een eliminatie-poule (geen ranglijst mogelijk):
+     *  - 'komt'       → eerstvolgende partij: groep (A/B) + ronde + tegenstander
+     *  - 'medaille'   → eindplaats (1e/2e/3e, '3e (gedeeld)' bij meerdere bronzen)
+     *  - 'afgevallen' → groep + ronde van de laatste verloren partij (uitschakelmoment)
+     * Round-robin gebruikt dit niet.
      */
     private function bouwEliminatieInfo(Poule $poule, Judoka $favoriet): array
     {
-        $info = ['ronde_naam' => null, 'tegenstander' => null, 'eindpositie' => null, 'uitgeschakeld' => false];
+        $info = [
+            'status' => null,       // 'komt' | 'medaille' | 'afgevallen'
+            'groep' => null,        // 'A' | 'B'
+            'ronde_naam' => null,
+            'tegenstander' => null,
+            'eindpositie' => null,
+        ];
 
-        // Eerstvolgende niet-gespeelde partij van de favoriet, vroegste ronde eerst.
+        // 1) Eerstvolgende niet-gespeelde partij van de favoriet, vroegste ronde eerst.
         $komende = $poule->wedstrijden
             ->filter(fn($w) => !$w->is_gespeeld
                 && ($w->judoka_wit_id === $favoriet->id || $w->judoka_blauw_id === $favoriet->id))
@@ -543,6 +551,8 @@ class PubliekController extends Controller
             ->first();
 
         if ($komende) {
+            $info['status'] = 'komt';
+            $info['groep'] = BracketLayoutService::rondeGroep($komende->ronde ?? '');
             $info['ronde_naam'] = BracketLayoutService::rondeNaam($komende->ronde ?? '');
             $tegenstanderId = $komende->judoka_wit_id === $favoriet->id
                 ? $komende->judoka_blauw_id
@@ -557,14 +567,31 @@ class PubliekController extends Controller
             return $info;
         }
 
-        // Geen komende partij: medaille (1/2/3) tonen, anders uitgeschakeld (geen plaats).
+        // 2) Medaille (1/2/3).
         $eindpositie = $favoriet->pivot->eindpositie !== null ? (int) $favoriet->pivot->eindpositie : null;
         if (in_array($eindpositie, [1, 2, 3], true)) {
             $gedeeldBrons = $eindpositie === 3
                 && $poule->judokas->filter(fn($j) => (int) ($j->pivot->eindpositie ?? 0) === 3)->count() > 1;
+            $info['status'] = 'medaille';
             $info['eindpositie'] = $gedeeldBrons ? '3e (gedeeld)' : $eindpositie . 'e';
-        } else {
-            $info['uitgeschakeld'] = true;
+
+            return $info;
+        }
+
+        // 3) Afgevallen: laatste gespeelde partij die de favoriet verloor. Een B-verlies telt
+        //    als later dan een A-verlies (double elim → B is de definitieve uitschakeling).
+        $verloren = $poule->wedstrijden
+            ->filter(fn($w) => $w->is_gespeeld
+                && ($w->judoka_wit_id === $favoriet->id || $w->judoka_blauw_id === $favoriet->id)
+                && $w->winnaar_id !== null && $w->winnaar_id !== $favoriet->id)
+            ->sortByDesc(fn($w) => (BracketLayoutService::rondeGroep($w->ronde ?? '') === 'B' ? 100 : 0)
+                + BracketLayoutService::rondeVolgorde($w->ronde ?? ''))
+            ->first();
+
+        $info['status'] = 'afgevallen';
+        if ($verloren) {
+            $info['groep'] = BracketLayoutService::rondeGroep($verloren->ronde ?? '');
+            $info['ronde_naam'] = BracketLayoutService::rondeNaam($verloren->ronde ?? '');
         }
 
         return $info;

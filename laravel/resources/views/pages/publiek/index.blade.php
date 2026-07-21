@@ -808,20 +808,18 @@
                         <!-- Tabs voor favorieten (max 10) -->
                         <div class="flex gap-1 mb-3 overflow-x-auto pb-2">
                             <template x-for="id in favorieten.slice(0, 10)" :key="id">
+                                {{-- Tab kleurt naar de beurt (groen=speelt / geel=klaar staan / blauw=klaar maken);
+                                     geselecteerde tab = oranje ring bovenop de beurt-vulling. --}}
                                 <button @click="activeFavoriet = id"
                                         class="px-3 py-2 rounded-t-lg text-sm font-medium whitespace-nowrap transition-colors relative"
-                                        :class="activeFavoriet === id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
+                                        :class="{
+                                            'bg-green-500 text-white animate-pulse': favorietBeurt(id) === 'speelt',
+                                            'bg-yellow-400 text-gray-900': favorietBeurt(id) === 'klaar',
+                                            'bg-blue-500 text-white': favorietBeurt(id) === 'gereed',
+                                            'bg-gray-200 text-gray-700 hover:bg-gray-300': favorietBeurt(id) === null,
+                                            'ring-2 ring-orange-500 font-bold': activeFavoriet === id
+                                        }">
                                     <span x-text="getFavorietNaam(id).split(' ')[0]"></span>
-                                    <!-- Indicator voor bezig/volgende/gereedmaken -->
-                                    <template x-if="favorietenPoules.some(p => p.judokas.some(j => j.id === id && j.is_aan_de_beurt))">
-                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                                    </template>
-                                    <template x-if="favorietenPoules.some(p => p.judokas.some(j => j.id === id && j.is_volgende && !j.is_aan_de_beurt))">
-                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
-                                    </template>
-                                    <template x-if="favorietenPoules.some(p => p.judokas.some(j => j.id === id && j.is_gereedmaken && !j.is_volgende && !j.is_aan_de_beurt))">
-                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full"></span>
-                                    </template>
                                 </button>
                             </template>
                             <button @click="loadFavorieten()" class="px-2 py-2 text-blue-600 hover:text-blue-800" title="Ververs">
@@ -831,8 +829,9 @@
                             </button>
                         </div>
 
-                        <!-- Actieve poule -->
-                        <template x-for="poule in favorietenPoules.filter(p => p.judokas.some(j => j.id === activeFavoriet))" :key="poule.id">
+                        <!-- Actieve poule (component-methode i.p.v. inline filter: valt terug op de
+                             eerste favoriet mét poule, zodat de kaart nooit stil leeg blijft) -->
+                        <template x-for="poule in actievePoules()" :key="poule.id">
                             <div class="bg-white rounded-lg shadow overflow-hidden">
                                 <div class="bg-blue-600 text-white px-4 py-2">
                                     <div class="flex justify-between items-center">
@@ -846,21 +845,16 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- Eliminatie: geen ranglijst maar de komende partij / eindplaats van de favoriet --}}
+                                {{-- Eliminatie: geen ranglijst, maar de status van dat moment van de favoriet --}}
                                 <template x-if="poule.type === 'eliminatie'">
                                     <div class="p-4">
-                                        <template x-if="favorietEliminatie(poule).eindpositie">
-                                            <div class="flex items-center gap-2 text-lg font-bold text-gray-800">
-                                                <span>🏅</span>
-                                                <span>{{ __('Eindplaats') }}: <span x-text="favorietEliminatie(poule).eindpositie"></span></span>
-                                            </div>
-                                        </template>
-
-                                        <template x-if="!favorietEliminatie(poule).eindpositie && favorietEliminatie(poule).ronde_naam">
+                                        {{-- Komende partij: groep + ronde + tegenstander + mat --}}
+                                        <template x-if="favorietEliminatie(poule).status === 'komt'">
                                             <div>
                                                 <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">{{ __('Volgende partij') }}</div>
                                                 <div class="flex items-baseline gap-2 flex-wrap">
-                                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm font-semibold" x-text="favorietEliminatie(poule).ronde_naam"></span>
+                                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm font-semibold"
+                                                          x-text="favorietEliminatie(poule).groep + ' · ' + favorietEliminatie(poule).ronde_naam"></span>
                                                     <template x-if="favorietEliminatie(poule).tegenstander">
                                                         <span class="text-gray-800 font-medium">
                                                             <span x-text="favorietEliminatie(poule).tegenstander.naam"></span>
@@ -870,12 +864,27 @@
                                                     <template x-if="!favorietEliminatie(poule).tegenstander">
                                                         <span class="text-gray-500 italic">{{ __('nog niet bekend') }}</span>
                                                     </template>
+                                                    <span x-show="poule.mat" class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm font-semibold">{{ __('Mat') }} <span x-text="poule.mat"></span></span>
                                                 </div>
                                             </div>
                                         </template>
 
-                                        <template x-if="!favorietEliminatie(poule).eindpositie && !favorietEliminatie(poule).ronde_naam && favorietEliminatie(poule).uitgeschakeld">
-                                            <div class="text-gray-500">{{ __('Uitgeschakeld') }}</div>
+                                        {{-- Medaille --}}
+                                        <template x-if="favorietEliminatie(poule).status === 'medaille'">
+                                            <div class="flex items-center gap-2 text-lg font-bold text-gray-800">
+                                                <span>🏅</span>
+                                                <span>{{ __('Eindplaats') }}: <span x-text="favorietEliminatie(poule).eindpositie"></span></span>
+                                            </div>
+                                        </template>
+
+                                        {{-- Afgevallen: groep + ronde van het uitschakelmoment --}}
+                                        <template x-if="favorietEliminatie(poule).status === 'afgevallen'">
+                                            <div class="text-gray-600">
+                                                <span class="font-semibold text-gray-700">{{ __('Afgevallen') }}</span>
+                                                <template x-if="favorietEliminatie(poule).ronde_naam">
+                                                    <span> — <span x-text="favorietEliminatie(poule).groep + ' · ' + favorietEliminatie(poule).ronde_naam"></span></span>
+                                                </template>
+                                            </div>
                                         </template>
                                     </div>
                                 </template>
@@ -1262,10 +1271,13 @@
                 debugTapCount: 0, // For tracking taps
 
                 init() {
-                    // Auto-select first favoriet when poules loaded
+                    // Vangnet: kies een actieve favoriet zodra poules laden en er nog geen
+                    // (gekoppelde) actieve is. De imperatieve set in loadFavorieten() is leidend.
                     this.$watch('favorietenPoules', () => {
-                        if (this.favorietenPoules.length > 0 && !this.activeFavoriet) {
-                            this.activeFavoriet = this.getFirstFavorietId();
+                        const heeftPoule = this.activeFavoriet
+                            && this.favorietenPoules.some(p => p.judokas.some(j => j.id === this.activeFavoriet));
+                        if (this.favorietenPoules.length > 0 && !heeftPoule) {
+                            this.activeFavoriet = this.kiesActieveFavoriet();
                         }
                     });
 
@@ -1448,16 +1460,39 @@
                     return judokaNamen[id] || 'Judoka #' + id;
                 },
 
-                getFirstFavorietId() {
-                    return this.favorieten.length > 0 ? this.favorieten[0] : null;
-                },
-
                 // Bracket-info van de actieve favoriet in een eliminatie-poule.
                 // Geeft altijd een object terug (nooit null) zodat de blade-expressies
                 // veilig .eindpositie/.ronde_naam/.tegenstander mogen lezen onder CSP.
                 favorietEliminatie(poule) {
                     const fav = poule.judokas.find(j => j.id === this.activeFavoriet);
                     return (fav && fav.eliminatie) ? fav.eliminatie : {};
+                },
+
+                // Poules waarin de actieve favoriet zit. Component-methode i.p.v. inline
+                // arrow-filter in de blade → CSP-veilig en één plek voor de logica.
+                actievePoules() {
+                    return this.favorietenPoules.filter(p => p.judokas.some(j => j.id === this.activeFavoriet));
+                },
+
+                // Eerste favoriet die daadwerkelijk in een geladen poule zit; anders favorieten[0].
+                // Zo kan de kaart nooit stil leeg blijven door een niet-gekoppelde activeFavoriet.
+                kiesActieveFavoriet() {
+                    const metPoule = this.favorieten.find(id =>
+                        this.favorietenPoules.some(p => p.judokas.some(j => j.id === id)));
+                    return metPoule ?? (this.favorieten.length > 0 ? this.favorieten[0] : null);
+                },
+
+                // Beurt van een favoriet voor de naam-tab-kleur:
+                // 'speelt' (groen) | 'klaar' (geel) | 'gereed' (blauw) | null (geen beurt).
+                favorietBeurt(id) {
+                    const j = this.favorietenPoules
+                        .flatMap(p => p.judokas)
+                        .find(k => k.id === id);
+                    if (!j) return null;
+                    if (j.is_aan_de_beurt) return 'speelt';
+                    if (j.is_volgende) return 'klaar';
+                    if (j.is_gereedmaken) return 'gereed';
+                    return null;
                 },
 
                 // Wrapper because compound @click (assignment + method call) fails silently
@@ -1492,6 +1527,14 @@
                         const data = await response.json();
                         const oldPoules = this.favorietenPoules;
                         this.favorietenPoules = data.poules || [];
+
+                        // Deterministisch een actieve favoriet kiezen: leeg, of hij zit in geen
+                        // enkele geladen poule → val terug op de eerste favoriet mét poule.
+                        const heeftPoule = this.activeFavoriet
+                            && this.favorietenPoules.some(p => p.judokas.some(j => j.id === this.activeFavoriet));
+                        if (!heeftPoule) {
+                            this.activeFavoriet = this.kiesActieveFavoriet();
+                        }
 
                         // Check for status changes and send notifications
                         this.checkAndNotify(oldPoules, this.favorietenPoules);
