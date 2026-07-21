@@ -30,6 +30,16 @@ incidenten. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afron
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Favorieten-tab render leeg op staging (21-07 avond).** Endpoint werkt (POST retourneert
+  2 poules met `is_favoriet:true` bij Bram + Emma), state klopt (`toonFavorietPoules` = true,
+  container zonder `display:none` in DevTools), maar op scherm alleen de tabjes Bram/Emma —
+  geen alerts, geen poule-kaart. Twee losse Alpine expression-errors uit de scorebord-picker
+  zijn vandaag verhard (`mat.groen.wit`-guards + JS-methoden `matPreviewTekst`) maar dat
+  fixte de tab niet. Volgende stap: klap `<template x-for="poule in favorietenPoules.filter(...)">`
+  in DevTools open en kijk of Alpine 'm rendert (verwacht 1 kind voor Bram als
+  activeFavoriet). Verdacht: `activeFavoriet` blijft null → filter geeft niks. Check
+  `$watch('favorietenPoules', ...)` + `getFirstFavorietId()` in `index.blade.php:1264-1270`.
+
 - **Coverage-tests cementeren bugs (21-07).** `WedstrijddagControllerCoverageTest` bevatte drie
   `assertStatus(500)`-asserts mét comment "known bug ... but hitting the endpoint still covers
   lines X-Y". De 500 was dus vastgelegd als verwacht gedrag om coverage te halen. Eén daarvan
