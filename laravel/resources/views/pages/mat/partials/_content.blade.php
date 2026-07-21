@@ -2595,9 +2595,13 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch (err) {
                 // === ROLLBACK bij fout ===
+                // Ook de DOM-beurtkleuren terugzetten: de optimistic update kleurde het
+                // slot al (bv. een onvolledige/blind wedstrijd die de server met 400 weigert);
+                // zonder deze herteken blijft die kleur ten onrechte staan.
                 console.error('[Mat] setWedstrijdStatus error:', err.message);
                 this.matSelectie = oudeSelectie;
                 this.poules = [...this.poules];
+                this.$nextTick(() => this.applyBeurtaanduiding());
                 alert(__t.saveSelectionError + ':\n' + err.message);
                 return false;
             }

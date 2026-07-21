@@ -92,6 +92,11 @@ class PouleEliminatieController extends Controller
             ], 400);
         }
 
+        // Bewaar de vorige winnaar vóór de update: is dit een correctie, dan moet de
+        // cascade (verwijderUitLatereRondes + B-opschoning) draaien — anders blijft de
+        // oude doorschuiving staan. null alleen bij een echte eerste registratie.
+        $oudeWinnaarId = $wedstrijd->winnaar_id;
+
         $wedstrijd->update([
             'winnaar_id' => $validated['winnaar_id'],
             'is_gespeeld' => true,
@@ -99,7 +104,7 @@ class PouleEliminatieController extends Controller
         ]);
 
         $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
-        $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], null, $eliminatieType);
+        $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
 
         return response()->json([
             'success' => true,

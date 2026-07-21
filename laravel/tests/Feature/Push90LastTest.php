@@ -286,9 +286,15 @@ class Push90LastTest extends TestCase
         $this->assertFalse($w->isGelijk());
 
         $w->is_gespeeld = true;
-        $w->winnaar_id = 5;
+        $w->judoka_wit_id = 5;
+        $w->judoka_blauw_id = 6;
+        $w->winnaar_id = 5; // winnaar is deelnemer → echt gespeeld
         $this->assertFalse($w->isNogTeSpelen());
         $this->assertTrue($w->isEchtGespeeld());
+
+        // Self-healing: winnaar die geen deelnemer is → niet als gespeeld beschouwen
+        $w->winnaar_id = 999;
+        $this->assertFalse($w->isEchtGespeeld());
     }
 
     // ============================================================

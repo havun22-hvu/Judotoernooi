@@ -41,6 +41,7 @@ class WinnerCalculator
         if ($wedstrijd->herkansing_wedstrijd_id) {
             $bWedstrijd = Wedstrijd::find($wedstrijd->herkansing_wedstrijd_id);
             if ($bWedstrijd) {
+                $this->resetAlsGespeeld($bWedstrijd);
                 $slot = ($wedstrijd->verliezer_naar_slot === 'blauw') ? 'judoka_blauw_id' : 'judoka_wit_id';
                 $bWedstrijd->update([$slot => $verliezerId]);
                 Log::info("Verliezer {$verliezerId} deterministisch geplaatst: {$wedstrijd->ronde} → {$bWedstrijd->ronde} pos {$bWedstrijd->bracket_positie} ({$wedstrijd->verliezer_naar_slot})");
@@ -102,6 +103,7 @@ class WinnerCalculator
         if ($wedstrijd->herkansing_wedstrijd_id) {
             $bWedstrijd = Wedstrijd::find($wedstrijd->herkansing_wedstrijd_id);
             if ($bWedstrijd) {
+                $this->resetAlsGespeeld($bWedstrijd);
                 $slot = ($wedstrijd->verliezer_naar_slot === 'blauw') ? 'judoka_blauw_id' : 'judoka_wit_id';
                 $bWedstrijd->update([$slot => $verliezerId]);
             }
@@ -324,6 +326,22 @@ class WinnerCalculator
     }
 
     /**
+     * Draai een reeds-gespeelde uitslag terug vóór er (opnieuw) een deelnemer in het
+     * doelslot wordt gezet. Voorkomt dat een oude winnaar/is_gespeeld blijft staan als
+     * een correctie een nieuwe verliezer in een al-gespeelde B-wedstrijd plaatst.
+     */
+    private function resetAlsGespeeld(Wedstrijd $wed): void
+    {
+        if ($wed->is_gespeeld || $wed->winnaar_id !== null) {
+            $wed->winnaar_id = null;
+            $wed->is_gespeeld = false;
+            $wed->gespeeld_op = null;
+            $wed->save();
+            Log::info("Correctie B: doelwedstrijd {$wed->id} ({$wed->ronde}) gereset vóór herplaatsing");
+        }
+    }
+
+    /**
      * Verwijder judoka uit B-groep wedstrijden.
      */
     public function verwijderUitB(int $pouleId, int $judokaId): void
@@ -337,11 +355,31 @@ class WinnerCalculator
             ->get();
 
         foreach ($bWedstrijden as $wed) {
+            $verwijderd = false;
             if ($wed->judoka_wit_id == $judokaId) {
-                $wed->update(['judoka_wit_id' => null]);
+                $wed->judoka_wit_id = null;
+                $verwijderd = true;
             }
             if ($wed->judoka_blauw_id == $judokaId) {
-                $wed->update(['judoka_blauw_id' => null]);
+                $wed->judoka_blauw_id = null;
+                $verwijderd = true;
+            }
+
+            // Reset de uitslag als deze judoka hier de winnaar was — anders blijft een
+            // stale winnaar achter die geen deelnemer meer is (corrupte "gespeeld"-rij).
+            if ($wed->winnaar_id == $judokaId) {
+                $wed->winnaar_id = null;
+                $wed->is_gespeeld = false;
+                $wed->gespeeld_op = null;
+                Log::info("Correctie B: uitslag gereset voor wed {$wed->id} ({$wed->ronde})");
+            }
+
+            if ($verwijderd) {
+                $wed->save();
+                // Cascade binnen de B-groep: was de judoka al doorgeschoven naar een
+                // latere B-ronde, dan daar ook verwijderen + uitslag terugdraaien.
+                $this->verwijderUitLatereRondes($pouleId, 'B', $judokaId, $wed->id);
+                Log::info("Correctie B: judoka {$judokaId} verwijderd uit wed {$wed->id} ({$wed->ronde})");
             }
         }
     }

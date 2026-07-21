@@ -150,7 +150,15 @@ class Wedstrijd extends Model
      */
     public function isEchtGespeeld(): bool
     {
-        return $this->is_gespeeld && $this->winnaar_id !== null;
+        if (!$this->is_gespeeld || $this->winnaar_id === null) {
+            return false;
+        }
+
+        // Self-healing: een winnaar die geen deelnemer (meer) is, duidt op een niet
+        // gepropageerde correctie. Behandel de wedstrijd dan als nog-te-spelen i.p.v.
+        // een corrupte "gespeeld"-status te vertrouwen. (== : int/string-tolerant.)
+        return $this->winnaar_id == $this->judoka_wit_id
+            || $this->winnaar_id == $this->judoka_blauw_id;
     }
 
     /**

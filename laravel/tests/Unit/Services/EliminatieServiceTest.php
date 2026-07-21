@@ -304,4 +304,83 @@ class EliminatieServiceTest extends TestCase
             );
         }
     }
+
+    // =========================================================================
+    // CORRECTIE-PROPAGATIE (winnaar wijzigen → herkansing meecorrigeren)
+    // =========================================================================
+
+    #[Test]
+    public function correctie_van_a_winnaar_ruimt_stale_uitslag_in_b_op(): void
+    {
+        [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
+        $this->service->genereerBracket($poule, $judokaIds, 'ijf');
+
+        $kf = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')->where('ronde', 'kwartfinale')
+            ->orderBy('bracket_positie')->first();
+
+        $vince = $kf->judoka_wit_id;   // wordt uiteindelijk (correcte) winnaar
+        $guus  = $kf->judoka_blauw_id; // eerst per ongeluk als winnaar ingevoerd
+
+        // 1) Foute invoer: Guus wint → verliezer Vince naar B-herkansing.
+        $kf->update(['is_gespeeld' => true, 'winnaar_id' => $guus]);
+        $this->service->verwerkUitslag($kf, $guus, null, 'ijf');
+
+        $bHf = Wedstrijd::find($kf->herkansing_wedstrijd_id);
+        $this->assertTrue(
+            $bHf->judoka_wit_id === $vince || $bHf->judoka_blauw_id === $vince,
+            'Verliezer Vince moet in B-1/2 geplaatst zijn'
+        );
+
+        // 2) Vince speelt zijn B-1/2 en wint (uitslag staat in B).
+        $bHf->update(['is_gespeeld' => true, 'winnaar_id' => $vince]);
+
+        // 3) Jury corrigeert de A-kwartfinale: Vince is winnaar (oude = Guus).
+        $kf->update(['winnaar_id' => $vince]);
+        $this->service->verwerkUitslag($kf, $vince, $guus, 'ijf');
+
+        // De B-1/2 mag geen corrupte "gespeeld"-status met stale winnaar houden.
+        $bHf->refresh();
+        if ($bHf->winnaar_id !== null) {
+            $this->assertTrue(
+                $bHf->winnaar_id == $bHf->judoka_wit_id || $bHf->winnaar_id == $bHf->judoka_blauw_id,
+                'B-1/2 winnaar moet een deelnemer zijn — geen stale Vince'
+            );
+        }
+        $this->assertFalse(
+            $bHf->isEchtGespeeld() && $bHf->winnaar_id == $vince
+                && $bHf->judoka_wit_id != $vince && $bHf->judoka_blauw_id != $vince,
+            'B-1/2 mag niet als gespeeld gelden met een niet-deelnemer als winnaar'
+        );
+        // De nieuwe verliezer (Guus) hoort nu in de B-1/2 te staan.
+        $this->assertTrue(
+            $bHf->judoka_wit_id === $guus || $bHf->judoka_blauw_id === $guus,
+            'Nieuwe verliezer Guus moet in B-1/2 geplaatst zijn'
+        );
+    }
+
+    #[Test]
+    public function is_echt_gespeeld_negeert_winnaar_die_geen_deelnemer_is(): void
+    {
+        $corrupt = new Wedstrijd();
+        $corrupt->judoka_wit_id = 1;
+        $corrupt->judoka_blauw_id = 2;
+        $corrupt->winnaar_id = 99; // geen deelnemer
+        $corrupt->is_gespeeld = true;
+        $this->assertFalse($corrupt->isEchtGespeeld(), 'Stale winnaar (niet-deelnemer) telt niet als gespeeld');
+
+        $normaal = new Wedstrijd();
+        $normaal->judoka_wit_id = 1;
+        $normaal->judoka_blauw_id = 2;
+        $normaal->winnaar_id = 2;
+        $normaal->is_gespeeld = true;
+        $this->assertTrue($normaal->isEchtGespeeld(), 'Winnaar = deelnemer telt als gespeeld');
+
+        $bye = new Wedstrijd();
+        $bye->judoka_wit_id = 1;
+        $bye->judoka_blauw_id = null;
+        $bye->winnaar_id = 1;
+        $bye->is_gespeeld = true;
+        $this->assertTrue($bye->isEchtGespeeld(), 'Bye (winnaar = enige deelnemer) telt als gespeeld');
+    }
 }

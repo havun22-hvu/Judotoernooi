@@ -32,6 +32,20 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Eliminatie: uitslagcorrectie propageert nu naar de herkansing (B) — fix op staging (21-07).**
+  Matscheids voert fout in, jury corrigeert → A-groep werd herzien, **B (herkansing) niet** →
+  stale winnaar (wed#25275: winnaar Vince geen deelnemer), speler zat vast, bracket ≠ live-mat.
+  Fix: `WinnerCalculator::verwijderUitB` reset nu uitslag + cascade in B (symmetrisch met
+  `verwijderUitLatereRondes`); `plaatsVerliezer*` reset een reeds-gespeelde doelwedstrijd;
+  `Wedstrijd::isEchtGespeeld` self-healing (winnaar moet deelnemer zijn — geneest bestaande
+  corruptie zónder reset); `PouleEliminatieController` geeft nu de oude winnaar door. **Niets
+  gereset** (bewust — dit klooien moet opgevangen worden). Doc:
+  `.claude/plan-correctie-propagatie.md`. 107+ tests groen incl. correctie-scenario.
+  **Te verifiëren op staging (Henk):** corrigeer een A-uitslag → herkansing schuift correct mee,
+  Sam-vs-Guus is weer speelbaar, bracht en live-mat gelijk.
+  Óók probleem 1 hierin: onvolledige/blind wedstrijd → beurtkleur; server weigert al (400) maar
+  de optimistische kleur bleef staan → `setWedstrijdStatus`-rollback roept nu
+  `applyBeurtaanduiding()` aan.
 - **Eliminatie: blind kreeg beurtkleur + drag-groen bleef hangen — fix op staging (21-07).**
   Blind (bye, wit gevuld/blauw leeg) kon via dubbelklik groen/blauw worden (guard testte op
   `uitslag_type==='bye'`, maar dat wordt pas ná advance-byes gezet). Nu 3 guard-lagen op
