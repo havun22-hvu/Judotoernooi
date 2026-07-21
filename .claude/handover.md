@@ -40,17 +40,6 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
   activeFavoriet). Verdacht: `activeFavoriet` blijft null → filter geeft niks. Check
   `$watch('favorietenPoules', ...)` + `getFirstFavorietId()` in `index.blade.php:1264-1270`.
 
-- **Coverage-tests cementeren bugs (21-07).** `WedstrijddagControllerCoverageTest` bevatte drie
-  `assertStatus(500)`-asserts mét comment "known bug ... but hitting the endpoint still covers
-  lines X-Y". De 500 was dus vastgelegd als verwacht gedrag om coverage te halen. Eén daarvan
-  (`$nieuweIsDynamisch` undefined) is nu gefixt. **Twee staan nog open:**
-  - `:768` — `bepaalGewichtsklasse()` verwacht `string $geslacht`, controller geeft `null`
-    → TypeError bij nieuwe judoka toevoegen zonder geslacht (`WedstrijddagController.php:861`).
-  - `:789` — `herstelJudoka()` zet `aanwezigheid = null` maar de kolom is NOT NULL → elke
-    herstel-actie geeft 500 (`WedstrijddagController.php:918-927`). Waarschijnlijk moet dit
-    `'aanwezig'` zijn, maar dat is een domeinkeuze: betekent null "nog niet gewogen"?
-  Les: een test die een 500 vastlegt is geen dekking, die maakt de bug permanent. Zoek bij
-  twijfel op `assertStatus(500)` in de coverage-tests. **Alle drie zijn nu gefixt** (21-07).
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
   gewichtloze judoka's uit met een melding. Doc: `2-FEATURES/JUDOKA-GEWICHT-VERPLICHT.md`.
