@@ -11,8 +11,8 @@ last_updated: 2026-07-21
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Prod = staging = main** qua code. **Open regressie (21-07): favorieten-tab op de publieke
-live-app rendert leeg terwijl endpoint + state kloppen — zie eerste open punt.**
+**Staging loopt vóór op prod:** de favorieten-tab fix (render + eliminatie-veld + tab-beurtkleur)
+staat op staging + main, **nog niet op production** — wacht op Henks go voor de prod-deploy.
 Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hieronder.
 
 ## Open — alleen jij kunt dit
@@ -30,22 +30,22 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
-- **Deelnemers-tab: H-15/D-15 klappen niet uit (21-07).** Op Generale-toernooi (staging): klik
-  op de leeftijdsklasse-header verandert niks visueel. Jeugd toont wél judoka-namen zonder
-  gewichtsklasse-groepering — dat is by design (variabele indeling, `max_kg_verschil > 0`),
-  bevestigd in `PUBLIEK.md`. Plan met vier hypotheses (x-collapse-cache, CSP-error, nested
-  x-data init, click-lek) + diagnose-stappen: `.claude/plan-deelnemers-tab.md`. Doc bijgewerkt.
-  Wacht op console-output van Henk vóór code.
+- **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
+  categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
+  in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
+  → vervangen door geneste inklap-headers). Zoeken (server-side over álle judoka's) blijft. Lost
+  vermoedelijk meteen de **H-15/D-15-klapbug** op (`.claude/plan-deelnemers-tab.md`, symptoom 1:
+  x-collapse-cache/CSP/nested-x-data hypotheses — niet los fixen, meenemen in de redesign; pas op
+  dezelfde x-collapse-valkuil niet te herhalen). Huidige structuur: `index.blade.php:572-701`.
+  **Wacht op 3 antwoorden van Henk vóór docs+plan:** (1) meerdere gewichtsklassen tegelijk open of
+  één tegelijk? (2) beginstand categorieën én gewichtsklassen open/dicht? (3) dynamische categorie
+  blijft platte lijst zonder extra laag — akkoord?
 
-- **Favorieten-tab: render-fix + tab-beurtkleur WERKT (bevestigd 21-07), eliminatie-veld in
-  verificatie.** Gebouwd + gedeployed naar staging. (A) render-leeg opgelost — `activeFavoriet`
-  deterministisch via `kiesActieveFavoriet()`/`actievePoules()`, Henk bevestigt: poules renderen weer.
-  (C) naam-tabs kleuren naar beurt + oranje ring op geselecteerde: bevestigd. (B) eliminatie: `komt`
-  toont nu **het hele veld dat nog in die ronde actief is** (favoriet vet, `eliminatie.veld`) i.p.v.
-  één tegenstander — verwarrend/inconsistent met mat. Ook `afgevallen — B · 1/8` + medaille.
-  Doc `PUBLIEK.md` + plan `.claude/plan-favorieten-eliminatie.md` bij. **Nog door Henk in browser te
-  zien:** eliminatie-veld op een echt eliminatie-toernooi (A/B, veld-lijst vet, scroll bij lange lijst).
-  Daarna → production (overleg).
+- **Favorieten-tab: KLAAR op staging, wacht op prod-deploy.** Render-fix + tab-beurtkleur +
+  eliminatie-status (`komt` = hele veld van die ronde, favoriet vet; `afgevallen — B · 1/8`;
+  medaille). Round-robin render + tab-kleur door Henk bevestigd. **Nog te doen:** (a) Henk bekijkt
+  eliminatie-veld op een echt eliminatie-toernooi, (b) **prod-deploy na go** (`repo-prod` pull +
+  caches). Docs: `PUBLIEK.md` + `.claude/plan-favorieten-eliminatie.md`.
 
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
