@@ -37,14 +37,15 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
   x-data init, click-lek) + diagnose-stappen: `.claude/plan-deelnemers-tab.md`. Doc bijgewerkt.
   Wacht op console-output van Henk vóór code.
 
-- **Favorieten-tab: render-fix + eliminatie-status + tab-beurtkleur (plan geschreven 21-07).**
-  Plan: `.claude/plan-favorieten-eliminatie.md`, doc bijgewerkt (`PUBLIEK.md`). Drie delen:
-  (A) render-leeg robuust fixen — `activeFavoriet` blijft null → kaart-`x-for` filter (`index.blade.php:835`)
-  leeg; imperatief zetten ná load + `actievePoules()`/`kiesActieveFavoriet()` i.p.v. losse `$watch`.
-  (B) eliminatie: A/B-groep + ronde + tegenstander + Mat, of "Afgevallen — B · 1/8 finale", of medaille
-  (`bouwEliminatieInfo()` uitbreiden). (C) naam-tabs kleuren naar beurt (groen/geel/blauw), geselecteerde
-  tab = oranje ring. **Wacht op "ga maar" voor code.** Niet in browser reproduceerbaar (Chrome uit) → Henk
-  verifieert op staging.
+- **Favorieten-tab: render-fix + tab-beurtkleur WERKT (bevestigd 21-07), eliminatie-veld in
+  verificatie.** Gebouwd + gedeployed naar staging. (A) render-leeg opgelost — `activeFavoriet`
+  deterministisch via `kiesActieveFavoriet()`/`actievePoules()`, Henk bevestigt: poules renderen weer.
+  (C) naam-tabs kleuren naar beurt + oranje ring op geselecteerde: bevestigd. (B) eliminatie: `komt`
+  toont nu **het hele veld dat nog in die ronde actief is** (favoriet vet, `eliminatie.veld`) i.p.v.
+  één tegenstander — verwarrend/inconsistent met mat. Ook `afgevallen — B · 1/8` + medaille.
+  Doc `PUBLIEK.md` + plan `.claude/plan-favorieten-eliminatie.md` bij. **Nog door Henk in browser te
+  zien:** eliminatie-veld op een echt eliminatie-toernooi (A/B, veld-lijst vet, scroll bij lange lijst).
+  Daarna → production (overleg).
 
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
