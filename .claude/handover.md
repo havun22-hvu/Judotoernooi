@@ -11,9 +11,11 @@ last_updated: 2026-07-21
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Staging loopt vóór op prod:** de favorieten-tab fix (render + eliminatie-veld + tab-beurtkleur)
-staat op staging + main, **nog niet op production** — wacht op Henks go voor de prod-deploy.
-Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hieronder.
+**Favorieten/publieks-page fix staat live op production** (21-07, prod op `1cf930e0`,
+HTTP 200, CSS-bundle `app-z7K1Ju_X.css` serveert): favorieten-card, eliminatie-status,
+beurt-gekleurde tabs, volledig ronde-veld. Nog te verifiëren in de browser: het eliminatie-veld
+op een echt eliminatie-toernooi. Live Stripe-sleutel 19-07 geroteerd na een lek via de chat —
+afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
@@ -41,11 +43,10 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
   één tegelijk? (2) beginstand categorieën én gewichtsklassen open/dicht? (3) dynamische categorie
   blijft platte lijst zonder extra laag — akkoord?
 
-- **Favorieten-tab: KLAAR op staging, wacht op prod-deploy.** Render-fix + tab-beurtkleur +
-  eliminatie-status (`komt` = hele veld van die ronde, favoriet vet; `afgevallen — B · 1/8`;
-  medaille). Round-robin render + tab-kleur door Henk bevestigd. **Nog te doen:** (a) Henk bekijkt
-  eliminatie-veld op een echt eliminatie-toernooi, (b) **prod-deploy na go** (`repo-prod` pull +
-  caches). Docs: `PUBLIEK.md` + `.claude/plan-favorieten-eliminatie.md`.
+- **Favorieten-tab: LIVE op production (21-07).** Render-fix + tab-beurtkleur + eliminatie-status
+  (`komt` = hele veld van die ronde, favoriet vet; `afgevallen — B · 1/8`; medaille). Round-robin
+  render + tab-kleur door Henk bevestigd. **Nog te doen:** Henk bekijkt het eliminatie-veld op een
+  echt eliminatie-toernooi. Docs: `PUBLIEK.md` + `.claude/plan-favorieten-eliminatie.md`.
 
 - **Gewicht + geslacht overal verplicht (21-07) — nog niet in de browser gezien.** Alle
   invoerpaden eisen ze nu, import keurt per rij af (bestand loopt door), en `JudokaGrouper` sluit
