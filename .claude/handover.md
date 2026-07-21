@@ -81,35 +81,6 @@ Live Stripe-sleutel 19-07 geroteerd na een lek via de chat — afronding hierond
   request. `git pull` op beide repo's fixt het; bij elke deploy dus altijd `pull` doen op
   `repo-prod` én `repo-staging`, ook als je "denkt" dat je al up-to-date bent.
 
-## Recent afgerond (context die nog nut heeft)
-- **17-07 — zwart is enum value 0, en dat brak vier dingen tegelijk.** `empty($judoka->band)` is
-  waar voor `0` én `"0"`. Fix: `Band::isIngevuld()`; nooit meer `empty()` op een band. Meegepakt:
-  `ValueParser::parseBand()` maakte van een geïmporteerde zwarte band stilzwijgend wit;
-  `voerValidatieUit()` schreef `$enum->value` weg; HavunClub-paden lieten de band ongefilterd door
-  (nu genormaliseerd, **null blijft null**). Alle 541 judoka's + 18 stam-records gemigreerd van
-  nummers naar kleurnamen. **Bijvangst:** met nummers in de DB viel `bandNaarNummer()` voor élke
-  waarde terug op wit → poule-solver zag iedereen als witte band. Zie ook open-punt hierboven.
-- **17-07 — data-migratie ramp-alarm.** `WHERE band = 0` (int) laat MySQL kleurnamen naar 0 casten
-  → één ronde zou alle 190 bestaande kleurnamen naar 'zwart' hebben herschreven. Strict mode brak
-  af, 0 rijen geraakt. **SQLite juggelt niet** → lokaal groen terwijl de migratie stuk was. Les:
-  een data-migratie draai je op staging vóór prod, altijd, ook als de suite groen is.
-- **17-07 — WhatsApp's link-preview brandde device-toegangslinks op.** WhatsApp's crawler haalde
-  de link zelf op voor een preview en liep door `show()` → `bind()` → binding verbruikt. Fix:
-  `show()` bindt alleen bij `Sec-Fetch-Mode: navigate`; alles anders krijgt een bevestigpagina.
-  Doc: `INTERFACES/TOEGANG.md`.
-- **17-07 — favorieten-tab kaart bleef leeg voor eliminatie-poules.** Round-robin-endpoint bouwde
-  geen ranglijst voor een eliminatie-poule → lege kaart. Nu een `eliminatie`-object per favoriet
-  (komende partij of eindplaats), CSP-safe via component-methode. Doc: `INTERFACES/PUBLIEK.md`.
-- **15-07 — Scoreboard-API security.** Vier lekken dicht (toernooi-scope op `/result`, `api_token`
-  lekte via publiek kanaal, Reset nulde het token niet, geen rate limit → nu 120/min per token, niet
-  per IP). Review: `HavunCore/docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
-  **Bewust:** Reverb-kanalen blijven publiek (Henk: "prima, als je de url weet").
-- **19-07 — secrets gaan nooit meer via de chat.** De live Stripe-key lekte niet via git
-  (`credentials.md` is gitignored, zat nooit in de history) maar via het transcript. Methode nu:
-  verborgen invoer (`read -rs`) in een script dat Henk zelf draait, waarde via stdin naar de
-  server, verifiëren met alleen prefix+laatste-4 of een HTTP-status. Runbook:
-  `HavunCore/docs/kb/runbooks/secrets-veilig-ontvangen.md`.
-
 ## Vaste context voor dit project
 - Artisan altijd met `cd laravel &&` prefix.
 - Auth guard is `organisator` — **niet** `web`. Voor tests: `actingAs($org, 'organisator')`.
