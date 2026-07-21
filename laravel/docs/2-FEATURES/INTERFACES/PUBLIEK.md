@@ -176,9 +176,16 @@ voor de actieve favoriet (`eliminatie.status`):
 
 | status | Weergave |
 |--------|----------|
-| `komt` | Badge `A · 1/4 finale` (groep + rondenaam) + tegenstander (naam + club, of "nog niet bekend") + `Mat X` |
+| `komt` | Badge `A · 1/4 finale` (groep + rondenaam) + `Mat X`, daaronder **het veld** dat nog actief is in die ronde (favoriet vet, oranje highlight) |
 | `afgevallen` | `Afgevallen — B · 1/8 finale` (groep + ronde van de laatste verloren partij) |
 | `medaille` | 🏅 eindplaats — 1e/2e/3e, `3e (gedeeld)` bij meerdere bronzen |
+
+**Geen losse tegenstander bij `komt`.** In een bracket is de tegenstander vaak nog onbekend (de
+vorige ronde is niet gespeeld) en één naam tonen suggereert zekerheid die er niet is — inconsistent
+met de mat-weergave. In plaats daarvan toont `eliminatie.veld` **alle judoka's die nog in die ronde
+actief zijn** (per partij: niet gespeeld → beide judoka's, gespeeld → alleen de winnaar). De favoriet
+staat vet. De lijst kan lang zijn (bv. ~16 bij een 1/8); de pagina scrollt gewoon door (geen vaste
+hoogte op `body`/`main`).
 
 De **groep** (`A`/`B`) komt uit de ronde-key: prefix `b_` → B-groep, anders A
 (`BracketLayoutService::rondeGroep()`). Rondenamen via `BracketLayoutService::rondeNaam()`.

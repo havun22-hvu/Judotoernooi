@@ -61,8 +61,14 @@ class FavorietenEliminatieTest extends TestCase
         return null;
     }
 
+    /** @return string[] namen in het veld, in payload-volgorde */
+    private function veldNamen(array $elim): array
+    {
+        return array_map(fn($d) => $d['naam'], $elim['veld']);
+    }
+
     #[Test]
-    public function toont_komende_partij_met_groep_ronde_en_tegenstander(): void
+    public function toont_komende_ronde_met_groep_en_het_veld(): void
     {
         $abel = $this->judoka('Abel');
         $rival = $this->judoka('Rival');
@@ -83,12 +89,15 @@ class FavorietenEliminatieTest extends TestCase
         $this->assertSame('komt', $elim['status']);
         $this->assertSame('A', $elim['groep']);
         $this->assertSame('1/2', $elim['ronde_naam']);
-        $this->assertSame('Rival', $elim['tegenstander']['naam']);
+        $this->assertSame(['Abel', 'Rival'], $this->veldNamen($elim));
+        // De favoriet is gemarkeerd, de rest niet.
+        $this->assertTrue(collect($elim['veld'])->firstWhere('naam', 'Abel')['is_favoriet']);
+        $this->assertFalse(collect($elim['veld'])->firstWhere('naam', 'Rival')['is_favoriet']);
         $this->assertNull($elim['eindpositie']);
     }
 
     #[Test]
-    public function tegenstander_onbekend_als_slot_leeg_is(): void
+    public function veld_bevat_alleen_de_favoriet_als_tegenstander_slot_leeg_is(): void
     {
         $abel = $this->judoka('Abel');
         $this->poule->judokas()->attach($abel->id, ['positie' => 1]);
@@ -104,9 +113,42 @@ class FavorietenEliminatieTest extends TestCase
         $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
 
         $this->assertSame('komt', $elim['status']);
-        $this->assertSame('A', $elim['groep']);
         $this->assertSame('1/4', $elim['ronde_naam']);
-        $this->assertNull($elim['tegenstander']);
+        $this->assertSame(['Abel'], $this->veldNamen($elim));
+    }
+
+    #[Test]
+    public function veld_bevat_het_hele_ronde_veld_en_filtert_verliezers(): void
+    {
+        $abel = $this->judoka('Abel');
+        $bram = $this->judoka('Bram');
+        $cas = $this->judoka('Cas');
+        $dan = $this->judoka('Dan');
+        foreach ([$abel, $bram, $cas, $dan] as $i => $j) {
+            $this->poule->judokas()->attach($j->id, ['positie' => $i + 1]);
+        }
+
+        // Twee partijen in dezelfde ronde: Abel–Bram nog niet gespeeld, Cas–Dan gespeeld (Cas wint).
+        Wedstrijd::factory()->create([
+            'poule_id' => $this->poule->id,
+            'judoka_wit_id' => $abel->id,
+            'judoka_blauw_id' => $bram->id,
+            'ronde' => 'achtste_finale',
+            'is_gespeeld' => false,
+        ]);
+        Wedstrijd::factory()->create([
+            'poule_id' => $this->poule->id,
+            'judoka_wit_id' => $cas->id,
+            'judoka_blauw_id' => $dan->id,
+            'ronde' => 'achtste_finale',
+            'is_gespeeld' => true,
+            'winnaar_id' => $cas->id,
+        ]);
+
+        $elim = $this->favoriet($this->postFavorieten([$abel->id])->assertOk()->json(), $abel->id)['eliminatie'];
+
+        // Abel + Bram (nog te spelen) + Cas (won); Dan (verloor) valt weg.
+        $this->assertSame(['Abel', 'Bram', 'Cas'], $this->veldNamen($elim));
     }
 
     #[Test]

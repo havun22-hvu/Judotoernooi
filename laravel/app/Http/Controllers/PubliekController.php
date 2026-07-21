@@ -539,7 +539,7 @@ class PubliekController extends Controller
             'status' => null,       // 'komt' | 'medaille' | 'afgevallen'
             'groep' => null,        // 'A' | 'B'
             'ronde_naam' => null,
-            'tegenstander' => null,
+            'veld' => [],           // nog-actieve judoka's in de komende ronde (favoriet gemarkeerd)
             'eindpositie' => null,
         ];
 
@@ -551,18 +551,36 @@ class PubliekController extends Controller
             ->first();
 
         if ($komende) {
+            $rondeKey = $komende->ronde ?? '';
             $info['status'] = 'komt';
-            $info['groep'] = BracketLayoutService::rondeGroep($komende->ronde ?? '');
-            $info['ronde_naam'] = BracketLayoutService::rondeNaam($komende->ronde ?? '');
-            $tegenstanderId = $komende->judoka_wit_id === $favoriet->id
-                ? $komende->judoka_blauw_id
-                : $komende->judoka_wit_id;
-            // Tegenstander zit in dezelfde poule (al geladen incl. club); NULL = vorige ronde
-            // nog niet gespeeld → de blade toont 'nog niet bekend'.
-            $tegenstander = $tegenstanderId ? $poule->judokas->firstWhere('id', $tegenstanderId) : null;
-            $info['tegenstander'] = $tegenstander
-                ? ['naam' => $tegenstander->naam, 'club' => $tegenstander->club?->naam]
-                : null;
+            $info['groep'] = BracketLayoutService::rondeGroep($rondeKey);
+            $info['ronde_naam'] = BracketLayoutService::rondeNaam($rondeKey);
+
+            // Het veld: alle judoka's die nog in déze ronde actief zijn (geen losse tegenstander,
+            // want die is in een bracket vaak nog onbekend). Per partij in de ronde: niet gespeeld
+            // → beide judoka's; gespeeld → alleen de winnaar (de verliezer is uit die ronde).
+            $actieveIds = [];
+            foreach ($poule->wedstrijden as $w) {
+                if (($w->ronde ?? '') !== $rondeKey) {
+                    continue;
+                }
+                if ($w->is_gespeeld && $w->winnaar_id !== null) {
+                    $actieveIds[] = $w->winnaar_id;
+                } else {
+                    if ($w->judoka_wit_id) $actieveIds[] = $w->judoka_wit_id;
+                    if ($w->judoka_blauw_id) $actieveIds[] = $w->judoka_blauw_id;
+                }
+            }
+            $info['veld'] = $poule->judokas
+                ->whereIn('id', array_unique($actieveIds))
+                ->sortBy('naam')
+                ->map(fn($j) => [
+                    'naam' => $j->naam,
+                    'club' => $j->club?->naam,
+                    'is_favoriet' => $j->id === $favoriet->id,
+                ])
+                ->values()
+                ->all();
 
             return $info;
         }

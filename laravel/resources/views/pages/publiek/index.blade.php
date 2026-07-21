@@ -848,23 +848,27 @@
                                 {{-- Eliminatie: geen ranglijst, maar de status van dat moment van de favoriet --}}
                                 <template x-if="poule.type === 'eliminatie'">
                                     <div class="p-4">
-                                        {{-- Komende partij: groep + ronde + tegenstander + mat --}}
+                                        {{-- Komende ronde: groep + ronde + mat, daaronder het veld dat nog
+                                             actief is in die ronde (favoriet vet). De lijst kan lang zijn;
+                                             de pagina scrollt gewoon door. --}}
                                         <template x-if="favorietEliminatie(poule).status === 'komt'">
                                             <div>
-                                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">{{ __('Volgende partij') }}</div>
-                                                <div class="flex items-baseline gap-2 flex-wrap">
+                                                <div class="flex items-baseline gap-2 flex-wrap mb-2">
                                                     <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm font-semibold"
                                                           x-text="favorietEliminatie(poule).groep + ' · ' + favorietEliminatie(poule).ronde_naam"></span>
-                                                    <template x-if="favorietEliminatie(poule).tegenstander">
-                                                        <span class="text-gray-800 font-medium">
-                                                            <span x-text="favorietEliminatie(poule).tegenstander.naam"></span>
-                                                            <span x-show="favorietEliminatie(poule).tegenstander.club" class="text-gray-500 text-sm font-normal" x-text="'(' + favorietEliminatie(poule).tegenstander.club + ')'"></span>
-                                                        </span>
-                                                    </template>
-                                                    <template x-if="!favorietEliminatie(poule).tegenstander">
-                                                        <span class="text-gray-500 italic">{{ __('nog niet bekend') }}</span>
-                                                    </template>
                                                     <span x-show="poule.mat" class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm font-semibold">{{ __('Mat') }} <span x-text="poule.mat"></span></span>
+                                                </div>
+                                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">{{ __('Nog in deze ronde') }}</div>
+                                                <div class="divide-y">
+                                                    <template x-for="deelnemer in favorietEliminatie(poule).veld" :key="deelnemer.naam">
+                                                        <div class="py-1.5"
+                                                             :class="{ 'bg-orange-50 -mx-4 px-4': deelnemer.is_favoriet }">
+                                                            <span class="text-sm"
+                                                                  :class="deelnemer.is_favoriet ? 'font-bold text-gray-900' : 'text-gray-700'"
+                                                                  x-text="deelnemer.naam"></span>
+                                                            <span x-show="deelnemer.club" class="text-xs text-gray-500 ml-1" x-text="'(' + deelnemer.club + ')'"></span>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </template>
