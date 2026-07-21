@@ -53,8 +53,13 @@ class OrganisatorDashboardController extends Controller
         // Fresh load to ensure we have latest toernooien (not cached from login)
         $organisator = $organisator->fresh();
 
-        // Everyone sees only their own toernooien — sitebeheerder uses /admin for other organisatoren
-        $alleToernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
+        // Everyone sees only their OWN created toernooien (pivot rol=eigenaar). Any other
+        // linkage (spurious or shared) is excluded here — sitebeheerder uses /admin for the rest.
+        $alleToernooien = $organisator->toernooien()
+            ->wherePivot('rol', 'eigenaar')
+            ->with('organisator')
+            ->orderBy('datum', 'desc')
+            ->get();
         $toernooien = $alleToernooien->where('is_gearchiveerd', false);
         $gearchiveerd = $alleToernooien->where('is_gearchiveerd', true);
 

@@ -70,4 +70,29 @@ class TenantScopeTest extends TestCase
             ->deleteJson($this->url("poule/{$ownPoule->id}"))
             ->assertStatus(200);
     }
+
+    #[Test]
+    public function dashboard_shows_only_own_created_tournaments(): void
+    {
+        $this->toernooi->update(['naam' => 'Mijn Eigen Toernooi']);
+
+        // A foreign tournament, owned by another organisator.
+        $otherOrg = Organisator::factory()->create();
+        $foreign = Toernooi::factory()->create([
+            'organisator_id' => $otherOrg->id,
+            'naam' => 'Vreemd Toernooi BSH',
+        ]);
+        $otherOrg->toernooien()->attach($foreign->id, ['rol' => 'eigenaar']);
+
+        // Non-owner linkage of the logged-in org to the foreign tournament (e.g. co-manager):
+        // reachable via /admin, but must NOT appear in "mijn toernooien".
+        $this->org->toernooien()->attach($foreign->id, ['rol' => 'beheerder']);
+
+        $response = $this->actingAs($this->org, 'organisator')
+            ->get("/{$this->org->slug}/dashboard");
+
+        $response->assertOk();
+        $response->assertSee('Mijn Eigen Toernooi');
+        $response->assertDontSee('Vreemd Toernooi BSH');
+    }
 }

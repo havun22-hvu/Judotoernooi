@@ -32,6 +32,14 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **"Mijn toernooien" lekte soms een vreemd toernooi — fix op staging (21-07).** De dashboard-lijst
+  toonde élke pivot-rol; nu `->wherePivot('rol', 'eigenaar')` → alleen zelf-aangemaakte toernooien
+  (andere blijven via /admin). Ook `getActiefToernooi()` org-gescoped (was globaal `is_actief`,
+  latente C-01-lek via dode code). Explore-sweep vond géén side-effect-getter; pivot is in rust
+  schoon, dus wat Henk "soms" zag was vermoedelijk een historische spookrij. 7 tests groen
+  (`TenantScopeTest` + `WimpelToernooiCoverageTest::get_actief_*`). Doc:
+  `.claude/plan-mijn-toernooien-scope.md`. **Te verifiëren op staging:** open "mijn toernooien" →
+  alleen Generale + test2, geen "test toernooi bsh".
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`

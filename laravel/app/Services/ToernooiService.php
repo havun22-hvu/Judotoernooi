@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Blok;
 use App\Models\DeviceToegang;
 use App\Models\Mat;
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Models\ToernooiTemplate;
 use Illuminate\Support\Facades\DB;
@@ -273,11 +274,24 @@ class ToernooiService
     }
 
     /**
-     * Get the active tournament
+     * Get the active tournament for a given organisator (C-01: never cross-tenant).
+     *
+     * Scoped to the organisator's OWN tournaments (pivot rol=eigenaar). Falls back to the
+     * authenticated organisator so existing callers stay safe by default; returns null when
+     * there is no organisator context instead of leaking a globally-active tournament.
      */
-    public function getActiefToernooi(): ?Toernooi
+    public function getActiefToernooi(?Organisator $organisator = null): ?Toernooi
     {
-        return Toernooi::actief()->first();
+        $organisator ??= auth('organisator')->user();
+
+        if (!$organisator) {
+            return null;
+        }
+
+        return $organisator->toernooien()
+            ->wherePivot('rol', 'eigenaar')
+            ->where('is_actief', true)
+            ->first();
     }
 
     /**

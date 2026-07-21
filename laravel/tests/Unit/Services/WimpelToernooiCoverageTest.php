@@ -544,11 +544,13 @@ class WimpelToernooiCoverageTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function get_actief_toernooi_returns_active_tournament(): void
+    public function get_actief_toernooi_returns_own_active_tournament(): void
     {
-        $toernooi = Toernooi::factory()->create(['is_actief' => true]);
+        $org = Organisator::factory()->create();
+        $toernooi = Toernooi::factory()->create(['is_actief' => true, 'organisator_id' => $org->id]);
+        $org->toernooien()->attach($toernooi->id, ['rol' => 'eigenaar']);
 
-        $result = $this->toernooiService->getActiefToernooi();
+        $result = $this->toernooiService->getActiefToernooi($org);
 
         $this->assertNotNull($result);
         $this->assertEquals($toernooi->id, $result->id);
@@ -557,11 +559,26 @@ class WimpelToernooiCoverageTest extends TestCase
     #[Test]
     public function get_actief_toernooi_returns_null_when_none(): void
     {
-        Toernooi::factory()->create(['is_actief' => false]);
+        $org = Organisator::factory()->create();
+        $toernooi = Toernooi::factory()->create(['is_actief' => false, 'organisator_id' => $org->id]);
+        $org->toernooien()->attach($toernooi->id, ['rol' => 'eigenaar']);
 
-        $result = $this->toernooiService->getActiefToernooi();
+        $result = $this->toernooiService->getActiefToernooi($org);
 
         $this->assertNull($result);
+    }
+
+    #[Test]
+    public function get_actief_toernooi_never_returns_another_organisators_tournament(): void
+    {
+        // C-01: a foreign organisator's active tournament must never leak.
+        $otherOrg = Organisator::factory()->create();
+        $foreign = Toernooi::factory()->create(['is_actief' => true, 'organisator_id' => $otherOrg->id]);
+        $otherOrg->toernooien()->attach($foreign->id, ['rol' => 'eigenaar']);
+
+        $me = Organisator::factory()->create();
+
+        $this->assertNull($this->toernooiService->getActiefToernooi($me));
     }
 
     // =========================================================================
