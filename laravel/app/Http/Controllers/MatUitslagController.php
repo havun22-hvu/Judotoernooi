@@ -456,6 +456,19 @@ class MatUitslagController extends Controller
                     };
                     return response()->json(['success' => false, 'error' => "{$label} wedstrijd is al gespeeld (heeft winnaar)"], 400);
                 }
+
+                // Blind (bye) of nog-lege wedstrijd: geen twee deelnemers → niet speelbaar,
+                // mag geen beurtkleur krijgen. Uitslag_type is hier onbetrouwbaar (pas 'bye'
+                // ná advance-byes), dus testen op de deelnemers-slots zelf.
+                $isBlind = is_null($wedstrijd->judoka_wit_id) || is_null($wedstrijd->judoka_blauw_id);
+                if (!$alInSelectie && $isBlind && !$wedstrijd->isEchtGespeeld()) {
+                    $label = match ($field) {
+                        'actieve_wedstrijd_id' => 'Actieve',
+                        'volgende_wedstrijd_id' => 'Volgende',
+                        'gereedmaken_wedstrijd_id' => 'Gereedmaken',
+                    };
+                    return response()->json(['success' => false, 'error' => "{$label} wedstrijd heeft geen twee deelnemers (blind)"], 400);
+                }
             }
         }
 

@@ -32,6 +32,16 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Eliminatie: blind kreeg beurtkleur + drag-groen bleef hangen — fix op staging (21-07).**
+  Blind (bye, wit gevuld/blauw leeg) kon via dubbelklik groen/blauw worden (guard testte op
+  `uitslag_type==='bye'`, maar dat wordt pas ná advance-byes gezet). Nu 3 guard-lagen op
+  `wit && blauw && !is_gespeeld` (`toggleVolgendeWedstrijd` + `dblClickBracket` +
+  `MatUitslagController` 400). Drag-groen bleef staan na terugzetten door asymmetrische reset:
+  `applyBeurtaanduiding` wist nu ook `outline/boxShadow`, `_clearBracketTargetMarks` ook `border`.
+  Groen tijdens slepen blijft (gewenst); drag-blokkade op geel/blauw ongewijzigd. Docs:
+  `2-FEATURES/ELIMINATIE/BEURTKLEUR.md` + `.claude/plan-blind-beurtkleur.md`. 11+2 tests groen.
+  **Te verifiëren op staging (Henk):** blind dubbelklik → geen kleur; blind slepen → groen tijdens
+  sleep, weg na loslaten/terugzetten; geen twee-keer-groen.
 - **"Mijn toernooien" lekte soms een vreemd toernooi — fix op staging (21-07).** De dashboard-lijst
   toonde élke pivot-rol; nu `->wherePivot('rol', 'eigenaar')` → alleen zelf-aangemaakte toernooien
   (andere blijven via /admin). Ook `getActiefToernooi()` org-gescoped (was globaal `is_actief`,

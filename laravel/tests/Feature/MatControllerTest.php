@@ -164,4 +164,58 @@ class MatControllerTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    #[Test]
+    public function blind_wedstrijd_cannot_be_set_as_active(): void
+    {
+        $this->actAsOrg();
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $this->toernooi->id,
+            'mat_id' => $mat->id,
+        ]);
+        $wit = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+
+        // Blind: wit gevuld, blauw leeg, niet gespeeld → mag geen beurtkleur krijgen.
+        $blind = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $wit->id,
+            'judoka_blauw_id' => null,
+            'is_gespeeld' => false,
+        ]);
+
+        $response = $this->postJson($this->toernooiUrl('mat/huidige-wedstrijd'), [
+            'mat_id' => $mat->id,
+            'actieve_wedstrijd_id' => $blind->id,
+        ]);
+
+        $response->assertStatus(400);
+    }
+
+    #[Test]
+    public function real_wedstrijd_with_two_participants_can_be_set_as_active(): void
+    {
+        $this->actAsOrg();
+        $mat = Mat::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $poule = Poule::factory()->create([
+            'toernooi_id' => $this->toernooi->id,
+            'mat_id' => $mat->id,
+        ]);
+        $wit = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $blauw = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+
+        $wedstrijd = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $wit->id,
+            'judoka_blauw_id' => $blauw->id,
+            'is_gespeeld' => false,
+        ]);
+
+        $response = $this->postJson($this->toernooiUrl('mat/huidige-wedstrijd'), [
+            'mat_id' => $mat->id,
+            'actieve_wedstrijd_id' => $wedstrijd->id,
+        ]);
+
+        $response->assertStatus(200);
+    }
 }

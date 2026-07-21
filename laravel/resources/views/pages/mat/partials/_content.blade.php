@@ -1254,7 +1254,9 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
     if (!poule) return;
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
     if (!wedstrijd) return;
-    if (wedstrijd.uitslag_type === 'bye') return;
+    // Blind (bye): één deelnemer, niet speelbaar → geen beurtkleur. Test op de aanwezigheid
+    // van beide deelnemers, NIET op uitslag_type (dat wordt pas 'bye' ná advance-byes).
+    if (!wedstrijd.wit || !wedstrijd.blauw) return;
     if (wedstrijd.is_gespeeld) return;
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
@@ -1759,10 +1761,15 @@ document.addEventListener('alpine:init', () => {
             const volgendeId = this.matSelectie.volgende_wedstrijd_id;
             const gereedmakenId = this.matSelectie.gereedmaken_wedstrijd_id;
 
-            // Reset alle beurtaanduiding
-            document.querySelectorAll('.bracket-potje .drop-slot').forEach(el => {
+            // Reset alle beurtaanduiding — inclusief eventuele achtergebleven drag-highlight
+            // (outline/boxShadow), zodat een gestrande groene drop-markering na een re-render
+            // niet als tweede "groen" blijft staan. Draait na elke render/drop.
+            document.querySelectorAll('.bracket-potje .drop-slot, [data-drop-target]').forEach(el => {
                 el.style.border = '';
                 el.style.backgroundColor = '';
+                el.style.outline = '';
+                el.style.outlineOffset = '';
+                el.style.boxShadow = '';
             });
 
             // Actief (groen)
@@ -2425,6 +2432,13 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            // Een blind (bye) of nog-lege wedstrijd heeft geen twee deelnemers en is niet
+            // speelbaar → mag geen beurtkleur krijgen. Centrale guard voor elke aanroeper.
+            if (!wedstrijd.wit || !wedstrijd.blauw) {
+                console.log('[Mat] Match', wedstrijd.id, 'is a blind (no two participants), skip beurtkleur');
+                return;
+            }
+
             // === HUIDIGE STATUS OPHALEN ===
             // Initialiseer matSelectie als het null is
             if (!this.matSelectie) {
@@ -2841,6 +2855,7 @@ window._clearBracketTargetMarks = function() {
         el.style.outline = '';
         el.style.outlineOffset = '';
         el.style.backgroundColor = '';
+        el.style.border = '';
         el.style.boxShadow = '';
         el.style.opacity = '';
         el.style.pointerEvents = '';
