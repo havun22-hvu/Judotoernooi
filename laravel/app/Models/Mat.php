@@ -67,8 +67,9 @@ class Mat extends Model
      */
     public function isGroen(Wedstrijd $wedstrijd): bool
     {
-        return $this->actieve_wedstrijd_id !== null
-            && $this->actieve_wedstrijd_id === $wedstrijd->id;
+        // `null === $wedstrijd->id` is altijd false (geen juggling bij ===), dus een aparte
+        // null-guard voegt niets toe; beide callers laden de wedstrijd via findOrFail.
+        return $this->actieve_wedstrijd_id === $wedstrijd->id;
     }
 
     /**

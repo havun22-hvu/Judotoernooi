@@ -66,6 +66,24 @@ class Poule extends Model
     }
 
     /**
+     * Poules die klaar staan voor de spreker: afgerond (`spreker_klaar`), nog niet afgeroepen,
+     * geen barrage — op afrondtijd, oudste bovenaan (langst wachtend).
+     *
+     * `reorder()` (niet `orderBy`) is essentieel: `Toernooi::poules()` heeft een default
+     * `orderBy('nummer')`; een gewone `orderBy('spreker_klaar')` erbovenop wordt secundair →
+     * de spreker sorteert dan op poule-nummer i.p.v. afrondtijd. reorder wist die default.
+     * Enige bron van waarheid voor beide spreker-paden. Guard: `SprekerVolgordeTest`.
+     */
+    public function scopeKlaarVoorSpreker($query)
+    {
+        return $query
+            ->whereNotNull('spreker_klaar')
+            ->whereNull('afgeroepen_at')
+            ->where('type', '!=', 'barrage')
+            ->reorder('spreker_klaar', 'asc');
+    }
+
+    /**
      * Get the number of matches per judoka for punten competitie (default 4).
      */
     public function getPuntenCompetitieWedstrijden(): int

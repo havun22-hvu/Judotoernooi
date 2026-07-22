@@ -31,14 +31,8 @@ class BlokSprekerController extends Controller
         // Get poules that are ready for spreker (with results) but not yet announced
         // EXCLUDE barrage poules - they are only used to determine standings in original poule
         $klarePoules = $toernooi->poules()
-            ->whereNotNull('spreker_klaar')
-            ->whereNull('afgeroepen_at')
-            ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
+            ->klaarVoorSpreker()  // afgerond + niet-afgeroepen + geen barrage, op afrondtijd (reorder)
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
-            // reorder() (niet orderBy) — de poules()-relatie heeft een default orderBy('nummer'),
-            // die anders primair blijft en spreker_klaar tot tiebreak degradeert (poule-nummer-
-            // volgorde i.p.v. afrondtijd). reorder wist dat en maakt spreker_klaar de enige sort.
-            ->reorder('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
             ->filter(function ($poule) {
                 // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)

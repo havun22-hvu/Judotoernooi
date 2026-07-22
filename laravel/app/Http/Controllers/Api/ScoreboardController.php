@@ -28,6 +28,31 @@ class ScoreboardController extends Controller
     ) {}
 
     /**
+     * De mat die bij dit device hoort — uit de Bearer-token (`DeviceToegang`), nooit uit de body.
+     * Optionele eager-loads voor de scoreboard-payload; zonder blijft het een kale lookup.
+     */
+    private function matVoorDevice(DeviceToegang $toegang, array $with = []): ?Mat
+    {
+        return Mat::where('toernooi_id', $toegang->toernooi_id)
+            ->where('nummer', $toegang->mat_nummer)
+            ->with($with)
+            ->first();
+    }
+
+    /**
+     * Tenant-isolatie: een wedstrijd uit een ander toernooi is "niet gevonden" voor dit device.
+     * Geeft een 404-response terug als de wedstrijd niet bij het token-toernooi hoort, anders null.
+     */
+    private function guardTenant(Wedstrijd $wedstrijd, DeviceToegang $toegang): ?JsonResponse
+    {
+        if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
+            return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        }
+
+        return null;
+    }
+
+    /**
      * Authenticate scoreboard device with a 12-character role code.
      * Returns Bearer token + toernooi/mat config.
      *
@@ -59,9 +84,7 @@ class ScoreboardController extends Controller
         ]);
 
         // Find the mat and tournament linked to this device
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->first();
+        $mat = $this->matVoorDevice($toegang);
         $toernooi = Toernooi::find($toegang->toernooi_id);
 
         return response()->json([
@@ -89,10 +112,11 @@ class ScoreboardController extends Controller
     {
         $toegang = $request->attributes->get('device_toegang');
 
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->with(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule'])
-            ->first();
+        $mat = $this->matVoorDevice($toegang, [
+            'actieveWedstrijd.judokaWit.club',
+            'actieveWedstrijd.judokaBlauw.club',
+            'actieveWedstrijd.poule.toernooi',
+        ]);
 
         if (!$mat || !$mat->actieveWedstrijd) {
             return response()->json(['match' => null]);
@@ -122,16 +146,13 @@ class ScoreboardController extends Controller
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
 
-        // Tenant-isolatie: zelfde conventie als result() — vreemd toernooi = 404.
         $toegang = $request->attributes->get('device_toegang');
-        if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
-            return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        if ($tenant = $this->guardTenant($wedstrijd, $toegang)) {
+            return $tenant;
         }
 
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->with(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule'])
-            ->first();
+        // Kale lookup: op de (frequente) groen=true-pad zijn de deelnemer-relaties niet nodig.
+        $mat = $this->matVoorDevice($toegang);
 
         if ($mat && $mat->isGroen($wedstrijd)) {
             return response()->json([
@@ -140,6 +161,13 @@ class ScoreboardController extends Controller
             ]);
         }
 
+        // Alleen bij niet-groen: hydrateer de groene match voor formatMatch. `poule.toernooi`
+        // is nodig voor de match-duur/rules — zonder zou dat een lazy-load worden.
+        $mat?->load([
+            'actieveWedstrijd.judokaWit.club',
+            'actieveWedstrijd.judokaBlauw.club',
+            'actieveWedstrijd.poule.toernooi',
+        ]);
         $actieve = $mat?->actieveWedstrijd;
 
         return response()->json([
@@ -181,8 +209,8 @@ class ScoreboardController extends Controller
         // another tournament is "not found" for this device. Unresolvable tournament
         // (orphaned poule) is denied too — never fall back to the token's tournament.
         $toegang = $request->attributes->get('device_toegang');
-        if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
-            return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        if ($tenant = $this->guardTenant($wedstrijd, $toegang)) {
+            return $tenant;
         }
 
         // Groen-gate: de app mag alléén de groene (actieve) wedstrijd van zijn mat scoren.
@@ -191,9 +219,7 @@ class ScoreboardController extends Controller
         // anders zou verwerkUitslag de bracket-doorschuif voor een verkeerde wedstrijd draaien.
         // Correcties van afgeronde wedstrijden lopen via het web, niet via deze endpoint.
         // Zie .claude/plan-scoreboard-groen-gate.md.
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->first();
+        $mat = $this->matVoorDevice($toegang);
         if (!$mat || !$mat->isGroen($wedstrijd)) {
             return response()->json([
                 'error' => 'niet_groen',
@@ -356,9 +382,7 @@ class ScoreboardController extends Controller
 
         $toegang = $request->attributes->get('device_toegang');
 
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->first();
+        $mat = $this->matVoorDevice($toegang);
 
         if (!$mat) {
             return response()->json(['message' => 'Mat niet gevonden.'], 404);

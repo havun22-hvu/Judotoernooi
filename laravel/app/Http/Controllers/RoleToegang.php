@@ -270,13 +270,8 @@ class RoleToegang extends Controller
         // Klare poules (spreker_klaar gezet, nog niet afgeroepen)
         // EXCLUDE barrage poules - they are only used to determine standings in original poule
         $klarePoules = $toernooi->poules()
-            ->whereNotNull('spreker_klaar')
-            ->whereNull('afgeroepen_at')
-            ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
+            ->klaarVoorSpreker()  // afgerond + niet-afgeroepen + geen barrage, op afrondtijd (reorder)
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
-            // reorder() wist de default orderBy('nummer') uit de poules()-relatie; anders sorteert
-            // de spreker op poule-nummer i.p.v. afrondtijd (spreker_klaar wordt dan slechts tiebreak).
-            ->reorder('spreker_klaar', 'asc')
             ->get()
             ->filter(function ($poule) {
                 // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)
