@@ -11,16 +11,16 @@ last_updated: 2026-07-22
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Prod staat op `1cf930e0`** (favorieten/publieks-page live). **Staging loopt vóór (`8c59aa01`)**
-met een stapel eliminatie/tenant/scoreboard-fixes van 21-22/07, door Henk op staging bevestigd —
-**wacht op prod-deploy** (zie tabel hieronder). Live Stripe-sleutel 19-07 geroteerd na een
-chat-lek — afronding hieronder.
+**Prod staat op `59e33a00`** (favorieten/publieks-page live). **Staging = main (`a0d0e343`)**,
+loopt vóór met een stapel eliminatie/tenant/scoreboard-fixes van 21-22/07, door Henk op staging
+bevestigd — **wacht op prod-deploy** (zie tabel hieronder). Live Stripe-sleutel 19-07 geroteerd na
+een chat-lek — afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
 | Wat | Details |
 |-----|---------|
-| **Prod-deploy staging-stapel (22-07)** | Prod `1cf930e0` → staging `8c59aa01`. Bevat, door Henk op staging bevestigd: (1) correctie propageert naar herkansing B + self-healing corrupte uitslag, (2) blind/onvolledige wedstrijd krijgt geen beurtkleur + deselect werkt + drag-groen ruimt op, (3) "mijn toernooien" alleen eigenaar (tenant-lek C-01), (4) scoreboard her-broadcast bij deelnemer-wijziging. Geen migraties. Deploy: `git pull` op `repo-prod` + `repo-staging`, caches clear. Docs: `plan-correctie-propagatie` / `plan-blind-beurtkleur` / `plan-mijn-toernooien-scope` / `plan-scoreboard-deelnemer-refresh` + `ELIMINATIE/BEURTKLEUR.md`. |
+| **Prod-deploy staging-stapel (22-07)** | Prod `59e33a00` → staging/main `a0d0e343` (6 commits: tenant C-01, beurtkleur-blinds, correctie-propagatie B, deselect/self-heal, scoreboard re-broadcast + handover). Bevat, door Henk op staging bevestigd: (1) correctie propageert naar herkansing B + self-healing corrupte uitslag, (2) blind/onvolledige wedstrijd krijgt geen beurtkleur + deselect werkt + drag-groen ruimt op, (3) "mijn toernooien" alleen eigenaar (tenant-lek C-01), (4) scoreboard her-broadcast bij deelnemer-wijziging. Geen migraties. Deploy: `git pull` op `repo-prod` + `repo-staging`, caches clear. Docs: `plan-correctie-propagatie` / `plan-blind-beurtkleur` / `plan-mijn-toernooien-scope` / `plan-scoreboard-deelnemer-refresh` + `ELIMINATIE/BEURTKLEUR.md`. |
 | **Scoreboard client-side reload (jouw project)** | Server stuurt nu een verse `ScoreboardAssignment` (`event: match.assign`) bij deelnemer-wijziging. In de Android-app moet een nieuwe assign de al-getoonde wedstrijd **vervangen** i.p.v. negeren. |
 | **Tijdzone-keuze `APP_TIMEZONE`** | LCD toonde 16:57 CEST i.p.v. 18:57. Systemisch: `APP_TIMEZONE=UTC` op alle `->format('H:i')` op DB-timestamps. Twee opties: (a) `.env` op prod+staging → `APP_TIMEZONE=Europe/Amsterdam` (jij, wachtwoord/prod-access), (b) hardcoded in `config/app.php` (ik, één commit). Optie a is flexibeler voor multi-timezone SaaS ooit; b is meteen klaar. Backup vóór (`cp .env .env.bak.YYYYMMDD`). |
 | **Stripe: afronden na key-lek (morgen)** | De live secret is 19-07 al geroteerd — prod draait op `sk_live_…dkIA3`, API geeft HTTP 200, config gecached, staging op testsleutels. Nog te doen: (1) oude `…4l13` in het Stripe-dashboard écht ingetrokken zien (was met 24u-expiry gerold), (2) Developers → Logs nakijken op requests met `…4l13` vanaf een ander IP dan `188.245.159.115`, (3) verouderde Stripe-regel in `HavunCore/.claude/credentials.md` opruimen. Lek liep via de chat, niet via git (`credentials.md` is gitignored, nooit in history). |
