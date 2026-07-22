@@ -43,8 +43,10 @@ een chat-lek — afronding hieronder.
   baar; echte correcties gaan via web `MatUitslagController`). App-kant: green-check async bij
   eerste timer-start, fail-open op netwerkfout, 409 niet_groen = permanent (geen retry). Eén
   gedeelde predicate `Mat::isGroen()`. Volledig contract + tests in
-  `.claude/plan-scoreboard-groen-gate.md`. **Open:** doet de app correcties via `result()`? (zo
-  ja breekt de strakke gate die). Wacht op "ga maar" + dat antwoord.
+  `.claude/plan-scoreboard-groen-gate.md`. **Contract definitief** — judoscoreboard bevestigd
+  (22-07): app speelt alleen vooruit, geen resubmits via `result()`; niet-groene POST ontstaat
+  enkel door timing (vertraagde submit / offline-queue flush) = precies waar de gate voor is.
+  Wacht alleen nog op "ga maar".
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`

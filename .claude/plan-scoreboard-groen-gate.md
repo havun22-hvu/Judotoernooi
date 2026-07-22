@@ -3,7 +3,7 @@ title: Plan — Scoreboard groene-vlag gate
 type: plan
 scope: judotoernooi
 created: 2026-07-22
-status: wacht op "ga maar" (contract vastgesteld met judoscoreboard 22-07)
+status: contract definitief (judoscoreboard bevestigd 22-07) — wacht alleen nog op "ga maar"
 ---
 
 # Plan — Scoreboard groene-vlag gate
@@ -125,12 +125,21 @@ Onderscheidend van de bestaande optimistic-lock-409, die een ándere body heeft
 - result()-gate: groene wedstrijd → 200 (normale flow blijft werken).
 - Bestaande result()-tests blijven groen (die scoren de groene wedstrijd).
 
+## Bevestigd met judoscoreboard (22-07) — gate breekt geen app-flow
+
+De app kiest **nooit** bewust een niet-groene wedstrijd en doet **geen** correcties/resubmits van
+afgeronde wedstrijden via `/api/scoreboard/result` (die lopen via het web). Een niet-groene POST
+ontstaat alleen door **timing** — en dát is precies waar de gate voor is:
+
+1. **Vertraagde submit:** organisator verschuift de beurt tussen het laatste punt en de EINDE-knop
+   → POST valt op een niet-meer-groene wedstrijd → 409 `niet_groen` (het Vince-geval).
+2. **Offline-queue flush:** een ge-queuede uitslag wordt laat verstuurd, ná een doorschuif → 409.
+
+De app handelt beide correct af (permanent, geen retry, uit de queue, melding). De strakke
+"alleen groen"-gate breekt dus **geen enkele legitieme app-flow**.
+
 ## Open te verifiëren tijdens bouw
 
-- **Doet de scoreboard-app ooit een correctie/resubmit via `/api/scoreboard/result` op een
-  niet-groene wedstrijd?** Verwacht: nee — correcties gaan via het web (`MatUitslagController`).
-  Zo nee → gate = alleen groen, zoals boven. Zo ja → deze strakke gate breekt die flow; dan
-  eerst met scoreboard afstemmen vóór dichtzetten.
 - Poule-matches (niet-eliminatie): de app speelt altijd de groene, dus de gate klopt. De
   web-`MatUitslagController` gaat níét via deze endpoint → organisator-invoer onaangetast.
   Verifiëren dat er geen andere caller van `/api/scoreboard/result` is.
