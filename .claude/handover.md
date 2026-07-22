@@ -33,28 +33,6 @@ afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
-- **Scoreboard groene-vlag gate — server-kant GEBOUWD 22-07, te beoordelen op staging.**
-  Vince-incident: herschikte mat-beurt (🟢 groen → 🔵 klaarmaken), app toont stale wedstrijd,
-  scoren corrumpeert de eliminatie-doorschuif. Server-kant klaar: (1) `Mat::isGroen()` predicate,
-  (2) `GET /api/scoreboard/green-check` (levert `groen` + bij false de nieuwe groene `match`),
-  (3) gate in `result()` → 409 `{error: niet_groen, actieve_wedstrijd_id}` als wedstrijd niet de
-  groene is. Gate = **alleen groen** (één as); `is_gespeeld`-uitzondering bewust verworpen. 15
-  feature-tests groen (`ScoreboardGreenGateTest` + security-test-helper zet mat nu groen). Doc:
-  `SCOREBORD/ARCHITECTUUR.md` (green-check + twee 409-varianten). Contract +
-  waarom in `.claude/plan-scoreboard-groen-gate.md`.
-  **App-kant (judoscoreboard, apart project):** green-check async bij eerste timer-start,
-  fail-open op netwerkfout, 409 niet_groen = permanent (geen retry, uit queue, melding).
-  **Live op prod (22-07).** Nog te doen: end-to-end testen met de app (zodra judoscoreboard z'n kant heeft).
-- **Poule-scoring CSP-fix — GEBOUWD 22-07, te testen op staging.** Groene poule-wedstrijd: JP
-  kiezen deed niets (geen auto-fill 2WP/0, totalen 0). Oorzaak bevestigd: compound
-  `@change="updateJP(...); saveScore(...)"` wordt stil niet uitgevoerd op de CSP-build (Henk kon
-  béide judoka's een JP geven → `updateJP` draaide niet). Fix: (1) wrapper `updateJpEnSla()`
-  (`_content.blade.php`), (2) sweep 2 andere compound-`;`-handlers met call (`publiek:117` →
-  `refreshTap()`, `coachkaarten:187` → bestaande `copy()`), (3) **nieuwe guard**
-  `AlpineCspBindingTest::no_event_handler_chains_a_method_call_with_a_semicolon` (statische scan,
-  dit ontbrak — Henk's testpunt). Doc: `alpine-csp-migration.md` (compound-regel in de kop, stale
-  build-switch-sectie eruit → weer <8k). 11 tests groen. Plan: `.claude/plan-poule-scoring-csp.md`.
-  **Op staging bevestigd + live op prod (22-07): werkt weer.**
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
@@ -124,8 +102,9 @@ afronding hieronder.
   - **Geen `x-model="a.b"`** → getter/setter-methode (`nvModel`/`formModel`).
   - **Geen `?.` in Alpine-expressies** — de parser gooit, hele render stopt. Gebruik een klassieke
     ternary of een component-methode. Guard: `AlpineCspBindingTest` (statische blade-scan).
-  - **Geen compound `@click` met assignment + methode** (`activeTab='x'; loadX()` faalt stil) →
-    wrapper-methode.
+  - **Geen compound `@`-handler met een methode-call + `;`** (`updateJP(...); saveScore(...)` óf
+    `activeTab='x'; loadX()` faalt stil op CSP) → wrapper-methode. Guard: `AlpineCspBindingTest`
+    (`no_event_handler_chains_a_method_call_with_a_semicolon`).
   - **Geen `Alpine.evaluate(el, string)`** → `Alpine.$data(el).method()` of `x-on:event.window`.
 - **CSS-bundle meecommitten** bij nieuwe Tailwind-classes: de oude bundle mist ze anders op prod.
 - **Request-scoped data hoort in `$request->attributes`**, nooit `merge()` — dat is de input bag.
