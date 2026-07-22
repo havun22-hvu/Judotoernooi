@@ -11,17 +11,16 @@ last_updated: 2026-07-22
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Prod staat op `59e33a00`** (favorieten/publieks-page live). **Staging = main (`a0d0e343`)**,
-loopt vóór met een stapel eliminatie/tenant/scoreboard-fixes van 21-22/07, door Henk op staging
-bevestigd — **wacht op prod-deploy** (zie tabel hieronder). Live Stripe-sleutel 19-07 geroteerd na
-een chat-lek — afronding hieronder.
+**Prod = staging = main (`fa8f7229`, 22-07).** De hele staging-stapel (eliminatie/tenant/
+scoreboard-fixes + scoreboard groene-vlag gate + poule-scoring CSP-fix) staat **live op productie**,
+alles synchroon, geen branches/PR's open. Live Stripe-sleutel 19-07 geroteerd na een chat-lek —
+afronding hieronder.
 
 ## Open — alleen jij kunt dit
 
 | Wat | Details |
 |-----|---------|
-| **Prod-deploy staging-stapel (22-07)** | Prod `59e33a00` → staging/main `a0d0e343` (6 commits: tenant C-01, beurtkleur-blinds, correctie-propagatie B, deselect/self-heal, scoreboard re-broadcast + handover). Bevat, door Henk op staging bevestigd: (1) correctie propageert naar herkansing B + self-healing corrupte uitslag, (2) blind/onvolledige wedstrijd krijgt geen beurtkleur + deselect werkt + drag-groen ruimt op, (3) "mijn toernooien" alleen eigenaar (tenant-lek C-01), (4) scoreboard her-broadcast bij deelnemer-wijziging. Geen migraties. Deploy: `git pull` op `repo-prod` + `repo-staging`, caches clear. Docs: `plan-correctie-propagatie` / `plan-blind-beurtkleur` / `plan-mijn-toernooien-scope` / `plan-scoreboard-deelnemer-refresh` + `ELIMINATIE/BEURTKLEUR.md`. |
-| **Scoreboard client-side reload (jouw project)** | Server stuurt nu een verse `ScoreboardAssignment` (`event: match.assign`) bij deelnemer-wijziging. In de Android-app moet een nieuwe assign de al-getoonde wedstrijd **vervangen** i.p.v. negeren. |
+| **Scoreboard client-side reload (jouw project)** | Server stuurt nu een verse `ScoreboardAssignment` (`event: match.assign`) bij deelnemer-wijziging én een `green-check`-endpoint (live op prod). In de Android-app moet een nieuwe assign de al-getoonde wedstrijd **vervangen** i.p.v. negeren, en de green-check + 409 `niet_groen` afhandelen (contract: `.claude/plan-scoreboard-groen-gate.md`). |
 | **Tijdzone-keuze `APP_TIMEZONE`** | LCD toonde 16:57 CEST i.p.v. 18:57. Systemisch: `APP_TIMEZONE=UTC` op alle `->format('H:i')` op DB-timestamps. Twee opties: (a) `.env` op prod+staging → `APP_TIMEZONE=Europe/Amsterdam` (jij, wachtwoord/prod-access), (b) hardcoded in `config/app.php` (ik, één commit). Optie a is flexibeler voor multi-timezone SaaS ooit; b is meteen klaar. Backup vóór (`cp .env .env.bak.YYYYMMDD`). |
 | **Stripe: afronden na key-lek (morgen)** | De live secret is 19-07 al geroteerd — prod draait op `sk_live_…dkIA3`, API geeft HTTP 200, config gecached, staging op testsleutels. Nog te doen: (1) oude `…4l13` in het Stripe-dashboard écht ingetrokken zien (was met 24u-expiry gerold), (2) Developers → Logs nakijken op requests met `…4l13` vanaf een ander IP dan `188.245.159.115`, (3) verouderde Stripe-regel in `HavunCore/.claude/credentials.md` opruimen. Lek liep via de chat, niet via git (`credentials.md` is gitignored, nooit in history). |
 | **Stripe webhook-secret: rollen? (morgen)** | `STRIPE_WEBHOOK_SECRET` (`whsec_…anY7Q`) is **niet** meegerold met de key. Vraag: is die ooit door de chat gegaan? Zo ja rollen — met die secret kan iemand valse webhooks vervalsen en betalingen als betaald markeren. App verifieert via `\Stripe\Webhook::constructEvent()` met één secret uit config (`StripePaymentProvider.php:292`). Stripe's "roll" houdt de oude tot expiry geldig, dus de nieuwe direct plaatsen geeft géén gat. Script nog te schrijven, patroon van `HavunCore/scripts/rotate-stripe-secret.sh` (verborgen `read -rs`, jij draait 'm). `pk_live_` is publishable, geen actie. |
@@ -44,7 +43,7 @@ een chat-lek — afronding hieronder.
   waarom in `.claude/plan-scoreboard-groen-gate.md`.
   **App-kant (judoscoreboard, apart project):** green-check async bij eerste timer-start,
   fail-open op netwerkfout, 409 niet_groen = permanent (geen retry, uit queue, melding).
-  **Nog te doen:** op staging end-to-end testen met de app; daarna prod-deploy.
+  **Live op prod (22-07).** Nog te doen: end-to-end testen met de app (zodra judoscoreboard z'n kant heeft).
 - **Poule-scoring CSP-fix — GEBOUWD 22-07, te testen op staging.** Groene poule-wedstrijd: JP
   kiezen deed niets (geen auto-fill 2WP/0, totalen 0). Oorzaak bevestigd: compound
   `@change="updateJP(...); saveScore(...)"` wordt stil niet uitgevoerd op de CSP-build (Henk kon
@@ -54,7 +53,7 @@ een chat-lek — afronding hieronder.
   `AlpineCspBindingTest::no_event_handler_chains_a_method_call_with_a_semicolon` (statische scan,
   dit ontbrak — Henk's testpunt). Doc: `alpine-csp-migration.md` (compound-regel in de kop, stale
   build-switch-sectie eruit → weer <8k). 11 tests groen. Plan: `.claude/plan-poule-scoring-csp.md`.
-  **Op staging bevestigd door Henk (22-07): werkt weer.** Wacht op prod-deploy (staging-stapel).
+  **Op staging bevestigd + live op prod (22-07): werkt weer.**
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
