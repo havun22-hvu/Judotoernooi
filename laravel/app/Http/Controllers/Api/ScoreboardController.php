@@ -107,6 +107,50 @@ class ScoreboardController extends Controller
     }
 
     /**
+     * Groene-vlag check vóór wedstrijd-start.
+     *
+     * Antwoordt of de opgegeven wedstrijd de groene (actieve) is op de mat van dit device.
+     * Bij niet-groen levert het meteen de nieuwe groene match mee (zelfde formatMatch als
+     * current-match), zodat de app in één call een melding + "wissel"-knop kan tonen —
+     * geen tweede call nodig. Zie .claude/plan-scoreboard-groen-gate.md.
+     */
+    public function greenCheck(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'wedstrijd_id' => 'required|exists:wedstrijden,id',
+        ]);
+
+        $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Tenant-isolatie: zelfde conventie als result() — vreemd toernooi = 404.
+        $toegang = $request->attributes->get('device_toegang');
+        if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
+            return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        }
+
+        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
+            ->where('nummer', $toegang->mat_nummer)
+            ->with(['actieveWedstrijd.judokaWit.club', 'actieveWedstrijd.judokaBlauw.club', 'actieveWedstrijd.poule'])
+            ->first();
+
+        if ($mat && $mat->isGroen($wedstrijd)) {
+            return response()->json([
+                'groen' => true,
+                'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+            ]);
+        }
+
+        $actieve = $mat?->actieveWedstrijd;
+
+        return response()->json([
+            'groen' => false,
+            'actieve_wedstrijd_id' => $mat?->actieve_wedstrijd_id,
+            'reden' => $actieve ? 'niet_groen' : 'geen_actieve_wedstrijd',
+            'match' => $actieve ? $this->formatMatch($actieve) : null,
+        ]);
+    }
+
+    /**
      * Register match result from scoreboard app.
      * Reuses the same logic as MatController::doRegistreerUitslag().
      */
@@ -139,6 +183,22 @@ class ScoreboardController extends Controller
         $toegang = $request->attributes->get('device_toegang');
         if ($wedstrijd->toernooiId() !== $toegang->toernooi_id) {
             return response()->json(['message' => 'Wedstrijd niet gevonden.'], 404);
+        }
+
+        // Groen-gate: de app mag alléén de groene (actieve) wedstrijd van zijn mat scoren.
+        // Een niet-groene POST ontstaat door timing (verschoven beurt tussen laatste punt en
+        // EINDE-knop, of een late offline-flush ná een doorschuif) → weiger vóór enige write,
+        // anders zou verwerkUitslag de bracket-doorschuif voor een verkeerde wedstrijd draaien.
+        // Correcties van afgeronde wedstrijden lopen via het web, niet via deze endpoint.
+        // Zie .claude/plan-scoreboard-groen-gate.md.
+        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
+            ->where('nummer', $toegang->mat_nummer)
+            ->first();
+        if (!$mat || !$mat->isGroen($wedstrijd)) {
+            return response()->json([
+                'error' => 'niet_groen',
+                'actieve_wedstrijd_id' => $mat?->actieve_wedstrijd_id,
+            ], 409);
         }
 
         // Optimistic locking. The field is optional, so it may be absent entirely —
@@ -228,10 +288,8 @@ class ScoreboardController extends Controller
             ]);
         }
 
-        // Auto-advance green slot: clear active match after result
-        $mat = Mat::where('toernooi_id', $toegang->toernooi_id)
-            ->where('nummer', $toegang->mat_nummer)
-            ->first();
+        // Auto-advance green slot: clear active match after result.
+        // $mat is al opgehaald door de groen-gate hierboven — hergebruiken.
 
         // Broadcast score update — use device mat as fallback for elimination poules (no mat_id).
         // The tenant check above already proved these two are the same tournament.

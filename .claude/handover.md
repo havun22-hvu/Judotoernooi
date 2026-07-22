@@ -33,20 +33,18 @@ een chat-lek — afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
-- **Scoreboard groene-vlag gate (contract vastgesteld met judoscoreboard 22-07) — wacht op "ga maar".**
+- **Scoreboard groene-vlag gate — server-kant GEBOUWD 22-07, te beoordelen op staging.**
   Vince-incident: herschikte mat-beurt (🟢 groen → 🔵 klaarmaken), app toont stale wedstrijd,
-  scoren corrumpeert de eliminatie-doorschuif. Fix: (1) nieuwe `GET /api/scoreboard/green-check`
-  (levert `groen` + bij false de nieuwe groene `match` via `formatMatch`), (2) gate in `result()`
-  → 409 `{error: niet_groen}` als wedstrijd **niet de groene** (`actieve_wedstrijd_id`) is.
-  Gate = **alleen groen**, één as (beurtkleur); de eerdere `is_gespeeld`/correctie-uitzondering
-  is bewust verworpen (bracket-shift maakt een gespeelde wedstrijd her-te-spelen, niet corrigeer-
-  baar; echte correcties gaan via web `MatUitslagController`). App-kant: green-check async bij
-  eerste timer-start, fail-open op netwerkfout, 409 niet_groen = permanent (geen retry). Eén
-  gedeelde predicate `Mat::isGroen()`. Volledig contract + tests in
-  `.claude/plan-scoreboard-groen-gate.md`. **Contract definitief** — judoscoreboard bevestigd
-  (22-07): app speelt alleen vooruit, geen resubmits via `result()`; niet-groene POST ontstaat
-  enkel door timing (vertraagde submit / offline-queue flush) = precies waar de gate voor is.
-  Wacht alleen nog op "ga maar".
+  scoren corrumpeert de eliminatie-doorschuif. Server-kant klaar: (1) `Mat::isGroen()` predicate,
+  (2) `GET /api/scoreboard/green-check` (levert `groen` + bij false de nieuwe groene `match`),
+  (3) gate in `result()` → 409 `{error: niet_groen, actieve_wedstrijd_id}` als wedstrijd niet de
+  groene is. Gate = **alleen groen** (één as); `is_gespeeld`-uitzondering bewust verworpen. 15
+  feature-tests groen (`ScoreboardGreenGateTest` + security-test-helper zet mat nu groen). Doc:
+  `SCOREBORD/ARCHITECTUUR.md` (green-check + twee 409-varianten). Contract +
+  waarom in `.claude/plan-scoreboard-groen-gate.md`.
+  **App-kant (judoscoreboard, apart project):** green-check async bij eerste timer-start,
+  fail-open op netwerkfout, 409 niet_groen = permanent (geen retry, uit queue, melding).
+  **Nog te doen:** op staging end-to-end testen met de app; daarna prod-deploy.
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`

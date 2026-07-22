@@ -3,7 +3,7 @@ title: Plan — Scoreboard groene-vlag gate
 type: plan
 scope: judotoernooi
 created: 2026-07-22
-status: contract definitief (judoscoreboard bevestigd 22-07) — wacht alleen nog op "ga maar"
+status: server-kant geïmplementeerd + getest 22-07 — te beoordelen op staging
 ---
 
 # Plan — Scoreboard groene-vlag gate

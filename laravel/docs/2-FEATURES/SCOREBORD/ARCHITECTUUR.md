@@ -87,7 +87,8 @@ HavunCore `docs/kb/reference/scoreboard-api-security-review-2026-07-15.md`.
 ```
 POST /api/scoreboard/auth            → Login: 12-teken code → token + config
 GET  /api/scoreboard/current-match   → Huidige wedstrijd ophalen (alleen bij (re)connect)
-POST /api/scoreboard/result          → Uitslag terugsturen
+GET  /api/scoreboard/green-check     → Is deze wedstrijd nog groen (aan de beurt)? (vóór start)
+POST /api/scoreboard/result          → Uitslag terugsturen (alleen de groene wedstrijd)
 POST /api/scoreboard/event           → Sync event naar display (event-based, niet continu)
 POST /api/scoreboard/heartbeat       → Verbinding alive houden
 POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) — mat uit token
@@ -132,6 +133,27 @@ POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) —
 }
 ```
 
+#### GET /api/scoreboard/green-check?wedstrijd_id={id}
+
+Vraagt of `wedstrijd_id` de **groene** (actieve) wedstrijd is op de mat van dit token. De app
+roept dit async aan bij de eerste timer-start; bij `groen:false` stopt de app de timer en toont
+een melding + "wissel"-knop. Bij `groen:false` komt de **nieuwe groene match** meteen mee (zelfde
+`formatMatch` als current-match), zodat de app geen tweede call nodig heeft.
+
+**Responses (200):**
+```json
+// groen
+{ "groen": true, "actieve_wedstrijd_id": 1234 }
+
+// niet groen — nieuwe groene match meegestuurd
+{ "groen": false, "actieve_wedstrijd_id": 1290, "reden": "niet_groen",
+  "match": { "id": 1290, "judoka_wit": {…}, "judoka_blauw": {…}, "poule_naam": "…", … } }
+
+// geen actieve wedstrijd op de mat
+{ "groen": false, "actieve_wedstrijd_id": null, "reden": "geen_actieve_wedstrijd", "match": null }
+```
+`wedstrijd_id` van een ander toernooi → **404** (tenant-isolatie, net als result()).
+
 #### POST /api/scoreboard/result
 **Request:**
 ```json
@@ -149,15 +171,25 @@ POST /api/scoreboard/tv-link         → TV koppelen via QR (body: { code }) —
 
 `updated_at` is optioneel (optimistic locking); laat je het weg, dan wint de laatste schrijver.
 
+**Groen-gate:** de app mag alléén de **groene** (actieve) wedstrijd van zijn mat scoren. Een
+niet-groene POST (verschoven beurt / late offline-flush) wordt geweigerd vóór enige write —
+anders zou de bracket-doorschuif voor een verkeerde wedstrijd draaien. Correcties van afgeronde
+wedstrijden lopen via het web (`MatUitslagController`), niet via deze endpoint.
+Zie `.claude/plan-scoreboard-groen-gate.md`.
+
 **Responses:**
 
-| Status | Wanneer |
-|--------|---------|
-| 200 | Uitslag verwerkt |
-| 400 | `winnaar_id` is geen deelnemer van deze wedstrijd |
-| 404 | Wedstrijd bestaat niet **of hoort niet bij het toernooi van je token** (tenant-isolatie) |
-| 409 | `updated_at` wijkt af — een ander apparaat was je voor |
-| 429 | Meer dan 120 requests/min met dit token |
+| Status | Body-signaal | Wanneer |
+|--------|--------------|---------|
+| 200 | `success: true` | Uitslag verwerkt |
+| 400 | `message` | `winnaar_id` is geen deelnemer van deze wedstrijd |
+| 404 | `message` | Wedstrijd bestaat niet **of hoort niet bij het toernooi van je token** (tenant-isolatie) |
+| 409 | `error: "niet_groen"` + `actieve_wedstrijd_id` | Wedstrijd is niet (meer) de groene → **permanent**, niet queuen/herproberen |
+| 409 | `success: false` + `server_updated_at` | `updated_at` wijkt af — een ander apparaat was je voor |
+| 429 | — | Meer dan 120 requests/min met dit token |
+
+> Twee 409-varianten, te onderscheiden op de body: `error: "niet_groen"` (beurt verschoven,
+> permanent) vs. `server_updated_at` (optimistic-lock). De groen-gate draait het eerst.
 
 ---
 

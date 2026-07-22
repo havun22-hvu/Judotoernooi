@@ -58,6 +58,20 @@ class Mat extends Model
     }
 
     /**
+     * Is deze wedstrijd de groene (nu-spelende) wedstrijd op deze mat?
+     *
+     * De scoreboard-app mag via /api/scoreboard/result alléén de groene wedstrijd scoren.
+     * Elke andere wedstrijd (verschoven beurt, late offline-flush) hoort geweigerd te worden —
+     * scoren ervan zou de eliminatie-doorschuif corrumperen. Gedeeld door green-check en de
+     * result()-gate. Zie .claude/plan-scoreboard-groen-gate.md.
+     */
+    public function isGroen(Wedstrijd $wedstrijd): bool
+    {
+        return $this->actieve_wedstrijd_id !== null
+            && $this->actieve_wedstrijd_id === $wedstrijd->id;
+    }
+
+    /**
      * Pas de kleurbeurten aan wanneer een poule/groep naar een ANDERE mat wordt
      * verplaatst.
      *

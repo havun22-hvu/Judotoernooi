@@ -42,6 +42,7 @@ Route::post('/scoreboard/auth', [ScoreboardController::class, 'auth'])
 // limiter in bootstrap/app.php) so one misbehaving device cannot hammer the API.
 Route::middleware(['scoreboard.token', 'throttle:scoreboard'])->prefix('scoreboard')->name('api.scoreboard.')->group(function () {
     Route::get('/current-match', [ScoreboardController::class, 'currentMatch'])->name('current-match');
+    Route::get('/green-check', [ScoreboardController::class, 'greenCheck'])->name('green-check');
     Route::post('/result', [ScoreboardController::class, 'result'])->name('result');
     Route::post('/event', [ScoreboardController::class, 'event'])->name('event');
     Route::post('/heartbeat', [ScoreboardController::class, 'heartbeat'])->name('heartbeat');

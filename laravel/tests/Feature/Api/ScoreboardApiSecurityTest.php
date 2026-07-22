@@ -55,6 +55,9 @@ class ScoreboardApiSecurityTest extends TestCase
             'is_gespeeld' => false,
         ]);
 
+        // Zet de wedstrijd groen: de result()-gate accepteert alléén de actieve wedstrijd.
+        $mat->update(['actieve_wedstrijd_id' => $wedstrijd->id]);
+
         $token = DeviceToegang::generateDeviceToken();
         $toegang = DeviceToegang::create([
             'toernooi_id' => $toernooi->id,
