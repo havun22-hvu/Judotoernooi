@@ -78,6 +78,41 @@ class AlpineCspBindingTest extends TestCase
         )));
     }
 
+    /**
+     * The @alpinejs/csp evaluator silently does NOT execute a compound handler that
+     * chains a method call with `;` — e.g. `@change="updateJP(...); saveScore(...)"`.
+     * Neither statement runs, with no console error, so the interaction just dies —
+     * on staging/prod only (strict CSP is off in local).
+     *
+     * Bind a single wrapper method instead: `@change="updateJpEnSla(...)"`.
+     *
+     * DO NOT REMOVE — this silently killed poule-scoring (auto WP/JP + totals) on
+     * staging (22-07-2026); the JP dropdown chained updateJP + saveScore.
+     */
+    #[Test]
+    public function no_event_handler_chains_a_method_call_with_a_semicolon(): void
+    {
+        $overtredingen = [];
+
+        foreach ($this->bladeFiles() as $pad) {
+            foreach (file($pad) as $nr => $regel) {
+                // Event-handler (@event / x-on:) waarvan de expressie een call bevat die
+                // met `);` wordt gevolgd door nog een statement (compound met call).
+                if (preg_match('/(?:@[\w.:-]+|x-on:[\w.:-]+)="[^"]*\);\s*\S[^"]*"/', $regel)) {
+                    $relatief = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $pad);
+                    $overtredingen[] = sprintf('%s:%d', $relatief, $nr + 1);
+                }
+            }
+        }
+
+        $this->assertSame([], $overtredingen, implode("\n", array_merge(
+            ['Compound event-handler met een methode-call + `;` faalt stil in de @alpinejs/csp build:', ''],
+            $overtredingen,
+            ['', 'Vervang de compound door één wrapper-methode die de calls intern doet.',
+                'Zie docs/alpine-csp-migration.md → "Compound handlers".'],
+        )));
+    }
+
     /** @return list<string> */
     private function bladeFiles(): array
     {

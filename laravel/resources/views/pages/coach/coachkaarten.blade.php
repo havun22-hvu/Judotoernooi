@@ -184,7 +184,7 @@
                             @endif
 
                             <button
-                                @click="navigator.clipboard.writeText('Coach kaart {{ $club->naam }}\nLink: {{ $kaart->getShowUrl() }}\nPIN: {{ $kaart->pincode }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                @click="copy('Coach kaart {{ $club->naam }}\nLink: {{ $kaart->getShowUrl() }}\nPIN: {{ $kaart->pincode }}')"
                                 class="px-3 py-1.5 rounded text-sm"
                                 :class="copied ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'"
                             >

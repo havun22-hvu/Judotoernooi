@@ -26,6 +26,22 @@ Drie gevallen, met verschillend gedrag:
 | `open = false` — property op een **ancestor**-component | ⚠️ **Stil fout.** De assignment schrijft naar `scope[name]` = de *eigen* scope, dus de ancestor-property verandert nooit. Geen error. Verplaats naar een methode op de component die de property bezit. |
 | `form.naam = x` — elk pad met een punt | ❌ **Harde error** `Property assignments are prohibited`. |
 
+### Compound handler met een call → gebruik één wrapper (22-07-2026)
+
+Een event-handler die een **methode-call met `;` chained** — `@change="updateJP(...); saveScore(...)"` —
+wordt door de CSP-evaluator **stil niet uitgevoerd**: géén statement draait, géén console-error.
+Vervang door één wrapper-methode op de component:
+
+```blade
+@change="updateJpEnSla(w, judoka.id, $event.target.value, poule)"
+```
+```js
+updateJpEnSla(w, id, v, poule) { this.updateJP(w, id, v); this.saveScore(w, poule); },
+```
+
+Guard: `AlpineCspBindingTest::no_event_handler_chains_a_method_call_with_a_semicolon` (statische
+blade-scan). Dit doodde stil de poule-scoring (auto WP/JP + totalen) op staging (22-07-2026).
+
 ### `x-model` op een genest pad is dus altijd stuk
 
 `x-model` bouwt intern letterlijk de string `<expressie> = __placeholder` en evalueert die.
@@ -144,30 +160,7 @@ Per views nog te refactoren met de NEW utility components:
 - `components/internet-indicator.blade.php` — `function internetIndicator()`
   → naar Alpine.data() in shared lib
 
-### ⏳ CSP build switch — wacht op 100% migratie
+> De build-switch naar `@alpinejs/csp` is uitgevoerd; de app draait er productie-breed op.
+> Nieuwe interactie-bugs vallen daarom onder de regels bovenaan dit doc + de guards in
+> `AlpineCspBindingTest`.
 
-Final stap (na alle views + internetIndicator):
-```js
-// resources/js/app.js
-- import Alpine from 'alpinejs';
-+ import Alpine from '@alpinejs/csp';
-```
-```php
-// app/Http/Middleware/SecurityHeaders.php
--script-src 'self' 'nonce-{$nonce}' 'unsafe-eval' ...
-+script-src 'self' 'nonce-{$nonce}' ...
-```
-
-Verifieer: Mozilla Observatory rescan = +10 punten op judotournament.org
-(geen `unsafe-eval` meer; A → A+).
-
-### Live op staging.judotournament.org
-
-24-04-2026 nacht: alle wijzigingen staan op staging. Test flows:
-- Top-balk language switcher + user dropdown + About modal
-- Organisator-dashboard zelfde dropdowns + About modal
-- Club-index club-uitnodigen page + URL/PIN copy buttons
-- Diverse `{ open: false }` toggles in toernooi/poule/judoka/wedstrijddag
-  pagina's (info-iconen, expand/collapse blokken)
-
-Productie deploy ná visuele bevestiging.

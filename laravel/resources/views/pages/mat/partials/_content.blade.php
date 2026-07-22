@@ -518,7 +518,7 @@
                                                     :class="!isInvoerToegestaan(w) ? 'bg-gray-100 cursor-not-allowed' : ''"
                                                     :value="getJP(w, judoka.id)"
                                                     :disabled="!isInvoerToegestaan(w)"
-                                                    @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
+                                                    @change="updateJpEnSla(w, judoka.id, $event.target.value, poule)"
                                                 >
                                                     <option value=""></option>
                                                     <option value="0">0</option>
@@ -1901,6 +1901,15 @@ document.addEventListener('alpine:init', () => {
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 2, [opponentId]: 0 };
                 wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
             }
+        },
+
+        // Wrapper: JP-invoer + opslaan in één methode-call. De @alpinejs/csp-evaluator voert
+        // een compound expressie (`updateJP(...); saveScore(...)`) stil NIET uit, waardoor de
+        // auto-toekenning en de save niet draaiden op staging/prod. Eén methode-call is CSP-veilig.
+        // Zie .claude/plan-poule-scoring-csp.md.
+        updateJpEnSla(wedstrijd, judokaId, value, poule) {
+            this.updateJP(wedstrijd, judokaId, value);
+            this.saveScore(wedstrijd, poule);
         },
 
         async saveScore(wedstrijd, poule) {

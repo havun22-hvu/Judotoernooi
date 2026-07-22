@@ -114,7 +114,7 @@
                         {{ $totaalJudokas }} <span class="hidden sm:inline">{{ __('deelnemers') }}</span>
                     </span>
                     @if($poulesGegenereerd)
-                    <button @click="forceRefresh(); debugTapCount++"
+                    <button @click="refreshTap()"
                             @dblclick.prevent="debugMode = !debugMode"
                             class="px-2 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors cursor-pointer"
                             :class="isConnected ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600 animate-pulse'"
@@ -1346,6 +1346,13 @@
                 },
 
                 // Force refresh - herlaad alles en herconnect WebSocket
+                // Wrapper: de @alpinejs/csp-evaluator voert een compound handler
+                // (`forceRefresh(); debugTapCount++`) stil niet uit. Eén methode-call is veilig.
+                refreshTap() {
+                    this.forceRefresh();
+                    this.debugTapCount++;
+                },
+
                 async forceRefresh() {
                     this.isRefreshing = true;
 

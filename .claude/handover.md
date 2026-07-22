@@ -45,14 +45,17 @@ een chat-lek — afronding hieronder.
   **App-kant (judoscoreboard, apart project):** green-check async bij eerste timer-start,
   fail-open op netwerkfout, 409 niet_groen = permanent (geen retry, uit queue, melding).
   **Nog te doen:** op staging end-to-end testen met de app; daarna prod-deploy.
-- **Poule-scoring werkt niet op staging (MPC, plan klaar 22-07) — wacht op console-confirmatie + "ga maar".**
-  Groene poule-wedstrijd: JP kiezen doet niets (geen auto-fill 2WP/0, totalen blijven 0). Backend
-  goed (35 tests). Bewezen: totalen zijn client-side uit lokaal `wpScores` → model wordt nooit
-  bijgewerkt → handler-uitvoering faalt, niet opslaan. Hypothese: compound `@change="updateJP(...);
-  saveScore(...)"` (`_content.blade.php:521`) faalt op CSP-build; fallback = reactiviteit. Fix =
-  wrapper-methode + `AlpineCspBindingTest` uitbreiden (guard op compound-met-call, dat ontbrak) +
-  sweep andere compound-`;`-handlers. Console-check bepaalt a vs b. Plan:
-  `.claude/plan-poule-scoring-csp.md`.
+- **Poule-scoring CSP-fix — GEBOUWD 22-07, te testen op staging.** Groene poule-wedstrijd: JP
+  kiezen deed niets (geen auto-fill 2WP/0, totalen 0). Oorzaak bevestigd: compound
+  `@change="updateJP(...); saveScore(...)"` wordt stil niet uitgevoerd op de CSP-build (Henk kon
+  béide judoka's een JP geven → `updateJP` draaide niet). Fix: (1) wrapper `updateJpEnSla()`
+  (`_content.blade.php`), (2) sweep 2 andere compound-`;`-handlers met call (`publiek:117` →
+  `refreshTap()`, `coachkaarten:187` → bestaande `copy()`), (3) **nieuwe guard**
+  `AlpineCspBindingTest::no_event_handler_chains_a_method_call_with_a_semicolon` (statische scan,
+  dit ontbrak — Henk's testpunt). Doc: `alpine-csp-migration.md` (compound-regel in de kop, stale
+  build-switch-sectie eruit → weer <8k). 11 tests groen. Plan: `.claude/plan-poule-scoring-csp.md`.
+  **Te doen:** op staging verifiëren dat JP kiezen nu wél auto-vult + totalen bijwerkt (zonder
+  scoreboard gekoppeld).
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
