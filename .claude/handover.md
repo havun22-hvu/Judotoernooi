@@ -11,9 +11,10 @@ last_updated: 2026-07-22
 > Afgerond = weg (git bewaart het). Max ~120 regels.
 
 **Branch:** main (enige branch, geen open PR's) · **Status:** Laravel 12.62, scoreboard 1.1.6.
-**Prod = staging = main (`fa8f7229`, 22-07).** De hele staging-stapel (eliminatie/tenant/
-scoreboard-fixes + scoreboard groene-vlag gate + poule-scoring CSP-fix) staat **live op productie**,
-alles synchroon, geen branches/PR's open. Live Stripe-sleutel 19-07 geroteerd na een chat-lek —
+**Prod = staging = main (22-07, alles synchroon, geen branches/PR's).** Hele stapel live op
+productie: eliminatie/tenant/scoreboard-fixes + scoreboard groene-vlag gate + poule-scoring
+CSP-fix + spreker-volgorde-fix (afgeronde poules op afrondtijd i.p.v. poule-nummer, via
+`reorder`; `SprekerVolgordeTest`). Live Stripe-sleutel 19-07 geroteerd na een chat-lek —
 afronding hieronder.
 
 ## Open — alleen jij kunt dit
