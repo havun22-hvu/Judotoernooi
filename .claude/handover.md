@@ -33,6 +33,14 @@ een chat-lek — afronding hieronder.
 | **Favorieten-meldingen op Android** | Feature is live, maar knop "Aanzetten" deed op de tablet ogenschijnlijk niets. Er is nu een zichtbare `notificatieStatus`-regel — die wijst de oorzaak aan zodra jij het hertest. |
 
 ## Open — te doen
+- **Scoreboard groene-vlag gate (contract vastgesteld met judoscoreboard 22-07) — wacht op "ga maar".**
+  Vince-incident: herschikte mat-beurt (🟢 groen → 🔵 klaarmaken), app toont stale wedstrijd,
+  scoren corrumpeert de eliminatie-doorschuif. Fix: (1) nieuwe `GET /api/scoreboard/green-check`
+  (levert `groen` + bij false de nieuwe groene `match` via `formatMatch`), (2) gate in `result()`
+  → 409 `{error: niet_groen}` als wedstrijd **niet-groen én niet-gespeeld** (correcties blijven
+  toegestaan). App-kant: green-check async bij eerste timer-start, fail-open op netwerkfout,
+  409 niet_groen = permanent (geen retry). Eén gedeelde predicate `Mat::…`. Volledig contract +
+  tests in `.claude/plan-scoreboard-groen-gate.md`.
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`
