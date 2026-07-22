@@ -54,8 +54,7 @@ een chat-lek — afronding hieronder.
   `AlpineCspBindingTest::no_event_handler_chains_a_method_call_with_a_semicolon` (statische scan,
   dit ontbrak — Henk's testpunt). Doc: `alpine-csp-migration.md` (compound-regel in de kop, stale
   build-switch-sectie eruit → weer <8k). 11 tests groen. Plan: `.claude/plan-poule-scoring-csp.md`.
-  **Te doen:** op staging verifiëren dat JP kiezen nu wél auto-vult + totalen bijwerkt (zonder
-  scoreboard gekoppeld).
+  **Op staging bevestigd door Henk (22-07): werkt weer.** Wacht op prod-deploy (staging-stapel).
 - **Deelnemers-tab herstructureren naar geneste accordions (MPC, fase 1 — 21-07).** Henk wil:
   categorie in/uitklapbaar (bestaat), en bij vaste gewichtsklassen **elke gewichtsklasse óók
   in/uitklapbaar** (nu een knoppen-balk met single-select via `nullableSelection`/`openGewicht`

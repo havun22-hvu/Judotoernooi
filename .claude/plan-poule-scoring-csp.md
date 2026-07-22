@@ -3,7 +3,7 @@ title: Plan — Poule-scoring werkt niet op staging (auto-toekenning + totalen)
 type: plan
 scope: judotoernooi
 created: 2026-07-22
-status: geïmplementeerd 22-07 (wrapper-fix hypothese a, bevestigd door "beide JP's zetbaar") — te testen op staging
+status: geïmplementeerd 22-07 (wrapper-fix hypothese a, bevestigd door "beide JP's zetbaar") — op staging bevestigd 22-07 — wacht op prod-deploy
 ---
 
 # Plan — Poule-scoring (auto-punten) werkt niet op staging
