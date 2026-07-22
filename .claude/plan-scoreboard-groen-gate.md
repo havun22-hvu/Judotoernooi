@@ -28,17 +28,32 @@ de bracket-doorschuif voor een wedstrijd die niet aan de beurt is → corrupte d
 
 **Groen = `mat.actieve_wedstrijd_id`.** Dat is de enige "aan de beurt".
 
-## Gate-semantiek (belangrijk)
+## Gate-semantiek — alleen de groene wedstrijd
 
-`result()` verwerkt óók **correcties** van al-gespeelde wedstrijden (`verwerkUitslag` met
-`oudeWinnaarId`, `ScoreboardController.php:179`). Een naakte "alleen groen"-gate zou die
-blokkeren. Daarom:
+> **Regel:** de scoreboard-app mag via `result()` **alléén de wedstrijd scoren die nu op de mat
+> staat** — de groene (`mat.actieve_wedstrijd_id`). Elke andere wedstrijd → **409 `niet_groen`**,
+> vóór er iets wordt weggeschreven. Eén as: de beurtkleur. Geen andere condities.
 
-> **Toestaan:** wedstrijd is groen (`actieve_wedstrijd_id`) **OF** al gespeeld (`is_gespeeld`).
-> **Weigeren (409 niet_groen):** niet-groen **én** niet-gespeeld. ← exact het Vince-geval.
+Eén predicate, één plek: `Mat::isGroen(Wedstrijd $w): bool` = `$w->id === $this->actieve_wedstrijd_id`.
+Hergebruikt door zowel green-check als de result()-gate.
 
-Eén predicate, één plek: `Mat::mUitslagToegestaan(Wedstrijd $w): bool` (of `isGroen()` +
-losse played-check in `result()`). Hergebruikt door zowel green-check als de result()-gate.
+### Waarom géén "al gespeeld / correctie"-uitzondering (bewust verworpen 22-07)
+
+Een eerder voorstel liet óók een **reeds-gespeelde** wedstrijd door, geredeneerd als "dat is dan
+een correctie". **Verworpen**, want `is_gespeeld` onderscheidt een correctie níét van een wedstrijd
+die opnieuw gespeeld moet worden:
+
+- In de eliminatie **schuift de bracket**. Verandert een uitslag stroomopwaarts, dan krijgt een
+  al-gespeelde wedstrijd **andere deelnemers** en moet 'ie **opnieuw gevochten** worden. Dat is
+  geen correctie van dezelfde partij, maar een nieuwe partij die over de oude uitslag heen zou
+  schrijven. `is_gespeeld = true` toestaan zet precies dát gat open — het gat dat deze gate juist
+  dicht moet doen.
+- Het vermengt twee assen (beurtkleur én gespeeld-status) in een model dat alleen over de
+  **beurtkleur** hoort te gaan. Verwarrend en foutgevoelig.
+
+**Echte correcties** van een afgeronde uitslag lopen via het **web** (organisator,
+`MatUitslagController`) — daar zit ook de correctie-propagatie. Níét via de scoreboard-app.
+Zolang de app alleen vooruit speelt (de groene wedstrijd), is "alleen groen" volledig dekkend.
 
 ## Contract
 
@@ -90,7 +105,7 @@ Onderscheidend van de bestaande optimistic-lock-409, die een ándere body heeft
 
 ## Implementatie (server)
 
-1. **Predicate** — `Mat.php`: methode die `result()` en green-check delen. Groen OF gespeeld.
+1. **Predicate** — `Mat::isGroen(Wedstrijd $w): bool` die `result()` en green-check delen.
 2. **green-check** — nieuwe `ScoreboardController::greenCheck()`; hergebruikt `formatMatch()`
    (met eager-load `actieveWedstrijd.judokaWit.club`, `.judokaBlauw.club`, `.poule` — zoals
    `currentMatch()` al doet). Route in de bestaande `scoreboard`-prefix-groep (`api.php:43-49`).
@@ -105,16 +120,17 @@ Onderscheidend van de bestaande optimistic-lock-409, die een ándere body heeft
 - green-check: blauw/geel wedstrijd → `groen:false` + `match` payload van de groene.
 - green-check: mat zonder actieve wedstrijd → `groen:false`, `match:null`.
 - green-check: wedstrijd ander toernooi → 404.
-- result()-gate: niet-groen + niet-gespeeld → 409 `niet_groen`, **geen** DB-write, **geen**
-  `verwerkUitslag`.
+- result()-gate: niet-groene wedstrijd → 409 `niet_groen`, **geen** DB-write, **geen**
+  `verwerkUitslag` (ongeacht `is_gespeeld` — een al-gespeelde niet-groene wordt óók geweigerd).
 - result()-gate: groene wedstrijd → 200 (normale flow blijft werken).
-- result()-gate: al-gespeelde wedstrijd (correctie) → 200 (correctie blijft werken).
-- Bestaande result()-tests blijven groen.
+- Bestaande result()-tests blijven groen (die scoren de groene wedstrijd).
 
 ## Open te verifiëren tijdens bouw
 
-- Doet de app ooit een result()-resubmit op een wedstrijd die niet-groen **en** niet-gespeeld
-  is anders dan het Vince-geval? Zo nee → gate zoals boven. Zo ja → apart bespreken.
+- **Doet de scoreboard-app ooit een correctie/resubmit via `/api/scoreboard/result` op een
+  niet-groene wedstrijd?** Verwacht: nee — correcties gaan via het web (`MatUitslagController`).
+  Zo nee → gate = alleen groen, zoals boven. Zo ja → deze strakke gate breekt die flow; dan
+  eerst met scoreboard afstemmen vóór dichtzetten.
 - Poule-matches (niet-eliminatie): de app speelt altijd de groene, dus de gate klopt. De
   web-`MatUitslagController` gaat níét via deze endpoint → organisator-invoer onaangetast.
   Verifiëren dat er geen andere caller van `/api/scoreboard/result` is.
