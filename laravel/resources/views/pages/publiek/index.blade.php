@@ -862,7 +862,13 @@
                                                 <div class="divide-y">
                                                     <template x-for="deelnemer in favorietEliminatie(poule).veld" :key="deelnemer.naam">
                                                         <div class="py-1.5"
-                                                             :class="{ 'bg-orange-50 -mx-4 px-4': deelnemer.is_favoriet }">
+                                                             :class="{
+                                                                 '-mx-4 px-4': deelnemer.is_favoriet,
+                                                                 'bg-green-100': deelnemer.is_favoriet && favorietBeurt(activeFavoriet) === 'speelt',
+                                                                 'bg-yellow-100': deelnemer.is_favoriet && favorietBeurt(activeFavoriet) === 'klaar',
+                                                                 'bg-blue-100': deelnemer.is_favoriet && favorietBeurt(activeFavoriet) === 'gereed',
+                                                                 'bg-orange-50': deelnemer.is_favoriet && favorietBeurt(activeFavoriet) === null,
+                                                             }">
                                                             <span class="text-sm"
                                                                   :class="deelnemer.is_favoriet ? 'font-bold text-gray-900' : 'text-gray-700'"
                                                                   x-text="deelnemer.naam"></span>

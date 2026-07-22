@@ -176,7 +176,7 @@ voor de actieve favoriet (`eliminatie.status`):
 
 | status | Weergave |
 |--------|----------|
-| `komt` | Badge `A · 1/4 finale` (groep + rondenaam) + `Mat X`, daaronder **het veld** dat nog actief is in die ronde (favoriet vet, oranje highlight) |
+| `komt` | Badge `A · 1/4 finale` (groep + rondenaam) + `Mat X`, daaronder **het veld** dat nog actief is in die ronde (favoriet vet; achtergrond = **beurtkleur** groen/geel/blauw als de favoriet aan de beurt is / klaar staat / klaar maakt, oranje als er geen beurt is) |
 | `afgevallen` | `Afgevallen — B · 1/8 finale` (groep + ronde van de laatste verloren partij) |
 | `medaille` | 🏅 eindplaats — 1e/2e/3e, `3e (gedeeld)` bij meerdere bronzen |
 
