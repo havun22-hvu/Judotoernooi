@@ -94,6 +94,11 @@ Eliminatie poules kunnen de B-groep op een aparte mat draaien. De mat interface 
 
 De "Afronden" knop verschijnt als alle wedstrijden van de zichtbare groep gespeeld zijn. Backend controleert of ALLE wedstrijden (A+B) klaar zijn voordat `spreker_klaar` wordt gezet.
 
+**Volgorde van afgeronde poules:** de spreker toont ze op **afrondtijd** (`spreker_klaar` oplopend,
+oudste bovenaan = langst wachtend), níét op poule-nummer. ⚠️ `Toernooi::poules()` heeft een default
+`orderBy('nummer')`; gebruik daarom `->reorder('spreker_klaar', 'asc')` (niet `orderBy`), anders wint
+het nummer en dringt een later-afgeronde poule met een lager nummer voor. Guard: `SprekerVolgordeTest`.
+
 > **Zie:** `ELIMINATIE/B-MAT-EN-WEERGAVE.md` → "B-groep op Aparte Mat"
 
 ---

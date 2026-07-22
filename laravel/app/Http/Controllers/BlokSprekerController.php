@@ -35,7 +35,10 @@ class BlokSprekerController extends Controller
             ->whereNull('afgeroepen_at')
             ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
-            ->orderBy('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
+            // reorder() (niet orderBy) — de poules()-relatie heeft een default orderBy('nummer'),
+            // die anders primair blijft en spreker_klaar tot tiebreak degradeert (poule-nummer-
+            // volgorde i.p.v. afrondtijd). reorder wist dat en maakt spreker_klaar de enige sort.
+            ->reorder('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
             ->filter(function ($poule) {
                 // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)

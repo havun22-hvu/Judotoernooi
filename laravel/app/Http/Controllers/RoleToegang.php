@@ -274,7 +274,9 @@ class RoleToegang extends Controller
             ->whereNull('afgeroepen_at')
             ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
-            ->orderBy('spreker_klaar', 'asc')
+            // reorder() wist de default orderBy('nummer') uit de poules()-relatie; anders sorteert
+            // de spreker op poule-nummer i.p.v. afrondtijd (spreker_klaar wordt dan slechts tiebreak).
+            ->reorder('spreker_klaar', 'asc')
             ->get()
             ->filter(function ($poule) {
                 // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)
